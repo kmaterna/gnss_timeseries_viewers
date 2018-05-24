@@ -1,0 +1,66 @@
+#! /bin/bash
+# Plot GPS Vectors and Topography and Faults at Mendocino Triple Junction. 
+# 07/26/2016 Kathryn Materna
+
+lonW=-125.4
+lonE=-122.0
+latS=39.5
+latN=42.0
+range="$lonW/$lonE/$latS/$latN"
+projection="m1.5i"
+output="mendocino_gps.ps"
+resampling="0.004"  # smaller means more fine sampling (bigger file)
+
+# Make color scale
+gmt makecpt -T-5400/5400/100 -Crelief -Z > myrainbow.cpt
+# nice example: -Cdem2 
+
+# Resample to make the topography a bit more clear. 
+# Use grdsample to make a fine mesh out of a course one, or the other way around. 
+# Then make some illumination data and plot it. 
+gmt grdsample Mapping_Resources/srtm1205.grd -GTopogrid.grd -I$resampling
+gmt grdgradient Topogrid.grd -A350 -GTopogrid.grad -Nt
+gmt grdhisteq Topogrid.grad -GTopogrid.hist -N
+gmt grdinfo Topogrid.hist
+gmt grdmath Topogrid.hist 6 DIV = Topogrid.norm
+gmt grdimage Topogrid.grd -ITopogrid.norm -R$range -J$projection -K -V -P -Cmyrainbow.cpt > $output
+
+# Do the same thing for the second tile (haven't gotten them to combine with grdpaste yet)
+gmt grdsample Mapping_Resources/srtm1204.grd -GTopogrid.grd -I$resampling
+gmt grdgradient Topogrid.grd -A350 -GTopogrid.grad -Nt
+gmt grdhisteq Topogrid.grad -GTopogrid.hist -N
+gmt grdinfo Topogrid.hist
+gmt grdmath Topogrid.hist 6 DIV = Topogrid.norm
+gmt grdimage Topogrid.grd -ITopogrid.norm -R$range -J$projection -K -V -O -P -Cmyrainbow.cpt >> $output
+
+# # Insert a horizontal scale bar and title
+gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N2 -B1.0:." ": -Dh -K -O -P >> $output # the title goes here
+
+# Add the fault map (on land)
+gmt psxy Mapping_Resources/Quaternary.txt -R$range -J$projection -Wthin,gray34 -K -O >> $output
+
+# Add PBO velocity vectors
+awk '{ print $1, $2, $3, $4, $5, $6, $7, $10 }' Mapping_Resources/mend_pbo_velo.txt | gmt psvelo -R$range -J$projection -O -P -K -Se0.05/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output
+
+# Add Williams' velocity field.
+# awk '{print $2*-1, $3, $4*10, $5*10, $6*10, $7*10, $8}' Williams2006_velfield.txt | gmt psvelo -R -J -O -P -K -Se0.07/0.68/0 -A+e+gred+pthickest -Wthick,red >> $output
+
+# Add the plate boundaries
+gmt psxy Mapping_Resources/transform.gmt -R$range -J$projection -Wthin,red -Sf5/1+r+s+o3.25 -K -O >> $output
+gmt psxy Mapping_Resources/ridge.gmt -R$range -J$projection -Wthin,red -K -O -Sf5/1+r+s+o1.3 >> $output
+gmt psxy Mapping_Resources/trench.gmt -R$range -J$projection -Wthin,red -Sf1.5/0.6+r+t+o1.8 -K -O >> $output
+
+# plot plate motion vectors
+gmt psvelo Mapping_Resources/Plate_arrows.txt -R$range -J$projection -A18p+e+gred+p2.7p -Se0.07/0.68/0 -Wred -K -O >> $output
+
+gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.05/0.68/10 -Wblack -K -O <<EOF >> $output
+-124.85 41.8 20 0 0.0 0.0 0.0 20mm/yr
+EOF
+
+rm gmt.history
+rm Topogrid.hist
+rm Topogrid.grad
+rm myrainbow.cpt
+rm Topogrid.grd 
+rm Topogrid.norm
+
