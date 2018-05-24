@@ -6,22 +6,46 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import collections
 import datetime as dt 
+import subprocess
 from scipy import signal
 import gps_io_functions
 
+# For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','yyyymmdd','dN', 'dE','dU','Sn','Se','Su']);
-
+Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove','earthquakes_remove','earthquakes_dir','reference_frame']);
 
 def view_single_station(station_name):
-	filename=configure(station_name);
-	[myData]=gps_io_functions.read_pbo_pos_file(filename);
+	MyParams=configure(station_name);
+	[myData]=gps_io_functions.read_pbo_pos_file(MyParams.filename);
+	updatedData=compute(myData,MyParams);
 	single_ts_plot(myData);
 
+
+
+# -------------- CONFIGURE ------------ # 
 def configure(station):
 	filename="../GPS_POS_DATA/PBO_stations/"+station+".pbo.final_nam08.pos"
-	return filename;
+	earthquakes_dir="../GPS_POS_DATA/Event_Files/"
+	outliers_remove=0;
+	earthquakes_remove=1;
+	reference_frame=0;
+	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, reference_frame=reference_frame);
+	return MyParams;
 
 
+
+# -------------- COMPUTE ------------ # 
+def compute(myData, MyParams):
+	if MyParams.earthquakes_remove==1:
+		table = subprocess.check_output("grep "+MyParams.station+" "+MyParams.earthquakes_dir+"*kalts.evt",shell=True);
+		print(table);
+	newData=0;
+	return newData;
+
+
+
+
+# -------------- OUTPUTS ------------ # 
 def single_ts_plot(ts_obj):
 	# Detrending
 	east_detrended=signal.detrend(ts_obj.dE);
