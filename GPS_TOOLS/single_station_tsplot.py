@@ -6,13 +6,14 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import collections
 import datetime as dt 
-import subprocess, sys
 from scipy import signal
 import gps_io_functions
+import gps_ts_functions
 
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def','earthquakes_remove','earthquakes_dir','reference_frame']);
+
 
 
 def view_single_station(station_name, earthquakes_remove=0, outliers_remove=1):
@@ -20,7 +21,6 @@ def view_single_station(station_name, earthquakes_remove=0, outliers_remove=1):
 	[myData]=gps_io_functions.read_pbo_pos_file(MyParams.filename);
 	updatedData=compute(myData,MyParams);
 	single_ts_plot(updatedData,MyParams);
-
 
 
 # -------------- CONFIGURE ------------ # 
@@ -35,88 +35,16 @@ def configure(station, earthquakes_remove, outliers_remove):
 	return MyParams;
 
 
-
 # -------------- COMPUTE ------------ # 
 def compute(myData, MyParams):
 	# First step: remove earthquakes
 	newData=myData; 
-
 	if MyParams.earthquakes_remove==1:
-		newData=remove_earthquakes(newData, MyParams);
-
+		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.station, MyParams.earthquakes_dir);
 	# Second step: remove outliers
 	if MyParams.outliers_remove==1:
-		newData=remove_outliers(newData, MyParams);
-
+		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
 	return newData;
-
-
-
-
-def remove_earthquakes(Data0, MyParams):
-	# Building earthquake table
-	table = subprocess.check_output("grep "+MyParams.station+" "+MyParams.earthquakes_dir+"*kalts.evt",shell=True);
-	print("building earthquake table for station %s ..." % (MyParams.station) );
-	print(table);
-	e_offset=[]; n_offset=[]; u_offset=[]; evdt=[];
-	tablesplit=table.split('\n');
-	for item in tablesplit:  # for each earthquake
-		if len(item)==0:
-			continue;  # if we're at the end, move on. 
-		words = item.split();
-		filename=words[0];
-		e_offset.append(float(words[3]));  # in m
-		n_offset.append(float(words[4]));
-		u_offset.append(float(words[8]));
-		evdate = filename.split('/')[-1];
-		evdate = evdate[4:10];
-		year=evdate[0:2];
-		month=evdate[2:4];
-		day=evdate[4:6];
-		year="20"+year;
-		evdt.append(dt.datetime.strptime(year+month+day,"%Y%m%d"));
-
-	newdtarray=[]; newdN=[]; newdE=[]; newdU=[];
-	# Removing offsets
-	for i in range(len(Data0.dtarray)):
-		# For each day...
-		tempE=Data0.dE[i];
-		tempN=Data0.dN[i];
-		tempU=Data0.dU[i];
-		for j in range(len(evdt)):
-			# print("removing %f mm from east at %s" % (e_offset[j], evdt[j]));
-			if Data0.dtarray[i]>=evdt[j]:
-				tempE=tempE-e_offset[j];
-				tempN=tempN-n_offset[j];
-				tempU=tempU-u_offset[j];
-		newdtarray.append(Data0.dtarray[i]);
-		newdE.append(tempE);
-		newdN.append(tempN);
-		newdU.append(tempU);
-	
-	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=evdt);
-	return newData;
-
-
-
-
-def remove_outliers(Data0, MyParams):
-	medfilt_e=signal.medfilt(Data0.dE, 35);
-	medfilt_n=signal.medfilt(Data0.dN, 35);
-	medfilt_u=signal.medfilt(Data0.dU, 35);
-
-	newdtarray=[]; newdN=[]; newdE=[]; newdU=[];
-	for i in range(len(medfilt_e)):
-		if abs(Data0.dE[i]-medfilt_e[i])<MyParams.outliers_def and abs(Data0.dN[i]-medfilt_n[i])<MyParams.outliers_def and abs(Data0.dU[i]-medfilt_u[i])<MyParams.outliers_def*2:
-			newdtarray.append(Data0.dtarray[i]);
-			newdE.append(Data0.dE[i]);
-			newdN.append(Data0.dN[i]);
-			newdU.append(Data0.dU[i]);
-
-	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
-	return newData;
-
-
 
 
 # -------------- OUTPUTS ------------ # 

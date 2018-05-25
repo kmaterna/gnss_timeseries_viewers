@@ -10,8 +10,8 @@ import gps_io_functions
 def get_stations_within_radius(center, radius):
 	[input_file, center, radius, num_years, max_sigma, coord_box] = configure(center, radius);
 	myVelfield = inputs(input_file, num_years, max_sigma, coord_box);
-	close_stations = compute(myVelfield, center, radius);	
-	return close_stations;
+	close_stations, rad_distance = compute(myVelfield, center, radius);	
+	return close_stations, rad_distance;
 
 def configure(center, radius):
 	input_file="../GPS_POS_DATA/PBO_Velocity_Files/NAM08_pbovelfile_feb2018.txt";
@@ -31,14 +31,17 @@ def inputs(input_file, num_years, max_sigma, coord_box):
 
 def compute(myVelfield, center, radius):
 	close_stations=[];
+	rad_distance=[];
 	for i in range(len(myVelfield.name)):
-		if haversine.distance([center[1], center[0]],[myVelfield.nlat[i],myVelfield.elon[i]]) <= radius:
+		mydist = haversine.distance([center[1], center[0]],[myVelfield.nlat[i],myVelfield.elon[i]])
+		if mydist <= radius:
+			rad_distance.append(mydist);
 			close_stations.append(myVelfield.name[i]);
 	print("Returning %d stations that are within %f km of center %f, %f" % (len(close_stations), radius, center[0], center[1]) )
-	return close_stations;
+	return close_stations, rad_distance;
 
 
 if __name__=="__main__":
 	center=[-124,40];
 	radius=120;
-	close_stations = get_stations_within_radius(center, radius);
+	close_stations, rad_distance = get_stations_within_radius(center, radius);
