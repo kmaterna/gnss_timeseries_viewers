@@ -1,10 +1,11 @@
 
 import numpy as np
 import collections
+import datetime as dt 
 
 
 Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']);
-Timeseries = collections.namedtuple("Timeseries",['name','coords','yyyymmdd','dN', 'dE','dU','Sn','Se','Su']);
+Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);
 
 
 def read_pbo_vel_file(infile):
@@ -101,8 +102,15 @@ def remove_duplicates(velfield):
 
 def read_pbo_pos_file(filename):
 	[yyyymmdd, Nlat, Elong, dN, dE, dU, Sn, Se, Su] = np.loadtxt(filename, skiprows=37, unpack=True,usecols=(0,12,13,15,16,17,18,19,20));
+	dN=[i*1000.0 for i in dN];
+	dE=[i*1000.0 for i in dE];
+	dU=[i*1000.0 for i in dU];
+	Sn=[i*1000.0 for i in Sn];
+	Se=[i*1000.0 for i in Se];
+	Su=[i*1000.0 for i in Su];
 	specific_file=filename.split('/')[-1];
-	myData=Timeseries(name=specific_file[0:4],coords=[Elong[0]-360, Nlat[0]], yyyymmdd=yyyymmdd, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su);
+	dtarray= [dt.datetime.strptime(str(int(i)),"%Y%m%d") for i in yyyymmdd];
+	myData=Timeseries(name=specific_file[0:4],coords=[Elong[0]-360, Nlat[0]], dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
 	return [myData];
 
 
