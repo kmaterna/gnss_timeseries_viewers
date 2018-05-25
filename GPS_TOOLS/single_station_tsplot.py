@@ -12,10 +12,11 @@ import gps_io_functions
 
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove','earthquakes_remove','earthquakes_dir','reference_frame']);
+Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def','earthquakes_remove','earthquakes_dir','reference_frame']);
 
-def view_single_station(station_name):
-	MyParams=configure(station_name);
+
+def view_single_station(station_name, earthquakes_remove=0, outliers_remove=1):
+	MyParams=configure(station_name, earthquakes_remove, outliers_remove);
 	[myData]=gps_io_functions.read_pbo_pos_file(MyParams.filename);
 	updatedData=compute(myData,MyParams);
 	single_ts_plot(updatedData,MyParams);
@@ -23,14 +24,14 @@ def view_single_station(station_name):
 
 
 # -------------- CONFIGURE ------------ # 
-def configure(station):
+def configure(station, earthquakes_remove, outliers_remove):
 	filename="../GPS_POS_DATA/PBO_stations/"+station+".pbo.final_nam08.pos"
 	earthquakes_dir="../GPS_POS_DATA/Event_Files/"
-	earthquakes_remove = 1;
-	outliers_remove    = 0;	
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
-	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, reference_frame=reference_frame);
+	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, outliers_def=outliers_def, 
+		earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, reference_frame=reference_frame);
+	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d" % (station, earthquakes_remove, outliers_remove) );
 	return MyParams;
 
 
@@ -41,7 +42,7 @@ def compute(myData, MyParams):
 	newData=myData; 
 
 	if MyParams.earthquakes_remove==1:
-		newData=remove_earthquakes(myData, MyParams);
+		newData=remove_earthquakes(newData, MyParams);
 
 	# Second step: remove outliers
 	if MyParams.outliers_remove==1:
@@ -55,7 +56,7 @@ def compute(myData, MyParams):
 def remove_earthquakes(Data0, MyParams):
 	# Building earthquake table
 	table = subprocess.check_output("grep "+MyParams.station+" "+MyParams.earthquakes_dir+"*kalts.evt",shell=True);
-	print("building earthquake table...")
+	print("building earthquake table for station %s ..." % (MyParams.station) );
 	print(table);
 	e_offset=[]; n_offset=[]; u_offset=[]; evdt=[];
 	tablesplit=table.split('\n');
@@ -97,8 +98,22 @@ def remove_earthquakes(Data0, MyParams):
 	return newData;
 
 
-def remove_outliers(myData, MyParams):
-	newData=[];
+
+
+def remove_outliers(Data0, MyParams):
+	medfilt_e=signal.medfilt(Data0.dE, 35);
+	medfilt_n=signal.medfilt(Data0.dN, 35);
+	medfilt_u=signal.medfilt(Data0.dU, 35);
+
+	newdtarray=[]; newdN=[]; newdE=[]; newdU=[];
+	for i in range(len(medfilt_e)):
+		if abs(Data0.dE[i]-medfilt_e[i])<MyParams.outliers_def and abs(Data0.dN[i]-medfilt_n[i])<MyParams.outliers_def and abs(Data0.dU[i]-medfilt_u[i])<MyParams.outliers_def*2:
+			newdtarray.append(Data0.dtarray[i]);
+			newdE.append(Data0.dE[i]);
+			newdN.append(Data0.dN[i]);
+			newdU.append(Data0.dU[i]);
+
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
 	return newData;
 
 
@@ -152,3 +167,4 @@ def single_ts_plot(ts_obj, MyParams):
 		plt.savefig("single_plots/"+ts_obj.name+"_ts.jpg");
 
 	return;
+
