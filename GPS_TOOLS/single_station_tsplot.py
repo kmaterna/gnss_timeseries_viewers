@@ -26,9 +26,10 @@ def view_single_station(station_name):
 def configure(station):
 	filename="../GPS_POS_DATA/PBO_stations/"+station+".pbo.final_nam08.pos"
 	earthquakes_dir="../GPS_POS_DATA/Event_Files/"
-	outliers_remove=0;
-	earthquakes_remove=1;
-	reference_frame=0;
+	earthquakes_remove =1;
+	outliers_remove    =0;	
+	outliers_def       =15.0;  # mm away from average. 
+	reference_frame    =0;
 	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, reference_frame=reference_frame);
 	return MyParams;
 
@@ -36,9 +37,32 @@ def configure(station):
 
 # -------------- COMPUTE ------------ # 
 def compute(myData, MyParams):
+	# First step: remove earthquakes
 	if MyParams.earthquakes_remove==1:
 		table = subprocess.check_output("grep "+MyParams.station+" "+MyParams.earthquakes_dir+"*kalts.evt",shell=True);
-		print(table);
+		print("splitting table...")
+		tablesplit=table.split('\n');
+		for item in tablesplit:
+			if len(item)==0:
+				continue;  # if we're at the end, move on. 
+			words = item.split();
+			filename=words[0];
+			de=words[2];
+			dn=words[3];
+			du=words[7];
+			evdate = filename.split('/')[-1];
+			evdate = evdate[4:10];
+			year=evdate[0:2];
+			month=evdate[2:4];
+			day=evdate[4:6];
+			year="20"+year;
+			evdt = dt.datetime.strptime(year+month+day,"%Y%m%d");
+
+			
+
+
+
+	# Second step: remove outliers. 
 	newData=0;
 	return newData;
 
