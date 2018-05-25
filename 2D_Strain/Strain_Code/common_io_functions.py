@@ -9,7 +9,6 @@ import subprocess, sys, os
 import collections
 import gps_io_functions
 import netcdf_io_functions
-
 import delaunay_strain
 import gpsgridder_strain
 import hammond_strain
