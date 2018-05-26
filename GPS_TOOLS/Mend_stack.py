@@ -32,7 +32,7 @@ def configure():
 	EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
 	EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
 	earthquakes_dir = earthquakes_dir="../GPS_POS_DATA/Event_Files/";
-	radius=150;  # km. 
+	radius=120;  # km. 
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius);
 	filenames=[];
 	for station in stations:
@@ -63,10 +63,10 @@ def compute(dataobj_list, distances, earthquakes_dir):
 	# No earthquakes objects
 	# SOMETHING ELSE HAPPENS
 	noeq_objects = [];
-	# for i in range(len(dataobj_list)):
-	# 	newobj=gps_ts_functions.remove_earthquakes(sorted_objects[i],earthquakes_dir);
-	# 	newobj=gps_ts_functions.detrend_data(newobj);
-	# 	noeq_objects.append(newobj);
+	for i in range(len(dataobj_list)):
+		newobj=gps_ts_functions.remove_earthquakes(sorted_objects[i],earthquakes_dir);
+		newobj=gps_ts_functions.detrend_data(newobj);
+		noeq_objects.append(newobj);
 
 	return [detrended_objects, noeq_objects, sorted_distances];
 
@@ -77,8 +77,9 @@ def output_full_ts(dataobj_list, distances, EQtime, filename):
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True)
 	label_date="20171031";
 	offset=0;
+	spacing=10;
 	for i in range(len(dataobj_list)):
-		offset=16*i;
+		offset=spacing*i;
 		edata=dataobj_list[i].dE;
 		edata=[x + offset for x in edata];
 		l1 = axarr[0].plot_date(dataobj_list[i].dtarray,edata,marker='+',markersize=2);
@@ -93,7 +94,7 @@ def output_full_ts(dataobj_list, distances, EQtime, filename):
 	axarr[0].grid('on')
 
 	for i in range(len(dataobj_list)):
-		offset=16*i;
+		offset=spacing*i;
 		ndata=dataobj_list[i].dN;
 		ndata=[x + offset for x in ndata];
 
