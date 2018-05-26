@@ -13,10 +13,12 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 
 # -------------------------------------------- # 
 # Functions that return modified timeseries
+# These all operate on Timeseries objects. 
 # -------------------------------------------- # 
 
-def remove_earthquakes(Data0, station, earthquakes_dir):
+def remove_earthquakes(Data0, earthquakes_dir):
 	# Building earthquake table
+	station=Data0.name;
 	table = subprocess.check_output("grep "+station+" "+earthquakes_dir+"*kalts.evt",shell=True);
 	print("building earthquake table for station %s ..." % (station) );
 	print(table);
@@ -74,6 +76,14 @@ def remove_outliers(Data0, outliers_def):
 			newdU.append(Data0.dU[i]);
 
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+	return newData;
+
+
+def detrend_data(Data0):
+	east_detrended=signal.detrend(Data0.dE);
+	north_detrended=signal.detrend(Data0.dN);
+	vert_detrended=signal.detrend(Data0.dU);
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);	
 	return newData;
 
 

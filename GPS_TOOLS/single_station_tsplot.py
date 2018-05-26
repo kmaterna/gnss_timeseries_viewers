@@ -15,7 +15,6 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def','earthquakes_remove','earthquakes_dir','reference_frame']);
 
 
-
 def view_single_station(station_name, earthquakes_remove=0, outliers_remove=1):
 	MyParams=configure(station_name, earthquakes_remove, outliers_remove);
 	[myData]=gps_io_functions.read_pbo_pos_file(MyParams.filename);
@@ -40,7 +39,7 @@ def compute(myData, MyParams):
 	# First step: remove earthquakes
 	newData=myData; 
 	if MyParams.earthquakes_remove==1:
-		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.station, MyParams.earthquakes_dir);
+		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir);
 	# Second step: remove outliers
 	if MyParams.outliers_remove==1:
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
