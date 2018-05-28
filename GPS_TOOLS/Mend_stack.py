@@ -10,6 +10,8 @@
 
 import numpy as np 
 import matplotlib.pyplot as plt 
+import matplotlib
+import matplotlib.cm as cm
 import collections
 import datetime as dt 
 from scipy import signal
@@ -78,12 +80,20 @@ def output_full_ts(dataobj_list, distances, EQtime, filename):
 	label_date="20171031";
 	offset=0;
 	spacing=10;
+	closest_station=70;
+	farthest_station=120;
+	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
+	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
+	custom_cmap.to_rgba(70);
+
+
+
 	for i in range(len(dataobj_list)):
 		offset=spacing*i;
 		edata=dataobj_list[i].dE;
 		edata=[x + offset for x in edata];
-		l1 = axarr[0].plot_date(dataobj_list[i].dtarray,edata,marker='+',markersize=2);
-		line_color=l1[0].get_color()
+		line_color=custom_cmap.to_rgba(distances[i]);
+		l1 = axarr[0].plot_date(dataobj_list[i].dtarray,edata,marker='+',markersize=2,color=line_color);
 		axarr[0].text(dt.datetime.strptime(label_date, "%Y%m%d"),offset,dataobj_list[i].name,fontsize=9,color=line_color);
 	axarr[0].set_xlim(dt.datetime.strptime("20050101", "%Y%m%d"),dt.datetime.strptime("20171020", "%Y%m%d"));
 	axarr[0].set_ylim([-10,offset+10])
@@ -97,10 +107,9 @@ def output_full_ts(dataobj_list, distances, EQtime, filename):
 		offset=spacing*i;
 		ndata=dataobj_list[i].dN;
 		ndata=[x + offset for x in ndata];
-
-		l1 = axarr[1].plot_date(dataobj_list[i].dtarray,ndata,marker='+',markersize=2);
-		line_color=l1[0].get_color()
-		axarr[1].text(dt.datetime.strptime(label_date, "%Y%m%d"),offset,dataobj_list[i].name,fontsize=9,color=line_color);
+		line_color=custom_cmap.to_rgba(distances[i]);
+		l1 = axarr[1].plot_date(dataobj_list[i].dtarray,ndata,marker='+',markersize=2, color=line_color);
+		#axarr[1].text(dt.datetime.strptime(label_date, "%Y%m%d"),offset,dataobj_list[i].name,fontsize=9,color=line_color);
 	axarr[1].set_xlim(dt.datetime.strptime("20050101", "%Y%m%d"),dt.datetime.strptime("20171020", "%Y%m%d"));
 	axarr[1].set_ylim([-10,offset+10])
 	bottom,top=axarr[1].get_ylim();
@@ -108,6 +117,8 @@ def output_full_ts(dataobj_list, distances, EQtime, filename):
 	axarr[1].set_ylabel("North (mm)");
 	axarr[1].set_title("Detrended GPS Time Series")
 	axarr[1].grid('on')
+	custom_cmap.set_array(range(closest_station,farthest_station))
+	plt.colorbar(custom_cmap);
 	plt.savefig('Mend_Collective_TS_'+filename+'.jpg')	
 	plt.close();
 

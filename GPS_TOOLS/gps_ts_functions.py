@@ -86,6 +86,10 @@ def detrend_data(Data0):
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);	
 	return newData;
 
+def rotate_data():
+	return;
+
+
 
 # -------------------------------------------- # 
 # FUNCTIONS THAT RETURN SCALARS OR VALUES # 
