@@ -80,13 +80,10 @@ def output_full_ts(dataobj_list, distances, EQtime, filename):
 	label_date="20171031";
 	offset=0;
 	spacing=10;
-	closest_station=70;
-	farthest_station=120;
+	closest_station=70;  # km from event
+	farthest_station=120; # km from event
 	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
 	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
-	custom_cmap.to_rgba(70);
-
-
 
 	for i in range(len(dataobj_list)):
 		offset=spacing*i;
@@ -118,7 +115,8 @@ def output_full_ts(dataobj_list, distances, EQtime, filename):
 	axarr[1].set_title("Detrended GPS Time Series")
 	axarr[1].grid('on')
 	custom_cmap.set_array(range(closest_station,farthest_station))
-	plt.colorbar(custom_cmap);
+	cb = plt.colorbar(custom_cmap);
+	cb.set_label('Kilometers from 2014 Earthquake');
 	plt.savefig('Mend_Collective_TS_'+filename+'.jpg')	
 	plt.close();
 
