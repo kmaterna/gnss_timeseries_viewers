@@ -5,6 +5,7 @@ GPS_POS_DATA/*
 GPS_TOOLS/Mapping_Resources/*
 2D_Strain/Delaunay/earlier_work/oregon_bdr
 2D_Strain/Delaunay/earlier_work/california_bdr
+2D_Strain/Strain_Code/visr/*
 ts_viewing/*
 INSAR_TOOLS/velocity_interpolation/*_bdr
 *.pdf
