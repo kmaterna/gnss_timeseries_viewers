@@ -85,12 +85,10 @@ def strain_sphere(phi,theta,u_phi,u_theta,s_phi,s_theta,weight,paramsel):
 
 
 	# #%% Make the matrix needed for least squares inversion
-	# d = np.hstack((u_phi.T,u_theta.T)); # a column vector
-
 	temparray=np.array([u_phi.T,u_theta.T])
 	newd = temparray.reshape((6,1), order='F')
 	d = newd.T;
-	d = d.flatten();
+	d = d.flatten();  # this performs the matlab reshape() function. 
 
 	if paramsel!=2 and paramsel!=1:  # if we're solving for both strain and rotation. 
 		G = np.zeros([2*n, 6]);
@@ -129,8 +127,6 @@ def strain_sphere(phi,theta,u_phi,u_theta,s_phi,s_theta,weight,paramsel):
 			G[2*i+1,1] =  r0*np.sin(theta_0)*del_phi;  
 			G[2*i+1,2] =  r0*del_theta;  
 
-	#print(G); # Same as Matlab's G matrix
-
 	# #% perform the inversion as in an overdetermined system
 
 	covd = np.diag(np.hstack((np.square(s_phi), np.square(s_theta))));
@@ -143,12 +139,9 @@ def strain_sphere(phi,theta,u_phi,u_theta,s_phi,s_theta,weight,paramsel):
 		M = np.dot(np.linalg.inv(np.dot(G.T,G)),G.T);
 
 	m = np.dot(M,d);
-
 	# m is the same between python and matlab
 
 	dpred = np.dot(G,m);
-
-	# Looks good up to here. 
 
 	# #the predicted u_phi_p, u_theta_p;
 	u_phi_p=dpred[::2];  # elements 0, 2, 4...
@@ -327,7 +320,7 @@ def compute(myVelfield, MyParams):
 		paramsel=0;
 		[e_phiphi,e_thetaphi,e_thetatheta,omega_r,U_theta,U_phi,s_omega_r,s_e_phiphi,s_e_thetaphi,s_e_thetatheta,s_U_theta,s_U_phi,chi2,OMEGA,THETA_p,PHI_p,s_OMEGA,s_THETA_p,s_PHI_p,r_PHITHETA,u_phi_p,u_theta_p] = strain_sphere(phi,theta,u_phi,u_theta,s_phi,s_theta,weight,paramsel);
 
-		print_all_values(e_phiphi,e_thetaphi,e_thetatheta,omega_r,U_theta,U_phi,s_omega_r,s_e_phiphi,s_e_thetaphi,s_e_thetatheta,s_U_theta,s_U_phi,chi2,OMEGA,THETA_p,PHI_p,s_OMEGA,s_THETA_p,s_PHI_p,r_PHITHETA,u_phi_p,u_theta_p);
+		# print_all_values(e_phiphi,e_thetaphi,e_thetatheta,omega_r,U_theta,U_phi,s_omega_r,s_e_phiphi,s_e_thetaphi,s_e_thetatheta,s_U_theta,s_U_phi,chi2,OMEGA,THETA_p,PHI_p,s_OMEGA,s_THETA_p,s_PHI_p,r_PHITHETA,u_phi_p,u_theta_p);
 
 		# The components that are easily computed
 		# Units: nanostrain per year. 
@@ -338,12 +331,11 @@ def compute(myVelfield, MyParams):
 		# # Compute a number of values based on tensor properties. 
 		I2nd_tri = np.log10(np.abs(strain_tensor_toolbox.second_invariant(exx, exy, eyy)));
 		I2nd.append(I2nd_tri);
-		rot.append(OMEGA*1000);
+		rot.append(OMEGA*1000*1000);
 		[e11, e22, v] = strain_tensor_toolbox.eigenvector_eigenvalue(exx, exy, eyy);
 
-		e1.append(e11);
-		e2.append(e22);
-		print("principal strains are...");
+		e1.append(-e11);  # the convention of this code returns negative eigenvalues compared to my other codes. 
+		e2.append(-e22);
 		max_shear.append((e11 - e22)/2);
 		v00.append(v[0][0]);
 		v10.append(v[1][0]);
