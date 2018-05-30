@@ -7,7 +7,7 @@ import subprocess
 import datetime as dt 
 from scipy import signal
 
-# 
+# A line for referencing the namedtuple definition. 
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 
 
@@ -94,6 +94,44 @@ def rotate_data():
 # -------------------------------------------- # 
 # FUNCTIONS THAT RETURN SCALARS OR VALUES # 
 # -------------------------------------------- # 
+
+def get_slope(Data0, starttime=[], endtime=[]):
+	# Model the data with a best-fit y = mx + b. 
+	if starttime==[]:
+		starttime=Data0.dtarray[0];
+	if endtime==[]:
+		endtime=Data0.dtarray[-1];
+
+	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
+	for i in range(len(Data0.dtarray)):
+		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime:
+			mydtarray.append(Data0.dtarray[i]);
+			myeast.append(Data0.dE[i]);
+			mynorth.append(Data0.dN[i]);
+			myup.append(Data0.dU[i]);
+
+	decyear=get_float_times(mydtarray);
+	east_coef=np.polyfit(decyear,myeast,1);
+	north_coef=np.polyfit(decyear,mynorth,1);
+	vert_coef=np.polyfit(decyear,myup,1);
+	east_slope=east_coef[0];
+	north_slope=north_coef[0];
+	vert_slope=vert_coef[0];
+	return [east_slope, north_slope, vert_slope];
+
+
+def get_float_times(datetimes):
+	floats=[];
+	for item in datetimes:
+		temp=item.strftime("%Y %j");
+		temp=temp.split();
+		floats.append(float(temp[0])+float(temp[1])/366.0);
+	return floats;
+
+
+
+
+
 
 
 

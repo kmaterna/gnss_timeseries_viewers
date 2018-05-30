@@ -23,10 +23,10 @@ import stations_within_radius
 def driver():
 	[stations, distances, filenames, EQtime, earthquakes_dir] = configure();
 	dataobj_list = inputs(stations, filenames);
-	[sorted_objects, noeq_objects, sorted_distances] = compute(dataobj_list, distances, earthquakes_dir);
+	[sorted_objects, noeq_objects, sorted_distances, east_slope_obj] = compute(dataobj_list, distances, earthquakes_dir, EQtime);
 	
-	output_full_ts(sorted_objects, sorted_distances, EQtime, "detrended");
-	output_full_ts(noeq_objects, sorted_distances, EQtime, "noeq");
+	output_full_ts(sorted_objects, sorted_distances, EQtime, "detrended", east_slope_obj);
+	output_full_ts(noeq_objects, sorted_distances, EQtime, "noeq", east_slope_obj);
 	return;
 
 
@@ -49,7 +49,7 @@ def inputs(stations, filenames):
 	return dataobj_list;
 
 
-def compute(dataobj_list, distances, earthquakes_dir):
+def compute(dataobj_list, distances, earthquakes_dir, EQtime):
 
 	latitudes_list=[i.coords[1] for i in dataobj_list];
 	sorted_objects = [x for _,x in sorted(zip(latitudes_list, dataobj_list))];  # the raw, sorted data. 
@@ -61,19 +61,31 @@ def compute(dataobj_list, distances, earthquakes_dir):
 		newobj=gps_ts_functions.detrend_data(sorted_objects[i]);
 		detrended_objects.append(newobj);
 
-
 	# No earthquakes objects
-	# SOMETHING ELSE HAPPENS
 	noeq_objects = [];
+	east_slope_obj=[];
 	for i in range(len(dataobj_list)):
+		# Remove the earthquakes
 		newobj=gps_ts_functions.remove_earthquakes(sorted_objects[i],earthquakes_dir);
+
+		# Get the pre-event and post-event velocities (earthquakes removed)
+		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,endtime=EQtime);
+		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(newobj,starttime=EQtime);
+		east_slope_after=np.round(east_slope_after,decimals=1);
+		east_slope_before=np.round(east_slope_before,decimals=1);
+		east_slope_obj.append([east_slope_before, east_slope_after]);
+
+		# Remove trend and then save this new object
 		newobj=gps_ts_functions.detrend_data(newobj);
 		noeq_objects.append(newobj);
 
-	return [detrended_objects, noeq_objects, sorted_distances];
+
+	return [detrended_objects, noeq_objects, sorted_distances, east_slope_obj];
 
 
-def output_full_ts(dataobj_list, distances, EQtime, filename):
+
+
+def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 
 	plt.figure();
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True)
@@ -92,6 +104,8 @@ def output_full_ts(dataobj_list, distances, EQtime, filename):
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = axarr[0].plot_date(dataobj_list[i].dtarray,edata,marker='+',markersize=2,color=line_color);
 		axarr[0].text(dt.datetime.strptime(label_date, "%Y%m%d"),offset,dataobj_list[i].name,fontsize=9,color=line_color);
+		axarr[0].text(dt.datetime.strptime("20050301", "%Y%m%d"),offset,east_slope_obj[i][0],fontsize=9,color='k');
+		axarr[0].text(EQtime,offset,east_slope_obj[i][1],fontsize=9,color='k');
 	axarr[0].set_xlim(dt.datetime.strptime("20050101", "%Y%m%d"),dt.datetime.strptime("20171020", "%Y%m%d"));
 	axarr[0].set_ylim([-10,offset+10])
 	bottom,top=axarr[0].get_ylim();

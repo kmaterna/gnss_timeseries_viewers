@@ -85,7 +85,12 @@ def strain_sphere(phi,theta,u_phi,u_theta,s_phi,s_theta,weight,paramsel):
 
 
 	# #%% Make the matrix needed for least squares inversion
-	d = np.hstack((u_phi.T,u_theta.T)); # a column vector
+	# d = np.hstack((u_phi.T,u_theta.T)); # a column vector
+
+	temparray=np.array([u_phi.T,u_theta.T])
+	newd = temparray.reshape((6,1), order='F')
+	d = newd.T;
+	d = d.flatten();
 
 	if paramsel!=2 and paramsel!=1:  # if we're solving for both strain and rotation. 
 		G = np.zeros([2*n, 6]);
@@ -124,18 +129,26 @@ def strain_sphere(phi,theta,u_phi,u_theta,s_phi,s_theta,weight,paramsel):
 			G[2*i+1,1] =  r0*np.sin(theta_0)*del_phi;  
 			G[2*i+1,2] =  r0*del_theta;  
 
+	#print(G); # Same as Matlab's G matrix
 
 	# #% perform the inversion as in an overdetermined system
 
 	covd = np.diag(np.hstack((np.square(s_phi), np.square(s_theta))));
+	# Same as Matlab's
 
 	if weight == 1:
 		W = np.diag(1./np.diag(covd));  # this checks out. 
 		M = np.dot(np.linalg.inv(np.dot(np.dot(G.T,W),G)),np.dot(G.T, W)); 
 	else:
 		M = np.dot(np.linalg.inv(np.dot(G.T,G)),G.T);
+
 	m = np.dot(M,d);
+
+	# m is the same between python and matlab
+
 	dpred = np.dot(G,m);
+
+	# Looks good up to here. 
 
 	# #the predicted u_phi_p, u_theta_p;
 	u_phi_p=dpred[::2];  # elements 0, 2, 4...
@@ -309,26 +322,28 @@ def compute(myVelfield, MyParams):
 		s_phi=np.array([myVelfield.se[index1],myVelfield.se[index2],myVelfield.se[index3]]);
 		s_theta=np.array([myVelfield.sn[index1],myVelfield.sn[index2],myVelfield.sn[index3]]);
 
-
 		# HERE WE PLUG IN BILL'S CODE! 
 		weight=1;
 		paramsel=0;
 		[e_phiphi,e_thetaphi,e_thetatheta,omega_r,U_theta,U_phi,s_omega_r,s_e_phiphi,s_e_thetaphi,s_e_thetatheta,s_U_theta,s_U_phi,chi2,OMEGA,THETA_p,PHI_p,s_OMEGA,s_THETA_p,s_PHI_p,r_PHITHETA,u_phi_p,u_theta_p] = strain_sphere(phi,theta,u_phi,u_theta,s_phi,s_theta,weight,paramsel);
 
+		print_all_values(e_phiphi,e_thetaphi,e_thetatheta,omega_r,U_theta,U_phi,s_omega_r,s_e_phiphi,s_e_thetaphi,s_e_thetatheta,s_U_theta,s_U_phi,chi2,OMEGA,THETA_p,PHI_p,s_OMEGA,s_THETA_p,s_PHI_p,r_PHITHETA,u_phi_p,u_theta_p);
+
 		# The components that are easily computed
 		# Units: nanostrain per year. 
-		exx=e_phiphi*1000;
-		exy=-e_thetaphi*1000;
-		eyy=-e_thetatheta*1000;
+		exx=e_phiphi*1e6;
+		exy=-e_thetaphi*1e6;
+		eyy=e_thetatheta*1e6;
 
 		# # Compute a number of values based on tensor properties. 
 		I2nd_tri = np.log10(np.abs(strain_tensor_toolbox.second_invariant(exx, exy, eyy)));
 		I2nd.append(I2nd_tri);
-		rot.append(omega_r*1000);
+		rot.append(OMEGA*1000);
 		[e11, e22, v] = strain_tensor_toolbox.eigenvector_eigenvalue(exx, exy, eyy);
 
 		e1.append(e11);
 		e2.append(e22);
+		print("principal strains are...");
 		max_shear.append((e11 - e22)/2);
 		v00.append(v[0][0]);
 		v10.append(v[1][0]);
@@ -337,6 +352,31 @@ def compute(myVelfield, MyParams):
 
 	return [xcentroid, ycentroid, triangle_vertices, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11];
 
+
+def print_all_values(e_phiphi,e_thetaphi,e_thetatheta,omega_r,U_theta,U_phi,s_omega_r,s_e_phiphi,s_e_thetaphi,s_e_thetatheta,s_U_theta,s_U_phi,chi2,OMEGA,THETA_p,PHI_p,s_OMEGA,s_THETA_p,s_PHI_p,r_PHITHETA,u_phi_p,u_theta_p):
+	print("e_phiphi is:     "+str(e_phiphi));
+	print("e_thetaphi is:   "+str(e_thetaphi));
+	print("e_thetatheta is: "+str(e_thetatheta));
+	print("omega_r is:      "+str(omega_r));
+	print("U_theta is:      "+str(U_theta));
+	print("U_phi is:        "+str(U_phi));
+	print("s_omega_r is:    "+str(s_omega_r));
+	print("s_e_phiphi is:   "+str(s_e_phiphi));
+	print("s_e_thetaphi is: "+str(s_e_thetaphi));
+	print("s_e_thetatheta:  "+str(s_e_thetatheta));
+	print("s_U_theta is:    "+str(s_U_theta));
+	print("s_U_phi is:      "+str(s_U_phi));
+	print("chi2 is:         "+str(chi2));
+	print("OMEGA is:        "+str(OMEGA));
+	print("THETA_p is:      "+str(THETA_p));
+	print("PHI_p is:        "+str(PHI_p));
+	print("s_OMEGA is:      "+str(s_OMEGA));
+	print("s_THETA_p is:    "+str(s_THETA_p));
+	print("s_PHI_p is:      "+str(s_PHI_p));
+	print("r_PHITHETA is:   "+str(r_PHITHETA));
+	print("u_phi_p is:      "+str(u_phi_p));
+	print("u_theta_p is:    "+str(u_theta_p));
+	return;
 
 
 

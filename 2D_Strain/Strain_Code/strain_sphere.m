@@ -125,6 +125,8 @@ else
     end;
 end
 
+
+
 % perform the inversion as in an overdetermined system
 
 covd = diag(reshape([(s_phi.^2)';(s_theta.^2)'],2*n,1));
