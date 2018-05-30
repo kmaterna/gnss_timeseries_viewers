@@ -78,8 +78,8 @@ def compute(myVelfield, MyParams):
 			# Compute a number of values based on tensor properties. 
 			I2nd[j][i] = np.log10(np.abs(strain_tensor_toolbox.second_invariant(exx, exy, eyy)));
 			[e11, e22, v1] = strain_tensor_toolbox.eigenvector_eigenvalue(exx, exy, eyy);
-			e1[j][i]= e11;
-			e2[j][i]= e22;
+			e1[j][i]= -e11;
+			e2[j][i]= -e22;
 			v00[j][i]=v1[0][0];
 			v10[j][i]=v1[0][1];
 			v01[j][i]=v1[1][0];
