@@ -30,7 +30,7 @@ gmt psvelo negative_eigs.txt -Se0.003/0.68/0 -A+b+pthick,red -Gred -R$range -J$p
 #awk '{print $1, $2, $4, $7}' misfitfile.txt | gmt psvelo -Se0.03/0.68/0 -A+e+pthick,black -Gblack -R$range -J$projection -K -O >> $out_strain
 
 # Rotation
-gmt makecpt -T0/50/10 -Crainbow.cpt > mycpt.cpt
+gmt makecpt -T0/300/50 -Crainbow.cpt > mycpt.cpt
 gmt grdimage rot.nc -R$range -J$projection -BWeSN+t"Rotation" -Bp1.0 -Cmycpt.cpt -X14 -Y0 -K -O >> $out_strain
 gmt pscoast -R$range -J$projection -Wthick,black -Df -Sgray -K -O >> $out_strain
 gmt psscale -DjTR+w4.5/0.5+o-1.1/1.5 -R$range -J$projection -Cmycpt.cpt -K -O >> $out_strain
@@ -40,3 +40,5 @@ gmt psvelo tempgps.txt -Se0.03/0.68/0 -A+e+pthick,black -Gwhite -R$range -J$proj
 rm gmt.history
 rm mycpt.cpt
 rm tempgps.txt
+
+open $out_strain

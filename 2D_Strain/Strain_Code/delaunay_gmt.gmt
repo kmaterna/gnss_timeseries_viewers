@@ -23,3 +23,5 @@ gmt psvelo tempgps.txt -Se0.03/0.68/0 -A+e+pthick,black -Gwhite -R$range -J$proj
 
 rm gmt.history
 rm mycpt.cpt
+
+open $out_strain
