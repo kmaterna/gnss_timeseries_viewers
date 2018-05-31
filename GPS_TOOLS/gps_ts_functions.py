@@ -16,6 +16,17 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 # These all operate on Timeseries objects. 
 # -------------------------------------------- # 
 
+def remove_offsets(Data0, offsets_dir):
+	station=Data0.name;
+	table = subprocess.check_output("grep "+station+" "+offsets_dir+"*.off",shell=True);
+	table_rows=table.split('\n');
+	for line in table_rows:
+		print(line);
+		print("\n");
+
+	return Data0; 
+
+
 def remove_earthquakes(Data0, earthquakes_dir):
 	# Building earthquake table
 	station=Data0.name;
@@ -74,17 +85,31 @@ def remove_outliers(Data0, outliers_def):
 			newdE.append(Data0.dE[i]);
 			newdN.append(Data0.dN[i]);
 			newdU.append(Data0.dU[i]);
+		else:
+			newdtarray.append(Data0.dtarray[i]);
+			newdE.append(np.nan);
+			newdN.append(np.nan);
+			newdU.append(np.nan);
 
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
 	return newData;
 
-
 def detrend_data(Data0):
-	east_detrended=signal.detrend(Data0.dE);
-	north_detrended=signal.detrend(Data0.dN);
-	vert_detrended=signal.detrend(Data0.dU);
+	# Need to make this operate with nans. 
+	decyear=get_float_times(Data0.dtarray);
+	east_coef=np.polyfit(decyear,Data0.dE,1);
+	north_coef=np.polyfit(decyear,Data0.dN,1);
+	vert_coef=np.polyfit(decyear,Data0.dU,1);
+
+	east_detrended=[]; north_detrended=[]; vert_detrended=[];
+	for i in range(len(decyear)):
+		east_detrended.append(Data0.dE[i]-(east_coef[0]*decyear[i] + east_coef[1]));
+		north_detrended.append(Data0.dN[i]-(north_coef[0]*decyear[i] + north_coef[1]));
+		vert_detrended.append(Data0.dU[i]-(vert_coef[0]*decyear[i] + vert_coef[1]));
+
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);	
 	return newData;
+
 
 def rotate_data():
 	return;
