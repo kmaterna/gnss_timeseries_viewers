@@ -12,6 +12,7 @@ import netcdf_io_functions
 import delaunay_strain
 import gpsgridder_strain
 import hammond_strain
+import visr_strain
 
 
 
@@ -39,6 +40,12 @@ def get_tunable_options(strain_method, map_range):
 		coord_box  =[map_range[0]-1, map_range[1]+3, map_range[2]-2, map_range[3]+2];
 		outdir     ="../GPSgridder/";
 		gmtfile    ="gpsgridder_gmt.gmt";
+
+	elif strain_method=="visr":
+		grid_inc   =0.04;
+		coord_box  =[map_range[0]-1, map_range[1]+3, map_range[2]-2, map_range[3]+2];
+		outdir     ="../visr/";
+		gmtfile    ="visr_gmt.gmt";
 
 	elif strain_method=="delaunay":
 		grid_inc   =0.04; # larger interval for convenience, because it's slow. 
