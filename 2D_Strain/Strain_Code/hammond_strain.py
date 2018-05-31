@@ -263,6 +263,7 @@ def strain_sphere(phi,theta,u_phi,u_theta,s_phi,s_theta,weight,paramsel):
 
 
 def compute(myVelfield, MyParams):
+	print("Computing strain via Hammond method.");
 	z = np.array([myVelfield.elon,myVelfield.nlat]);
 	z = z.T;
 	tri=Delaunay(z);

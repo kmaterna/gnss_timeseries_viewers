@@ -22,8 +22,8 @@ Params=collections.namedtuple("Params",['strain_method','input_file','map_range'
 
 # ----------------- CONFIGURE -------------------------
 def configure(strain_method):
-	# input_file="../../GPS_POS_DATA/PBO_Velocity_Files/NAM08_pbovelfile_feb2018.txt";
-	input_file="../../GPS_POS_DATA/PBO_Velocity_Files/TEST_velfield.txt";
+	input_file="../../GPS_POS_DATA/PBO_Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+	# input_file="../../GPS_POS_DATA/PBO_Velocity_Files/TEST_velfield.txt";
 	map_range=[-125, -121, 37.0, 42.2]; # Northern California
 	map_range_string = str(map_range[0])+'/'+str(map_range[1])+'/'+str(map_range[2])+'/'+str(map_range[3]);
 	num_years=3.0;
@@ -43,7 +43,7 @@ def get_tunable_options(strain_method, map_range):
 
 	elif strain_method=="visr":
 		grid_inc   =0.04;
-		coord_box  =[map_range[0]-1, map_range[1]+3, map_range[2]-2, map_range[3]+2];
+		coord_box  =[map_range[0]-0.5, map_range[1]+0.5, map_range[2]-0.5, map_range[3]+0.5];
 		outdir     ="../visr/";
 		gmtfile    ="visr_gmt.gmt";
 
@@ -103,7 +103,10 @@ def write_grid_eigenvectors(xdata, ydata, w1, w2, v00, v01, v10, v11, MyParams):
 	# Need eigs_interval and outdir from MyParams. 
 	positive_file=open(MyParams.outdir+"positive_eigs.txt",'w');
 	negative_file=open(MyParams.outdir+"negative_eigs.txt",'w');
-	eigs_dec=12;
+	if MyParams.strain_method=='visr':
+		eigs_dec=8;
+	elif MyParams.strain_method=='gpsgridder':
+		eigs_dec=12;
 
 	for j in range(len(ydata)):
 		for k in range(len(xdata)):

@@ -10,9 +10,11 @@
 
 import numpy as np 
 import subprocess
+import sys
 import strain_tensor_toolbox
 
-
+# Reference for velocity field objects:
+# Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']);
 
 def compute(myVelfield, MyParams):
 
@@ -27,7 +29,7 @@ def compute(myVelfield, MyParams):
 	return [xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11];
 
 
-def write_fortran_config_file(strain_config_file, strain_data_file, strain_output_file):
+def write_fortran_config_file(strain_config_file, strain_data_file, strain_output_file, MyParams):
 	# The config file will have the following components. 
 	"""
 	visr/visr_drive_strain.drv contains: 
@@ -43,9 +45,32 @@ def write_fortran_config_file(strain_config_file, strain_data_file, strain_outpu
 	0                                          ! number of creep faults
 	crp.dat                                    ! creep fault data file
 	"""
+	ofile=open(strain_config_file,'w');
+	ofile.write(strain_data_file+'                              ! Station coordinate and velocity solution file\n');
+	ofile.write(strain_output_file+'                             ! Strain rate output file\n');
+	ofile.write('1                                          ! distance weighting scheme: 1=gaussian, 2=quadratic\n');
+	ofile.write('2                                          ! spatial weighting scheme: 1=azimuth, 2=voronoi area\n');
+	ofile.write('1 100 1                                    ! minimum, maximum, and incremental spatial smoothing constants (km)\n');
+	ofile.write('2                                          ! weighting threshold Wt\n');
+	ofile.write('0.05                                       ! uncertainty threshold for reset\n');
+	ofile.write('3                                          ! function: 1=velocity compatibility checking; 2=velocity interpolation; 3=strain rate interpolation\n');
+	ofile.write(str(MyParams.coord_box[0])+' '+str(MyParams.coord_box[1])+' '+str(MyParams.coord_box[2])+' '+str(MyParams.coord_box[3])+' '+str(MyParams.grid_inc)+' '+str(MyParams.grid_inc)+'                ! Lon_min, Lon_max, Lat_min, Lat_max, dLon, dLat\n');
+	ofile.write('0                                          ! number of creep faults\n');
+	ofile.write('crp.dat                                    ! creep fault data file\n');
+	ofile.close();
 	return;
 
+
 def write_fortran_data_file(data_file, Velfield):
+	ofile=open(data_file,'w');
+	# 35    format(a8,2f10.4,2(f7.2,f5.2),f7.3)
+	# 0102_GPS -119.2642   34.5655 -29.02 0.79  22.96 0.73  0.082     4   7.2  1994.4  
+	for i in range(len(Velfield.name)):
+		ofile.write(Velfield.name[i]+"_GPS ");
+		ofile.write("%9.4f %9.4f " % (Velfield.elon[i], Velfield.nlat[i]) );
+		ofile.write("%6.2f %4.2f %6.2f %4.2f %6.3f " % (Velfield.e[i], Velfield.se[i], Velfield.n[i], Velfield.sn[i], 0.001) );
+		ofile.write("    5   2.1  2005.0\n");
+	ofile.close();
 	return;
 
 
@@ -80,6 +105,10 @@ def make_output_grids_from_strain_out(infile):
 
 	xaxis=sorted(ax1);
 	yaxis=sorted(ax2);
+
+	if xlen==0 and ylen==0:
+		print("ERROR! No valid strains have been computed. Try again.")
+		sys.exit(0);
 	
 	# Loop through x and y lists, find the index of the coordinates in the xaxis and yaxis sets, 
 	# Then place them into the 2d arrays. 
@@ -99,8 +128,8 @@ def make_output_grids_from_strain_out(infile):
 		e1[yindex][xindex]= e11;
 		e2[yindex][xindex]= e22;
 		v00[yindex][xindex]=v1[0][0];
-		v10[yindex][xindex]=v1[0][1];
-		v01[yindex][xindex]=v1[1][0];
+		v10[yindex][xindex]=v1[1][0];
+		v01[yindex][xindex]=v1[0][1];
 		v11[yindex][xindex]=v1[1][1];
 		max_shear[yindex][xindex] = (e11 - e22)/2;
 

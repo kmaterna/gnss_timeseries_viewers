@@ -24,6 +24,7 @@ import strain_tensor_toolbox
 # ----------------- COMPUTE -------------------------
 
 def compute(myVelfield, MyParams):
+	print("Computing strain via delaunay method.");
 	z = np.array([myVelfield.elon,myVelfield.nlat]);
 	z = z.T;
 	tri=Delaunay(z);
