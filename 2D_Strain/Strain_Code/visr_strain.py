@@ -13,17 +13,49 @@ import subprocess
 import strain_tensor_toolbox
 
 
+
 def compute(myVelfield, MyParams):
 
-	# write_into_fortran_format();
-	# call_fortran_compute();
-
-	# Here we will make the strain compute function, using visr's fortran code. 
-	# It will output a large text file. 
+	strain_config_file='visr/visr_strain.drv';
+	strain_data_file='visr/velocities.vel';
+	strain_output_file='visr/strain.out';
+	write_fortran_config_file(strain_config_file, strain_data_file, strain_output_file, MyParams);
+	write_fortran_data_file(strain_data_file, myVelfield);
+	call_fortran_compute(strain_config_file);
 	# We convert that text file into grids, which we will write as GMT grd files. 
-
-	[xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11] = make_output_grids_from_strain_out("visr/strain.out");
+	[xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11] = make_output_grids_from_strain_out(strain_output_file);
 	return [xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11];
+
+
+def write_fortran_config_file(strain_config_file, strain_data_file, strain_output_file):
+	# The config file will have the following components. 
+	"""
+	visr/visr_drive_strain.drv contains: 
+	visr/velh.cmm4                             ! Station coordinate and velocity solution file
+	visr/strain.out                            ! Strain rate output file
+	1                                          ! distance weighting scheme: 1=gaussian, 2=quadratic
+	2                                          ! spatial weighting scheme: 1=azimuth, 2=voronoi area
+	1 100 1                                    ! minimum, maximum, and incremental spatial smoothing constants (km)
+	24                                         ! weighting threshold Wt
+	0.5                                        ! uncertainty threshold for reset
+	3                                          ! function: 1=velocity compatibility checking; 2=velocity interpolation; 3=strain rate interpolation
+	-122.5 -114.0 32.0 37.5 0.04 0.04          ! Lon_min, Lon_max, Lat_min, Lat_max, dLon, dLat
+	0                                          ! number of creep faults
+	crp.dat                                    ! creep fault data file
+	"""
+	return;
+
+def write_fortran_data_file(data_file, Velfield):
+	return;
+
+
+def call_fortran_compute(config_file):
+	# Here we will call the strain compute function, using visr's fortran code. 
+	# It will output a large text file. 	
+	print("Calling visr.exe fortran code to compute strain. ");
+	subprocess.call('visr/visr.exe < '+config_file, shell=True);
+	return;
+
 
 
 def make_output_grids_from_strain_out(infile):
@@ -40,6 +72,7 @@ def make_output_grids_from_strain_out(infile):
 			exx.append(float(temp[9]));
 			exy.append(float(temp[11]));
 			eyy.append(float(temp[13]));
+	ifile.close();
 	ax1=set(x);
 	ax2=set(y);
 	xlen=len(ax1);
@@ -63,8 +96,8 @@ def make_output_grids_from_strain_out(infile):
 		rot[yindex][xindex]=rotation[i];
 		I2nd[yindex][xindex] = np.log10(np.abs(strain_tensor_toolbox.second_invariant(exx[i], exy[i], eyy[i])));
 		[e11, e22, v1] = strain_tensor_toolbox.eigenvector_eigenvalue(exx[i], exy[i], eyy[i]);
-		e1[yindex][xindex]= -e11;
-		e2[yindex][xindex]= -e22;
+		e1[yindex][xindex]= e11;
+		e2[yindex][xindex]= e22;
 		v00[yindex][xindex]=v1[0][0];
 		v10[yindex][xindex]=v1[0][1];
 		v01[yindex][xindex]=v1[1][0];

@@ -1,11 +1,11 @@
 #!/bin/bash
 # GMT plotting of gpsgridder results
 
-# range=$1
+range=$1
 projection="M3.7i"
 output="visr_vel.ps"
 out_strain="visr_strain.ps"
-range="-121/-115/32/37"
+# range="-121/-115/32/37"
 
 gmt makecpt -T-30/30/5 -Crainbow.cpt > mycpt.cpt
 gmt grdimage gps_u.nc -R$range -J$projection -Cmycpt.cpt -BWeSN+tX -Bp1.0 -K > $output
