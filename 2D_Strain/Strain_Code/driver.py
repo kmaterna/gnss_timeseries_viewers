@@ -25,7 +25,6 @@ def driver_2d(strain_method):
 	return;
 
 
-
 # Are we producing gridded interpolated data, or static polygons?
 driver_dict={
 	"delaunay":driver_1d, 

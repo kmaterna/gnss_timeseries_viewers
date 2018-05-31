@@ -22,8 +22,8 @@ Params=collections.namedtuple("Params",['strain_method','input_file','map_range'
 
 # ----------------- CONFIGURE -------------------------
 def configure(strain_method):
-	input_file="../../GPS_POS_DATA/PBO_Velocity_Files/NAM08_pbovelfile_feb2018.txt";
-	# input_file="../../GPS_POS_DATA/PBO_Velocity_Files/TEST_velfield.txt";
+	# input_file="../../GPS_POS_DATA/PBO_Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+	input_file="../../GPS_POS_DATA/PBO_Velocity_Files/TEST_velfield.txt";
 	map_range=[-125, -121, 37.0, 42.2]; # Northern California
 	map_range_string = str(map_range[0])+'/'+str(map_range[1])+'/'+str(map_range[2])+'/'+str(map_range[3]);
 	num_years=3.0;
@@ -95,8 +95,7 @@ def outputs_2d(xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, m
 	netcdf_io_functions.produce_output_netcdf(xdata, ydata, rot, 'per yr', MyParams.outdir+'rot.nc');
 	netcdf_io_functions.flip_if_necessary(MyParams.outdir+'rot.nc');	
 	write_grid_eigenvectors(xdata, ydata, e1, e2, v00, v01, v10, v11, MyParams);
-	os.chdir(MyParams.outdir)
-	subprocess.call("../Strain_Code/"+MyParams.gmtfile+" "+MyParams.map_range,shell=True);
+	subprocess.call("../Strain_Code/"+MyParams.gmtfile+" "+MyParams.map_range,shell=True,cwd=MyParams.outdir);
 	return;
 
 def write_grid_eigenvectors(xdata, ydata, w1, w2, v00, v01, v10, v11, MyParams):
@@ -171,9 +170,7 @@ def outputs_1d(xcentroid, ycentroid, polygon_vertices, I2nd, max_shear, rot, e1,
 	I2ndfile.close();
 	positive_file.close();
 	negative_file.close();
-	os.chdir(MyParams.outdir)	
-	subprocess.call("../Strain_Code/"+MyParams.gmtfile+" "+MyParams.map_range,shell=True);
-
+	subprocess.call("../Strain_Code/"+MyParams.gmtfile+" "+MyParams.map_range,shell=True,cwd=MyParams.outdir);
 	return;
 
 
