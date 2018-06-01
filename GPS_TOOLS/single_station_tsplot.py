@@ -31,6 +31,7 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove):
 	reference_frame    = 0;
 	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, outliers_def=outliers_def, 
 		earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, offsets_remove=offsets_remove, offsets_dir=offsets_dir, reference_frame=reference_frame);
+	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d" % (station, earthquakes_remove, outliers_remove) );
 	return MyParams;
 
@@ -50,7 +51,6 @@ def compute(myData, MyParams):
 
 # -------------- OUTPUTS ------------ # 
 def single_ts_plot(ts_obj, detrended, MyParams):
-
 	# The major figure
 	plt.figure();
 	[f,axarr]=plt.subplots(3,1,sharex=True);
@@ -62,7 +62,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	for i in range(len(ts_obj.EQtimes)):
 		axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k');
 	ax1=axarr[0].twinx();
-	ax1.plot_date(detrended.dtarray, detrended.dE,'r');
+	ax1.plot_date(detrended.dtarray, detrended.dE,'.r');
 	ax1.set_ylabel('detrended (mm)')
 
 	axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN);
@@ -72,7 +72,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	for i in range(len(ts_obj.EQtimes)):
 		axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k');	
 	ax2=axarr[1].twinx();
-	ax2.plot_date(detrended.dtarray, detrended.dN,'r');
+	ax2.plot_date(detrended.dtarray, detrended.dN,'.r');
 	ax2.set_ylabel('detrended (mm)')
 	
 	axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU);	
@@ -82,14 +82,12 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	for i in range(len(ts_obj.EQtimes)):
 		axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k');	
 	ax3=axarr[2].twinx();
-	ax3.plot_date(detrended.dtarray, detrended.dU,'r');
+	ax3.plot_date(detrended.dtarray, detrended.dU,'.r');
 	ax3.set_ylabel('detrended (mm)')
-	
 
 	if MyParams.earthquakes_remove==1:
 		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq.jpg");
 	else:
 		plt.savefig("single_plots/"+ts_obj.name+"_ts.jpg");
-
 	return;
 

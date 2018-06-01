@@ -5,6 +5,7 @@ import numpy as np
 import collections
 import subprocess
 import datetime as dt 
+import sys
 from scipy import signal
 
 # A line for referencing the namedtuple definition. 
@@ -18,12 +19,14 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 
 def remove_offsets(Data0, offsets_dir):
 	station=Data0.name;
+	print("Offset table for station %s:" % (station) );	
 	table = subprocess.check_output("grep "+station+" "+offsets_dir+"*.off",shell=True);
 	table_rows=table.split('\n');
 	for line in table_rows:
-		print(line);
-		print("\n");
-
+		if "EQ" in line:
+			continue;
+		else:
+			print(line);
 	return Data0; 
 
 
@@ -31,7 +34,7 @@ def remove_earthquakes(Data0, earthquakes_dir):
 	# Building earthquake table
 	station=Data0.name;
 	table = subprocess.check_output("grep "+station+" "+earthquakes_dir+"*kalts.evt",shell=True);
-	print("building earthquake table for station %s ..." % (station) );
+	print("Earthquake table for station %s:" % (station) );
 	print(table);
 	e_offset=[]; n_offset=[]; u_offset=[]; evdt=[];
 	tablesplit=table.split('\n');
@@ -90,12 +93,19 @@ def remove_outliers(Data0, outliers_def):
 			newdE.append(np.nan);
 			newdN.append(np.nan);
 			newdU.append(np.nan);
-
+	
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+
 	return newData;
 
+
 def detrend_data(Data0):
-	# Need to make this operate with nans. 
+
+	# Operates with nans. 
+	idx=np.isnan(Data0.dE);
+	if(sum(idx))>0:  # if there are nans, please pull them out. 
+		Data0=remove_nans(Data0);
+	
 	decyear=get_float_times(Data0.dtarray);
 	east_coef=np.polyfit(decyear,Data0.dE,1);
 	north_coef=np.polyfit(decyear,Data0.dN,1);
@@ -106,9 +116,35 @@ def detrend_data(Data0):
 		east_detrended.append(Data0.dE[i]-(east_coef[0]*decyear[i] + east_coef[1]));
 		north_detrended.append(Data0.dN[i]-(north_coef[0]*decyear[i] + north_coef[1]));
 		vert_detrended.append(Data0.dU[i]-(vert_coef[0]*decyear[i] + vert_coef[1]));
-
-	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);	
+	# print(east_coef[0]);  # these are the slopes
+	# print(north_coef[0]);
+	# print(vert_coef[0]);
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
 	return newData;
+
+
+
+def remove_nans(Data0):
+	idx=np.isnan(Data0.dE);
+	temp_dates=[];
+	temp_east=[];
+	temp_north=[];
+	temp_vert=[];
+	temp_Sn=[];
+	temp_Se=[];
+	temp_Su=[];
+	for i in range(len(Data0.dtarray)):
+		if idx[i]!=1:
+			temp_dates.append(Data0.dtarray[i]);
+			temp_east.append(Data0.dE[i]);
+			temp_north.append(Data0.dN[i]);
+			temp_vert.append(Data0.dU[i]);
+			temp_Se.append(Data0.Se[i]);
+			temp_Sn.append(Data0.Sn[i]);
+			temp_Su.append(Data0.Su[i]);
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=temp_dates, dN=temp_north, dE=temp_east, dU=temp_vert, Sn=temp_Sn, Se=temp_Se, Su=temp_Su, EQtimes=Data0.EQtimes);
+	return newData;
+
 
 
 def rotate_data():
@@ -129,7 +165,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 
 	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
 	for i in range(len(Data0.dtarray)):
-		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime:
+		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.dE[i]):
 			mydtarray.append(Data0.dtarray[i]);
 			myeast.append(Data0.dE[i]);
 			mynorth.append(Data0.dN[i]);
