@@ -19,6 +19,7 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 
 def remove_offsets(Data0, offsets_dir):
 	station=Data0.name;
+	e_offset=[]; n_offset=[]; u_offset=[]; evdt=[];
 	print("Offset table for station %s:" % (station) );	
 	table = subprocess.check_output("grep "+station+" "+offsets_dir+"*.off",shell=True);
 	table_rows=table.split('\n');
@@ -27,7 +28,39 @@ def remove_offsets(Data0, offsets_dir):
 			continue;
 		else:
 			print(line);
-	return Data0; 
+		if len(line)==0:
+			continue;  # if we're at the end, move on. 
+		words = line.split();
+		site=words[0];
+		yyyy=words[1];
+		mm=words[2];
+		dd=words[3];
+		e_offset.append(float(words[8]));  # in m
+		n_offset.append(float(words[6]));
+		u_offset.append(float(words[10]));
+		evdt.append(dt.datetime.strptime(yyyy+mm+dd,"%Y%m%d"));
+
+	newdtarray=[]; newdN=[]; newdE=[]; newdU=[];
+	# Removing offsets
+	for i in range(len(Data0.dtarray)):
+		# For each day...
+		tempE=Data0.dE[i];
+		tempN=Data0.dN[i];
+		tempU=Data0.dU[i];
+		for j in range(len(evdt)):
+			# print("removing %f mm from east at %s" % (e_offset[j], evdt[j]));
+			if Data0.dtarray[i]>=evdt[j]:
+				tempE=tempE-e_offset[j];
+				tempN=tempN-n_offset[j];
+				tempU=tempU-u_offset[j];
+		newdtarray.append(Data0.dtarray[i]);
+		newdE.append(tempE);
+		newdN.append(tempN);
+		newdU.append(tempU);
+	
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=evdt);
+
+	return newData; 
 
 
 def remove_earthquakes(Data0, earthquakes_dir):
