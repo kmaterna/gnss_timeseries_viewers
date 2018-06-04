@@ -53,6 +53,11 @@ gmt psxy Mapping_Resources/trench.gmt -R$range -J$projection -Wthin,red -Sf1.5/0
 # plot plate motion vectors
 gmt psvelo Mapping_Resources/Plate_arrows.txt -R$range -J$projection -A18p+e+gred+p2.7p -Se0.07/0.68/0 -Wred -K -O >> $output
 
+# The 2014 M6.8 earthquake
+gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output
+-125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
+EOF
+
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.05/0.68/10 -Wblack -K -O <<EOF >> $output
 -124.85 41.8 20 0 0.0 0.0 0.0 20mm/yr
 EOF
