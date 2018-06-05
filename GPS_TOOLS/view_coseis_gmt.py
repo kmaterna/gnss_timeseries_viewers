@@ -36,11 +36,11 @@ def inputs(filename):
 		if read_data==1:
 			lon.append(float(temp[0])-360);
 			lat.append(float(temp[1]));
-			dE.append(-float(temp[2]));
-			dN.append(-float(temp[3]));
+			dE.append(float(temp[2]));
+			dN.append(float(temp[3]));
 			sE.append(float(temp[4]));
 			sN.append(float(temp[5]));
-			dU.append(-float(temp[7]));
+			dU.append(float(temp[7]));
 			sU.append(float(temp[8]));
 			full_name=temp[9];
 			site.append(full_name[0:4]);

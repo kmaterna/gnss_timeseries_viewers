@@ -26,11 +26,11 @@ def driver():
 
 def configure():
 	EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
-	# EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
-	EQtime  = dt.datetime.strptime("20100110", "%Y%m%d");
-	EQtime  = dt.datetime.strptime("20111017", "%Y%m%d");
-	EQtime  = dt.datetime.strptime("20151017", "%Y%m%d");
-	EQtime  = dt.datetime.strptime("20131017", "%Y%m%d");
+	EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
+	# EQtime  = dt.datetime.strptime("20100110", "%Y%m%d");
+	# EQtime  = dt.datetime.strptime("20111017", "%Y%m%d");
+	# EQtime  = dt.datetime.strptime("20151017", "%Y%m%d");
+	# EQtime  = dt.datetime.strptime("20131017", "%Y%m%d");
 	earthquakes_dir = earthquakes_dir="../GPS_POS_DATA/Event_Files/";
 	offsets_dir = "../GPS_POS_DATA/Offsets/";
 	radius=280;  # km. 
@@ -50,6 +50,8 @@ def inputs(stations, filenames):
 
 def compute(dataobj_list, distances, earthquakes_dir, offsets_dir, EQtime):
 
+	time_duration = 2; # years
+
 	latitudes_list=[i.coords[1] for i in dataobj_list];
 	sorted_objects = [x for _,x in sorted(zip(latitudes_list, dataobj_list))];  # the raw, sorted data. 
 	sorted_distances = [x for _,x in sorted(zip(latitudes_list, distances))];  # the sorted distances.
@@ -65,8 +67,8 @@ def compute(dataobj_list, distances, earthquakes_dir, offsets_dir, EQtime):
 		noeq_objects.append(newobj);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
-		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,endtime=EQtime);
-		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(newobj,starttime=EQtime);
+		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,starttime=EQtime-dt.timedelta(days=time_duration*365),endtime=EQtime);
+		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(newobj,starttime=EQtime,endtime=EQtime+dt.timedelta(days=time_duration*365));
 		east_slope_after=np.round(east_slope_after,decimals=1);
 		east_slope_before=np.round(east_slope_before,decimals=1);
 		east_slope_obj.append([east_slope_before, east_slope_after]);
