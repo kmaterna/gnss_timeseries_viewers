@@ -21,9 +21,9 @@ import stations_within_radius
 
 
 def driver():
-	[stations, distances, filenames, EQtime, earthquakes_dir] = configure();
+	[stations, distances, filenames, EQtime, earthquakes_dir, offsets_dir] = configure();
 	dataobj_list = inputs(stations, filenames);
-	[sorted_objects, noeq_objects, sorted_distances, east_slope_obj] = compute(dataobj_list, distances, earthquakes_dir, EQtime);
+	[sorted_objects, noeq_objects, sorted_distances, east_slope_obj] = compute(dataobj_list, distances, earthquakes_dir, offsets_dir, EQtime);
 	
 	output_full_ts(sorted_objects, sorted_distances, EQtime, "detrended", east_slope_obj);
 	output_full_ts(noeq_objects, sorted_distances, EQtime, "noeq", east_slope_obj);
@@ -33,13 +33,14 @@ def driver():
 def configure():
 	EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
 	EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
-	earthquakes_dir = earthquakes_dir="../GPS_POS_DATA/Event_Files/";
+	earthquakes_dir = "../GPS_POS_DATA/Event_Files/";
+	offsets_dir = "../GPS_POS_DATA/Offsets/";
 	radius=120;  # km. 
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius);
 	filenames=[];
 	for station in stations:
 		filenames.append("../GPS_POS_DATA/PBO_stations/"+station+".pbo.final_nam08.pos");
-	return [stations, distances, filenames, EQtime, earthquakes_dir];
+	return [stations, distances, filenames, EQtime, earthquakes_dir, offsets_dir];
 
 def inputs(stations, filenames):
 	dataobj_list=[];
@@ -49,7 +50,7 @@ def inputs(stations, filenames):
 	return dataobj_list;
 
 
-def compute(dataobj_list, distances, earthquakes_dir, EQtime):
+def compute(dataobj_list, distances, earthquakes_dir, offsets_dir, EQtime):
 
 	latitudes_list=[i.coords[1] for i in dataobj_list];
 	sorted_objects = [x for _,x in sorted(zip(latitudes_list, dataobj_list))];  # the raw, sorted data. 
@@ -66,7 +67,8 @@ def compute(dataobj_list, distances, earthquakes_dir, EQtime):
 	east_slope_obj=[];
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes
-		newobj=gps_ts_functions.remove_earthquakes(sorted_objects[i],earthquakes_dir);
+		newobj=gps_ts_functions.remove_offsets(sorted_objects[i],offsets_dir);
+		newobj=gps_ts_functions.remove_earthquakes(newobj,earthquakes_dir);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
 		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,endtime=EQtime);

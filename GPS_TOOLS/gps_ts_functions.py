@@ -196,6 +196,19 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	if endtime==[]:
 		endtime=Data0.dtarray[-1];
 
+	# Defensive programming
+	if starttime<Data0.dtarray[0]:
+		starttime=Data0.dtarray[0];
+	if endtime>Data0.dtarray[-1]:
+		endttime=Data0.dtarray[-1];
+	if endtime<Data0.dtarray[0]:
+		print("Error: end time before start of array. Returning 0");
+		return [0,0,0];
+	if starttime>Data0.dtarray[-1]:
+		print("Error: start time after end of array. Returning 0");
+		return [0,0,0];
+
+
 	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
 	for i in range(len(Data0.dtarray)):
 		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.dE[i]):
