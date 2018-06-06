@@ -21,7 +21,15 @@ def remove_offsets(Data0, offsets_dir):
 	station=Data0.name;
 	e_offset=[]; n_offset=[]; u_offset=[]; evdt=[];
 	print("Offset table for station %s:" % (station) );	
-	table = subprocess.check_output("grep "+station+" "+offsets_dir+"*.off",shell=True);
+
+	try:
+		table = subprocess.check_output("grep "+station+" "+offsets_dir+"*.off",shell=True);
+	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
+		table=[];
+
+	if len(table)==0:
+		return Data0;
+
 	table_rows=table.split('\n');
 	for line in table_rows:
 		if "EQ" in line:
@@ -66,7 +74,15 @@ def remove_offsets(Data0, offsets_dir):
 def remove_earthquakes(Data0, earthquakes_dir):
 	# Building earthquake table
 	station=Data0.name;
-	table = subprocess.check_output("grep "+station+" "+earthquakes_dir+"*kalts.evt",shell=True);
+
+	try:
+		table = subprocess.check_output("grep "+station+" "+earthquakes_dir+"*kalts.evt",shell=True);
+	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
+		table=[];
+
+	if len(table)==0:
+		return Data0;
+
 	print("Earthquake table for station %s:" % (station) );
 	print(table);
 	e_offset=[]; n_offset=[]; u_offset=[]; evdt=[];
