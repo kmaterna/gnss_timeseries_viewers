@@ -14,6 +14,7 @@ def config():
 	events_dir="../../GPS_POS_DATA/Event_Files/"
 	event = '140310'  # format: March 10, 2014  #THIS IS WHERE YOU DEFINE THE EARTHQUAKE YOU WANT
 	# event = '100110'
+	event = '050615'
 	filenames=glob.glob(events_dir+'pbo_'+event+'*_coseis_kalts.evt');
 	if len(filenames)!=1: 
 		print("Error: The wrong number of files has been detected.")
@@ -49,7 +50,7 @@ def inputs(filename):
 
 def outputs(lon, lat, dE, dN, sE, sN, dU, sU, site, eqlon, eqlat):
 	#### Will eventually make these parameters. 
-	lonW=-125.7
+	lonW=-126.7
 	lonE=-122.0
 	latS=39.5
 	latN=42.0

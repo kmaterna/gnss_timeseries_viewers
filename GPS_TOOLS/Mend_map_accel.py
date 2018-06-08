@@ -26,6 +26,14 @@
 # post_event_duration = 2; # years
 # map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.5, EQcoords[1]+2.5];
 
+# Nice Reference: 
+# EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
+# EQcoords=[-122.834, 37.829]; # San Francisco Bay Area
+# EQcoords=[-123.834, 39.029]; # North Bay Area
+# EQcoords=[-125.134, 43.829]; # Oregon
+# EQcoords=[-125.134, 46.829]; # Washington
+# EQcoords=[-125.134, 48.829]; # Canada
+
 
 import numpy as np 
 import datetime as dt 
@@ -35,36 +43,28 @@ import gps_ts_functions
 import stations_within_radius
 
 
-def driver():
-	[stations, distances, filenames, EQtime, earthquakes_dir, offsets_dir, pre_event_duration, post_event_duration, map_coords,outfile_name] = configure();
+def driver(EQcoords=[-125.134, 40.829], outfile_name='accel_map.ps'):
+	[stations, distances, filenames, EQtime, earthquakes_dir, offsets_dir, pre_event_duration, post_event_duration, map_coords, outfile_name] = configure(EQcoords, outfile_name);
 	dataobj_list = inputs(stations, filenames);
 	[noeq_objects, east_slope_obj, north_slope_obj] = compute(dataobj_list, distances, earthquakes_dir, offsets_dir, EQtime, pre_event_duration, post_event_duration);
 	outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name);
 	return;
 
 
-def configure():
-	# EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
-	# EQcoords=[-122.834, 37.829]; # San Francisco Bay Area
-	# EQcoords=[-123.834, 39.029]; # North Bay Area
-	# EQcoords=[-125.134, 43.829]; # Oregon
-	# EQcoords=[-125.134, 46.829]; # Washington
-	EQcoords=[-125.134, 48.829]; # Canada
-	EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
+def configure(EQcoords, outfile_name):
+	# EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
+	EQtime  = dt.datetime.strptime("20100110", "%Y%m%d");
 	earthquakes_dir = earthquakes_dir="../GPS_POS_DATA/Event_Files/";
 	offsets_dir = "../GPS_POS_DATA/Offsets/";
 	radius=450;  # km. 
-	pre_event_duration = 2; # years
-	post_event_duration = 2; # years
+	pre_event_duration = 3; # years
+	post_event_duration = 3; # years
 	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.5, EQcoords[1]+2.5];
-	outfile_name='accel_map.ps'
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
 	filenames=[];
 	for station in stations:
 		filenames.append("../GPS_POS_DATA/PBO_stations/"+station+".pbo.final_nam08.pos");
 	return [stations, distances, filenames, EQtime, earthquakes_dir, offsets_dir, pre_event_duration, post_event_duration, map_coords, outfile_name];
-
-
 
 
 def inputs(stations, filenames):

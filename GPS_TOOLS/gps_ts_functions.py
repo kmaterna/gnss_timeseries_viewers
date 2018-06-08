@@ -1,4 +1,6 @@
-# Functions to map, filter, and reduce generic GPS time series
+# May/June 2018
+# This is a toolbox that operates on Timeseries objects. 
+# Contains functions to map, filter, and reduce generic GPS time series
 
 
 import numpy as np 
@@ -13,8 +15,8 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 
 
 # -------------------------------------------- # 
-# Functions that return modified timeseries
-# These all operate on Timeseries objects. 
+# FUNCTIONS THAT TAKE TIME SERIES OBJECTS # 
+# AND RETURN OTHER TIME SERIES OBJECTS # 
 # -------------------------------------------- # 
 
 def remove_offsets(Data0, offsets_dir):
@@ -195,14 +197,34 @@ def remove_nans(Data0):
 	return newData;
 
 
+def remove_annual_semiannual(Data0):
+	decyear=get_float_times(Data0.dtarray);
+	[east_params,north_params,up_params]=get_linear_annual_semiannual(Data0);
+	east_function = annual_semiannual_function(decyear, east_params);
+	north_function = annual_semiannual_function(decyear, north_params);
+	up_function = annual_semiannual_function(decyear, up_params);
+
+	temp_east=[]; temp_north=[]; temp_up=[];
+	for i in range(len(decyear)):
+		temp_east.append(Data0.dE[i]-east_function[i]);
+		temp_north.append(Data0.dN[i]-north_function[i]);
+		temp_up.append(Data0.dU[i]-up_function[i]);
+
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=temp_north, dE=temp_east, dU=temp_up, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes); 
+	return newData;
+
+
 
 def rotate_data():
 	return;
 
 
 
+
+
 # -------------------------------------------- # 
-# FUNCTIONS THAT RETURN SCALARS OR VALUES # 
+# FUNCTIONS THAT TAKE TIME SERIES OBJECTS #
+# AND RETURN SCALARS OR VALUES # 
 # -------------------------------------------- # 
 
 def get_slope(Data0, starttime=[], endtime=[]):
@@ -243,15 +265,95 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	return [east_slope, north_slope, vert_slope];
 
 
+def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
+	# Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F; 
+	if starttime==[]:
+		starttime=Data0.dtarray[0];
+	if endtime==[]:
+		endtime=Data0.dtarray[-1];
+
+	# Defensive programming
+	if starttime<Data0.dtarray[0]:
+		starttime=Data0.dtarray[0];
+	if endtime>Data0.dtarray[-1]:
+		endttime=Data0.dtarray[-1];
+	if endtime<Data0.dtarray[0]:
+		print("Error: end time before start of array. Returning 0");
+		return [0,0,0];
+	if starttime>Data0.dtarray[-1]:
+		print("Error: start time after end of array. Returning 0");
+		return [0,0,0];
+
+	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
+	for i in range(len(Data0.dtarray)):
+		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.dE[i]):
+			mydtarray.append(Data0.dtarray[i]);
+			myeast.append(Data0.dE[i]);
+			mynorth.append(Data0.dN[i]);
+			myup.append(Data0.dU[i]);
+
+	decyear=get_float_times(mydtarray);
+	east_params=invert_linear_annual_semiannual(decyear,myeast);
+	north_params=invert_linear_annual_semiannual(decyear, mynorth);
+	vert_params=invert_linear_annual_semiannual(decyear, myup);
+	return [east_params, north_params, vert_params];
+
+
+
 def get_float_times(datetimes):
 	floats=[];
 	for item in datetimes:
 		temp=item.strftime("%Y %j");
 		temp=temp.split();
-		floats.append(float(temp[0])+float(temp[1])/366.0);
+		floats.append(float(temp[0])+float(temp[1])/365.24);
 	return floats;
 
 
+def invert_linear_annual_semiannual(decyear,data):
+	"""
+	Take a time series and fit a best-fitting linear least squares equation: 
+	GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F; 
+	Here we also solve for a linear trend as well. 
+	"""
+	design_matrix=[];
+	w = 2*np.pi / 1.0;  
+	for t in decyear:
+		design_matrix.append([np.cos(w*t), np.sin(w*t), np.cos(2*w*t), np.sin(2*w*t), t, 1]);
+	design_matrix= np.array(design_matrix);
+	params = np.dot(np.linalg.inv(np.dot(design_matrix.T, design_matrix)), np.dot(design_matrix.T, data));
+	return params;
+
+
+
+
+# -------------------------------------------- # 
+# FUNCTIONS THAT TAKE PARAMETERS
+# AND RETURN Y=F(X) ARRAYS
+# -------------------------------------------- # 
+
+
+def annual_semiannual_function(decyear, fit_params):
+	"""
+	Given curve parameters and a set of observation times, build the function y = f(x). 
+	Model consists of GPS_V = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F; 
+	"""
+	model_def = [];
+	w = 2*np.pi / 1.0; 
+	for t in decyear:
+		model_def.append( (fit_params[0]*np.cos(w*t)) + (fit_params[1]*np.sin(w*t)) + (fit_params[2]*np.cos(2*w*t)) + (fit_params[3]*np.sin(2*w*t)) + fit_params[4]*t + fit_params[5]);
+	return model_def;
+
+
+def annual_only_function(decyear, fit_params):
+	"""
+	Given curve parameters and a set of observation times, build the function y = f(x). 
+	Model consists of GPS_V = Acos(wt) + Bsin(wt); 
+	"""
+	model_def = [];
+	w = 2*np.pi / 1.0; 
+	for t in decyear:
+		model_def.append( (fit_params[0]*np.cos(w*t)) + (fit_params[1]*np.sin(w*t)) );
+	return model_def;
 
 
 

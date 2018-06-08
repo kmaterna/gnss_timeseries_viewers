@@ -12,27 +12,27 @@ import gps_ts_functions
 
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def','earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame']);
+Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def','earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','seasonals_remove']);
 
 
-def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0):
-	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove);
+def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0):
+	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove);
 	[myData]=gps_io_functions.read_pbo_pos_file(MyParams.filename);
 	[updatedData, detrended]=compute(myData,MyParams);
 	single_ts_plot(updatedData,detrended,MyParams);
 
 
 # -------------- CONFIGURE ------------ # 
-def configure(station, offsets_remove, earthquakes_remove, outliers_remove):
+def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove):
 	filename="../GPS_POS_DATA/PBO_stations/"+station+".pbo.final_nam08.pos"
 	earthquakes_dir="../GPS_POS_DATA/Event_Files/"
 	offsets_dir="../GPS_POS_DATA/Offsets/"
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
 	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, outliers_def=outliers_def, 
-		earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, offsets_remove=offsets_remove, offsets_dir=offsets_dir, reference_frame=reference_frame);
+		earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, offsets_remove=offsets_remove, offsets_dir=offsets_dir, reference_frame=reference_frame, seasonals_remove=seasonals_remove);
 	print("------- %s --------" %(station));
-	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d" % (station, earthquakes_remove, outliers_remove) );
+	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d" % (station, earthquakes_remove, outliers_remove, seasonals_remove) );
 	return MyParams;
 
 
@@ -45,6 +45,8 @@ def compute(myData, MyParams):
 		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir);	
 	if MyParams.outliers_remove==1:  # Second step: remove outliers
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
+	if MyParams.seasonals_remove==1:
+		newData=gps_ts_functions.remove_annual_semiannual(newData);
 	detrended=gps_ts_functions.detrend_data(newData);  # a ts object with detrended data
 	return [newData, detrended];
 
@@ -65,6 +67,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	ax1.plot_date(detrended.dtarray, detrended.dE,'.r');
 	ax1.set_ylabel('detrended (mm)')
 
+
 	axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN);
 	axarr[1].grid('on');
 	axarr[1].set_ylabel('north (mm)');
@@ -74,6 +77,13 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	ax2=axarr[1].twinx();
 	ax2.plot_date(detrended.dtarray, detrended.dN,'.r');
 	ax2.set_ylabel('detrended (mm)')
+	
+	# start = dt.datetime.strptime("20090910", "%Y%m%d");
+	# endtime = dt.datetime.strptime("20100410", "%Y%m%d");
+	# axarr[1].set_xlim([start, endtime]);
+	# axarr[1].set_ylim([0, 50]);
+
+
 	
 	axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU);	
 	axarr[2].grid('on');
