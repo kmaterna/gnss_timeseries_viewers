@@ -95,8 +95,12 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	ax3.plot_date(detrended.dtarray, detrended.dU,'.r');
 	ax3.set_ylabel('detrended (mm)')
 
-	if MyParams.earthquakes_remove==1:
+	if MyParams.earthquakes_remove==1 and MyParams.seasonals_remove==0:
 		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq.jpg");
+	elif MyParams.earthquakes_remove==1 and MyParams.seasonals_remove==1:
+		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq_seasons.jpg");
+	elif MyParams.earthquakes_remove==0 and MyParams.seasonals_remove==1:
+		plt.savefig("single_plots/"+ts_obj.name+"_ts_noseasons.jpg");
 	else:
 		plt.savefig("single_plots/"+ts_obj.name+"_ts.jpg");
 	return;

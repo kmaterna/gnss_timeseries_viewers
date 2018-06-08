@@ -200,9 +200,9 @@ def remove_nans(Data0):
 def remove_annual_semiannual(Data0):
 	decyear=get_float_times(Data0.dtarray);
 	[east_params,north_params,up_params]=get_linear_annual_semiannual(Data0);
-	east_function = annual_semiannual_function(decyear, east_params);
-	north_function = annual_semiannual_function(decyear, north_params);
-	up_function = annual_semiannual_function(decyear, up_params);
+	east_function = annual_semiannual_only_function(decyear, east_params);
+	north_function = annual_semiannual_only_function(decyear, north_params);
+	up_function = annual_semiannual_only_function(decyear, up_params);
 
 	temp_east=[]; temp_north=[]; temp_up=[];
 	for i in range(len(decyear)):
@@ -332,15 +332,15 @@ def invert_linear_annual_semiannual(decyear,data):
 # -------------------------------------------- # 
 
 
-def annual_semiannual_function(decyear, fit_params):
+def annual_semiannual_only_function(decyear, fit_params):
 	"""
 	Given curve parameters and a set of observation times, build the function y = f(x). 
-	Model consists of GPS_V = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F; 
+	Model consists of GPS_V = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt);
 	"""
 	model_def = [];
 	w = 2*np.pi / 1.0; 
 	for t in decyear:
-		model_def.append( (fit_params[0]*np.cos(w*t)) + (fit_params[1]*np.sin(w*t)) + (fit_params[2]*np.cos(2*w*t)) + (fit_params[3]*np.sin(2*w*t)) + fit_params[4]*t + fit_params[5]);
+		model_def.append( (fit_params[0]*np.cos(w*t)) + (fit_params[1]*np.sin(w*t)) + (fit_params[2]*np.cos(2*w*t)) + (fit_params[3]*np.sin(2*w*t)) );
 	return model_def;
 
 
