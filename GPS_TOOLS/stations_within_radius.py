@@ -7,18 +7,19 @@ import gps_io_functions
 
 # Reference: Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']);
 
-def get_stations_within_radius(center, radius, coord_box):
-	[input_file, center, radius, num_years, max_sigma] = configure(center, radius);
+def get_stations_within_radius(center, radius, coord_box=[]):
+	[input_file, center, radius, num_years, max_sigma, coord_box] = configure(center, radius, coord_box);
 	myVelfield = inputs(input_file, num_years, max_sigma, coord_box);
 	close_stations, rad_distance = compute(myVelfield, center, radius);	
 	return close_stations, rad_distance;
 
-def configure(center, radius):
+def configure(center, radius, coord_box):
 	input_file="../GPS_POS_DATA/PBO_Velocity_Files/NAM08_pbovelfile_feb2018.txt";
 	num_years=3.0;
 	max_sigma=2.0;
-	# coord_box=[-126, -120, 36.0, 43]; # Northern California
-	return [input_file, center, radius, num_years, max_sigma];
+	if coord_box==[]:
+		coord_box=[-126, -120, 36.0, 43]; # Northern California
+	return [input_file, center, radius, num_years, max_sigma, coord_box];
 
 
 def inputs(input_file, num_years, max_sigma, coord_box):

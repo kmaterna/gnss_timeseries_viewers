@@ -26,7 +26,7 @@ def driver():
 	[sorted_objects, noeq_objects, sorted_distances, east_slope_obj] = compute(dataobj_list, distances, earthquakes_dir, offsets_dir, EQtime);
 	
 	output_full_ts(sorted_objects, sorted_distances, EQtime, "detrended", east_slope_obj);
-	output_full_ts(noeq_objects, sorted_distances, EQtime, "noeq", east_slope_obj);
+	output_full_ts(noeq_objects, sorted_distances, EQtime, "noeq_noseasons", east_slope_obj);
 	return;
 
 
@@ -62,13 +62,14 @@ def compute(dataobj_list, distances, earthquakes_dir, offsets_dir, EQtime):
 		newobj=gps_ts_functions.detrend_data(sorted_objects[i]);
 		detrended_objects.append(newobj);
 
-	# No earthquakes objects
+	# Objects with no earthquakes or seasonals
 	noeq_objects = [];
 	east_slope_obj=[];
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes
 		newobj=gps_ts_functions.remove_offsets(sorted_objects[i],offsets_dir);
 		newobj=gps_ts_functions.remove_earthquakes(newobj,earthquakes_dir);
+		newobj=gps_ts_functions.remove_annual_semiannual(newobj);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
 		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,endtime=EQtime);

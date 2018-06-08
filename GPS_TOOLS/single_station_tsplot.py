@@ -98,7 +98,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	if MyParams.earthquakes_remove==1 and MyParams.seasonals_remove==0:
 		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq.jpg");
 	elif MyParams.earthquakes_remove==1 and MyParams.seasonals_remove==1:
-		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq_seasons.jpg");
+		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq_noseasons.jpg");
 	elif MyParams.earthquakes_remove==0 and MyParams.seasonals_remove==1:
 		plt.savefig("single_plots/"+ts_obj.name+"_ts_noseasons.jpg");
 	else:
