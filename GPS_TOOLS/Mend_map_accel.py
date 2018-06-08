@@ -52,14 +52,14 @@ def driver(EQcoords=[-125.134, 40.829], outfile_name='accel_map.ps'):
 
 
 def configure(EQcoords, outfile_name):
-	# EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
-	EQtime  = dt.datetime.strptime("20100110", "%Y%m%d");
+	EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
+	# EQtime  = dt.datetime.strptime("20100110", "%Y%m%d");
 	earthquakes_dir = earthquakes_dir="../GPS_POS_DATA/Event_Files/";
 	offsets_dir = "../GPS_POS_DATA/Offsets/";
 	radius=450;  # km. 
 	pre_event_duration = 3; # years
 	post_event_duration = 3; # years
-	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.5, EQcoords[1]+2.5];
+	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
 	filenames=[];
 	for station in stations:
@@ -87,17 +87,22 @@ def compute(dataobj_list, distances, earthquakes_dir, offsets_dir, EQtime, pre_e
 		# Remove the earthquakes
 		newobj=gps_ts_functions.remove_offsets(sorted_objects[i],offsets_dir);
 		newobj=gps_ts_functions.remove_earthquakes(newobj,earthquakes_dir);
+		newobj=gps_ts_functions.remove_annual_semiannual(newobj);
 		noeq_objects.append(newobj);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
 		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,starttime=EQtime-dt.timedelta(days=pre_event_duration*365),endtime=EQtime);
 		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(newobj,starttime=EQtime,endtime=EQtime+dt.timedelta(days=post_event_duration*365));
-		east_slope_after=np.round(east_slope_after,decimals=1);
-		east_slope_before=np.round(east_slope_before,decimals=1);
-		east_slope_obj.append([east_slope_before, east_slope_after]);
-		north_slope_after=np.round(north_slope_after,decimals=1);
-		north_slope_before=np.round(north_slope_before,decimals=1);
-		north_slope_obj.append([north_slope_before, north_slope_after]);
+		if east_slope_before+east_slope_after+north_slope_before+north_slope_after+vert_slope_before+vert_slope_after==np.nan:
+			east_slobe_obj.append(0);
+			north_slope_obj.append(0);
+		else:
+			east_slope_after=np.round(east_slope_after,decimals=1);
+			east_slope_before=np.round(east_slope_before,decimals=1);
+			east_slope_obj.append([east_slope_before, east_slope_after]);
+			north_slope_after=np.round(north_slope_after,decimals=1);
+			north_slope_before=np.round(north_slope_before,decimals=1);
+			north_slope_obj.append([north_slope_before, north_slope_after]);
 	return [noeq_objects, east_slope_obj, north_slope_obj];
 
 

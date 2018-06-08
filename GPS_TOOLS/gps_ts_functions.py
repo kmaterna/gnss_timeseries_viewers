@@ -240,11 +240,11 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	if endtime>Data0.dtarray[-1]:
 		endttime=Data0.dtarray[-1];
 	if endtime<Data0.dtarray[0]:
-		print("Error: end time before start of array. Returning 0");
-		return [0,0,0];
+		print("Error: end time before start of array. Returning Nan");
+		return [np.nan,np.nan,np.nan];
 	if starttime>Data0.dtarray[-1]:
-		print("Error: start time after end of array. Returning 0");
-		return [0,0,0];
+		print("Error: start time after end of array. Returning Nan");
+		return [np.nan,np.nan,np.nan];
 
 
 	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
@@ -254,6 +254,10 @@ def get_slope(Data0, starttime=[], endtime=[]):
 			myeast.append(Data0.dE[i]);
 			mynorth.append(Data0.dN[i]);
 			myup.append(Data0.dU[i]);
+
+	if len(mydtarray)<365:
+		print("Error: using less than one year of data to estimate parameters. Returning 0");
+		return [np.nan,np.nan,np.nan];
 
 	decyear=get_float_times(mydtarray);
 	east_coef=np.polyfit(decyear,myeast,1);
@@ -291,6 +295,10 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
 			myeast.append(Data0.dE[i]);
 			mynorth.append(Data0.dN[i]);
 			myup.append(Data0.dU[i]);
+
+	if len(mydtarray)<365:
+		print("Error: using less than one year of data to estimate parameters. Returning 0");
+		return [0,0,0];
 
 	decyear=get_float_times(mydtarray);
 	east_params=invert_linear_annual_semiannual(decyear,myeast);

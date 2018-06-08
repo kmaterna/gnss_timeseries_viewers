@@ -18,6 +18,7 @@ Parameters = collections.namedtuple("Parameters",['station','filename','outliers
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0):
 	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove);
 	[myData]=gps_io_functions.read_pbo_pos_file(MyParams.filename);
+	print(myData.coords);
 	[updatedData, detrended]=compute(myData,MyParams);
 	single_ts_plot(updatedData,detrended,MyParams);
 
@@ -78,13 +79,6 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	ax2.plot_date(detrended.dtarray, detrended.dN,'.r');
 	ax2.set_ylabel('detrended (mm)')
 	
-	# start = dt.datetime.strptime("20090910", "%Y%m%d");
-	# endtime = dt.datetime.strptime("20100410", "%Y%m%d");
-	# axarr[1].set_xlim([start, endtime]);
-	# axarr[1].set_ylim([0, 50]);
-
-
-	
 	axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU);	
 	axarr[2].grid('on');
 	axarr[2].set_ylabel('vertical (mm)')
@@ -94,6 +88,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	ax3=axarr[2].twinx();
 	ax3.plot_date(detrended.dtarray, detrended.dU,'.r');
 	ax3.set_ylabel('detrended (mm)')
+	axarr[2].set_xlim([min(ts_obj.dtarray), max(ts_obj.dtarray)]);
 
 	if MyParams.earthquakes_remove==1 and MyParams.seasonals_remove==0:
 		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq.jpg");
