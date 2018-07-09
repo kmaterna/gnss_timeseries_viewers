@@ -93,6 +93,8 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 	plt.figure();
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True)
 	label_date="20181031";
+	EQ1time = dt.datetime.strptime("20050615", "%Y%m%d");
+	EQ2time = dt.datetime.strptime("20100110", "%Y%m%d");
 	offset=0;
 	spacing=10;
 	closest_station=70;  # km from event
@@ -107,12 +109,14 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = axarr[0].plot_date(dataobj_list[i].dtarray,edata,marker='+',markersize=2,color=line_color);
 		axarr[0].text(dt.datetime.strptime(label_date, "%Y%m%d"),offset,dataobj_list[i].name,fontsize=9,color=line_color);
-		axarr[0].text(dt.datetime.strptime("20050301", "%Y%m%d"),offset,east_slope_obj[i][0],fontsize=9,color='k');
-		axarr[0].text(EQtime,offset,east_slope_obj[i][1],fontsize=9,color='k');
+		# axarr[0].text(dt.datetime.strptime("20050301", "%Y%m%d"),offset,east_slope_obj[i][0],fontsize=9,color='k');
+		# axarr[0].text(EQtime,offset,east_slope_obj[i][1],fontsize=9,color='k');
 	axarr[0].set_xlim(dt.datetime.strptime("20050101", "%Y%m%d"),dt.datetime.strptime("20181020", "%Y%m%d"));
 	axarr[0].set_ylim([-10,offset+10])
 	bottom,top=axarr[0].get_ylim();
 	axarr[0].plot_date([EQtime, EQtime], [bottom, top], '--k');	
+	axarr[0].plot_date([EQ1time, EQ1time], [bottom, top], '--k');	
+	axarr[0].plot_date([EQ2time, EQ2time], [bottom, top], '--k');	
 	axarr[0].set_ylabel("East (mm)");
 	axarr[0].set_title("Detrended GPS Time Series")
 	axarr[0].grid('on')
@@ -128,6 +132,8 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 	axarr[1].set_ylim([-10,offset+10])
 	bottom,top=axarr[1].get_ylim();
 	axarr[1].plot_date([EQtime, EQtime], [bottom, top], '--k');	
+	axarr[1].plot_date([EQ1time, EQ1time], [bottom, top], '--k');	
+	axarr[1].plot_date([EQ2time, EQ2time], [bottom, top], '--k');		
 	axarr[1].set_ylabel("North (mm)");
 	axarr[1].set_title("Detrended GPS Time Series")
 	axarr[1].grid('on')

@@ -1,6 +1,7 @@
 #! /bin/bash
 # Plot GPS Vectors and Topography and Faults at Mendocino Triple Junction. 
-# This is hard-coded to plot the coseismic offsets of three offshore earthquakes. 
+# This will plot the coseismic offsets of three offshore earthquakes. 
+# It will also plot aftershock catalogs from 4 months after each mainshock. 
 # July 2018 Kathryn Materna
 
 
@@ -39,15 +40,36 @@ gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.08/0.68/10 -Wblack 
 -126.05 41.8 10 0 0.0 0.0 0.0 10mm
 EOF
 
+# Focal mechanisms from somewhere? 
+# Depths here from Double Differenced Catalog where possible, NCSN for 2014 event. 
+# 2014 event
 gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output
 -125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
 EOF
+gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5u -C -K -O <<EOF>> $output
+-125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 16km
+EOF
+
+# 2010 event
 gmt psmeca -R$range -J$projection -Gblue1 -Sm0.5 -C -K -O <<EOF>> $output
 -124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 2010M6.5
 EOF
+gmt psmeca -R$range -J$projection -Gblue1 -Sm0.5u -C -K -O <<EOF>> $output
+-124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 21km
+EOF
+
+# 2005 event
 gmt psmeca -R$range -J$projection -Gforestgreen -Sm0.5 -C -K -O <<EOF>> $output
 -126.42 41.15 20 0.01 -0.83 0.81 0.03 0.11 0.05 27 0 0 2005M7.0
 EOF
+gmt psmeca -R$range -J$projection -Gforestgreen -Sm0.5u -C -K -O <<EOF>> $output
+-126.42 41.15 20 0.01 -0.83 0.81 0.03 0.11 0.05 27 0 0 5km
+EOF
+
+# AFTERSHOCKS
+awk {'print $4, $3, $6 '} ../../GPS_TOOLS/Mapping_Resources/20050615_aftershocks_ncsn.txt | gmt psxy -R$range -J$projection -Sc0.05 -Gforestgreen -K -O >> $output
+awk {'print $4, $3, $6 '} ../../GPS_TOOLS/Mapping_Resources/20100110_aftershocks_ncsn.txt | gmt psxy -R$range -J$projection -Sc0.05 -Gblue1 -K -O >> $output
+awk {'print $4, $3, $6 '} ../../GPS_TOOLS/Mapping_Resources/20140310_aftershocks_ncsn.txt | gmt psxy -R$range -J$projection -Sc0.05 -Gdarkmagenta -K -O >> $output
 
 rm gmt.history
 

@@ -1,0 +1,34 @@
+#! /bin/bash
+# Plot GPS Vectors and Topography and Faults at Mendocino Triple Junction. 
+# 07/26/2016 Kathryn Materna
+
+
+lonW=$1
+lonE=$2
+latS=$3
+latN=$4
+output=$5
+range="$lonW/$lonE/$latS/$latN"
+projection="m1.5i"
+
+# # Insert a horizontal scale bar and title
+gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:." ": -Dh -K -P > $output # the title goes here
+
+# Add PBO velocity vectors
+gmt psvelo accelerations.txt -R$range -J$projection -O -P -K -Se0.30/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output
+
+# Put dots for every station
+awk '{print $1, $2}' accelerations.txt | gmt psxy -R$range -J$projection -Sc0.10 -Gred -O -K >> $output
+
+gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.30/0.68/10 -Wblack -K -O <<EOF >> $output
+-124.85 41.8 1 0 0.0 0.0 0.0 1mm/yr
+EOF
+
+gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output
+-125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
+-124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 2010M6.5
+EOF
+
+
+rm gmt.history
+
