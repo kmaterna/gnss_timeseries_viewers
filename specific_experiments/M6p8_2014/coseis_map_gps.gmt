@@ -1,0 +1,53 @@
+#! /bin/bash
+# Plot GPS Vectors and Topography and Faults at Mendocino Triple Junction. 
+# This is hard-coded to plot the coseismic offsets of three offshore earthquakes. 
+# July 2018 Kathryn Materna
+
+
+lonW=$1
+lonE=$2
+latS=$3
+latN=$4
+event_file1=$5
+event_file2=$6
+event_file3=$7
+range="$lonW/$lonE/$latS/$latN"
+projection="m1.5i"
+output="coseis.ps"
+
+# # Insert a horizontal scale bar and title
+gmt pscoast -R$range -J$projection -Lf-126.3/39.65/39.65/50+jt -Slightblue -N2 -B1.0:." ": -Dh -K -P > $output # the title goes here
+
+# Add PBO velocity vectors: Comment these out if you want only 1 or 2 earthquakes. 
+awk {'print $1, $2, $3, $4, $5, $6, $7'} $7 | gmt psvelo -R$range -J$projection -O -P -K -Se0.08/0.68/8 -A+e+gdarkmagenta+pthickest -Wthick,darkmagenta >> $output
+awk {'print $1, $2, $3, $4, $5, $6, $7'} $6 | gmt psvelo -R$range -J$projection -O -P -K -Se0.08/0.68/8 -A+e+gblue1+pthickest -Wthick,blue1 >> $output
+awk {'print $1, $2, $3, $4, $5, $6, $7'} $5 | gmt psvelo -R$range -J$projection -O -P -K -Se0.08/0.68/8 -A+e+gforestgreen+pthickest -Wthick,forestgreen >> $output
+
+# Playing tricks to get the station labels correctly placed, written in black. 
+awk {'print $1, $2, 0*$3+0.01, 0*$4, 0*$5, 0*$6, 0*$7, $8'} $7 | gmt psvelo -R$range -J$projection -O -P -K -Se0.08/0.0/8 -A+e+black+pthickest -Wthick,black >> $output
+
+# Add the plate boundaries
+gmt psxy ../../GPS_TOOLS/Mapping_Resources/transform.gmt -R$range -J$projection -Wthin,red -Sf5/1+r+s+o3.25 -K -O >> $output
+gmt psxy ../../GPS_TOOLS/Mapping_Resources/ridge.gmt -R$range -J$projection -Wthin,red -K -O -Sf5/1+r+s+o1.3 >> $output
+gmt psxy ../../GPS_TOOLS/Mapping_Resources/trench.gmt -R$range -J$projection -Wthin,red -Sf1.5/0.6+r+t+o1.8 -K -O >> $output
+
+# plot plate motion vectors
+# gmt psvelo ../../GPS_TOOLS/Mapping_Resources/Plate_arrows.txt -R$range -J$projection -A18p+e+gred+p2.7p -Se0.08/0.68/0 -Wred -K -O >> $output
+
+# Velocity scale
+gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.08/0.68/10 -Wblack -K -O <<EOF >> $output
+-126.05 41.8 10 0 0.0 0.0 0.0 10mm
+EOF
+
+gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output
+-125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
+EOF
+gmt psmeca -R$range -J$projection -Gblue1 -Sm0.5 -C -K -O <<EOF>> $output
+-124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 2010M6.5
+EOF
+gmt psmeca -R$range -J$projection -Gforestgreen -Sm0.5 -C -K -O <<EOF>> $output
+-126.42 41.15 20 0.01 -0.83 0.81 0.03 0.11 0.05 27 0 0 2005M7.0
+EOF
+
+rm gmt.history
+
