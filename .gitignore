@@ -1,6 +1,9 @@
 Reports/*
+specific_experiments/waveforms/*
+specific_experiments/Coulomb_stresses/*
 specific_experiments/block_models/*
 Literature_Review/*
+INSAR_Results/*
 GPS_POS_DATA/*
 GPS_TOOLS/Mapping_Resources/*
 2D_Strain/Delaunay/earlier_work/*

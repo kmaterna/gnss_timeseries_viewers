@@ -55,7 +55,7 @@ def configure(EQcoords, outfile_name):
 	# EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
 	EQtime  = dt.datetime.strptime("20100110", "%Y%m%d");
 	EQtime  = dt.datetime.strptime("20100111", "%Y%m%d");
-	earthquakes_dir = earthquakes_dir="../GPS_POS_DATA/Event_Files/";
+	earthquakes_dir = "../GPS_POS_DATA/Event_Files/";
 	offsets_dir = "../GPS_POS_DATA/Offsets/";
 	radius=450;  # km. 
 	pre_event_duration = 3; # years

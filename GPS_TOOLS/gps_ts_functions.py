@@ -146,7 +146,23 @@ def remove_outliers(Data0, outliers_def):
 			newdU.append(np.nan);
 	
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+	return newData;
 
+
+def impose_time_limits(Data0, starttime, endtime):
+	# Starttime and endtime are datetime objects
+	newdtarray=[]; newdN=[]; newdE=[]; newdU=[]; newSn=[]; newSe=[]; newSu=[];
+	for i in range(len(Data0.dN)):
+		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime:
+			newdtarray.append(Data0.dtarray[i]);
+			newdE.append(Data0.dE[i]);
+			newdN.append(Data0.dN[i]);
+			newdU.append(Data0.dU[i]);
+			newSe.append(Data0.Se[i]);
+			newSn.append(Data0.Sn[i]);
+			newSu.append(Data0.Su[i]);
+	
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
 	return newData;
 
 
