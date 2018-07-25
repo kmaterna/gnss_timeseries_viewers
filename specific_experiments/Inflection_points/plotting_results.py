@@ -1,4 +1,7 @@
-# Plotting the results
+# Plotting the time of inflection
+# Reads the output file from driver.py
+# Makes a basemap image. 
+# Colorscale is by days since earthquake
 
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -10,7 +13,7 @@ import gps_ts_functions
 
 
 
-def onset_time_map(lon,lat,data,earthquake_time,description,savename):
+def onset_time_map(name,lon,lat,data,earthquake_time,description,savename):
 	
 	# Earthquake time
 	eq_dt = dt.datetime.strptime(earthquake_time,"%Y%m%d");
@@ -28,9 +31,9 @@ def onset_time_map(lon,lat,data,earthquake_time,description,savename):
 
 	# draw coastlines, country boundaries, fill continents.
 	map=Basemap(projection='merc',llcrnrlat=39,llcrnrlon=-125, urcrnrlat=41.5, urcrnrlon=-122,resolution='i');
-	map.drawcoastlines(linewidth=0.25);
-	map.fillcontinents(color='coral',lake_color='white')
-	map.drawmapboundary(fill_color='white')
+	map.drawcoastlines(linewidth=0.5);
+	map.fillcontinents(color='tan',lake_color='azure')
+	map.drawmapboundary(fill_color='azure')
 	# draw lat/lon grid lines every degree.
 	map.drawmeridians(np.arange(-128,-120,1),labels=[1,0,0,1])
 	map.drawparallels(np.arange(38,43,1),labels=[1,0,0,1])
@@ -40,6 +43,8 @@ def onset_time_map(lon,lat,data,earthquake_time,description,savename):
 		x,y=map(lon[i],lat[i])
 		line_color=custom_cmap.to_rgba(data_points[i]);
 		map.plot(x,y,marker='D',color=line_color);
+		x,y=map(lon[i]+0.04, lat[i]-0.03);
+		plt.text(x,y,name[i], fontsize=8);
 
 	# Plot legend with earthquake time. 
 	x,y=map(-124.8, 41.45)
@@ -52,7 +57,7 @@ def onset_time_map(lon,lat,data,earthquake_time,description,savename):
 	cb = plt.colorbar(custom_cmap);
 	cb.set_label('Inflection Time (Days since earthquake)');
 
-	plt.title('GPS Onset Time, '+description)
+	plt.title('GPS Onset Time near '+earthquake_time+', '+description)
 	plt.savefig(savename);
 	plt.close();
 	return;
@@ -61,23 +66,24 @@ def onset_time_map(lon,lat,data,earthquake_time,description,savename):
 
 #  THE MAIN PROGRAM
 
-earthquake_time="20140314"
-# earthquake_time="20161208"
+# earthquake_time="20140314"
+earthquake_time="20161208"
 infile="Outputs/"+earthquake_time+"_inflections.txt"
-lat=[]; lon=[]; east=[]; north=[]; up=[];
+name=[]; lat=[]; lon=[]; east=[]; north=[]; up=[];
 
 ifile=open(infile,'r');
 for line in ifile:
 	temp=line.split();
-	lon.append(float(temp[0]));
-	lat.append(float(temp[1]));
-	east.append(dt.datetime.strptime(temp[2],"%Y-%m-%d"));
-	north.append(dt.datetime.strptime(temp[4],"%Y-%m-%d"));
-	up.append(dt.datetime.strptime(temp[6],"%Y-%m-%d"));
+	name.append(temp[0]);
+	lon.append(float(temp[1]));
+	lat.append(float(temp[2]));
+	east.append(dt.datetime.strptime(temp[3],"%Y-%m-%d"));
+	north.append(dt.datetime.strptime(temp[5],"%Y-%m-%d"));
+	up.append(dt.datetime.strptime(temp[7],"%Y-%m-%d"));
 
 
-onset_time_map(lon,lat,east,earthquake_time,'East',earthquake_time+'_east.png');
-onset_time_map(lon,lat,north,earthquake_time,'North',earthquake_time+'_north.png');
-onset_time_map(lon,lat,up,earthquake_time,'Up',earthquake_time+'_up.png');
+onset_time_map(name,lon,lat,east,earthquake_time,'East',earthquake_time+'_east.png');
+onset_time_map(name,lon,lat,north,earthquake_time,'North',earthquake_time+'_north.png');
+onset_time_map(name,lon,lat,up,earthquake_time,'Up',earthquake_time+'_up.png');
 
 
