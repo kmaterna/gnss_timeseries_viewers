@@ -118,24 +118,10 @@ def inflection_with_butterworth(x, y, N, Wn, avoid_edges):
 	# Return a datetime object where the slope is minimized
 	slope=abs(yfirst);
 	turning_point=np.argmin(slope,0);
-	turning_dt=float_to_dt(xfirst[turning_point]); 
+	turning_dt=gps_ts_functions.float_to_dt(xfirst[turning_point]); 
 
 	return [y_filtered, turning_dt];
 
-
-
-def float_to_dt(float_time):
-	# Example: 2014.194 --> datetime object
-	fractional_year=str(1+int(365.24*(float_time-np.floor(float_time))));  # something like 004, 204, 321, etc. 
-	if len(fractional_year)==1:
-		fractional_year='00'+fractional_year;
-	elif len(fractional_year)==2:
-		fractional_year='0'+fractional_year;
-	if fractional_year=='367' or fractional_year=='366':
-		fractional_year='365';
-	myyear = str(int(np.floor(float_time)));  # something like 2014
-	my_date = dt.datetime.strptime(myyear+fractional_year,"%Y%j");
-	return my_date;
 
 
 
@@ -183,8 +169,8 @@ def output_plots(noeq_obj, short_obj, east_filt, north_filt, vert_filt, east_inf
 # --------- DRIVER ---------- # 
 if __name__=="__main__":
 	
-	eqtime="20140314"; # 2014 M6.8 Earthquake
-	# eqtime="20161208"; # # 2016 M6.6 Earthquake
+	# eqtime="20140314"; # 2014 M6.8 Earthquake
+	eqtime="20161208"; # # 2016 M6.6 Earthquake
 	# eqtime="20100110"; # # 2010 M6.5 Earthquake
 	driver(eqtime);
 

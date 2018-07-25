@@ -333,6 +333,21 @@ def get_float_times(datetimes):
 	return floats;
 
 
+def float_to_dt(float_time):
+	# Example: 2014.194 --> datetime object
+	fractional_year=str(1+int(365.24*(float_time-np.floor(float_time))));  # something like 004, 204, 321, etc. 
+	if len(fractional_year)==1:
+		fractional_year='00'+fractional_year;
+	elif len(fractional_year)==2:
+		fractional_year='0'+fractional_year;
+	if fractional_year=='367' or fractional_year=='366':
+		fractional_year='365';
+	myyear = str(int(np.floor(float_time)));  # something like 2014
+	my_date = dt.datetime.strptime(myyear+fractional_year,"%Y%j");
+	return my_date;
+
+
+
 def invert_linear_annual_semiannual(decyear,data):
 	"""
 	Take a time series and fit a best-fitting linear least squares equation: 
