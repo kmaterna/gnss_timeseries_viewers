@@ -332,6 +332,12 @@ def get_float_times(datetimes):
 		floats.append(float(temp[0])+float(temp[1])/365.24);
 	return floats;
 
+def get_float_time(datetime_item):
+	temp=datetime_item.strftime("%Y %j");
+	temp=temp.split();
+	floats = (float(temp[0])+float(temp[1])/365.24);
+	return floats;
+
 
 def float_to_dt(float_time):
 	# Example: 2014.194 --> datetime object

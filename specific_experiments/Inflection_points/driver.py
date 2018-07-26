@@ -18,10 +18,10 @@ import stations_within_radius
 
 
 def driver(eqtime):
-	[stations, filenames, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn, avoid_edges, map_coords, outfile_dir] = configure(eqtime);
+	[stations, filenames, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn, map_coords, outfile_dir] = configure(eqtime);
 	dataobj_list = inputs(stations, filenames);
-	[noeq_objects, short_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, avoid_edges_array]=compute(dataobj_list, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn, avoid_edges);
-	outputs(noeq_objects, short_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, avoid_edges_array, outfile_dir);
+	[noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change]=compute(dataobj_list, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn);
+	outputs(noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change, start_time, end_time, outfile_dir);
 	return;
 
 
@@ -33,17 +33,14 @@ def configure(eqtime):
 	offsets_dir = "../../GPS_POS_DATA/Offsets/";
 
 	if eqtime[0:4]=='2016' or eqtime[0:4]=='2017':
-		pre_event_duration = 1.5; # years
-		post_event_duration = 1.5; # years
-		avoid_edges=400;  # When you find inflection points, you avoid each end of the filter (days)
-		print('searching %f years, centered on the event time' % ( ( (pre_event_duration+post_event_duration)*365.25-2*avoid_edges)/365.24 ) );
+		pre_event_duration = 0.5; # years
+		post_event_duration = 0.5; # years
+		print('searching %f years, centered on the event time' % ( pre_event_duration+post_event_duration ) );
 		# Presently, I'm searching 1 year surrounding the event time for an inflection point. 	
 	else:
-		pre_event_duration = 2.5; # years
-		post_event_duration = 2.5; # years
-		avoid_edges=730;  # When you find inflection points, you avoid each end of the filter (days)
-		print('searching %f years, centered on the event time' % ( ( (pre_event_duration+post_event_duration)*365.25-2*avoid_edges)/365.24 ) );
-		# Presently, I'm searching 1 year surrounding the event time for an inflection point. 	
+		pre_event_duration = 0.5; # years
+		post_event_duration = 0.5; # years
+		print('searching %f years, centered on the event time' % ( pre_event_duration+post_event_duration) );
 
 	start_time=EQtime-dt.timedelta(days=pre_event_duration*365);
 	end_time=EQtime+dt.timedelta(days=post_event_duration*365);
@@ -59,7 +56,7 @@ def configure(eqtime):
 	for station in stations:
 		filenames.append("../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos");
 	outfile_dir='Outputs/'+str(eqtime);
-	return [stations, filenames, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn, avoid_edges, map_coords, outfile_dir];
+	return [stations, filenames, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn, map_coords, outfile_dir];
 
 
 # ------------ INPUTS  ------------- # 
@@ -72,11 +69,12 @@ def inputs(stations, filenames):
 
 
 # ------------ COMPUTE ------------- # 
-def compute(dataobj_list, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn, avoid_edges):
+def compute(dataobj_list, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn):
 	
 	# Initialize output objects
-	noeq_objects = []; short_objects = [];
-	east_filt=[]; north_filt=[]; vert_filt=[]; east_inf_time=[]; north_inf_time=[]; vert_inf_time=[]; avoid_edges_array=[];
+	noeq_objects = []; 
+	east_filt=[]; north_filt=[]; vert_filt=[]; east_inf_time=[]; north_inf_time=[]; vert_inf_time=[];
+	east_change=[]; north_change=[]; vert_change=[];
 
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes
@@ -85,16 +83,13 @@ def compute(dataobj_list, earthquakes_dir, offsets_dir, start_time, end_time, N,
 		newobj=gps_ts_functions.remove_outliers(newobj,15);  # 15mm horizontal outliers
 		newobj=gps_ts_functions.detrend_data(newobj);
 		newobj=gps_ts_functions.remove_annual_semiannual(newobj);
-		short_obj = gps_ts_functions.impose_time_limits(newobj,start_time,end_time);
-		# short_obj = newobj;
 		noeq_objects.append(newobj);
-		short_objects.append(short_obj);
 
 		# Get the inflection points in the timeseries
-		float_dtarray = gps_ts_functions.get_float_times(short_obj.dtarray);
-		[east_filtered, e_inflection_time, avoid_edges_new]=inflection_with_butterworth(float_dtarray, short_obj.dE, N, Wn, avoid_edges);
-		[north_filtered, n_inflection_time, avoid_edges_new]=inflection_with_butterworth(float_dtarray, short_obj.dN, N, Wn, avoid_edges);
-		[vert_filtered, v_inflection_time, avoid_edges_new]=inflection_with_butterworth(float_dtarray, short_obj.dU, N, Wn, avoid_edges);
+		float_dtarray = gps_ts_functions.get_float_times(newobj.dtarray);
+		[east_filtered, e_inflection_time, echange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dE, N, Wn, start_time, end_time);
+		[north_filtered, n_inflection_time, nchange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dN, N, Wn, start_time, end_time);
+		[vert_filtered, v_inflection_time, vchange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dU, N, Wn, start_time, end_time);
 
 		east_filt.append(east_filtered);
 		north_filt.append(north_filtered);
@@ -102,77 +97,90 @@ def compute(dataobj_list, earthquakes_dir, offsets_dir, start_time, end_time, N,
 		east_inf_time.append(e_inflection_time);
 		north_inf_time.append(n_inflection_time);
 		vert_inf_time.append(v_inflection_time);
-		avoid_edges_array.append(avoid_edges_new);
+		east_change.append(echange);
+		north_change.append(nchange);
+		vert_change.append(vchange);
 
-	return [noeq_objects, short_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, avoid_edges_array];
+	return [noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change];
 
 
 # The butterworth filter. 
-def inflection_with_butterworth(x, y, N, Wn, avoid_edges):
+def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time, end_time):
 
 	# Build the butterworth filter
 	[b,a]=butter(N, Wn, btype='low',output='ba');
 	y_filtered = filtfilt(b, a, y);
 
-	# Avoid the edges of the filter. 
-	if len(y_filtered)<2*avoid_edges:
-		print("Error: avoid_edges is too long. Cutting to a smaller value. ");
-		avoid_edges=int((len(y_filtered)-365)/2);
+	# Making a shortened filtered time series (for only the region of the earthquake)
+	new_filtered=[]; new_float_time=[];
+	for i in range(len(dtarray)):
+		if dtarray[i]>=start_time and dtarray[i]<=end_time:
+			new_float_time.append(x[i]);
+			new_filtered.append(y_filtered[i]);			
 
 	# Find the inflection points. yfirst and xfirst are derivatives. 
-	dy=np.diff(y_filtered[avoid_edges:-avoid_edges],1)
-	dx=np.diff(x[avoid_edges:-avoid_edges],1)
+	dy=np.diff(new_filtered[:],1)
+	dx=np.diff(new_float_time[:],1)
 	yfirst=np.divide(dy,dx);
-	xfirst=np.add(x[avoid_edges:-avoid_edges-1],x[avoid_edges+1:-avoid_edges])*0.5;
+	xfirst=np.add(new_float_time[:-1],new_float_time[1:])*0.5;
 
 	# Return a datetime object where the slope is minimized
 	slope=abs(yfirst);
 	turning_point=np.argmin(slope,0);
-	turning_dt=gps_ts_functions.float_to_dt(xfirst[turning_point]); 
+	turning_dt=gps_ts_functions.float_to_dt(xfirst[turning_point]);
 
-	return [y_filtered, turning_dt, avoid_edges];
+	# Get the slope of a time series, but make sure that you can use at least a month on either side. 
+	if turning_point<30 or turning_point>len(yfirst)-30:
+		slope_change=0;
+	else:
+		slope_pre=get_ts_slope(new_float_time, new_filtered, 0, turning_point);  # the slope before
+		slope_post=get_ts_slope(new_float_time, new_filtered, turning_point, -1);  # the slope after 
+		slope_change = slope_post - slope_pre;
 
+	return [y_filtered, turning_dt, slope_change];
+
+def get_ts_slope(float_time, ts_data, start_index, end_index):
+	slope_coef=np.polyfit(float_time[start_index:end_index],ts_data[start_index:end_index],1);
+	slope=slope_coef[0];
+	return slope;
 
 
 
 
 # ------------ OUTPUTS ------------- # 
-def outputs(noeq_objects, short_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, avoid_edges_array, outfile_dir):
+def outputs(noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change, start_time, end_time, outfile_dir):
 	ofile=open(outfile_dir+'_inflections.txt','w');
 	for i in range(len(noeq_objects)):
-		ofile.write("%s %f %f %s %s %s\n" % (noeq_objects[i].name, noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_inf_time[i], north_inf_time[i], vert_inf_time[i]) );
+		ofile.write("%s %f %f %s %s %s %.3f %.3f %.3f \n" % (noeq_objects[i].name, noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_inf_time[i], north_inf_time[i], vert_inf_time[i], east_change[i], north_change[i], vert_change[i]) );
 	ofile.close();
 	for i in range(len(noeq_objects)):
-		output_plots(noeq_objects[i], short_objects[i], east_filt[i], north_filt[i], vert_filt[i], east_inf_time[i], north_inf_time[i], vert_inf_time[i], avoid_edges_array[i], outfile_dir);
+		output_plots(noeq_objects[i], east_filt[i], north_filt[i], vert_filt[i], east_inf_time[i], north_inf_time[i], vert_inf_time[i], start_time, end_time, outfile_dir);
 	return;
 
-def output_plots(noeq_obj, short_obj, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, avoid_edges, outfile_dir):
+def output_plots(noeq_obj, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, start_time, end_time, outfile_dir):
 
 	plt.figure();
 	[f,axarr]=plt.subplots(3,1,sharex=True);
 	axarr[0].plot_date(noeq_obj.dtarray,noeq_obj.dE);
-	axarr[0].plot_date(short_obj.dtarray,short_obj.dE,'r.');
-	axarr[0].plot_date(short_obj.dtarray,east_filt,'g',linewidth=3);
+	axarr[0].plot_date(noeq_obj.dtarray,east_filt,'g',linewidth=3);
 	axarr[0].plot_date([east_inf_time, east_inf_time],[-5,5],'--k');
-	axarr[0].plot_date([short_obj.dtarray[avoid_edges], short_obj.dtarray[avoid_edges]],[-5,5],'k');
-	axarr[0].plot_date([short_obj.dtarray[-avoid_edges], short_obj.dtarray[-avoid_edges]],[-5,5],'k');
+	axarr[0].plot_date([start_time, start_time],[-5,5],'k');
+	axarr[0].plot_date([end_time, end_time],[-5,5],'k');
 	axarr[0].set_ylabel('East (mm)');
 	axarr[0].set_title(noeq_obj.name);
 	
 	axarr[1].plot_date(noeq_obj.dtarray,noeq_obj.dN);
-	axarr[1].plot_date(short_obj.dtarray,short_obj.dN,'r.');
-	axarr[1].plot_date(short_obj.dtarray,north_filt,'g',linewidth=3);
+	axarr[1].plot_date(noeq_obj.dtarray,north_filt,'g',linewidth=3);
 	axarr[1].plot_date([north_inf_time, north_inf_time],[-5,5],'--k');
-	axarr[1].plot_date([short_obj.dtarray[avoid_edges], short_obj.dtarray[avoid_edges]],[-5,5],'k');
-	axarr[1].plot_date([short_obj.dtarray[-avoid_edges], short_obj.dtarray[-avoid_edges]],[-5,5],'k');	
+	axarr[1].plot_date([start_time, start_time],[-5,5],'k');
+	axarr[1].plot_date([end_time, end_time],[-5,5],'k');
 	axarr[1].set_ylabel('North (mm)');
 	
 	axarr[2].plot_date(noeq_obj.dtarray,noeq_obj.dU);
-	axarr[2].plot_date(short_obj.dtarray,short_obj.dU,'r.');
-	axarr[2].plot_date(short_obj.dtarray,vert_filt,'g',linewidth=3);
+	axarr[2].plot_date(noeq_obj.dtarray,vert_filt,'g',linewidth=3);
 	axarr[2].plot_date([vert_inf_time, vert_inf_time],[-15,15],'--k');
-	axarr[2].plot_date([short_obj.dtarray[avoid_edges], short_obj.dtarray[avoid_edges]],[-15,15],'k');
-	axarr[2].plot_date([short_obj.dtarray[-avoid_edges], short_obj.dtarray[-avoid_edges]],[-15,15],'k');	
+	axarr[2].plot_date([start_time, start_time],[-15,15],'k');
+	axarr[2].plot_date([end_time, end_time],[-15,15],'k');
 	axarr[2].set_ylabel('Up (mm)');
 	axarr[2].set_xlabel('Time');
 	
@@ -185,8 +193,8 @@ def output_plots(noeq_obj, short_obj, east_filt, north_filt, vert_filt, east_inf
 # --------- DRIVER ---------- # 
 if __name__=="__main__":
 	
-	eqtime="20140314"; # 2014 M6.8 Earthquake
-	# eqtime="20161208"; # # 2016 M6.6 Earthquake
+	# eqtime="20140314"; # 2014 M6.8 Earthquake
+	eqtime="20161208"; # # 2016 M6.6 Earthquake
 	# eqtime="20100110"; # # 2010 M6.5 Earthquake
 	driver(eqtime);
 

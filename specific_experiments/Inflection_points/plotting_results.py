@@ -13,7 +13,7 @@ import gps_ts_functions
 
 
 
-def onset_time_map(name,lon,lat,data,earthquake_time,description,savename):
+def onset_time_map(name,lon,lat,data,size,earthquake_time,description,savename):
 	
 	# Earthquake time
 	eq_dt = dt.datetime.strptime(earthquake_time,"%Y%m%d");
@@ -38,11 +38,16 @@ def onset_time_map(name,lon,lat,data,earthquake_time,description,savename):
 	map.drawmeridians(np.arange(-128,-120,1),labels=[1,0,0,1])
 	map.drawparallels(np.arange(38,43,1),labels=[1,0,0,1])
 
+	if description=='Up':
+		multiplier=2;
+	else:
+		multiplier=10;
+
 	# Plot dots
 	for i in range(len(lon)):
 		x,y=map(lon[i],lat[i])
 		line_color=custom_cmap.to_rgba(data_points[i]);
-		map.plot(x,y,marker='D',color=line_color);
+		map.plot(x,y,marker='D',color=line_color,markersize=multiplier*size[i]);
 		x,y=map(lon[i]+0.04, lat[i]-0.03);
 		plt.text(x,y,name[i], fontsize=8);
 
@@ -66,10 +71,10 @@ def onset_time_map(name,lon,lat,data,earthquake_time,description,savename):
 
 #  THE MAIN PROGRAM
 
-# earthquake_time="20140314"
-earthquake_time="20161208"
+earthquake_time="20140314"
+# earthquake_time="20161208"
 infile="Outputs/"+earthquake_time+"_inflections.txt"
-name=[]; lat=[]; lon=[]; east=[]; north=[]; up=[];
+name=[]; lat=[]; lon=[]; east=[]; north=[]; up=[]; east_change=[]; north_change=[]; up_change=[];
 
 ifile=open(infile,'r');
 for line in ifile:
@@ -80,10 +85,12 @@ for line in ifile:
 	east.append(dt.datetime.strptime(temp[3],"%Y-%m-%d"));
 	north.append(dt.datetime.strptime(temp[5],"%Y-%m-%d"));
 	up.append(dt.datetime.strptime(temp[7],"%Y-%m-%d"));
+	east_change.append(abs(float(temp[9])));
+	north_change.append(abs(float(temp[10])));
+	up_change.append(abs(float(temp[11])));
 
-
-onset_time_map(name,lon,lat,east,earthquake_time,'East',earthquake_time+'_east.png');
-onset_time_map(name,lon,lat,north,earthquake_time,'North',earthquake_time+'_north.png');
-onset_time_map(name,lon,lat,up,earthquake_time,'Up',earthquake_time+'_up.png');
+onset_time_map(name,lon,lat,east,east_change,earthquake_time,'East',earthquake_time+'_east.png');
+onset_time_map(name,lon,lat,north,north_change,earthquake_time,'North',earthquake_time+'_north.png');
+onset_time_map(name,lon,lat,up,up_change,earthquake_time,'Up',earthquake_time+'_up.png');
 
 
