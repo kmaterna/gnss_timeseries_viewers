@@ -12,11 +12,12 @@ import gps_ts_functions
 
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def','earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','seasonals_remove']);
+Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def',
+	'earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','seasonals_remove', 'fit_type','fit_table']);
 
 
-def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0):
-	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove);
+def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, fit_type='fit'):
+	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, fit_type);
 	[myData]=gps_io_functions.read_pbo_pos_file(MyParams.filename);
 	print(myData.coords);
 	[updatedData, detrended]=compute(myData,MyParams);
@@ -24,14 +25,16 @@ def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, ou
 
 
 # -------------- CONFIGURE ------------ # 
-def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove):
+def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, fit_type):
 	filename="../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos"
 	earthquakes_dir="../GPS_POS_DATA/PBO_Event_Files/"
 	offsets_dir="../GPS_POS_DATA/Offsets/"
+	fit_table="../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
 	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, outliers_def=outliers_def, 
-		earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, offsets_remove=offsets_remove, offsets_dir=offsets_dir, reference_frame=reference_frame, seasonals_remove=seasonals_remove);
+		earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, offsets_remove=offsets_remove, offsets_dir=offsets_dir, 
+		reference_frame=reference_frame, seasonals_remove=seasonals_remove, fit_type=fit_type, fit_table=fit_table);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d" % (station, earthquakes_remove, outliers_remove, seasonals_remove) );
 	return MyParams;
@@ -42,13 +45,20 @@ def compute(myData, MyParams):
 	newData=myData; 
 	if MyParams.offsets_remove==1:  # First step: remove offsets and earthquakes
 		newData=gps_ts_functions.remove_offsets(newData, MyParams.offsets_dir);
-	if MyParams.earthquakes_remove==1:
-		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir);	
 	if MyParams.outliers_remove==1:  # Second step: remove outliers
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
-	if MyParams.seasonals_remove==1:
-		newData=gps_ts_functions.remove_annual_semiannual(newData);
-	detrended=gps_ts_functions.detrend_data(newData);  # a ts object with detrended data
+	if MyParams.earthquakes_remove==1:
+		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir);		
+	
+	if MyParams.fit_type=='fit':
+		if MyParams.seasonals_remove==1:
+			newData=gps_ts_functions.remove_annual_semiannual_by_fitting(newData);	
+		detrended=gps_ts_functions.detrend_data_by_fitting(newData);  # a ts object with detrended data
+
+	if MyParams.fit_type=='noel':
+		if MyParams.seasonals_remove==1:
+			newData=gps_ts_functions.remove_annual_semiannual_by_table(newData, MyParams.fit_table);	
+		detrended=gps_ts_functions.detrend_data_by_table(newData,MyParams.fit_table);  # a ts object with detrended data
 	return [newData, detrended];
 
 
@@ -91,13 +101,15 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	ax3.set_ylabel('detrended (mm)')
 	axarr[2].set_xlim([min(ts_obj.dtarray), max(ts_obj.dtarray)]);
 
-	if MyParams.earthquakes_remove==1 and MyParams.seasonals_remove==0:
-		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq.jpg",dpi=dpival);
-	elif MyParams.earthquakes_remove==1 and MyParams.seasonals_remove==1:
-		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq_noseasons.jpg",dpi=dpival);
-	elif MyParams.earthquakes_remove==0 and MyParams.seasonals_remove==1:
-		plt.savefig("single_plots/"+ts_obj.name+"_ts_noseasons.jpg",dpi=dpival);
-	else:
-		plt.savefig("single_plots/"+ts_obj.name+"_ts.jpg",dpi=dpival);
+	savename="single_plots/"+ts_obj.name;
+	if MyParams.earthquakes_remove:
+		savename=savename+"_noeq";
+	if MyParams.seasonals_remove:
+		savename=savename+"_noseasons";
+	if MyParams.fit_type=="noel":
+		savename=savename+"_noelfits"
+	savename=savename+"_ts.jpg"
+
+	plt.savefig(savename,dpi=dpival);
 	return;
 

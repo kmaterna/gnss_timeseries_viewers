@@ -114,3 +114,18 @@ def read_pbo_pos_file(filename):
 	return [myData];
 
 
+
+def read_noel_file(filename):
+	
+	names = np.genfromtxt(filename,skip_header=8, usecols=(0), dtype=('unicode') );
+	E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2 = np.genfromtxt(filename,skip_header=8, usecols=(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), unpack=True );
+
+	return [names, E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2];
+
+
+def read_noel_file_station(filename,station):
+	names = np.genfromtxt(filename,skip_header=8, usecols=(0), dtype=('unicode') );
+	E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2 = np.genfromtxt(filename,skip_header=8, usecols=(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), unpack=True );
+	i=np.where(names==station)[0][0];
+	return [E[i], N[i], U[i], Ea1[i], Na1[i], Ua1[i], Ea2[i], Na2[i], Ua2[i], Es1[i], Ns1[i], Us1[i], Es2[i], Ns2[i], Us2[i]];
+
