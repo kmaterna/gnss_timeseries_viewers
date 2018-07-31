@@ -25,8 +25,8 @@ def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, ou
 
 # -------------- CONFIGURE ------------ # 
 def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove):
-	filename="../GPS_POS_DATA/PBO_stations/"+station+".pbo.final_nam08.pos"
-	earthquakes_dir="../GPS_POS_DATA/Event_Files/"
+	filename="../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos"
+	earthquakes_dir="../GPS_POS_DATA/PBO_Event_Files/"
 	offsets_dir="../GPS_POS_DATA/Offsets/"
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
@@ -55,48 +55,49 @@ def compute(myData, MyParams):
 # -------------- OUTPUTS ------------ # 
 def single_ts_plot(ts_obj, detrended, MyParams):
 	# The major figure
-	plt.figure();
+	dpival=500;
+	plt.figure(figsize=(15,15),dpi=dpival);
 	[f,axarr]=plt.subplots(3,1,sharex=True);
 	axarr[0].set_title(ts_obj.name);
-	axarr[0].plot_date(ts_obj.dtarray, ts_obj.dE);
-	axarr[0].grid('on');
+	axarr[0].plot_date(ts_obj.dtarray, ts_obj.dE,color='blue',markeredgecolor='black',markersize=1.5);
+	axarr[0].grid(linestyle='--',linewidth=0.5);
 	axarr[0].set_ylabel('east (mm)');
 	bottom,top=axarr[0].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
-		axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k');
+		axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=1);
 	ax1=axarr[0].twinx();
-	ax1.plot_date(detrended.dtarray, detrended.dE,'.r');
+	ax1.plot_date(detrended.dtarray, detrended.dE,marker='D',markersize=1.0,color='red');
 	ax1.set_ylabel('detrended (mm)')
 
 
-	axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN);
-	axarr[1].grid('on');
+	axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN,color='blue',markeredgecolor='black',markersize=1.5);
+	axarr[1].grid(linestyle='--',linewidth=0.5);
 	axarr[1].set_ylabel('north (mm)');
 	bottom,top=axarr[1].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
-		axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k');	
+		axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=1);	
 	ax2=axarr[1].twinx();
-	ax2.plot_date(detrended.dtarray, detrended.dN,'.r');
+	ax2.plot_date(detrended.dtarray, detrended.dN,marker='D',markersize=1.0,color='red');
 	ax2.set_ylabel('detrended (mm)')
 	
-	axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU);	
-	axarr[2].grid('on');
+	axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU,color='blue',markeredgecolor='black',markersize=1.5);
+	axarr[2].grid(linestyle='--',linewidth=0.5);
 	axarr[2].set_ylabel('vertical (mm)')
 	bottom,top=axarr[2].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
-		axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k');	
+		axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=1);	
 	ax3=axarr[2].twinx();
-	ax3.plot_date(detrended.dtarray, detrended.dU,'.r');
+	ax3.plot_date(detrended.dtarray, detrended.dU,marker='D',markersize=1.0,color='red');
 	ax3.set_ylabel('detrended (mm)')
 	axarr[2].set_xlim([min(ts_obj.dtarray), max(ts_obj.dtarray)]);
 
 	if MyParams.earthquakes_remove==1 and MyParams.seasonals_remove==0:
-		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq.jpg");
+		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq.jpg",dpi=dpival);
 	elif MyParams.earthquakes_remove==1 and MyParams.seasonals_remove==1:
-		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq_noseasons.jpg");
+		plt.savefig("single_plots/"+ts_obj.name+"_ts_noeq_noseasons.jpg",dpi=dpival);
 	elif MyParams.earthquakes_remove==0 and MyParams.seasonals_remove==1:
-		plt.savefig("single_plots/"+ts_obj.name+"_ts_noseasons.jpg");
+		plt.savefig("single_plots/"+ts_obj.name+"_ts_noseasons.jpg",dpi=dpival);
 	else:
-		plt.savefig("single_plots/"+ts_obj.name+"_ts.jpg");
+		plt.savefig("single_plots/"+ts_obj.name+"_ts.jpg",dpi=dpival);
 	return;
 

@@ -32,6 +32,7 @@ def remove_offsets(Data0, offsets_dir):
 	if len(table)==0:
 		return Data0;
 
+	table=table.decode(); # needed when switching to python 3
 	table_rows=table.split('\n');
 	for line in table_rows:
 		if "EQ" in line:
@@ -86,6 +87,7 @@ def remove_earthquakes(Data0, earthquakes_dir):
 		return Data0;
 
 	print("Earthquake table for station %s:" % (station) );
+	table=table.decode(); # needed when switching to python 3
 	print(table);
 	e_offset=[]; n_offset=[]; u_offset=[]; evdt=[];
 	tablesplit=table.split('\n');
