@@ -68,7 +68,6 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	dpival=500;
 	plt.figure(figsize=(15,15),dpi=dpival);
 	[f,axarr]=plt.subplots(3,1,sharex=True);
-	axarr[0].set_title(ts_obj.name);
 	axarr[0].plot_date(ts_obj.dtarray, ts_obj.dE,color='blue',markeredgecolor='black',markersize=1.5);
 	axarr[0].grid(linestyle='--',linewidth=0.5);
 	axarr[0].set_ylabel('east (mm)');
@@ -102,13 +101,19 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	axarr[2].set_xlim([min(ts_obj.dtarray), max(ts_obj.dtarray)]);
 
 	savename="single_plots/"+ts_obj.name;
+	title_name=ts_obj.name;
 	if MyParams.earthquakes_remove:
 		savename=savename+"_noeq";
+		title_name=title_name+', without earthquakes'
 	if MyParams.seasonals_remove:
 		savename=savename+"_noseasons";
+		title_name=title_name+', without seasonals'
 	if MyParams.fit_type=="noel":
 		savename=savename+"_noelfits"
+		title_name=title_name+' by interSSE data'
 	savename=savename+"_ts.jpg"
+
+	axarr[0].set_title(title_name);
 
 	plt.savefig(savename,dpi=dpival);
 	return;

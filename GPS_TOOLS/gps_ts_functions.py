@@ -201,7 +201,7 @@ def remove_nans(Data0):
 
 # The two drivers
 def detrend_data_by_fitting(Data0):
-	[Data0,east_coef,north_coef,vert_coef]=detrend_data_step_1(Data0);
+	[east_coef,north_coef,vert_coef]=detrend_data_step_1(Data0);
 	newData=detrend_data_step_2(Data0,east_coef,north_coef,vert_coef);
 	return newData;
 
@@ -215,20 +215,26 @@ def detrend_data_step_1(Data0):
 	idx=np.isnan(Data0.dE);
 	if(sum(idx))>0:  # if there are nans, please pull them out. 
 		Data0=remove_nans(Data0);
-	
 	decyear=get_float_times(Data0.dtarray);
+
 	east_coef=np.polyfit(decyear,Data0.dE,1);  # 1 for degree 1 polynomial.
 	north_coef=np.polyfit(decyear,Data0.dN,1);
-	vert_coef=np.polyfit(decyear,Data0.dU,1);	
-	return [Data0,decyear,east_coef[0],north_coef[0],vert_coef[0]];
+	vert_coef=np.polyfit(decyear,Data0.dU,1);
+	return [east_coef[0],north_coef[0],vert_coef[0]];
 
 def detrend_data_step_2(Data0,east_coef,north_coef,vert_coef):
 	east_detrended=[]; north_detrended=[]; vert_detrended=[];
+	idx=np.isnan(Data0.dE);
+	if(sum(idx))>0:  # if there are nans, please pull them out. 
+		Data0=remove_nans(Data0);	
 	decyear=get_float_times(Data0.dtarray);
 	for i in range(len(decyear)):
 		east_detrended.append(Data0.dE[i]-(east_coef*decyear[i]) );
 		north_detrended.append(Data0.dN[i]-(north_coef*decyear[i]) );
 		vert_detrended.append(Data0.dU[i]-(vert_coef*decyear[i]) );
+	east_detrended=east_detrended-east_detrended[0];
+	north_detrended=north_detrended-north_detrended[0];
+	vert_detrended=vert_detrended-vert_detrended[0];
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);	
 	return newData;
 
