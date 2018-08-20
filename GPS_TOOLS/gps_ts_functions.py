@@ -10,6 +10,7 @@ import datetime as dt
 import sys
 from scipy import signal
 import gps_io_functions
+import notch_filter
 
 # A line for referencing the namedtuple definition. 
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
@@ -192,6 +193,7 @@ def remove_nans(Data0):
 
 
 # Make a detrended/modeled version of this time series. 
+# There are options for seasonal removal. 
 def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table):
 	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
 	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 
@@ -215,9 +217,17 @@ def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table):
 			east_params[1:-1]=0; north_params[1:-1]=0; up_params[1:-1]=0;  # do not model the seasonal terms
 		trend_out=detrend_data_by_value(Data, east_params, north_params, up_params);	
 	
+	# Here we use notch filters 
+	if seasonals_type=='notch':
+		trend_out=remove_seasonals_by_notch(Data);
+
 	# Here we are doing something else. 
 	if seasonals_type=='stl':
-		print("No seasonal removal coded yet");
+		print("STL not suppotrted yet");
+
+	if seasonals_type=='grace':
+		print("GRACE-based seasonals not supported yet");
+
 
 	return [Data, trend_out];
 
@@ -249,11 +259,56 @@ def detrend_data_by_value(Data0,east_params,north_params,vert_params):
 	east_detrended=east_detrended-east_detrended[0];
 	north_detrended=north_detrended-north_detrended[0];
 	vert_detrended=vert_detrended-vert_detrended[0];
-	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);	
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
 	return newData;
 
 
+def remove_seasonals_by_notch(Data):
+	# Using Sang-Ho's notch filter script to remove power at frequencies corresponding to 1 year and 6 months. 
 
+	Data=remove_nans(Data);
+
+	# Parameters
+	# %   x       1-D signal array
+	# %   fs      sampling frequency, Hz
+	# %   fn      notch frequency, Hz
+	# %   Bn      notch bandwidth, Hz
+	dt = 1.0;
+	fs = 1/dt;
+	fn1 = 1.0/365.24;  # fn = notch frequency, annual
+	Bn1 = 0.1*fn1;
+	fn2 = 2.0/365.24;  # fn = notch frequency, semiannual
+	Bn2 = 0.1*fn2;  # a choice: 10% seems to work well.
+
+	decyear=get_float_times(Data.dtarray);
+	dE_detrended=np.zeros(np.shape(Data.dE)); dN_detrended=np.zeros(np.shape(Data.dN)); dU_detrended=np.zeros(np.shape(Data.dU));
+
+	# East
+	x = Data.dE;
+	dE_filt = notch_filter.notchfilt(x,fs,fn1,Bn1,filtfiltopt=True);
+	dE_filt = notch_filter.notchfilt(dE_filt,fs,fn2,Bn2,filtfiltopt=True);
+	east_coef=np.polyfit(decyear,dE_filt,1)[0];
+	for i in range(len(dE_filt)):
+		dE_detrended[i]=dE_filt[i]-east_coef*decyear[i] - (dE_filt[0]-east_coef*decyear[0]);
+
+	# North
+	x = Data.dN;
+	dN_filt = notch_filter.notchfilt(x,fs,fn1,Bn1,filtfiltopt=True);
+	dN_filt = notch_filter.notchfilt(dN_filt,fs,fn2,Bn2,filtfiltopt=True);
+	north_coef=np.polyfit(decyear,dN_filt,1)[0];
+	for i in range(len(dN_filt)):
+		dN_detrended[i]=(dN_filt[i]-north_coef*decyear[i]) - (dN_filt[0]-north_coef*decyear[0]);
+
+	# Up
+	x = Data.dU;
+	dU_filt = notch_filter.notchfilt(x,fs,fn1,Bn1,filtfiltopt=True);
+	dU_filt = notch_filter.notchfilt(dU_filt,fs,fn2,Bn2,filtfiltopt=True);
+	vert_coef=np.polyfit(decyear,dU_filt,1)[0];
+	for i in range(len(dU_filt)):
+		dU_detrended[i]=(dU_filt[i]-vert_coef*decyear[i]) - (dU_filt[0]-vert_coef*decyear[0]);
+
+	newData=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+	return newData;
 
 
 

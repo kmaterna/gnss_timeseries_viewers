@@ -15,6 +15,13 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def',
 	'earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','seasonals_remove', 'seasonals_type','fit_table']);
 
+# Types of seasonal options: 
+#    fit: fits seasonals and linear trend by least squares inversion.
+#   noel: uses noel's fits of inter-SSE velocities and seasonal terms.
+#  notch: removes the 1-year and 6-month components by notch filter.
+#  grace: uses GRACE loading model interpolated between monthly points where available, and linear inversion where not available.
+#    stl: not supported yet. 
+
 
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, seasonals_type='fit'):
 	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type);
@@ -103,6 +110,9 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	if MyParams.seasonals_type=="noel":
 		savename=savename+"_noelfits"
 		title_name=title_name+' by interSSE data'
+	if MyParams.seasonals_type=="notch":
+		savename=savename+"_notch"
+		title_name=title_name+' by notch filter'	
 	savename=savename+"_ts.jpg"
 
 	axarr[0].set_title(title_name);
