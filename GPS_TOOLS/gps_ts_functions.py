@@ -191,104 +191,70 @@ def remove_nans(Data0):
 	return newData;
 
 
-# Goal: 
-# eventually a single "model timeseries" function that solves for a linear, annual, semiannual function. 
-# For now: 
-# Separate the function that solves a linear, annual, semiannual
-# from the function that subtracts the linear, annual, semiannual. 
+# Make a detrended/modeled version of this time series. 
+def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table):
+	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
+	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 
+	# Fit params definition: slope, a2(cos), a1(sin), s2, s1. 
+
+	east_params=[0,0,0,0,0];  north_params=[0,0,0,0,0]; up_params=[0,0,0,0,0];
+
+	# Here we are asking to invert the data for linear and seasonal components
+	if seasonals_type=='fit':
+		if seasonals_remove==1:
+			[east_params, north_params, up_params]=get_linear_annual_semiannual(Data);
+		else:
+			[east_vel, north_vel, up_vel]=get_slope(Data);
+			east_params[0]=east_vel; north_params[0]=north_vel; up_params[0]=up_vel;
+		trend_out=detrend_data_by_value(Data, east_params, north_params, up_params);
+
+	# Here we are removing Noel's fits to the data
+	if seasonals_type=='noel':
+		[east_params, north_params, up_params] = look_up_seasonal_coefs(Data, fit_table);
+		if seasonals_remove==0:
+			east_params[1:-1]=0; north_params[1:-1]=0; up_params[1:-1]=0;  # do not model the seasonal terms
+		trend_out=detrend_data_by_value(Data, east_params, north_params, up_params);	
+	
+	# Here we are doing something else. 
+	if seasonals_type=='stl':
+		print("No seasonal removal coded yet");
+
+	return [Data, trend_out];
 
 
 
-# The two drivers
-def detrend_data_by_fitting(Data0):
-	[east_coef,north_coef,vert_coef]=detrend_data_step_1(Data0);
-	newData=detrend_data_step_2(Data0,east_coef,north_coef,vert_coef);
-	return newData;
+def look_up_seasonal_coefs(Data0,table_file):
+	[E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2]=gps_io_functions.read_noel_file_station(table_file,Data0.name);
+	east_params=[E, Ea2, Ea1, Es2, Es1];
+	north_params=[N, Na2, Na1, Ns2, Na2];
+	up_params=[U, Ua2, Ua1, Us2, Us1];
+	return [east_params, north_params, up_params];
 
-def detrend_data_by_table(Data0,table_file):
-	[east_coef,north_coef,vert_coef]=look_up_detrending_coefs(Data0,table_file);
-	newData=detrend_data_step_2(Data0,east_coef,north_coef,vert_coef);
-	return newData;
 
-def detrend_data_step_1(Data0):
-	# Operates with nans. 
+def detrend_data_by_value(Data0,east_params,north_params,vert_params):
+	east_detrended=[]; north_detrended=[]; vert_detrended=[];
 	idx=np.isnan(Data0.dE);
 	if(sum(idx))>0:  # if there are nans, please pull them out. 
 		Data0=remove_nans(Data0);
 	decyear=get_float_times(Data0.dtarray);
+	
+	east_model=linear_annual_semiannual_function(decyear,east_params);
+	north_model=linear_annual_semiannual_function(decyear,north_params);
+	vert_model=linear_annual_semiannual_function(decyear,vert_params);
 
-	east_coef=np.polyfit(decyear,Data0.dE,1);  # 1 for degree 1 polynomial.
-	north_coef=np.polyfit(decyear,Data0.dN,1);
-	vert_coef=np.polyfit(decyear,Data0.dU,1);
-	return [east_coef[0],north_coef[0],vert_coef[0]];
-
-def detrend_data_step_2(Data0,east_coef,north_coef,vert_coef):
-	east_detrended=[]; north_detrended=[]; vert_detrended=[];
-	idx=np.isnan(Data0.dE);
-	if(sum(idx))>0:  # if there are nans, please pull them out. 
-		Data0=remove_nans(Data0);	
-	decyear=get_float_times(Data0.dtarray);
 	for i in range(len(decyear)):
-		east_detrended.append(Data0.dE[i]-(east_coef*decyear[i]) );
-		north_detrended.append(Data0.dN[i]-(north_coef*decyear[i]) );
-		vert_detrended.append(Data0.dU[i]-(vert_coef*decyear[i]) );
+		east_detrended.append(Data0.dE[i]-(east_model[i]) );
+		north_detrended.append(Data0.dN[i]-(north_model[i]) );
+		vert_detrended.append(Data0.dU[i]-(vert_model[i]) );
 	east_detrended=east_detrended-east_detrended[0];
 	north_detrended=north_detrended-north_detrended[0];
 	vert_detrended=vert_detrended-vert_detrended[0];
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);	
 	return newData;
 
-def look_up_detrending_coefs(Data0,table_file):
-	[E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2]=gps_io_functions.read_noel_file_station(table_file,Data0.name);
-	return [E,N,U];
 
 
 
-
-# The two drivers
-def remove_annual_semiannual_by_fitting(Data0):
-	[east_params, north_params, up_params]=fit_annual_semiannual_step_1(Data0);
-	newData=fit_annual_semiannual_step_2(Data0,east_params, north_params, up_params);
-	return newData;
-
-def remove_annual_semiannual_by_table(Data0,table_file):
-	[east_params, north_params, up_params]=look_up_seasonal_coefs(Data0,table_file);
-	newData=fit_annual_semiannual_step_2(Data0,east_params, north_params, up_params);
-	return newData;
-
-
-def fit_annual_semiannual_step_1(Data0):
-	# Operates with nans. 
-	idx=np.isnan(Data0.dE);
-	if(sum(idx))>0:  # if there are nans, please pull them out. 
-		Data0=remove_nans(Data0);
-	decyear=get_float_times(Data0.dtarray);
-	[east_params,north_params,up_params]=get_linear_annual_semiannual(Data0);
-	return [east_params, north_params, up_params];
-
-def fit_annual_semiannual_step_2(Data0, east_params, north_params, up_params):
-	temp_east=[]; temp_north=[]; temp_up=[];
-	decyear=get_float_times(Data0.dtarray);
-	
-	# Format here: GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F; 
-	east_function = annual_semiannual_only_function(decyear, east_params);
-	north_function = annual_semiannual_only_function(decyear, north_params);
-	up_function = annual_semiannual_only_function(decyear, up_params);	
-
-	for i in range(len(decyear)):
-		temp_east.append(Data0.dE[i]-east_function[i]);
-		temp_north.append(Data0.dN[i]-north_function[i]);
-		temp_up.append(Data0.dU[i]-up_function[i]);
-	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=temp_north, dE=temp_east, dU=temp_up, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes); 	
-	return newData;
-
-
-def look_up_seasonal_coefs(Data0,table_file):
-	[E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2]=gps_io_functions.read_noel_file_station(table_file,Data0.name);
-	east_params=[Ea2, Ea1, Es2, Es1];
-	north_params=[Na2, Na1, Ns2, Na2];
-	up_params=[Ua2, Ua1, Us2, Us1];
-	return [east_params, north_params, up_params];
 
 
 
@@ -326,7 +292,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 		print("Error: start time after end of array. Returning Nan");
 		return [np.nan,np.nan,np.nan];
 
-
+	# Cut to desired window, and remove nans
 	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
 	for i in range(len(Data0.dtarray)):
 		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.dE[i]):
@@ -339,6 +305,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 		print("Error: using less than one year of data to estimate parameters. Returning 0");
 		return [np.nan,np.nan,np.nan];
 
+	# doing the inversion here, since it's only one line.
 	decyear=get_float_times(mydtarray);
 	east_coef=np.polyfit(decyear,myeast,1);
 	north_coef=np.polyfit(decyear,mynorth,1);
@@ -347,6 +314,8 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	north_slope=north_coef[0];
 	vert_slope=vert_coef[0];
 	return [east_slope, north_slope, vert_slope];
+
+
 
 
 def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
@@ -368,6 +337,7 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
 		print("Error: start time after end of array. Returning 0");
 		return [0,0,0];
 
+	# Cut to desired time window, and remove nans.
 	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
 	for i in range(len(Data0.dtarray)):
 		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.dE[i]):
@@ -380,10 +350,17 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
 		print("Error: using less than one year of data to estimate parameters. Returning 0");
 		return [0,0,0];
 
-	decyear=get_float_times(mydtarray);
-	east_params=invert_linear_annual_semiannual(decyear,myeast);
-	north_params=invert_linear_annual_semiannual(decyear, mynorth);
-	vert_params=invert_linear_annual_semiannual(decyear, myup);
+	decyear=get_float_times(mydtarray);	
+	east_params_unordered=invert_linear_annual_semiannual(decyear,myeast);
+	north_params_unordered=invert_linear_annual_semiannual(decyear, mynorth);
+	vert_params_unordered=invert_linear_annual_semiannual(decyear, myup);
+
+	# The definition for returning parameters, consistent with Noel's reporting:
+	# slope, a2(cos), a1(sin), s2, s1. 
+	east_params=[east_params_unordered[4], east_params_unordered[0], east_params_unordered[1], east_params_unordered[2], east_params_unordered[3]];
+	north_params=[north_params_unordered[4], north_params_unordered[0], north_params_unordered[1], north_params_unordered[2], north_params_unordered[3]];
+	vert_params=[vert_params_unordered[4], vert_params_unordered[0], vert_params_unordered[1], vert_params_unordered[2], vert_params_unordered[3]];
+
 	return [east_params, north_params, vert_params];
 
 
@@ -400,8 +377,6 @@ def invert_linear_annual_semiannual(decyear,data):
 	design_matrix= np.array(design_matrix);
 	params = np.dot(np.linalg.inv(np.dot(design_matrix.T, design_matrix)), np.dot(design_matrix.T, data));
 	return params;
-
-
 
 
 def get_float_times(datetimes):
@@ -443,6 +418,18 @@ def float_to_dt(float_time):
 # FUNCTIONS THAT TAKE PARAMETERS
 # AND RETURN Y=F(X) ARRAYS
 # -------------------------------------------- # 
+
+
+def linear_annual_semiannual_function(decyear, fit_params):
+	"""
+	Given curve parameters and a set of observation times, build the function y = f(x). 
+	Model consists of GPS_V = E*t + Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt);
+	"""
+	model_def = [];
+	w = 2*np.pi / 1.0; 
+	for t in decyear:
+		model_def.append( fit_params[0]*t + (fit_params[1]*np.cos(w*t)) + (fit_params[2]*np.sin(w*t)) + (fit_params[3]*np.cos(2*w*t)) + (fit_params[4]*np.sin(2*w*t)) );
+	return model_def;
 
 
 def annual_semiannual_only_function(decyear, fit_params):

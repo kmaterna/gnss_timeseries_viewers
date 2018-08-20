@@ -13,11 +13,11 @@ import gps_ts_functions
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def',
-	'earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','seasonals_remove', 'fit_type','fit_table']);
+	'earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','seasonals_remove', 'seasonals_type','fit_table']);
 
 
-def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, fit_type='fit'):
-	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, fit_type);
+def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, seasonals_type='fit'):
+	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type);
 	[myData]=gps_io_functions.read_pbo_pos_file(MyParams.filename);
 	print(myData.coords);
 	[updatedData, detrended]=compute(myData,MyParams);
@@ -25,7 +25,7 @@ def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, ou
 
 
 # -------------- CONFIGURE ------------ # 
-def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, fit_type):
+def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type):
 	filename="../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos"
 	earthquakes_dir="../GPS_POS_DATA/PBO_Event_Files/"
 	offsets_dir="../GPS_POS_DATA/Offsets/"
@@ -34,7 +34,7 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seas
 	reference_frame    = 0;
 	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, outliers_def=outliers_def, 
 		earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, offsets_remove=offsets_remove, offsets_dir=offsets_dir, 
-		reference_frame=reference_frame, seasonals_remove=seasonals_remove, fit_type=fit_type, fit_table=fit_table);
+		reference_frame=reference_frame, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, fit_table=fit_table);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d" % (station, earthquakes_remove, outliers_remove, seasonals_remove) );
 	return MyParams;
@@ -48,18 +48,10 @@ def compute(myData, MyParams):
 	if MyParams.outliers_remove==1:  # Second step: remove outliers
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
 	if MyParams.earthquakes_remove==1:
-		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir);		
-	
-	if MyParams.fit_type=='fit':
-		if MyParams.seasonals_remove==1:
-			newData=gps_ts_functions.remove_annual_semiannual_by_fitting(newData);	
-		detrended=gps_ts_functions.detrend_data_by_fitting(newData);  # a ts object with detrended data
+		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir);	
 
-	if MyParams.fit_type=='noel':
-		if MyParams.seasonals_remove==1:
-			newData=gps_ts_functions.remove_annual_semiannual_by_table(newData, MyParams.fit_table);	
-		detrended=gps_ts_functions.detrend_data_by_table(newData,MyParams.fit_table);  # a ts object with detrended data
-	return [newData, detrended];
+	[trend_in, trend_out]=gps_ts_functions.make_detrended_option(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams.fit_table);
+	return [trend_in, trend_out];
 
 
 # -------------- OUTPUTS ------------ # 
@@ -108,7 +100,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	if MyParams.seasonals_remove:
 		savename=savename+"_noseasons";
 		title_name=title_name+', without seasonals'
-	if MyParams.fit_type=="noel":
+	if MyParams.seasonals_type=="noel":
 		savename=savename+"_noelfits"
 		title_name=title_name+' by interSSE data'
 	savename=savename+"_ts.jpg"
