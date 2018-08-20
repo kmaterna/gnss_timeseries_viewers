@@ -85,7 +85,7 @@ def single_ts_plot(ts_obj, lssq_fit, noel_fit, notch_filt, grace_filt, MyParams)
 	plt.text(labeldate,4*offset_val+text_val,'GRACE load model',fontsize=22,color='magenta');
 	plt.ylabel('detrended east (mm)',fontsize=22)
 	plt.gca().tick_params(labelsize=22);
-	title_name=ts_obj.name+" Seasonal Corrections";
+	title_name=ts_obj.name+" Seasonal Corrections - East";
 	plt.title(title_name,fontsize=24);
 	savename="single_plots/seasonal_"+ts_obj.name;
 	savename=savename+"_east.jpg"
@@ -105,7 +105,7 @@ def single_ts_plot(ts_obj, lssq_fit, noel_fit, notch_filt, grace_filt, MyParams)
 	plt.text(labeldate,4*offset_val+text_val,'GRACE load model',fontsize=22,color='magenta');
 	plt.ylabel('detrended north (mm)',fontsize=22)
 	plt.gca().tick_params(labelsize=22);
-	title_name=ts_obj.name+" Seasonal Corrections";
+	title_name=ts_obj.name+" Seasonal Corrections - North";
 	plt.title(title_name,fontsize=24);
 	savename="single_plots/seasonal_"+ts_obj.name;
 	savename=savename+"_north.jpg"
@@ -125,7 +125,7 @@ def single_ts_plot(ts_obj, lssq_fit, noel_fit, notch_filt, grace_filt, MyParams)
 	plt.text(labeldate,8*offset_val+text_val,'GRACE load model',fontsize=22,color='magenta');
 	plt.ylabel('detrended vertical (mm)',fontsize=22)
 	plt.gca().tick_params(labelsize=22);
-	title_name=ts_obj.name+" Seasonal Corrections";
+	title_name=ts_obj.name+" Seasonal Corrections - Vertical";
 	plt.title(title_name,fontsize=24);
 	savename="single_plots/seasonal_"+ts_obj.name;
 	savename=savename+"_vert.jpg"

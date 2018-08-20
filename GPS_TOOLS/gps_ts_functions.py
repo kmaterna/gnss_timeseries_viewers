@@ -11,6 +11,7 @@ import sys
 from scipy import signal
 import gps_io_functions
 import notch_filter
+import grace_ts_functions
 
 # A line for referencing the namedtuple definition. 
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
@@ -223,9 +224,7 @@ def make_detrended_option(Data, seasonals_remove, seasonals_type, MyParams):
 		trend_out=remove_seasonals_by_notch(Data);
 
 	if seasonals_type=='grace':
-		print("GRACE-based seasonals not supported yet");
-		# trend_out=remove_seasonals_by_GRACE(Data,MyParams.grace_dir);
-		trend_out=remove_seasonals_by_notch(Data);
+		trend_out=remove_seasonals_by_GRACE(Data,MyParams.grace_dir);
 
 	# Here we are doing something else. 
 	if seasonals_type=='stl':
@@ -268,6 +267,7 @@ def detrend_data_by_value(Data0,east_params,north_params,vert_params):
 
 def remove_seasonals_by_notch(Data):
 	# Using Sang-Ho's notch filter script to remove power at frequencies corresponding to 1 year and 6 months. 
+	# We are also removing a linear trend in this step. 
 
 	Data=remove_nans(Data);
 
@@ -314,13 +314,58 @@ def remove_seasonals_by_notch(Data):
 	return newData;
 
 
+# Note: 
+# Paired_TS=collections.namedtuple('Paired_TS',[
+# 	'dtarray',
+# 	'north','east','vert',
+# 	'N_err','E_err','V_err',
+# 	'u','v','w']);
 
 def remove_seasonals_by_GRACE(Data, grace_dir):
 	# Here we use pre-computed GRACE load model time series to correct the GPS time series. 
 	# We recognize that the horizontals will be bad, and that the resolution of GRACE is coarse.  
 	# For these reasons, this is not an important part of the analysis. 
-	return 0;
+	# Read and interpolate GRACE loading model
+	# Subtract the GRACE model
+	# Remove a trend from the GPS data
+	# Return the object. 
 
+	filename=grace_dir+"scaled_"+Data.name+"_PREM_model_ts.txt";
+	try:
+		ifile=open(filename);
+	except FileNotFoundError:
+		print("Error! GRACE not found for %s" % Data.name);
+		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
+		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+		return wimpyObj;
+
+	# If the station has been pre-computed with GRACE:
+	Data=remove_nans(Data);
+	grace_model=grace_ts_functions.input_GRACE_individual_station(grace_dir+"scaled_"+Data.name+"_PREM_model_ts.txt");
+	my_paired_ts = grace_ts_functions.pair_GPSGRACE(Data, grace_model);
+	decyear = get_float_times(my_paired_ts.dtarray);
+
+	# Subtract the GRACE object
+	dE_filt=[]; dN_filt=[]; dU_filt=[];
+	for i in range(len(my_paired_ts.dtarray)):
+		dE_filt.append(my_paired_ts.east[i]-my_paired_ts.u[i]);
+		dN_filt.append(my_paired_ts.north[i]-my_paired_ts.v[i]);
+		dU_filt.append(my_paired_ts.vert[i]-my_paired_ts.w[i]);
+
+	# A Simple detrending
+	dE_detrended=np.zeros(np.shape(decyear)); dN_detrended=np.zeros(np.shape(decyear)); dU_detrended=np.zeros(np.shape(decyear));
+	east_coef=np.polyfit(decyear,dE_filt,1)[0];
+	for i in range(len(dE_filt)):
+		dE_detrended[i]=dE_filt[i]-east_coef*decyear[i] - (dE_filt[0]-east_coef*decyear[0]);	
+	north_coef=np.polyfit(decyear,dN_filt,1)[0];
+	for i in range(len(dN_filt)):
+		dN_detrended[i]=(dN_filt[i]-north_coef*decyear[i]) - (dN_filt[0]-north_coef*decyear[0]);
+	vert_coef=np.polyfit(decyear,dU_filt,1)[0];
+	for i in range(len(dU_filt)):
+		dU_detrended[i]=(dU_filt[i]-vert_coef*decyear[i]) - (dU_filt[0]-vert_coef*decyear[0]);
+
+	newData=Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err, Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
+	return newData;
 
 
 

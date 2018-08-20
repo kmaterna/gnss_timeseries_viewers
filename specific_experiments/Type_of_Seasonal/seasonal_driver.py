@@ -6,13 +6,15 @@
 #    stl: not supported yet. 
 
 # Goal 1: Implement these seasonal corrections for a single station. Plot them all next to each other. Done. 
+
 # Goal 2: Implement these for a bunch of stations, look at the timing
+
 # Goal 3: Plot the stacked time series with a "corner" model on top, once for each seasonal method. 
 
 
 import seasonal_single_plot
 
 
-station="P159";
+station="P144";
 seasonal_single_plot.compare_single_seasonals(station, offsets_remove=1, earthquakes_remove=1, outliers_remove=1);
 
