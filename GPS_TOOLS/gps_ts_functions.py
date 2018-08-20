@@ -193,10 +193,11 @@ def remove_nans(Data0):
 
 
 # Make a detrended/modeled version of this time series. 
-# There are options for seasonal removal. 
-def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table):
+def make_detrended_option(Data, seasonals_remove, seasonals_type, MyParams):
+	# Once we have removed earthquake steps... 
 	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
 	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 
+	# There are options for the seasonal removal (least squares, notch filter, grace, etc.)
 	# Fit params definition: slope, a2(cos), a1(sin), s2, s1. 
 
 	east_params=[0,0,0,0,0];  north_params=[0,0,0,0,0]; up_params=[0,0,0,0,0];
@@ -212,7 +213,7 @@ def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table):
 
 	# Here we are removing Noel's fits to the data
 	if seasonals_type=='noel':
-		[east_params, north_params, up_params] = look_up_seasonal_coefs(Data, fit_table);
+		[east_params, north_params, up_params] = look_up_seasonal_coefs(Data, MyParams.fit_table);
 		if seasonals_remove==0:
 			east_params[1:-1]=0; north_params[1:-1]=0; up_params[1:-1]=0;  # do not model the seasonal terms
 		trend_out=detrend_data_by_value(Data, east_params, north_params, up_params);	
@@ -221,15 +222,17 @@ def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table):
 	if seasonals_type=='notch':
 		trend_out=remove_seasonals_by_notch(Data);
 
+	if seasonals_type=='grace':
+		print("GRACE-based seasonals not supported yet");
+		# trend_out=remove_seasonals_by_GRACE(Data,MyParams.grace_dir);
+		trend_out=remove_seasonals_by_notch(Data);
+
 	# Here we are doing something else. 
 	if seasonals_type=='stl':
 		print("STL not suppotrted yet");
 
-	if seasonals_type=='grace':
-		print("GRACE-based seasonals not supported yet");
 
-
-	return [Data, trend_out];
+	return trend_out;
 
 
 
@@ -273,7 +276,7 @@ def remove_seasonals_by_notch(Data):
 	# %   fs      sampling frequency, Hz
 	# %   fn      notch frequency, Hz
 	# %   Bn      notch bandwidth, Hz
-	dt = 1.0;
+	dt = 1.0;  # one day
 	fs = 1/dt;
 	fn1 = 1.0/365.24;  # fn = notch frequency, annual
 	Bn1 = 0.1*fn1;
@@ -309,6 +312,14 @@ def remove_seasonals_by_notch(Data):
 
 	newData=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 	return newData;
+
+
+
+def remove_seasonals_by_GRACE(Data, grace_dir):
+	# Here we use pre-computed GRACE load model time series to correct the GPS time series. 
+	# We recognize that the horizontals will be bad, and that the resolution of GRACE is coarse.  
+	# For these reasons, this is not an important part of the analysis. 
+	return 0;
 
 
 

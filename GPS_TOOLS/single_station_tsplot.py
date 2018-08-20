@@ -13,7 +13,7 @@ import gps_ts_functions
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def',
-	'earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','seasonals_remove', 'seasonals_type','fit_table']);
+	'earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','seasonals_remove', 'seasonals_type','fit_table','grace_dir']);
 
 # Types of seasonal options: 
 #    fit: fits seasonals and linear trend by least squares inversion.
@@ -37,11 +37,12 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seas
 	earthquakes_dir="../GPS_POS_DATA/PBO_Event_Files/"
 	offsets_dir="../GPS_POS_DATA/Offsets/"
 	fit_table="../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
+	grace_dir="../GPS_POS_DATA/GRACE_loading_model/"
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
 	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, outliers_def=outliers_def, 
 		earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, offsets_remove=offsets_remove, offsets_dir=offsets_dir, 
-		reference_frame=reference_frame, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, fit_table=fit_table);
+		reference_frame=reference_frame, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, fit_table=fit_table,grace_dir=grace_dir);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d" % (station, earthquakes_remove, outliers_remove, seasonals_remove) );
 	return MyParams;
@@ -57,8 +58,8 @@ def compute(myData, MyParams):
 	if MyParams.earthquakes_remove==1:
 		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir);	
 
-	[trend_in, trend_out]=gps_ts_functions.make_detrended_option(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams.fit_table);
-	return [trend_in, trend_out];
+	trend_out=gps_ts_functions.make_detrended_option(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams);
+	return [newData, trend_out];
 
 
 # -------------- OUTPUTS ------------ # 
@@ -112,7 +113,10 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 		title_name=title_name+' by interSSE data'
 	if MyParams.seasonals_type=="notch":
 		savename=savename+"_notch"
-		title_name=title_name+' by notch filter'	
+		title_name=title_name+' by notch filter'
+	if MyParams.seasonals_type=="grace":
+		savename=savename+"_grace"
+		title_name=title_name+' by GRACE model'		
 	savename=savename+"_ts.jpg"
 
 	axarr[0].set_title(title_name);
