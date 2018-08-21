@@ -18,9 +18,9 @@ import stations_within_radius
 
 
 def driver(eqtime):
-	[stations, filenames, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn, map_coords, outfile_dir] = configure(eqtime);
+	[stations, filenames, earthquakes_dir, offsets_dir, fit_table, grace_dir,start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir] = configure(eqtime);
 	dataobj_list = inputs(stations, filenames);
-	[noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change]=compute(dataobj_list, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn);
+	[noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change]=compute(dataobj_list, earthquakes_dir, offsets_dir, fit_table, grace_dir,start_time, end_time, seasonal_type, N, Wn);
 	outputs(noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change, start_time, end_time, outfile_dir);
 	return;
 
@@ -31,6 +31,9 @@ def configure(eqtime):
 	pbo_velfile="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
 	earthquakes_dir = "../../GPS_POS_DATA/PBO_Event_Files/";
 	offsets_dir = "../../GPS_POS_DATA/Offsets/";
+	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
+	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
+	seasonal_type="notch";
 
 	if eqtime[0:4]=='2016' or eqtime[0:4]=='2017':
 		pre_event_duration = 0.5; # years
@@ -56,7 +59,7 @@ def configure(eqtime):
 	for station in stations:
 		filenames.append("../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos");
 	outfile_dir='Outputs/'+str(eqtime);
-	return [stations, filenames, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn, map_coords, outfile_dir];
+	return [stations, filenames, earthquakes_dir, offsets_dir,fit_table, grace_dir, start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir];
 
 
 # ------------ INPUTS  ------------- # 
@@ -69,7 +72,7 @@ def inputs(stations, filenames):
 
 
 # ------------ COMPUTE ------------- # 
-def compute(dataobj_list, earthquakes_dir, offsets_dir, start_time, end_time, N, Wn):
+def compute(dataobj_list, earthquakes_dir, offsets_dir, fit_table, grace_dir,start_time, end_time, seasonal_type, N, Wn):
 	
 	# Initialize output objects
 	noeq_objects = []; 
@@ -81,8 +84,7 @@ def compute(dataobj_list, earthquakes_dir, offsets_dir, start_time, end_time, N,
 		newobj=gps_ts_functions.remove_offsets(dataobj_list[i],offsets_dir);
 		newobj=gps_ts_functions.remove_earthquakes(newobj,earthquakes_dir);
 		newobj=gps_ts_functions.remove_outliers(newobj,15);  # 15mm horizontal outliers
-		newobj=gps_ts_functions.detrend_data(newobj);
-		newobj=gps_ts_functions.remove_annual_semiannual(newobj);
+		newobj=gps_ts_functions.make_detrended_option(newobj, 1, seasonal_type, fit_table, grace_dir);  # can remove seasonals a few ways
 		noeq_objects.append(newobj);
 
 		# Get the inflection points in the timeseries
@@ -193,8 +195,8 @@ def output_plots(noeq_obj, east_filt, north_filt, vert_filt, east_inf_time, nort
 # --------- DRIVER ---------- # 
 if __name__=="__main__":
 	
-	# eqtime="20140314"; # 2014 M6.8 Earthquake
-	eqtime="20161208"; # # 2016 M6.6 Earthquake
+	eqtime="20140314"; # 2014 M6.8 Earthquake
+	# eqtime="20161208"; # # 2016 M6.6 Earthquake
 	# eqtime="20100110"; # # 2010 M6.5 Earthquake
 	driver(eqtime);
 

@@ -54,11 +54,11 @@ def compute(myData, MyParams):
 		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir);
 
 	# A few different types of seasonal removal. 
-	notrend=gps_ts_functions.make_detrended_option(newData, 0, 'fit', MyParams);
-	lssq_fit=gps_ts_functions.make_detrended_option(newData, 1, 'fit', MyParams);
-	noel_fit=gps_ts_functions.make_detrended_option(newData, 1, 'noel', MyParams);
-	notch_filt=gps_ts_functions.make_detrended_option(newData, 1, 'notch', MyParams);
-	grace_filt=gps_ts_functions.make_detrended_option(newData, 1, 'grace', MyParams);
+	notrend=gps_ts_functions.make_detrended_option(newData, 0, 'fit', MyParams.fit_table, MyParams.grace_dir);
+	lssq_fit=gps_ts_functions.make_detrended_option(newData, 1, 'fit', MyParams.fit_table, MyParams.grace_dir);
+	noel_fit=gps_ts_functions.make_detrended_option(newData, 1, 'noel', MyParams.fit_table, MyParams.grace_dir);
+	notch_filt=gps_ts_functions.make_detrended_option(newData, 1, 'notch', MyParams.fit_table, MyParams.grace_dir);
+	grace_filt=gps_ts_functions.make_detrended_option(newData, 1, 'grace', MyParams.fit_table, MyParams.grace_dir);
 
 	return [notrend, lssq_fit, noel_fit, notch_filt, grace_filt];
 

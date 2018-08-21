@@ -194,7 +194,7 @@ def remove_nans(Data0):
 
 
 # Make a detrended/modeled version of this time series. 
-def make_detrended_option(Data, seasonals_remove, seasonals_type, MyParams):
+def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table, grace_dir):
 	# Once we have removed earthquake steps... 
 	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
 	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 
@@ -213,22 +213,25 @@ def make_detrended_option(Data, seasonals_remove, seasonals_type, MyParams):
 		trend_out=detrend_data_by_value(Data, east_params, north_params, up_params);
 
 	# Here we are removing Noel's fits to the data
-	if seasonals_type=='noel':
-		[east_params, north_params, up_params] = look_up_seasonal_coefs(Data, MyParams.fit_table);
+	elif seasonals_type=='noel':
+		[east_params, north_params, up_params] = look_up_seasonal_coefs(Data, fit_table);
 		if seasonals_remove==0:
 			east_params[1:-1]=0; north_params[1:-1]=0; up_params[1:-1]=0;  # do not model the seasonal terms
 		trend_out=detrend_data_by_value(Data, east_params, north_params, up_params);	
 	
 	# Here we use notch filters 
-	if seasonals_type=='notch':
+	elif seasonals_type=='notch':
 		trend_out=remove_seasonals_by_notch(Data);
 
-	if seasonals_type=='grace':
-		trend_out=remove_seasonals_by_GRACE(Data,MyParams.grace_dir);
+	elif seasonals_type=='grace':
+		trend_out=remove_seasonals_by_GRACE(Data,grace_dir);
 
 	# Here we are doing something else. 
-	if seasonals_type=='stl':
+	elif seasonals_type=='stl':
 		print("STL not suppotrted yet");
+
+	else:
+		print("Error: %s not supported as a seasonal removal type" % seasonals_type);
 
 
 	return trend_out;

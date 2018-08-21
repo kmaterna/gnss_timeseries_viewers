@@ -32,8 +32,8 @@ def onset_time_map(name,lon,lat,data,size,earthquake_time,description,savename):
 	# draw coastlines, country boundaries, fill continents.
 	map=Basemap(projection='merc',llcrnrlat=39,llcrnrlon=-125, urcrnrlat=41.5, urcrnrlon=-122,resolution='i');
 	map.drawcoastlines(linewidth=0.5);
-	map.fillcontinents(color='tan',lake_color='azure')
-	map.drawmapboundary(fill_color='azure')
+	# map.fillcontinents(color='azure')
+	map.drawmapboundary(fill_color='tan')
 	# draw lat/lon grid lines every degree.
 	map.drawmeridians(np.arange(-128,-120,1),labels=[1,0,0,1])
 	map.drawparallels(np.arange(38,43,1),labels=[1,0,0,1])
@@ -47,7 +47,7 @@ def onset_time_map(name,lon,lat,data,size,earthquake_time,description,savename):
 	for i in range(len(lon)):
 		x,y=map(lon[i],lat[i])
 		line_color=custom_cmap.to_rgba(data_points[i]);
-		map.plot(x,y,marker='D',color=line_color,markersize=multiplier*size[i]);
+		map.plot(x,y,marker='D',color=line_color,markersize=multiplier*size[i],linewidth=0.25);
 		x,y=map(lon[i]+0.04, lat[i]-0.03);
 		plt.text(x,y,name[i], fontsize=8);
 

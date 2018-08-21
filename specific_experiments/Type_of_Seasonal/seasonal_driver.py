@@ -6,10 +6,8 @@
 #    stl: not supported yet. 
 
 # Goal 1: Implement these seasonal corrections for a single station. Plot them all next to each other. Done. 
-
-# Goal 2: Implement these for a bunch of stations, look at the timing
-
-# Goal 3: Plot the stacked time series with a "corner" model on top, once for each seasonal method. 
+# Goal 2: Implement these for a bunch of stations, map the timing. Done. 
+# Goal 3: Plot the stacked time series with a "corner" model on top, once for each seasonal method. Optional. 
 
 
 import seasonal_single_plot
