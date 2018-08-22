@@ -194,7 +194,7 @@ def remove_nans(Data0):
 
 
 # Make a detrended/modeled version of this time series. 
-def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table, grace_dir):
+def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt", grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"):
 	# Once we have removed earthquake steps... 
 	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
 	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 

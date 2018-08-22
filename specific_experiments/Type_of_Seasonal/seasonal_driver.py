@@ -13,6 +13,6 @@
 import seasonal_single_plot
 
 
-station="P144";
+station="TRND";
 seasonal_single_plot.compare_single_seasonals(station, offsets_remove=1, earthquakes_remove=1, outliers_remove=1);
 
