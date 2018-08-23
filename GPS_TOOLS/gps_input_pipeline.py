@@ -37,7 +37,7 @@ def get_pbo(station):
 
 # Based on whether a file exists in certain directories or not, 
 # Return the 'pbo' or 'unr' datasource that we should be using. 
-def determine_datasource(station, input_datasource):
+def determine_datasource(station, input_datasource='pbo'):
 	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+".NA12.tenv3";
 	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos";
 	if input_datasource=='pbo' and os.path.isfile(pbo_filename):

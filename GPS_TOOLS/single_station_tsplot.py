@@ -46,7 +46,8 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seas
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
 	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, earthquakes_remove=earthquakes_remove, 
-		offsets_remove=offsets_remove, reference_frame=reference_frame, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, fit_table=fit_table, grace_dir=grace_dir);
+		offsets_remove=offsets_remove, reference_frame=reference_frame, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
+		fit_table=fit_table, grace_dir=grace_dir);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d" % (station, earthquakes_remove, outliers_remove, seasonals_remove) );
 	return MyParams;

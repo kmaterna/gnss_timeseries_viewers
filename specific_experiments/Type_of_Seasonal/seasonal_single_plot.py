@@ -7,51 +7,58 @@
 
 import numpy as np
 import matplotlib.pyplot as plt 
-import collections
+import collections, sys
 import datetime as dt 
-from scipy import signal
 import gps_io_functions
 import gps_ts_functions
+import gps_input_pipeline
+import offsets
 
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-Parameters = collections.namedtuple("Parameters",['station','filename','outliers_remove', 'outliers_def',
-	'earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','fit_table', 'grace_dir']);
+Parameters = collections.namedtuple("Parameters",['station','outliers_remove', 'outliers_def',
+	'earthquakes_remove','offsets_remove','reference_frame','fit_table', 'grace_dir']);
 
 
-def compare_single_seasonals(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0):
+def compare_single_seasonals(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, datasource='pbo'):
 	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove);
-	[myData]=gps_io_functions.read_pbo_pos_file(MyParams.filename);
-	[updatedData, lssq_fit, noel_fit, notch_filt, grace_filt]=compute(myData,MyParams);
+	[myData, offset_obj, eq_obj] = input_data(station_name, datasource);
+	[updatedData, lssq_fit, noel_fit, notch_filt, grace_filt]=compute(myData, offset_obj, eq_obj, MyParams);
 	single_ts_plot(updatedData,lssq_fit,noel_fit,notch_filt,grace_filt,MyParams);
 
 
 # -------------- CONFIGURE ------------ # 
 def configure(station, offsets_remove, earthquakes_remove, outliers_remove):
-	filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos"
-	earthquakes_dir="../../GPS_POS_DATA/PBO_Event_Files/"
-	offsets_dir="../../GPS_POS_DATA/Offsets/"
 	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
 	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
-	MyParams=Parameters(station=station,filename=filename, outliers_remove=outliers_remove, outliers_def=outliers_def, 
-		earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, offsets_remove=offsets_remove, offsets_dir=offsets_dir, 
-		reference_frame=reference_frame, fit_table=fit_table, grace_dir=grace_dir);
+	MyParams=Parameters(station=station,outliers_remove=outliers_remove, outliers_def=outliers_def, 
+		earthquakes_remove=earthquakes_remove, offsets_remove=offsets_remove, reference_frame=reference_frame, fit_table=fit_table, grace_dir=grace_dir);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d " % (station, earthquakes_remove, outliers_remove) );
 	return MyParams;
 
 
+# ----------- INPUTS ---------------- # 
+def input_data(station_name, datasource):
+	datasource=gps_input_pipeline.determine_datasource(station_name, datasource);  # tell us which directory to use. 
+	if datasource=='pbo':
+		[myData, offset_obj, eq_obj]     = gps_input_pipeline.get_pbo(station_name);  # PBO data format
+	if datasource=='unr':
+		[myData, offset_obj, eq_obj]     = gps_input_pipeline.get_unr(station_name);  # UNR data format
+	return [myData, offset_obj, eq_obj];
+
+
 # -------------- COMPUTE ------------ # 
-def compute(myData, MyParams):
+def compute(myData, offset_obj, eq_obj, MyParams):
 	newData=myData; 
 	if MyParams.offsets_remove==1:  # First step: remove offsets and earthquakes
-		newData=gps_ts_functions.remove_offsets(newData, MyParams.offsets_dir);
+		newData=offsets.remove_antenna_offsets(newData, offset_obj);
 	if MyParams.outliers_remove==1:  # Second step: remove outliers
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
 	if MyParams.earthquakes_remove==1:
-		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir);
+		newData=offsets.remove_earthquakes(newData, eq_obj);
 
 	# A few different types of seasonal removal. 
 	notrend=gps_ts_functions.make_detrended_option(newData, 0, 'fit', MyParams.fit_table, MyParams.grace_dir);
