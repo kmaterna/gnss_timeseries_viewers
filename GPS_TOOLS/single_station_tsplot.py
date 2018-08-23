@@ -10,6 +10,7 @@ import datetime as dt
 from scipy import signal
 import gps_io_functions
 import gps_ts_functions
+import offsets
 
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
@@ -66,6 +67,9 @@ def determine_datasource(input_datasource, pbo_filename, unr_filename):
 	elif input_datasource=='unr' and not os.path.isfile(unr_filename):
 		print("Error! Cannot find file in UNR database.");
 		sys.exit(1);
+	elif input_datasource != 'unr' and input_datasource != 'pbo':
+		print("Error! Invalid input datasource");
+		sys.exit(1);
 	return datasource;
 
 
@@ -83,11 +87,11 @@ def input_data(station_name, pbo_filename, unr_filename, unr_coords, datasource)
 def compute(myData, MyParams):
 	newData=myData; 
 	if MyParams.offsets_remove==1:  # First step: remove offsets and earthquakes
-		newData=gps_ts_functions.remove_offsets(newData, MyParams.offsets_dir, MyParams.datasource);
+		newData=offsets.remove_antenna_offsets(newData, MyParams.offsets_dir, MyParams.datasource);
 	if MyParams.outliers_remove==1:  # Second step: remove outliers
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
 	if MyParams.earthquakes_remove==1:
-		newData=gps_ts_functions.remove_earthquakes(newData, MyParams.earthquakes_dir, MyParams.datasource);
+		newData=offsets.remove_earthquakes(newData, MyParams.earthquakes_dir, MyParams.offsets_dir, MyParams.datasource);
 
 	trend_out=gps_ts_functions.make_detrended_option(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams);
 	return [newData, trend_out];

@@ -115,7 +115,7 @@ def read_pbo_pos_file(filename):
 
 
 def read_UNR_magnet_file(filename, coordinates_file):
-	[decyeararray,east,north,vert,sig_e,sig_n,sig_v]=np.loadtxt(filename,usecols=(2,8,10,12,14,15,16),skiprows=1,unpack=True);
+	[decyeararray,dE,dN,dU,Se,Sn,Su]=np.loadtxt(filename,usecols=(2,8,10,12,14,15,16),skiprows=1,unpack=True);
 	dtarray=[];
 	ifile=open(filename);
 	ifile.readline();
@@ -124,9 +124,15 @@ def read_UNR_magnet_file(filename, coordinates_file):
 		yyMMMdd=line.split()[1];  # has format 07SEP19
 		mydateobject=dt.datetime.strptime(yyMMMdd,"%y%b%d");
 		dtarray.append(mydateobject);
+	dN=[i*1000.0 for i in dN];
+	dE=[i*1000.0 for i in dE];
+	dU=[i*1000.0 for i in dU];
+	Sn=[i*1000.0 for i in Sn];
+	Se=[i*1000.0 for i in Se];
+	Su=[i*1000.0 for i in Su];
 
 	coords = get_coordinates_for_station(station_name, coordinates_file);  # format [lon, lat]
-	my_data_object=Timeseries(name=station_name,coords=coords, dtarray=dtarray, dN=north, dE=east, dU=vert, Sn=sig_n, Se=sig_e, Su=sig_v, EQtimes=[]);
+	my_data_object=Timeseries(name=station_name,coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
 	return [my_data_object];
 	
 
