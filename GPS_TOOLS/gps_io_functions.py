@@ -2,6 +2,7 @@
 import numpy as np
 import collections
 import datetime as dt 
+import sys, os
 
 
 Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']);
@@ -150,10 +151,8 @@ def get_coordinates_for_station(station_name,coordinates_file):
 
 
 def read_noel_file(filename):
-	
 	names = np.genfromtxt(filename,skip_header=8, usecols=(0), dtype=('unicode') );
 	E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2 = np.genfromtxt(filename,skip_header=8, usecols=(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), unpack=True );
-
 	return [names, E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2];
 
 
@@ -166,4 +165,8 @@ def read_noel_file_station(filename,station):
 		print("Error! Cannot find station %s in File %s " % (station, filename) );
 		return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
 	return [E[i], N[i], U[i], Ea1[i], Na1[i], Ua1[i], Ea2[i], Na2[i], Ua2[i], Es1[i], Ns1[i], Us1[i], Es2[i], Ns2[i], Us2[i]];
+
+
+
+
 

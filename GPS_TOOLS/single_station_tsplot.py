@@ -11,11 +11,13 @@ from scipy import signal
 import gps_io_functions
 import gps_ts_functions
 import offsets
+import gps_input_pipeline
 
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-Parameters = collections.namedtuple("Parameters",['station','pbo_filename','unr_filename','unr_coords','datasource','outliers_remove', 'outliers_def',
-	'earthquakes_remove','earthquakes_dir','offsets_remove','offsets_dir','reference_frame','seasonals_remove', 'seasonals_type','fit_table','grace_dir']);
+Parameters = collections.namedtuple("Parameters",['station','outliers_remove', 'outliers_def',
+	'earthquakes_remove','offsets_remove','reference_frame','seasonals_remove', 'seasonals_type','fit_table','grace_dir']);
+Offsets    = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'dtevts']);
 
 # Types of seasonal options: 
 #    fit: fits seasonals and linear trend by least squares inversion.
@@ -26,10 +28,9 @@ Parameters = collections.namedtuple("Parameters",['station','pbo_filename','unr_
 
 
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, seasonals_type='fit',datasource='pbo'):
-	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource);
-	myData = input_data(MyParams.station, MyParams.pbo_filename, MyParams.unr_filename, MyParams.unr_coords, MyParams.datasource);
-	print(myData.coords);
-	[updatedData, detrended]=compute(myData,MyParams);
+	MyParams = configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type);
+	[myData, offset_obj, eq_obj] = input_data(MyParams.station, datasource);
+	[updatedData, detrended] = compute(myData, offset_obj, eq_obj, MyParams);
 	single_ts_plot(updatedData,detrended,MyParams);
 
 
@@ -39,60 +40,38 @@ def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, ou
 
 
 # -------------- CONFIGURE ------------ # 
-def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource):
-	pbo_filename="../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos"
-	unr_filename="../GPS_POS_DATA/UNR_Data/"+station+".NA12.tenv3"
-	unr_coords="../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"
-	datasource=determine_datasource(datasource, pbo_filename, unr_filename);  # tell us which directory to use. 
-	earthquakes_dir="../GPS_POS_DATA/PBO_Event_Files/"
-	offsets_dir="../GPS_POS_DATA/Offsets/"
+def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type):
 	fit_table="../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
 	grace_dir="../GPS_POS_DATA/GRACE_loading_model/"
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
-	MyParams=Parameters(station=station, pbo_filename=pbo_filename, unr_filename=unr_filename, unr_coords=unr_coords, datasource=datasource, outliers_remove=outliers_remove, 
-		outliers_def=outliers_def, earthquakes_remove=earthquakes_remove, earthquakes_dir=earthquakes_dir, offsets_remove=offsets_remove, offsets_dir=offsets_dir, 
-		reference_frame=reference_frame, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, fit_table=fit_table,grace_dir=grace_dir);
+	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, earthquakes_remove=earthquakes_remove, 
+		offsets_remove=offsets_remove, reference_frame=reference_frame, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, fit_table=fit_table, grace_dir=grace_dir);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d" % (station, earthquakes_remove, outliers_remove, seasonals_remove) );
 	return MyParams;
 
-def determine_datasource(input_datasource, pbo_filename, unr_filename):
-	if input_datasource=='pbo' and os.path.isfile(pbo_filename):
-		print("Using PBO file as input data. ");
-		datasource='pbo'
-	elif input_datasource=='pbo' and os.path.isfile(unr_filename):
-		print("Using UNR as input data because PBO data file doesn't exist");
-		datasource='unr';
-	elif input_datasource=='unr' and not os.path.isfile(unr_filename):
-		print("Error! Cannot find file in UNR database.");
-		sys.exit(1);
-	elif input_datasource != 'unr' and input_datasource != 'pbo':
-		print("Error! Invalid input datasource");
-		sys.exit(1);
-	return datasource;
-
 
 # ----------- INPUTS ---------------- # 
-
-def input_data(station_name, pbo_filename, unr_filename, unr_coords, datasource):
+def input_data(station_name, datasource):
+	datasource=gps_input_pipeline.determine_datasource(station_name, datasource);  # tell us which directory to use. 
 	if datasource=='pbo':
-		[myData]=gps_io_functions.read_pbo_pos_file(pbo_filename);  # PBO data format
+		[myData, offset_obj, eq_obj]     = gps_input_pipeline.get_pbo(station_name);  # PBO data format
 	if datasource=='unr':
-		[myData]=gps_io_functions.read_UNR_magnet_file(unr_filename, unr_coords);  # UNR data format
-	return myData;
+		[myData, offset_obj, eq_obj]     = gps_input_pipeline.get_unr(station_name);  # UNR data format
+	return [myData, offset_obj, eq_obj];
 
 
 # -------------- COMPUTE ------------ # 
-def compute(myData, MyParams):
+def compute(myData, offset_obj, eq_obj, MyParams):
 	newData=myData; 
 	if MyParams.offsets_remove==1:  # First step: remove offsets and earthquakes
-		newData=offsets.remove_antenna_offsets(newData, MyParams.offsets_dir, MyParams.datasource);
+		newData=offsets.remove_antenna_offsets(newData, offset_obj);
 	if MyParams.outliers_remove==1:  # Second step: remove outliers
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
 	if MyParams.earthquakes_remove==1:
-		newData=offsets.remove_earthquakes(newData, MyParams.earthquakes_dir, MyParams.offsets_dir, MyParams.datasource);
-
+		newData=offsets.remove_earthquakes(newData, eq_obj);
+	
 	trend_out=gps_ts_functions.make_detrended_option(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams);
 	return [newData, trend_out];
 
