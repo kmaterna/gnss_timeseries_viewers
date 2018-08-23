@@ -28,9 +28,9 @@ import stations_within_radius
 
 
 def driver(EQcoords, outfile_name, deltat1, deltat2):
-	[stations, distances, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name] = configure(EQcoords, outfile_name, deltat1, deltat2);
+	[stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name] = configure(EQcoords, outfile_name, deltat1, deltat2);
 	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
-	[noeq_objects, east_slope_obj, north_slope_obj] = compute(dataobj_list, distances, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end);
+	[noeq_objects, east_slope_obj, north_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end);
 	outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name);
 	return;
 
@@ -40,12 +40,11 @@ def configure(EQcoords, outfile_name, deltat1, deltat2):
 	dt1_end  = dt.datetime.strptime(deltat1[1], "%Y%m%d");
 	dt2_start  = dt.datetime.strptime(deltat2[0], "%Y%m%d");
 	dt2_end  = dt.datetime.strptime(deltat2[1], "%Y%m%d");
-	radius=150;  # km. 
+	radius=450;  # km. 
 	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
 	stations.append("CME6"); ## A special thing for CME6, not within PBO fields. 
-	distances.append(100);
-	return [stations, distances, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name];
+	return [stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name];
 
 def inputs(station_names):
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
@@ -58,7 +57,7 @@ def inputs(station_names):
 
 
 
-def compute(dataobj_list, distances, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end):
+def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end):
 
 	# No earthquakes objects
 	noeq_objects = [];
@@ -74,16 +73,15 @@ def compute(dataobj_list, distances, offsetobj_list, eqobj_list, dt1_start, dt1_
 		# Get the pre-event and post-event velocities (earthquakes removed)
 		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,starttime=dt1_start,endtime=dt1_end);
 		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(newobj,starttime=dt2_start,endtime=dt2_end);
-		if east_slope_before+east_slope_after+north_slope_before+north_slope_after+vert_slope_before+vert_slope_after==np.nan:
-			east_slobe_obj.append(0);
-			north_slope_obj.append(0);
-		else:
-			east_slope_after=np.round(east_slope_after,decimals=1);
-			east_slope_before=np.round(east_slope_before,decimals=1);
-			east_slope_obj.append([east_slope_before, east_slope_after]);
-			north_slope_after=np.round(north_slope_after,decimals=1);
-			north_slope_before=np.round(north_slope_before,decimals=1);
-			north_slope_obj.append([north_slope_before, north_slope_after]);
+
+		east_slope_after=np.round(east_slope_after,decimals=1);
+		east_slope_before=np.round(east_slope_before,decimals=1);
+		east_slope_obj.append([east_slope_before, east_slope_after]);
+		north_slope_after=np.round(north_slope_after,decimals=1);
+		north_slope_before=np.round(north_slope_before,decimals=1);
+		north_slope_obj.append([north_slope_before, north_slope_after]);
+
+
 	return [noeq_objects, east_slope_obj, north_slope_obj];
 
 

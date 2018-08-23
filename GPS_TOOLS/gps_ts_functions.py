@@ -306,7 +306,8 @@ def get_slope(Data0, starttime=[], endtime=[]):
 			mynorth.append(Data0.dN[i]);
 			myup.append(Data0.dU[i]);
 
-	if len(mydtarray)<365:
+	time_duration=mydtarray[-1]-mydtarray[0];
+	if time_duration.days<365:
 		print("Error: using less than one year of data to estimate parameters. Returning 0");
 		return [np.nan,np.nan,np.nan];
 

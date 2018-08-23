@@ -12,13 +12,16 @@ EQ2="20140314"
 EQ3="20161208"
 EQ4="20180505"
 
+
+Center_Coords=[-125.134, 40.829]; # MTJ
+Mend_map_accel.driver(Center_Coords, "MTJ_2010.ps", [EQ0,EQ1],[EQ1,EQ2]);
+Mend_map_accel.driver(Center_Coords, "MTJ_2014.ps", [EQ1,EQ2],[EQ2,EQ3]);
+Mend_map_accel.driver(Center_Coords, "MTJ_2016.ps", [EQ2,EQ3],[EQ3,EQ4]);
+
+
+
 # EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
 # EQcoords=[-122.834, 37.829]; # San Francisco Bay Area
 # EQcoords=[-123.834, 39.029]; # North Bay Area
 # EQcoords=[-125.134, 43.829]; # Oregon
 # # EQcoords=[-125.134, 46.829]; # Washington
-
-EQcoords=[-125.134, 40.829]; # MTJ
-# Mend_map_accel.driver(EQcoords, "MTJ_2010.ps", [EQ0,EQ1],[EQ1,EQ2]);
-# Mend_map_accel.driver(EQcoords, "MTJ_2014.ps", [EQ1,EQ2],[EQ2,EQ3]);
-Mend_map_accel.driver(EQcoords, "MTJ_2016.ps", [EQ2,EQ3],[EQ3,EQ4]);
