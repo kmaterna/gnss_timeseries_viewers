@@ -16,8 +16,8 @@ def get_stations_within_radius(center, radius, coord_box=[]):
 	return close_stations, rad_distance;
 
 # DRIVER 2: STATIONS WITHIN BOX
-def get_stations_within_box(coord_box, input_file):
-	[num_years, max_sigma]=configure_box();
+def get_stations_within_box(coord_box):
+	[input_file, num_years, max_sigma]=configure_box();
 	myVelfield = inputs(input_file, num_years, max_sigma, coord_box);
 	close_stations = compute_box(myVelfield, coord_box);
 	return close_stations;
@@ -61,9 +61,10 @@ def compute_circle(myVelfield, center, radius):
 
 # ----------- CIRCLE FUNCTIONS ---------------- # 
 def configure_box():
+	input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
 	num_years=3.0;
 	max_sigma=2.0;
-	return [num_years, max_sigma];
+	return [input_file, num_years, max_sigma];
 
 def compute_box(myVelfield, coord_box):
 	close_stations=[];

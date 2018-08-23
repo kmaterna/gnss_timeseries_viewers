@@ -43,16 +43,10 @@ def configure():
 def inputs(station_names):
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in station_names:
-		datasource=gps_input_pipeline.determine_datasource(station_name);  # tell us which directory to use. 
-		if datasource=='pbo':
-			[myData, offset_obj, eq_obj] = gps_input_pipeline.get_pbo(station_name);  # PBO data format
-		if datasource=='unr':
-			[myData, offset_obj, eq_obj] = gps_input_pipeline.get_unr(station_name);  # UNR data format
-		
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, 'pbo');
 		dataobj_list.append(myData);
 		offsetobj_list.append(offset_obj);
-		eqobj_list.append(eq_obj);
-	
+		eqobj_list.append(eq_obj);	
 	return [dataobj_list, offsetobj_list, eqobj_list];
 
 

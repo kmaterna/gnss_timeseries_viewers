@@ -9,6 +9,8 @@ from scipy.signal import butter, filtfilt
 import subprocess, sys
 import gps_io_functions
 import gps_ts_functions
+import gps_input_pipeline
+import offsets
 import stations_within_radius
 
 
@@ -18,9 +20,9 @@ import stations_within_radius
 
 
 def driver(eqtime):
-	[stations, filenames, earthquakes_dir, offsets_dir, fit_table, grace_dir,start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir] = configure(eqtime);
-	dataobj_list = inputs(stations, filenames);
-	[noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change]=compute(dataobj_list, earthquakes_dir, offsets_dir, fit_table, grace_dir,start_time, end_time, seasonal_type, N, Wn);
+	[stations, fit_table, grace_dir,start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir] = configure(eqtime);
+	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
+	[noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change]=compute(dataobj_list, offsetobj_list, eqobj_list, fit_table, grace_dir,start_time, end_time, seasonal_type, N, Wn);
 	outputs(noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change, start_time, end_time, outfile_dir);
 	return;
 
@@ -28,9 +30,6 @@ def driver(eqtime):
 # ------------ CONFIGURE ------------- # 
 def configure(eqtime):
 	EQtime  = dt.datetime.strptime(eqtime, "%Y%m%d");
-	pbo_velfile="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
-	earthquakes_dir = "../../GPS_POS_DATA/PBO_Event_Files/";
-	offsets_dir = "../../GPS_POS_DATA/Offsets/";
 	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
 	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
 	seasonal_type="notch";
@@ -53,26 +52,24 @@ def configure(eqtime):
 	Wn=1/365.0;  # 1/period (days) of cutoff frequency. 	
 
 	map_coords=[-125, -122, 39, 41.5];
-	stations = stations_within_radius.get_stations_within_box(map_coords,pbo_velfile);
-	# stations=['P659'];
-	filenames=[];
-	for station in stations:
-		filenames.append("../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos");
+	stations = stations_within_radius.get_stations_within_box(map_coords);
 	outfile_dir='Outputs/'+str(eqtime);
-	return [stations, filenames, earthquakes_dir, offsets_dir,fit_table, grace_dir, start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir];
+	return [stations, fit_table, grace_dir, start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir];
 
 
 # ------------ INPUTS  ------------- # 
-def inputs(stations, filenames):
-	dataobj_list=[];
-	for item in filenames:
-		[myData]=gps_io_functions.read_pbo_pos_file(item);
+def inputs(stations):
+	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
+	for station_name in stations:
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, 'pbo');
 		dataobj_list.append(myData);
-	return dataobj_list;
+		offsetobj_list.append(offset_obj);
+		eqobj_list.append(eq_obj);
+	return [dataobj_list, offsetobj_list, eqobj_list];
 
 
 # ------------ COMPUTE ------------- # 
-def compute(dataobj_list, earthquakes_dir, offsets_dir, fit_table, grace_dir,start_time, end_time, seasonal_type, N, Wn):
+def compute(dataobj_list, offsetobj_list, eqobj_list, fit_table, grace_dir,start_time, end_time, seasonal_type, N, Wn):
 	
 	# Initialize output objects
 	noeq_objects = []; 
@@ -80,9 +77,9 @@ def compute(dataobj_list, earthquakes_dir, offsets_dir, fit_table, grace_dir,sta
 	east_change=[]; north_change=[]; vert_change=[];
 
 	for i in range(len(dataobj_list)):
-		# Remove the earthquakes
-		newobj=gps_ts_functions.remove_offsets(dataobj_list[i],offsets_dir);
-		newobj=gps_ts_functions.remove_earthquakes(newobj,earthquakes_dir);
+		# Remove the earthquakes and offsets
+		newobj=offsets.remove_antenna_offsets(dataobj_list[i], offsetobj_list[i]);
+		newobj=offsets.remove_earthquakes(newobj,eqobj_list[i]);
 		newobj=gps_ts_functions.remove_outliers(newobj,15);  # 15mm horizontal outliers
 		newobj=gps_ts_functions.make_detrended_option(newobj, 1, seasonal_type, fit_table, grace_dir);  # can remove seasonals a few ways
 		noeq_objects.append(newobj);

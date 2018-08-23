@@ -15,6 +15,15 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 # DRIVERS, CONFIGURE, AND FILE MASHING ---
 # ----------------------------------------
 
+def get_station_data(station, datasource):
+	datasource=determine_datasource(station, datasource);  # tell us which directory to use. 
+	if datasource=='pbo':
+		[myData, offset_obj, eq_obj] = get_pbo(station);  # PBO data format
+	if datasource=='unr':
+		[myData, offset_obj, eq_obj] = get_unr(station);  # UNR data format
+	return [myData, offset_obj, eq_obj];
+
+
 def get_unr(station):
 	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+".NA12.tenv3"
 	unr_coords="../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"

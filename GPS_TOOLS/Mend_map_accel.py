@@ -19,16 +19,18 @@
 
 import numpy as np 
 import datetime as dt 
-import subprocess
+import subprocess, sys
 import gps_io_functions
 import gps_ts_functions
+import gps_input_pipeline
+import offsets
 import stations_within_radius
 
 
 def driver(EQcoords, outfile_name, deltat1, deltat2):
-	[stations, distances, filenames, earthquakes_dir, offsets_dir, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name] = configure(EQcoords, outfile_name, deltat1, deltat2);
-	dataobj_list = inputs(stations, filenames);
-	[noeq_objects, east_slope_obj, north_slope_obj] = compute(dataobj_list, distances, earthquakes_dir, offsets_dir, dt1_start, dt1_end, dt2_start, dt2_end);
+	[stations, distances, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name] = configure(EQcoords, outfile_name, deltat1, deltat2);
+	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
+	[noeq_objects, east_slope_obj, north_slope_obj] = compute(dataobj_list, distances, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end);
 	outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name);
 	return;
 
@@ -38,29 +40,25 @@ def configure(EQcoords, outfile_name, deltat1, deltat2):
 	dt1_end  = dt.datetime.strptime(deltat1[1], "%Y%m%d");
 	dt2_start  = dt.datetime.strptime(deltat2[0], "%Y%m%d");
 	dt2_end  = dt.datetime.strptime(deltat2[1], "%Y%m%d");
-	earthquakes_dir = "../../GPS_POS_DATA/PBO_Event_Files/";
-	offsets_dir = "../../GPS_POS_DATA/Offsets/";
-	radius=450;  # km. 
+	radius=150;  # km. 
 	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
-	filenames=[];
-	for station in stations:
-		filenames.append("../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos");
-	return [stations, distances, filenames, earthquakes_dir, offsets_dir, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name];
+	stations.append("CME6"); ## A special thing for CME6, not within PBO fields. 
+	distances.append(100);
+	return [stations, distances, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name];
 
-
-def inputs(stations, filenames):
-	dataobj_list=[];
-	for item in filenames:
-		[myData]=gps_io_functions.read_pbo_pos_file(item);
+def inputs(station_names):
+	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
+	for station_name in station_names:
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, 'pbo');
 		dataobj_list.append(myData);
-	return dataobj_list;
+		offsetobj_list.append(offset_obj);
+		eqobj_list.append(eq_obj);
+	return [dataobj_list, offsetobj_list, eqobj_list];
 
 
-def compute(dataobj_list, distances, earthquakes_dir, offsets_dir, dt1_start, dt1_end, dt2_start, dt2_end):
-	latitudes_list=[i.coords[1] for i in dataobj_list];
-	sorted_objects = [x for _,x in sorted(zip(latitudes_list, dataobj_list))];  # the raw, sorted data. 
-	sorted_distances = [x for _,x in sorted(zip(latitudes_list, distances))];  # the sorted distances.
+
+def compute(dataobj_list, distances, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end):
 
 	# No earthquakes objects
 	noeq_objects = [];
@@ -68,8 +66,8 @@ def compute(dataobj_list, distances, earthquakes_dir, offsets_dir, dt1_start, dt
 	north_slope_obj=[];
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes
-		newobj=gps_ts_functions.remove_offsets(sorted_objects[i],offsets_dir);
-		newobj=gps_ts_functions.remove_earthquakes(newobj,earthquakes_dir);
+		newobj=offsets.remove_antenna_offsets(dataobj_list[i],offsetobj_list[i]);
+		newobj=offsets.remove_earthquakes(newobj, eqobj_list[i]);
 		newobj=gps_ts_functions.make_detrended_option(newobj, 1, 'fit');
 		noeq_objects.append(newobj);
 

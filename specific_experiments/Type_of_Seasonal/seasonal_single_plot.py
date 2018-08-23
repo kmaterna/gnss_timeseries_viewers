@@ -42,11 +42,7 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove):
 
 # ----------- INPUTS ---------------- # 
 def input_data(station_name, datasource):
-	datasource=gps_input_pipeline.determine_datasource(station_name, datasource);  # tell us which directory to use. 
-	if datasource=='pbo':
-		[myData, offset_obj, eq_obj]     = gps_input_pipeline.get_pbo(station_name);  # PBO data format
-	if datasource=='unr':
-		[myData, offset_obj, eq_obj]     = gps_input_pipeline.get_unr(station_name);  # UNR data format
+	[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource);
 	return [myData, offset_obj, eq_obj];
 
 
