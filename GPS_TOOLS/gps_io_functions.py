@@ -114,6 +114,34 @@ def read_pbo_pos_file(filename):
 	return [myData];
 
 
+def read_UNR_magnet_file(filename, coordinates_file):
+	[decyeararray,east,north,vert,sig_e,sig_n,sig_v]=np.loadtxt(filename,usecols=(2,8,10,12,14,15,16),skiprows=1,unpack=True);
+	dtarray=[];
+	ifile=open(filename);
+	ifile.readline();
+	for line in ifile:
+		station_name=line.split()[0];
+		yyMMMdd=line.split()[1];  # has format 07SEP19
+		mydateobject=dt.datetime.strptime(yyMMMdd,"%y%b%d");
+		dtarray.append(mydateobject);
+
+	coords = get_coordinates_for_station(station_name, coordinates_file);  # format [lon, lat]
+	my_data_object=Timeseries(name=station_name,coords=coords, dtarray=dtarray, dN=north, dE=east, dU=vert, Sn=sig_n, Se=sig_e, Su=sig_v, EQtimes=[]);
+	return [my_data_object];
+	
+
+def get_coordinates_for_station(station_name,coordinates_file):
+	ifile=open(coordinates_file,'r');
+	for line in ifile:
+		temp=line.split();
+		name=temp[0];
+		if name==station_name:
+			lon=float(temp[1]);
+			lat=float(temp[2]);
+			break;
+	ifile.close();
+	return [lon,lat];
+
 
 def read_noel_file(filename):
 	
