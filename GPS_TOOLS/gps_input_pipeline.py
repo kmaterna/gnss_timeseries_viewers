@@ -66,6 +66,19 @@ def determine_datasource(station, input_datasource='pbo'):
 		sys.exit(1);
 	return datasource;
 
+def remove_blacklist(stations):
+	new_stations=[];
+	blacklisted_stations=[];
+	blacklist="../../GPS_POS_DATA/Blacklist/blacklist.txt"
+	ifile=open(blacklist,'r');
+	for line in ifile:
+		blacklisted_stations.append(line.split()[0]);
+	ifile.close();
+	for station in stations:
+		if not (station in blacklisted_stations):
+			new_stations.append(station);
+	return new_stations;
+
 
 # ----------------------------------------------- 
 # THE GUTS --------------------------------------

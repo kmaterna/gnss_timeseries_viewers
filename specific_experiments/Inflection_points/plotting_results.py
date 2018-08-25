@@ -71,6 +71,7 @@ def onset_time_map(name,lon,lat,data,size,earthquake_time,description,savename):
 
 #  THE MAIN PROGRAM
 
+
 earthquake_time="20140314"
 # earthquake_time="20161208"
 infile="Outputs/"+earthquake_time+"_inflections.txt"
@@ -90,7 +91,7 @@ for line in ifile:
 	up_change.append(abs(float(temp[11])));
 
 onset_time_map(name,lon,lat,east,east_change,earthquake_time,'East',earthquake_time+'_east.png');
-onset_time_map(name,lon,lat,north,north_change,earthquake_time,'North',earthquake_time+'_north.png');
-onset_time_map(name,lon,lat,up,up_change,earthquake_time,'Up',earthquake_time+'_up.png');
+# onset_time_map(name,lon,lat,north,north_change,earthquake_time,'North',earthquake_time+'_north.png');
+# onset_time_map(name,lon,lat,up,up_change,earthquake_time,'Up',earthquake_time+'_up.png');
 
 

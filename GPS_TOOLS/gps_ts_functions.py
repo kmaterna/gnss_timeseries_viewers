@@ -291,10 +291,10 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	if endtime>Data0.dtarray[-1]:
 		endttime=Data0.dtarray[-1];
 	if endtime<Data0.dtarray[0]:
-		print("Error: end time before start of array. Returning Nan");
+		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan];
 	if starttime>Data0.dtarray[-1]:
-		print("Error: start time after end of array. Returning Nan");
+		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan];
 
 	# Cut to desired window, and remove nans
@@ -308,7 +308,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 
 	time_duration=mydtarray[-1]-mydtarray[0];
 	if time_duration.days<365:
-		print("Error: using less than one year of data to estimate parameters. Returning 0");
+		print("Error: using less than one year of data to estimate parameters for station %s. Returning 0" % Data0.name);
 		return [np.nan,np.nan,np.nan];
 
 	# doing the inversion here, since it's only one line.
@@ -337,10 +337,10 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
 	if endtime>Data0.dtarray[-1]:
 		endttime=Data0.dtarray[-1];
 	if endtime<Data0.dtarray[0]:
-		print("Error: end time before start of array. Returning 0");
+		print("Error: end time before start of array for station %s. Returning 0" % Data0.name);
 		return [0,0,0];
 	if starttime>Data0.dtarray[-1]:
-		print("Error: start time after end of array. Returning 0");
+		print("Error: start time after end of array for station %s. Returning 0" % Data0.name);
 		return [0,0,0];
 
 	# Cut to desired time window, and remove nans.
@@ -353,7 +353,7 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
 			myup.append(Data0.dU[i]);
 
 	if len(mydtarray)<365:
-		print("Error: using less than one year of data to estimate parameters. Returning 0");
+		print("Error: using less than one year of data to estimate parameters for station %s. Returning 0" % Data0.name);
 		return [0,0,0];
 
 	decyear=get_float_times(mydtarray);	

@@ -43,6 +43,7 @@ def configure(EQcoords, outfile_name, deltat1, deltat2):
 	radius=450;  # km. 
 	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
+	stations=gps_input_pipeline.remove_blacklist(stations);
 	stations.append("CME6"); ## A special thing for CME6, not within PBO fields. 
 	return [stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name];
 
