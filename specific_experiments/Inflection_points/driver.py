@@ -53,6 +53,7 @@ def configure(eqtime):
 
 	map_coords=[-125, -122, 39, 41.5];
 	stations = stations_within_radius.get_stations_within_box(map_coords);
+	stations=gps_input_pipeline.remove_blacklist(stations);
 	outfile_dir='Outputs/'+str(eqtime);
 	return [stations, fit_table, grace_dir, start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir];
 

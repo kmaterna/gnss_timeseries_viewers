@@ -30,15 +30,16 @@ def onset_time_map(name,lon,lat,data,size,earthquake_time,description,savename):
 	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
 
 	# draw coastlines, country boundaries, fill continents.
+	plt.figure(figsize=(8,8));
 	map=Basemap(projection='merc',llcrnrlat=39,llcrnrlon=-125, urcrnrlat=41.5, urcrnrlon=-122,resolution='i');
 	map.drawcoastlines(linewidth=0.5);
-	# map.fillcontinents(color='azure')
-	map.drawmapboundary(fill_color='tan')
+	map.fillcontinents(color='tan',lake_color='azure')
+	map.drawmapboundary(fill_color='azure')
 	# draw lat/lon grid lines every degree.
 	map.drawmeridians(np.arange(-128,-120,1),labels=[1,0,0,1])
 	map.drawparallels(np.arange(38,43,1),labels=[1,0,0,1])
 
-	if description=='Up':
+	if description=='Vertical':
 		multiplier=2;
 	else:
 		multiplier=10;
@@ -47,22 +48,23 @@ def onset_time_map(name,lon,lat,data,size,earthquake_time,description,savename):
 	for i in range(len(lon)):
 		x,y=map(lon[i],lat[i])
 		line_color=custom_cmap.to_rgba(data_points[i]);
-		map.plot(x,y,marker='D',color=line_color,markersize=multiplier*size[i],linewidth=0.25);
+		map.plot(x,y,marker='D',color=line_color,markersize=multiplier*size[i],markeredgecolor='black',markeredgewidth=0.3);
 		x,y=map(lon[i]+0.04, lat[i]-0.03);
-		plt.text(x,y,name[i], fontsize=8);
+		plt.text(x,y,name[i], fontsize=10);
 
 	# Plot legend with earthquake time. 
 	x,y=map(-124.8, 41.45)
 	line_color=custom_cmap.to_rgba(0);
-	map.plot(x,y,marker='D',color=line_color);
+	map.plot(x,y,marker='D',color=line_color,markeredgecolor='black',markeredgewidth=0.3);
 	x,y=map(-124.75, 41.41)
-	plt.text(x,y,'Earthquake Time');
+	plt.text(x,y,'Earthquake Time',fontsize=14);
 
 	custom_cmap.set_array(np.arange(vmin,vmax));
 	cb = plt.colorbar(custom_cmap);
-	cb.set_label('Inflection Time (Days since earthquake)');
+	cb.set_label('Onset Time (Days since earthquake)',fontsize=14);
+	cb.ax.tick_params(labelsize=14)
 
-	plt.title('GPS Onset Time near '+earthquake_time+', '+description)
+	plt.title(description+' GPS Onset Time near '+earthquake_time,fontsize=16)
 	plt.savefig(savename);
 	plt.close();
 	return;
@@ -72,8 +74,8 @@ def onset_time_map(name,lon,lat,data,size,earthquake_time,description,savename):
 #  THE MAIN PROGRAM
 
 
-earthquake_time="20140314"
-# earthquake_time="20161208"
+# earthquake_time="20140314"
+earthquake_time="20161208"
 infile="Outputs/"+earthquake_time+"_inflections.txt"
 name=[]; lat=[]; lon=[]; east=[]; north=[]; up=[]; east_change=[]; north_change=[]; up_change=[];
 
@@ -91,7 +93,7 @@ for line in ifile:
 	up_change.append(abs(float(temp[11])));
 
 onset_time_map(name,lon,lat,east,east_change,earthquake_time,'East',earthquake_time+'_east.png');
-# onset_time_map(name,lon,lat,north,north_change,earthquake_time,'North',earthquake_time+'_north.png');
-# onset_time_map(name,lon,lat,up,up_change,earthquake_time,'Up',earthquake_time+'_up.png');
+onset_time_map(name,lon,lat,north,north_change,earthquake_time,'North',earthquake_time+'_north.png');
+onset_time_map(name,lon,lat,up,up_change,earthquake_time,'Vertical',earthquake_time+'_up.png');
 
 
