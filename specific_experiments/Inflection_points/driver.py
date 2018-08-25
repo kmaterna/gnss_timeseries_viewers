@@ -66,6 +66,7 @@ def inputs(stations):
 		dataobj_list.append(myData);
 		offsetobj_list.append(offset_obj);
 		eqobj_list.append(eq_obj);
+		# break;
 	return [dataobj_list, offsetobj_list, eqobj_list];
 
 
@@ -159,25 +160,25 @@ def outputs(noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north
 
 def output_plots(noeq_obj, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, start_time, end_time, outfile_dir):
 
-	plt.figure();
-	[f,axarr]=plt.subplots(3,1,sharex=True);
-	axarr[0].plot_date(noeq_obj.dtarray,noeq_obj.dE);
-	axarr[0].plot_date(noeq_obj.dtarray,east_filt,'g',linewidth=3);
+	# plt.figure(figsize=(8,8),dpi=80);
+	[f,axarr]=plt.subplots(3,1,sharex=True,figsize=(8,8), dpi=80);
+	axarr[0].plot_date(noeq_obj.dtarray,noeq_obj.dE,'b.');
+	axarr[0].plot_date(noeq_obj.dtarray,east_filt,'r',linewidth=3);
 	axarr[0].plot_date([east_inf_time, east_inf_time],[-5,5],'--k');
 	axarr[0].plot_date([start_time, start_time],[-5,5],'k');
 	axarr[0].plot_date([end_time, end_time],[-5,5],'k');
 	axarr[0].set_ylabel('East (mm)');
 	axarr[0].set_title(noeq_obj.name);
 	
-	axarr[1].plot_date(noeq_obj.dtarray,noeq_obj.dN);
-	axarr[1].plot_date(noeq_obj.dtarray,north_filt,'g',linewidth=3);
+	axarr[1].plot_date(noeq_obj.dtarray,noeq_obj.dN,'b.');
+	axarr[1].plot_date(noeq_obj.dtarray,north_filt,'r',linewidth=3);
 	axarr[1].plot_date([north_inf_time, north_inf_time],[-5,5],'--k');
 	axarr[1].plot_date([start_time, start_time],[-5,5],'k');
 	axarr[1].plot_date([end_time, end_time],[-5,5],'k');
 	axarr[1].set_ylabel('North (mm)');
 	
-	axarr[2].plot_date(noeq_obj.dtarray,noeq_obj.dU);
-	axarr[2].plot_date(noeq_obj.dtarray,vert_filt,'g',linewidth=3);
+	axarr[2].plot_date(noeq_obj.dtarray,noeq_obj.dU,'b.');
+	axarr[2].plot_date(noeq_obj.dtarray,vert_filt,'r',linewidth=3);
 	axarr[2].plot_date([vert_inf_time, vert_inf_time],[-15,15],'--k');
 	axarr[2].plot_date([start_time, start_time],[-15,15],'k');
 	axarr[2].plot_date([end_time, end_time],[-15,15],'k');
@@ -193,8 +194,8 @@ def output_plots(noeq_obj, east_filt, north_filt, vert_filt, east_inf_time, nort
 # --------- DRIVER ---------- # 
 if __name__=="__main__":
 	
-	eqtime="20140314"; # 2014 M6.8 Earthquake
-	# eqtime="20161208"; # # 2016 M6.6 Earthquake
+	# eqtime="20140314"; # 2014 M6.8 Earthquake
+	eqtime="20161208"; # # 2016 M6.6 Earthquake
 	# eqtime="20100110"; # # 2010 M6.5 Earthquake
 	driver(eqtime);
 
