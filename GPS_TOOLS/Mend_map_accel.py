@@ -27,11 +27,11 @@ import offsets
 import stations_within_radius
 
 
-def driver(EQcoords, outfile_name, deltat1, deltat2):
+def driver(EQcoords, outfile_name, deltat1, deltat2, component='horizontal'):
 	[stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name] = configure(EQcoords, outfile_name, deltat1, deltat2);
 	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
-	[noeq_objects, east_slope_obj, north_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end);
-	outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name);
+	[noeq_objects, east_slope_obj, north_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end, component);
+	outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name,component);
 	return;
 
 
@@ -58,7 +58,7 @@ def inputs(station_names):
 
 
 
-def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end):
+def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end, component):
 
 	# No earthquakes objects
 	noeq_objects = [];
@@ -75,22 +75,30 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,starttime=dt1_start,endtime=dt1_end);
 		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(newobj,starttime=dt2_start,endtime=dt2_end);
 
-		east_slope_after=np.round(east_slope_after,decimals=1);
-		east_slope_before=np.round(east_slope_before,decimals=1);
-		east_slope_obj.append([east_slope_before, east_slope_after]);
-		north_slope_after=np.round(north_slope_after,decimals=1);
-		north_slope_before=np.round(north_slope_before,decimals=1);
-		north_slope_obj.append([north_slope_before, north_slope_after]);
-
+		if component=='horizontal':
+			east_slope_after=np.round(east_slope_after,decimals=1);
+			east_slope_before=np.round(east_slope_before,decimals=1);
+			east_slope_obj.append([east_slope_before, east_slope_after]);
+			north_slope_after=np.round(north_slope_after,decimals=1);
+			north_slope_before=np.round(north_slope_before,decimals=1);
+			north_slope_obj.append([north_slope_before, north_slope_after]);
+		else:
+			vert_slope_after=np.round(vert_slope_after,decimals=1);
+			vert_slope_before=np.round(vert_slope_before,decimals=1);
+			north_slope_obj.append([vert_slope_before, vert_slope_after]);
+			east_slope_obj.append([0,0])
 
 	return [noeq_objects, east_slope_obj, north_slope_obj];
 
 
-def outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name):
+def outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name,component):
 	# basename=outfile_name.split(".")[0]
 	ofile=open('accelerations.txt','w');
 	for i in range(len(noeq_objects)):
-		ofile.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], north_slope_obj[i][1]-north_slope_obj[i][0]) );
+		if component=='vertical':
+			ofile.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0])*0.3) );
+		else:
+			ofile.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], north_slope_obj[i][1]-north_slope_obj[i][0]) );
 		# ofile.write("%f %f %f %f 0 0 0 %s\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], north_slope_obj[i][1]-north_slope_obj[i][0], noeq_objects[i].name) );
 	ofile.close();
 	subprocess.call(['./accel_map_gps.gmt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),outfile_name],shell=False);
