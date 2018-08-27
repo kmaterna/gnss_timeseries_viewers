@@ -122,7 +122,10 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 		title_name=title_name+' by notch filter'
 	if MyParams.seasonals_type=="grace":
 		savename=savename+"_grace"
-		title_name=title_name+' by GRACE model'		
+		title_name=title_name+' by GRACE model'
+	if MyParams.seasonals_type=="stl":
+		savename=savename+"_stl"
+		title_name=title_name+' by STL'			
 	savename=savename+"_ts.jpg"
 
 	axarr[0].set_title(title_name);

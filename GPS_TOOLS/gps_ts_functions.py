@@ -114,12 +114,13 @@ def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table="../
 	elif seasonals_type=='notch':
 		trend_out=remove_seasonals_by_notch(Data);
 
+	# Here we use a pre-computed GRACE loading time series
 	elif seasonals_type=='grace':
 		trend_out=remove_seasonals_by_GRACE(Data,grace_dir);
 
 	# Here we are doing something else. 
 	elif seasonals_type=='stl':
-		print("STL not suppotrted yet");
+		trend_out=remove_seasonals_by_STL(Data);
 
 	else:
 		print("Error: %s not supported as a seasonal removal type" % seasonals_type);
@@ -208,6 +209,89 @@ def remove_seasonals_by_notch(Data):
 	return newData;
 
 
+def remove_seasonals_by_STL(Data):
+
+	# Preprocess data
+	[new_dtarray, dE, Se] = preprocess_stl(Data.dtarray, Data.dE, Data.Se);
+	[new_dtarray, dN, Sn] = preprocess_stl(Data.dtarray, Data.dN, Data.Sn);
+	[new_dtarray, dU, Su] = preprocess_stl(Data.dtarray, Data.dU, Data.Su);
+
+	# Write E, N, U
+	ofile=open('raw_ts_data.txt','w');
+	for i in range(len(dE)):
+		mystring=dt.datetime.strftime(new_dtarray[i],"%Y%m%d");
+		ofile.write('%s %f %f %f\n' % (mystring, dE[i], dN[i], dU[i]) );
+	ofile.close();
+
+	# Call driver in matlab (read, STL, write)
+	subprocess.call(['matlab','-nodisplay','-nosplash','-r','stl_driver'],shell=False);
+
+	# Read / Detrended data
+	[dE, dN, dU]=np.loadtxt('filtered_ts_data.txt',unpack=True,usecols=(1,2,3));
+
+	# East, North, Up Detrending
+	decyear=get_float_times(new_dtarray);
+	dE_detrended=np.zeros(np.shape(dE)); dN_detrended=np.zeros(np.shape(dN)); dU_detrended=np.zeros(np.shape(dU));
+	east_coef=np.polyfit(decyear,dE,1)[0];
+	for i in range(len(dE)):
+		dE_detrended[i]=dE[i]-east_coef*decyear[i] - (dE[0]-east_coef*decyear[0]);
+	north_coef=np.polyfit(decyear,dN,1)[0];
+	for i in range(len(dN)):
+		dN_detrended[i]=(dN[i]-north_coef*decyear[i]) - (dN[0]-north_coef*decyear[0]);
+	vert_coef=np.polyfit(decyear,dU,1)[0];
+	for i in range(len(dU)):
+		dU_detrended[i]=(dU[i]-vert_coef*decyear[i]) - (dU[0]-vert_coef*decyear[0]);
+
+	# Return data
+	Data=Timeseries(name=Data.name, coords=Data.coords, dtarray=new_dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=Sn, Se=Se, Su=Su, EQtimes=Data.EQtimes);
+	return Data;
+
+
+def preprocess_stl(dtarray, data_column, uncertainties):
+	# Remove nan's, fill in gaps, and make to a multiple of 365 day cycles. 
+
+	new_data_column=[]; new_sig=[]; new_dtarray=[];
+	new_data_column.append(data_column[0]);
+	new_sig.append(uncertainties[0]);
+	new_dtarray.append(dtarray[0]);
+	start_date = dtarray[0];
+	end_date=dtarray[-1];
+
+	for i in range(1,len(dtarray)):
+
+		start_counter=new_dtarray[-1];  # this is the date where we start. 
+		destination_counter=dtarray[i];  # the next datapoint we are going to append until in this loop.
+
+		while start_counter+dt.timedelta(days=1) <= destination_counter:
+
+			# If your next element is consecutive with the old element.
+			if start_counter+dt.timedelta(days=1) == destination_counter:	
+				new_dtarray.append(dtarray[i]);
+				if data_column[i]==np.nan:
+					new_data_column.append(new_data_column[-1]);
+					new_sig.append(uncertainties[-1]);
+				else:
+					new_data_column.append(data_column[i]);
+					new_sig.append(uncertainties[i]);
+				break;
+
+			# If your next element is not consecutive with the old element
+			else:
+				new_dtarray.append(start_counter+dt.timedelta(days=1));
+				new_data_column.append(new_data_column[-1]);
+				new_sig.append(uncertainties[-1]);
+				start_counter=start_counter+dt.timedelta(days=1);
+
+	# Make the length an integer number of years
+	while np.mod(len(new_dtarray),365)>0.01:
+		new_dtarray.append(new_dtarray[-1]+dt.timedelta(days=1));
+		new_data_column.append(new_data_column[-1]);
+		new_sig.append(uncertainties[-1]);
+
+	return [new_dtarray, new_data_column, new_sig];
+
+
+
 # Note: 
 # Paired_TS=collections.namedtuple('Paired_TS',[
 # 	'dtarray',
@@ -260,6 +344,8 @@ def remove_seasonals_by_GRACE(Data, grace_dir):
 
 	newData=Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err, Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
 	return newData;
+
+
 
 
 
