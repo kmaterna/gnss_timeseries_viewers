@@ -242,8 +242,26 @@ def remove_seasonals_by_STL(Data):
 	for i in range(len(dU)):
 		dU_detrended[i]=(dU[i]-vert_coef*decyear[i]) - (dU[0]-vert_coef*decyear[0]);
 
+	# Put the gaps back in:
+	final_dtarray=[]; final_dE=[]; final_dN=[]; final_dU=[]; final_Se=[]; final_Sn=[]; final_Su=[];
+	for i in range(len(new_dtarray)):
+		if new_dtarray[i] in Data.dtarray:
+			final_dtarray.append(new_dtarray[i]);
+			final_dE.append(dE_detrended[i]);
+			final_dN.append(dN_detrended[i]);
+			final_dU.append(dU_detrended[i]);
+			final_Se.append(Se[i]);
+			final_Sn.append(Sn[i]);
+			final_Su.append(Su[i]);
+	final_dE=np.array(final_dE);
+	final_dN=np.array(final_dN);
+	final_dU=np.array(final_dU);
+	final_Se=np.array(final_Se);
+	final_Sn=np.array(final_Sn);
+	final_Su=np.array(final_Su);
+
 	# Return data
-	Data=Timeseries(name=Data.name, coords=Data.coords, dtarray=new_dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=Sn, Se=Se, Su=Su, EQtimes=Data.EQtimes);
+	Data=Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=final_dN, dE=final_dE, dU=final_dU, Sn=final_Sn, Se=final_Se, Su=final_Su, EQtimes=Data.EQtimes);
 	return Data;
 
 

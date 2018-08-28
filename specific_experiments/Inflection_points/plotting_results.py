@@ -74,8 +74,8 @@ def onset_time_map(name,lon,lat,data,size,earthquake_time,description,savename):
 #  THE MAIN PROGRAM
 
 
-# earthquake_time="20140314"
-earthquake_time="20161208"
+earthquake_time="20140310"  # I kicked out TRND and CME6 from this analysis. They have strange non-tectonic signals. 
+# earthquake_time="20161208"
 infile="Outputs/"+earthquake_time+"_inflections.txt"
 name=[]; lat=[]; lon=[]; east=[]; north=[]; up=[]; east_change=[]; north_change=[]; up_change=[];
 

@@ -54,6 +54,7 @@ def configure(eqtime):
 	map_coords=[-125, -122, 39, 41.5];
 	stations = stations_within_radius.get_stations_within_box(map_coords);
 	stations=gps_input_pipeline.remove_blacklist(stations);
+	stations.append('CME6');
 	outfile_dir='Outputs/'+str(eqtime);
 	return [stations, fit_table, grace_dir, start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir];
 
@@ -194,8 +195,8 @@ def output_plots(noeq_obj, east_filt, north_filt, vert_filt, east_inf_time, nort
 # --------- DRIVER ---------- # 
 if __name__=="__main__":
 	
-	# eqtime="20140314"; # 2014 M6.8 Earthquake
-	eqtime="20161208"; # # 2016 M6.6 Earthquake
+	eqtime="20140310"; # 2014 M6.8 Earthquake
+	# eqtime="20161208"; # # 2016 M6.6 Earthquake
 	# eqtime="20100110"; # # 2010 M6.5 Earthquake
 	driver(eqtime);
 
