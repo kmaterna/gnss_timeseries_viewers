@@ -22,7 +22,8 @@ Params=collections.namedtuple("Params",['strain_method','input_file','map_range'
 
 # ----------------- CONFIGURE -------------------------
 def configure(strain_method):
-	input_file="../../GPS_POS_DATA/PBO_Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+	# input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+	input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
 	# input_file="../../GPS_POS_DATA/PBO_Velocity_Files/TEST_velfield.txt";
 	map_range=[-125, -121, 37.0, 42.2]; # Northern California
 	map_range_string = str(map_range[0])+'/'+str(map_range[1])+'/'+str(map_range[2])+'/'+str(map_range[3]);
@@ -70,12 +71,18 @@ def get_tunable_options(strain_method, map_range):
 # ----------------- INPUTS -------------------------
 def inputs(MyParams):
 	# Purpose: generate input velocity field. 
-	[myVelfield]=gps_io_functions.read_pbo_vel_file(MyParams.input_file);  # read the raw velfield from file. 
+	if 'PBO' in MyParams.input_file or 'pbo' in MyParams.input_file:
+		[myVelfield]=gps_io_functions.read_pbo_vel_file(MyParams.input_file);  # read the raw velfield from file. 
+	elif 'MAGNET' in MyParams.input_file or 'unr' in MyParams.input_file:
+		[myVelfield]=gps_io_functions.read_unr_vel_file(MyParams.input_file);  # read the raw velfield from file. 
+	else:
+		print("Error! Cannot read %s " % MyParams.input_file);
+		sys.exit(1);
 	print(len(myVelfield.name));
 	[myVelfield]=gps_io_functions.clean_velfield(myVelfield, MyParams.num_years, MyParams.max_sigma, MyParams.coord_box);
 	print(len(myVelfield.name));
 	[myVelfield]=gps_io_functions.remove_duplicates(myVelfield);
-	print(len(myVelfield.name));		
+	print(len(myVelfield.name));
 	return [myVelfield];
 
 

@@ -32,13 +32,39 @@ def read_pbo_vel_file(infile):
 			su.append(float(temp[24])*1000.0);
 			t1=temp[-2];
 			t2=temp[-1];
-			first_epoch.append(int(t1[0:8]));
-			last_epoch.append(int(t2[0:8]));
+			first_epoch.append(dt.datetime.strptime(t1[0:8],'%Y%m%d'));
+			last_epoch.append(dt.datetime.strptime(t2[0:8],'%Y%m%d'));
 		if "*" in line:
 			start=1;
 	ifile.close();
 	myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch);
 	return [myVelfield];
+
+
+def read_unr_vel_file(infile):
+# Meant for reading velocity files from the MAGNET/MIDAS website. 
+# Returns a Velfield collections object. 	
+	name=[]; nlat=[]; elon=[]; n=[]; e=[]; u=[]; sn=[]; se=[]; su=[]; 
+	ifile=open(infile,'r');
+	for line in ifile:
+		temp=line.split();
+		if temp[0]=="#":
+			continue;
+		else:
+			name.append(temp[0]);
+			e.append(float(temp[8])*1000.0);
+			n.append(float(temp[9])*1000.0);
+			u.append(float(temp[10])*1000.0);
+			se.append(float(temp[11])*1000.0);
+			sn.append(float(temp[12])*1000.0);
+			su.append(float(temp[13])*1000.0);
+	ifile.close();
+
+	[elon,nlat]=get_coordinates_for_stations(name);
+	[first_epoch, last_epoch] = get_start_times_for_stations(name);
+
+	myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch);
+	return [myVelfield]; 
 
 
 
@@ -53,7 +79,8 @@ def clean_velfield(velfield, num_years, max_sigma, coord_box):
 			continue;
 		if velfield.se[i] > max_sigma:
 			continue;
-		if velfield.last_epoch[i]-velfield.first_epoch[i] <= num_years*10000:
+		deltatime=velfield.last_epoch[i]-velfield.first_epoch[i];
+		if deltatime.days <= num_years*365.24:
 			continue;
 		if (velfield.elon[i]>coord_box[0] and velfield.elon[i]<coord_box[1] and velfield.nlat[i]>coord_box[2] and velfield.nlat[i]<coord_box[3]):
 			#The station is within the box of interest. 
@@ -138,17 +165,67 @@ def read_UNR_magnet_file(filename, coordinates_file):
 	return [my_data_object];
 	
 
-def get_coordinates_for_station(station_name,coordinates_file):
+def get_coordinates_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"):
+	lon=[];
+	lat=[];
+	reference_names=[]; reference_lons=[]; reference_lats=[];
+
+	# Read the file
 	ifile=open(coordinates_file,'r');
 	for line in ifile:
 		temp=line.split();
-		name=temp[0];
-		if name==station_name:
-			lon=float(temp[1]);
-			lat=float(temp[2]);
-			break;
+		if temp[0]=="#":
+			continue;
+		reference_names.append(temp[0]);
+		reference_lats.append(float(temp[1]));
+		testlon=float(temp[2]);
+		if testlon>180:
+			testlon=testlon-360;
+		reference_lons.append(testlon);
 	ifile.close();
+
+	# find the stations
+	for i in range(len(station_names)):
+		myindex=reference_names.index(station_names[i]);
+		lon.append(reference_lons[myindex]);
+		lat.append(reference_lats[myindex]);
+		if myindex==[]:
+			print("Error! Could not find coordinates for station %s " % station_names[i]);
+			print("Returning [0,0]. ");
+			lon.append(0.0);
+			lat.append(0.0);
+
 	return [lon,lat];
+
+
+def get_start_times_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"):
+	# Meant for UNR stations
+	end_time=[];
+	start_time=[];
+	reference_names=[]; reference_start_time=[]; reference_end_time=[];
+
+	# Read the file
+	ifile=open(coordinates_file,'r');
+	for line in ifile:
+		temp=line.split();
+		if temp[0]=="#":
+			continue;
+		reference_names.append(temp[0]);
+		reference_start_time.append(temp[7]);
+		reference_end_time.append(temp[8]);
+	ifile.close();
+
+	# find the stations
+	for i in range(len(station_names)):
+		myindex=reference_names.index(station_names[i]);
+		start_time.append(dt.datetime.strptime(reference_start_time[myindex],'%Y-%m-%d'));
+		end_time.append(dt.datetime.strptime(reference_end_time[myindex],'%Y-%m-%d'));
+		if myindex==[]:
+			print("Error! Could not find startdate for station %s " % station_names[i]);
+			print("Returning [0,0]. ");
+			start_time.append(dt.datetime.strptime('2000-01-01','%Y-%m-%d'));
+			end_time.append(dt.datetime.strptime('2000-01-01','%Y-%m-%d'));		
+	return [start_time,end_time];
 
 
 def read_noel_file(filename):
