@@ -9,6 +9,7 @@ GPS_TOOLS/Mapping_Resources/*
 2D_Strain/Delaunay/earlier_work/*
 2D_Strain/Strain_Code/hammond/*
 2D_Strain/Strain_Code/visr/*
+2D_Strain/Mapping_Resources/*
 ts_viewing/*
 *_bdr
 *.pdf
@@ -24,3 +25,5 @@ ts_viewing/*
 *.cpt
 *.history
 *.conf
+*.pptx
+*.ppt

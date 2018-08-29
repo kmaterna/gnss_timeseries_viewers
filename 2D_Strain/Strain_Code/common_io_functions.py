@@ -103,6 +103,7 @@ def outputs_2d(xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, m
 	netcdf_io_functions.flip_if_necessary(MyParams.outdir+'rot.nc');	
 	write_grid_eigenvectors(xdata, ydata, e1, e2, v00, v01, v10, v11, MyParams);
 	subprocess.call("../Strain_Code/"+MyParams.gmtfile+" "+MyParams.map_range,shell=True,cwd=MyParams.outdir);
+	# subprocess.call("../Strain_Code/visr_gmt_fancy.gmt",shell=True,cwd=MyParams.outdir);  # just for a fancy visr figure. 
 	return;
 
 def write_grid_eigenvectors(xdata, ydata, w1, w2, v00, v01, v10, v11, MyParams):
