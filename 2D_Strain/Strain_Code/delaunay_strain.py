@@ -31,7 +31,7 @@ def compute(myVelfield, MyParams):
 
 	triangle_vertices = z[tri.simplices];
 	trishape = np.shape(triangle_vertices);  # 516 x 3 x 2, for example
-	print trishape[0]
+	print(trishape[0])
 
 	# We are going to solve for the velocity gradient tensor at the centroid of each triangle. 
 	centroids=[];
