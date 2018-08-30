@@ -159,8 +159,8 @@ def read_UNR_magnet_file(filename, coordinates_file):
 	Se=[i*1000.0 for i in Se];
 	Su=[i*1000.0 for i in Su];
 
-	coords = get_coordinates_for_station(station_name, coordinates_file);  # format [lat, lon]
-	coords = [coords[1]-360, coords[0]];
+	[lon,lat] = get_coordinates_for_stations([station_name], coordinates_file);  # format [lat, lon]
+	coords = [lon[0]-360, lat[0]];
 	my_data_object=Timeseries(name=station_name,coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
 	return [my_data_object];
 	

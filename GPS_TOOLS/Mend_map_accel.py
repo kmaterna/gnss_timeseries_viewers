@@ -64,6 +64,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 	noeq_objects = [];
 	east_slope_obj=[];
 	north_slope_obj=[];
+	period_after_start_date=7;  # wait a week. 
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes
 		newobj=offsets.remove_antenna_offsets(dataobj_list[i],offsetobj_list[i]);
@@ -72,8 +73,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 		noeq_objects.append(newobj);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
-		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,starttime=dt1_start,endtime=dt1_end);
-		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(newobj,starttime=dt2_start,endtime=dt2_end);
+		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,starttime=dt1_start+dt.timedelta(days=period_after_start_date),endtime=dt1_end);
+		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(newobj,starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
 
 		if component=='horizontal':
 			east_slope_after=np.round(east_slope_after,decimals=1);

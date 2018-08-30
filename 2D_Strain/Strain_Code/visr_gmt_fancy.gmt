@@ -14,7 +14,7 @@ bigprojection="m0.09i"
 
 
 # Strain
-gmt makecpt -T-1/5/1 -Crainbow.cpt > mycpt.cpt
+gmt makecpt -T-1/5/0.5 -Crainbow.cpt > mycpt.cpt
 gmt grdimage I2nd.nc -R$range -J$projection -BWeSN+t"Strain In Mendocino" -Bp1.0 -Cmycpt.cpt -K > $out_strain
 gmt pscoast -R$range -J$projection -Wthick,black -Df -Slightsteelblue2 -K -O >> $out_strain
 gmt psscale -DjTR+w4.5/0.5+o-1.1/1.5 -R$range -J$projection -B1.0:"log(I2)":/:: -Cmycpt.cpt -K -O >> $out_strain
