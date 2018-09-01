@@ -25,6 +25,7 @@ import gps_ts_functions
 import gps_input_pipeline
 import offsets
 import stations_within_radius
+import haversine
 
 
 def driver(EQcoords, outfile_name, deltat1, deltat2, component='horizontal'):
@@ -110,24 +111,33 @@ def adjust_by_reference_stations(names, coords, slope_obj):
 
 	reference_station='P060';
 	coord_box=[-123,-121,39,42];
+	eq_coords=[-124.81, 40.53];
+	radius=150;
+	reference_type='radius'  # options = 'radius','box','station'
+
 	new_slope_obj=[];
 	background_slopes_before=[];
 	background_slopes_after =[];
 
 	for i in range(len(names)):
-		# if names[i]==reference_station:
-		# 	vert_reference_before=slope_obj[i][0];
-		# 	vert_reference_after=slope_obj[i][1];
-		# 	print("Vert slope before: %f " % vert_reference_before);
-		# 	print("Vert slope after: %f " % vert_reference_after);
-		if coords[i][0]>coord_box[0] and coords[i][0]<coord_box[1]:
-			if coords[i][1]>coord_box[2] and coords[i][1]<coord_box[3]:
+		if reference_type=='station':
+			if names[i]==reference_station:
 				background_slopes_before.append(slope_obj[i][0]);
 				background_slopes_after.append(slope_obj[i][1]);
-	vert_reference_before=np.nanmean(background_slopes_before);
-	vert_reference_after =np.nanmean(background_slopes_after);
+		elif reference_type=='box':
+			if coords[i][0]>coord_box[0] and coords[i][0]<coord_box[1]:
+				if coords[i][1]>coord_box[2] and coords[i][1]<coord_box[3]:
+					background_slopes_before.append(slope_obj[i][0]);
+					background_slopes_after.append(slope_obj[i][1]);
+		elif reference_type=='radius':
+			if haversine.distance([coords[i][1],coords[i][0]],[eq_coords[1],eq_coords[0]])<radius:
+				background_slopes_before.append(slope_obj[i][0]);
+				background_slopes_after.append(slope_obj[i][1]);
+	
 	# print(background_slopes_before);
 	# print(background_slopes_after);
+	vert_reference_before=np.nanmean(background_slopes_before);
+	vert_reference_after =np.nanmean(background_slopes_after);
 	print("Vert slope before: %f " % vert_reference_before);
 	print("Vert slope after: %f " % vert_reference_after);
 

@@ -13,6 +13,8 @@
 import seasonal_single_plot
 
 
-station="P162";
+station="P161";
 seasonal_single_plot.compare_single_seasonals(station, offsets_remove=1, earthquakes_remove=1, outliers_remove=1);
 
+# P160 has bug under 25 and 17 with new data. Data looks fine. not sure what's up yet.  
+# P161 has bug under 25 and 17 with new data

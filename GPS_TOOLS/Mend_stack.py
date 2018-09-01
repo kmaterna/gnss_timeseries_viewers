@@ -97,8 +97,11 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 
 	# plt.figure(figsize=(20,15),dpi=160);
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True,figsize=(10,8))
-	label_date="20181031";
-	EQ1time = dt.datetime.strptime("20050615", "%Y%m%d");
+	label_date=dt.datetime.strptime("20181031","%Y%m%d");
+	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
+	end_time_plot=dt.datetime.strptime("20181208", "%Y%m%d");
+
+	EQ1time = dt.datetime.strptime("20050615", "%Y%m%d");  # other earthquakes added to the figure
 	EQ2time = dt.datetime.strptime("20100110", "%Y%m%d");
 	EQ3time = dt.datetime.strptime("20161208", "%Y%m%d");
 	offset=0;
@@ -115,10 +118,10 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 		edata=[x + offset for x in edata];
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = axarr[0].plot_date(dataobj_list[i].dtarray,edata,marker='+',markersize=1.5,color=line_color);
-		axarr[0].text(dt.datetime.strptime(label_date, "%Y%m%d"),offset,dataobj_list[i].name,fontsize=9,color=line_color);
+		axarr[0].text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
 		# axarr[0].text(dt.datetime.strptime("20050301", "%Y%m%d"),offset,east_slope_obj[i][0],fontsize=9,color='k');
 		# axarr[0].text(EQtime,offset,east_slope_obj[i][1],fontsize=9,color='k');
-	axarr[0].set_xlim(dt.datetime.strptime("20050101", "%Y%m%d"),dt.datetime.strptime("20181020", "%Y%m%d"));
+	axarr[0].set_xlim(start_time_plot,end_time_plot);
 	axarr[0].set_ylim([-10,offset+10])
 	bottom,top=axarr[0].get_ylim();
 	axarr[0].plot_date([EQtime, EQtime], [bottom, top], '--k');	
@@ -136,8 +139,7 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 		ndata=[x + offset for x in ndata];
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = axarr[1].plot_date(dataobj_list[i].dtarray,ndata,marker='+',markersize=1.5, color=line_color);
-		#axarr[1].text(dt.datetime.strptime(label_date, "%Y%m%d"),offset,dataobj_list[i].name,fontsize=9,color=line_color);
-	axarr[1].set_xlim(dt.datetime.strptime("20050101", "%Y%m%d"),dt.datetime.strptime("20181020", "%Y%m%d"));
+	axarr[1].set_xlim(start_time_plot,end_time_plot);
 	axarr[1].set_ylim([-10,offset+10])
 	bottom,top=axarr[1].get_ylim();
 	axarr[1].plot_date([EQtime, EQtime], [bottom, top], '--k');	

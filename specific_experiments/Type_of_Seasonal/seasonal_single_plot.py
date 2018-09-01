@@ -62,7 +62,8 @@ def compute(myData, offset_obj, eq_obj, MyParams):
 	noel_fit=gps_ts_functions.make_detrended_option(newData, 1, 'noel', MyParams.fit_table, MyParams.grace_dir);
 	notch_filt=gps_ts_functions.make_detrended_option(newData, 1, 'notch');
 	grace_filt=gps_ts_functions.make_detrended_option(newData, 1, 'grace', MyParams.fit_table, MyParams.grace_dir);
-	stl_filt=gps_ts_functions.make_detrended_option(newData, 1, 'stl');
+	# stl_filt=gps_ts_functions.make_detrended_option(newData, 1, 'stl');
+	stl_filt=gps_ts_functions.make_detrended_option(newData, 0, 'fit');
 
 	return [notrend, lssq_fit, noel_fit, notch_filt, grace_filt, stl_filt];
 
