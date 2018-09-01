@@ -412,7 +412,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 
 	time_duration=mydtarray[-1]-mydtarray[0];
 	if time_duration.days<365:
-		print("Error: using less than one year of data to estimate parameters for station %s. Returning 0" % Data0.name);
+		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan];
 
 	# doing the inversion here, since it's only one line.

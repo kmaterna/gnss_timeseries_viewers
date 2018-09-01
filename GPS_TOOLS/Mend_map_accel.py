@@ -65,6 +65,14 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 	east_slope_obj=[];
 	north_slope_obj=[];
 	period_after_start_date=7;  # wait a week. 
+
+	# For the vertical correction. 
+	names=[]; coords=[];
+	for i in range(len(dataobj_list)):
+		names.append(dataobj_list[i].name);
+		coords.append(dataobj_list[i].coords);
+
+	# The main processing loop for slopes. 
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes
 		newobj=offsets.remove_antenna_offsets(dataobj_list[i],offsetobj_list[i]);
@@ -86,10 +94,48 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 		else:
 			vert_slope_after=np.round(vert_slope_after,decimals=1);
 			vert_slope_before=np.round(vert_slope_before,decimals=1);
-			north_slope_obj.append([vert_slope_before, vert_slope_after]);
+			north_slope_obj.append([vert_slope_before, vert_slope_after]);  # tricking the map
 			east_slope_obj.append([0,0])
 
+	# Adjusting verticals by a reference station. 
+	if component=='vertical':
+		north_slope_obj = adjust_by_reference_stations(names, coords, north_slope_obj);
+
 	return [noeq_objects, east_slope_obj, north_slope_obj];
+
+
+
+def adjust_by_reference_stations(names, coords, slope_obj):
+	# How do we adjust the verticals for large-scale drought signatures? 
+
+	reference_station='P060';
+	coord_box=[-123,-121,39,42];
+	new_slope_obj=[];
+	background_slopes_before=[];
+	background_slopes_after =[];
+
+	for i in range(len(names)):
+		# if names[i]==reference_station:
+		# 	vert_reference_before=slope_obj[i][0];
+		# 	vert_reference_after=slope_obj[i][1];
+		# 	print("Vert slope before: %f " % vert_reference_before);
+		# 	print("Vert slope after: %f " % vert_reference_after);
+		if coords[i][0]>coord_box[0] and coords[i][0]<coord_box[1]:
+			if coords[i][1]>coord_box[2] and coords[i][1]<coord_box[3]:
+				background_slopes_before.append(slope_obj[i][0]);
+				background_slopes_after.append(slope_obj[i][1]);
+	vert_reference_before=np.nanmean(background_slopes_before);
+	vert_reference_after =np.nanmean(background_slopes_after);
+	# print(background_slopes_before);
+	# print(background_slopes_after);
+	print("Vert slope before: %f " % vert_reference_before);
+	print("Vert slope after: %f " % vert_reference_after);
+
+	for i in range(len(slope_obj)):
+		new_slope_obj.append([slope_obj[i][0]-vert_reference_before, slope_obj[i][1]-vert_reference_after]);
+	
+	return new_slope_obj;
+
 
 
 def outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name,component):
@@ -97,7 +143,7 @@ def outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_na
 	ofile=open('accelerations.txt','w');
 	for i in range(len(noeq_objects)):
 		if component=='vertical':
-			ofile.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0])*0.3) );
+			ofile.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0])*1.0) );
 		else:
 			ofile.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], north_slope_obj[i][1]-north_slope_obj[i][0]) );
 		# ofile.write("%f %f %f %f 0 0 0 %s\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], north_slope_obj[i][1]-north_slope_obj[i][0], noeq_objects[i].name) );
