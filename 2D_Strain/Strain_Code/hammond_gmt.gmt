@@ -6,10 +6,10 @@ projection="M3.7i"
 out_strain="hammond_strain.ps"
 
 # # Strain
-gmt makecpt -T-1/5/1 -Crainbow.cpt > mycpt.cpt
+gmt makecpt -T-1/5/0.5 -Crainbow.cpt > mycpt.cpt
 gmt psxy I2nd.txt -R$range -J$projection -BWeSN+t"Second Invariant" -Bp1.0 -Cmycpt.cpt -Wblack -L -K > $out_strain
 gmt pscoast -R$range -J$projection -Wthick,black -Df -Sgray -K -O >> $out_strain
-gmt psscale -DjTR+w4.5/0.5+o-1.1/1.5 -R$range -J$projection -Cmycpt.cpt -K -O >> $out_strain
+gmt psscale -DjTR+w4.5/0.5+o-1.1/1.5 -R$range -J$projection -B1.0:"log(I2)":/:: -Cmycpt.cpt -K -O >> $out_strain
 gmt psvelo positive_eigs.txt -Se0.003/0.68/0 -A+e+pthick,blue -Gblue -R$range -J$projection -K -O >> $out_strain
 gmt psvelo negative_eigs.txt -Se0.003/0.68/0 -A+b+pthick,red -Gred -R$range -J$projection -K -O >> $out_strain
 # gmt psvelo tempgps.txt -Se0.03/0.68/0 -A+e+pthick,white -Gwhite -R$range -J$projection -K -O >> $out_strain

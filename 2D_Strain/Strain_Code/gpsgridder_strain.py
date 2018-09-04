@@ -18,12 +18,13 @@ def compute(myVelfield, MyParams):
 	for i in range(len(myVelfield.n)):
 		outfile.write("%f %f %f %f %f %f 0.0\n" % (myVelfield.elon[i], myVelfield.nlat[i], myVelfield.e[i], myVelfield.n[i], myVelfield.se[i], myVelfield.sn[i]) );
 	outfile.close();
-	subprocess.call("gmt gpsgridder tempgps.txt -R"+MyParams.map_range+" -I"+str(MyParams.grid_inc)+" -S0.5 -Ff0.1 -C0.005 -Emisfitfile.txt -fg -r -Gnc4_%s.nc",shell=True);  # makes a netcdf grid file
+	subprocess.call("gmt gpsgridder tempgps.txt -R"+MyParams.map_range+" -I"+str(MyParams.grid_inc)+" -S0.5 -Fd0.01 -C0.0025 -Emisfitfile.txt -fg -r -Gnc4_%s.nc",shell=True);  # makes a netcdf grid file
 	# -R = range. -I = interval. -E prints the model and data fits at the input stations (very useful). 
 	# -S = poisson's ratio. -Fd = fudge factor. -C = eigenvalues below this value will be ignored. 
 	# -fg = flat earth approximation. -G = output netcdf files (x and y displacements). 
 	# You should experiment with Fd and C values to find something that you like (good fit without overfitting). 
 	# For Northern California, I like -Fd0.01 -C0.005. -R-125/-121/38/42.2
+	# I had Ff0.1 -C0.005 -fg 
 	
 	# For large domains, GMT netcdf4 files instead of netcdf3. We must turn them all into netcdf3 for python to read them. 
 	subprocess.call('nccopy -k classic nc4_u.nc gps_u.nc',shell=True);
@@ -71,10 +72,8 @@ def compute(myVelfield, MyParams):
 			
 			# The components that are easily computed
 			# Units: nanostrain per year. 
-			exx=dudx*1000;
-			exy=0.5 * (dvdx+dudy)*1000;
-			eyy=dvdy*1000;
-			rot[j][i]=1000*0.25*(dvdx-dudy)*(dvdx-dudy)
+			[exx, exy, eyy, rotation] = strain_tensor_toolbox.compute_strain_components_from_dx(dudx, dvdx, dudy, dvdy);
+			rot[j][i]=rotation;
 
 			# Compute a number of values based on tensor properties. 
 			I2nd[j][i] = np.log10(np.abs(strain_tensor_toolbox.second_invariant(exx, exy, eyy)));

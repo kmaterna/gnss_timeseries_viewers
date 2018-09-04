@@ -15,12 +15,12 @@ def second_invariant(exx, exy, eyy):
 	return e2nd;
 
 def eigenvector_eigenvalue(exx, exy, eyy):
-	T = np.array([[exx, exy],[exy, eyy]]);  # the rotation
+	T = np.array([[exx, exy],[exy, eyy]]);  # the tensor
 	w,v=np.linalg.eig(T);  # The eigenvectors and eigenvalues (principal strains) of the strain rate tensor
 	return [w[0], w[1], v]; 
 
 def max_shear_strain(exx, exy, eyy):
-	T = np.array([[exx, exy],[exy, eyy]]);  # the rotation
+	T = np.array([[exx, exy],[exy, eyy]]);  # the tensor
 	w,v=np.linalg.eig(T);  # The eigenvectors and eigenvalues (principal strains) of the strain rate tensor
 	# w = eigenvalues
 	# v = eigenvectors
@@ -37,3 +37,15 @@ def compute_displacement_gradients(up, vp, ur, vr, uq, vq, dx, dy):
 	dvdy = (vr-vp)/dy;
 	return [dudx, dvdx, dudy, dvdy];
 
+
+def compute_strain_components_from_dx(dudx, dvdx, dudy, dvdy):
+	# Given a displacement tensor, compute the relevant parts of the strain and rotation tensors. 
+	# Also converts to nanostrain per year.
+	# Rot is the determinant of the rotation tensor. 
+	# http://www.engr.colostate.edu/~thompson/hPage/CourseMat/Tutorials/Solid_Mechanics/rotations.pdf
+	exx=dudx*1000;
+	exy=(0.5 * (dvdx+dudy) )*1000;
+	eyy=dvdy*1000;
+	rot=0 - (0.5*0.5*(dvdx-dudy)*(dudy-dvdx));
+	rot=rot*1000.0*5;   # putting a five here to make units consisent with other calculations. This is probably a bug. 
+	return [exx, exy, eyy, rot];

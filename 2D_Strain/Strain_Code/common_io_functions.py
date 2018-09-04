@@ -30,6 +30,7 @@ def configure(strain_method):
 	num_years=3.0;
 	max_sigma=2.0;
 	[grid_inc, coord_box, outdir, gmtfile] = get_tunable_options(strain_method, map_range);
+	print("Reading %s to compute strain using %s method" % (input_file, strain_method) );
 	MyParams=Params(strain_method=strain_method, input_file=input_file, map_range=map_range_string, coord_box=coord_box, num_years=num_years, max_sigma=max_sigma, grid_inc=grid_inc, outdir=outdir, gmtfile=gmtfile);
 	return [MyParams];
 
@@ -78,11 +79,10 @@ def inputs(MyParams):
 	else:
 		print("Error! Cannot read %s " % MyParams.input_file);
 		sys.exit(1);
-	print(len(myVelfield.name));
+	print("%d stations before applying coord_box." % (len(myVelfield.name)) );
 	[myVelfield]=gps_io_functions.clean_velfield(myVelfield, MyParams.num_years, MyParams.max_sigma, MyParams.coord_box);
-	print(len(myVelfield.name));
 	[myVelfield]=gps_io_functions.remove_duplicates(myVelfield);
-	print(len(myVelfield.name));
+	print("%d stations after selection criteria." % (len(myVelfield.name)) );
 	return [myVelfield];
 
 
@@ -92,7 +92,7 @@ def inputs(MyParams):
 # ----------------- OUTPUTS -------------------------
 
 def outputs_2d(xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, myVelfield, MyParams):
-	print("Sending outputs")
+	print("Sending outputs");
 	outfile=open(MyParams.outdir+"tempgps.txt",'w');
 	for i in range(len(myVelfield.n)):
 		outfile.write("%f %f %f %f %f %f 0.0\n" % (myVelfield.elon[i], myVelfield.nlat[i], myVelfield.e[i], myVelfield.n[i], myVelfield.se[i], myVelfield.sn[i]) );
@@ -101,6 +101,9 @@ def outputs_2d(xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, m
 	netcdf_io_functions.flip_if_necessary(MyParams.outdir+'I2nd.nc');
 	netcdf_io_functions.produce_output_netcdf(xdata, ydata, rot, 'per yr', MyParams.outdir+'rot.nc');
 	netcdf_io_functions.flip_if_necessary(MyParams.outdir+'rot.nc');	
+	print("Max I2: %f " % (np.amax(I2nd)));
+	print("Max rot: %f " % (np.amax(rot)));
+	print("Min rot: %f " % (np.amin(rot)));
 	write_grid_eigenvectors(xdata, ydata, e1, e2, v00, v01, v10, v11, MyParams);
 	subprocess.call("../Strain_Code/"+MyParams.gmtfile+" "+MyParams.map_range,shell=True,cwd=MyParams.outdir);
 	# subprocess.call("../Strain_Code/visr_gmt_fancy.gmt",shell=True,cwd=MyParams.outdir);  # just for a fancy visr figure. 
@@ -142,6 +145,7 @@ def write_grid_eigenvectors(xdata, ydata, w1, w2, v00, v01, v10, v11, MyParams):
 
 
 def outputs_1d(xcentroid, ycentroid, polygon_vertices, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, myVelfield, MyParams):
+	print("Sending outputs");
 
 	rotfile=open(MyParams.outdir+"rotation.txt",'w');
 	I2ndfile=open(MyParams.outdir+"I2nd.txt",'w');
@@ -170,9 +174,9 @@ def outputs_1d(xcentroid, ycentroid, polygon_vertices, I2nd, max_shear, rot, e1,
 		write_single_eigenvector(positive_file, negative_file, e1[i], v00[i], v10[i], xcentroid[i], ycentroid[i]);
 		write_single_eigenvector(positive_file, negative_file, e2[i], v01[i], v11[i], xcentroid[i], ycentroid[i]);
 	
-	print(max(I2nd));
-	print(max(rot));
-	print(min(rot));
+	print("Max I2: %f " % (max(I2nd)));
+	print("Max rot: %f " % (max(rot)));
+	print("Min rot: %f " % (min(rot)));
 
 	rotfile.close();
 	I2ndfile.close();

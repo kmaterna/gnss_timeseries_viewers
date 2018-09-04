@@ -6,11 +6,15 @@ Literature_Review/*
 INSAR_Results/*
 GPS_POS_DATA/*
 GPS_TOOLS/Mapping_Resources/*
+GPS_TOOLS/_stl_simple.m
 2D_Strain/Delaunay/earlier_work/*
 2D_Strain/Strain_Code/hammond/*
 2D_Strain/Strain_Code/visr/*
+2D_Strain/Strain_Code/tape/*
 2D_Strain/Mapping_Resources/*
+Manuscript_Draft/*
 ts_viewing/*
+specific_experiments/Type_of_Seasonal/grace_box.py
 *_bdr
 *.pdf
 *.ps

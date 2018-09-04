@@ -270,7 +270,7 @@ def compute(myVelfield, MyParams):
 
 	triangle_vertices = z[tri.simplices];
 	trishape = np.shape(triangle_vertices);  # 516 x 3 x 2, for example
-	print(trishape[0]);
+	print("Number of triangle elements: %d" % (trishape[0]));
 
 	# We are going to solve for the velocity gradient tensor at the centroid of each triangle. 
 	centroids=[];
@@ -299,14 +299,14 @@ def compute(myVelfield, MyParams):
 		# Get velocities for Vertex 1 (triangle_vertices[i,0,0] and triangle_vertices[i,0,1])
 		xindex1 = np.where(myVelfield.elon==triangle_vertices[i,0,0])
 		yindex1 = np.where(myVelfield.nlat==triangle_vertices[i,0,1])
-		index1=np.intersect1d(xindex1,yindex1);
+		index1  = int(np.intersect1d(xindex1,yindex1)[0]);
 		xindex2 = np.where(myVelfield.elon==triangle_vertices[i,1,0])
 		yindex2 = np.where(myVelfield.nlat==triangle_vertices[i,1,1])
-		index2=np.intersect1d(xindex2,yindex2);
+		index2  = int(np.intersect1d(xindex2,yindex2)[0]);
 		xindex3 = np.where(myVelfield.elon==triangle_vertices[i,2,0])
 		yindex3 = np.where(myVelfield.nlat==triangle_vertices[i,2,1])
-		index3=np.intersect1d(xindex3,yindex3);
-
+		index3  = int(np.intersect1d(xindex3,yindex3)[0]);
+		
 		phi=np.array([triangle_vertices[i,0,0], triangle_vertices[i,1,0], triangle_vertices[i,2,0] ]);
 		theta=np.array([triangle_vertices[i,0,1], triangle_vertices[i,1,1], triangle_vertices[i,2,1] ]);
 		theta=[i-90 for i in theta];
