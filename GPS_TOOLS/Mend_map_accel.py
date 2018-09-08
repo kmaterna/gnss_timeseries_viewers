@@ -16,8 +16,14 @@
 # EQcoords=[-125.134, 46.829]; # Washington
 # EQcoords=[-125.134, 48.829]; # Canada
 
+# New goal: verticals and horizontals at the same time, making two output plots
+# This avoids reading the data in many times. 
+# New goal: feed seasonal type as parameter, and include that in the output_file name
+# This lets us run several experiments.
+
 
 import numpy as np 
+import matplotlib.pyplot as plt
 import datetime as dt 
 import subprocess, sys
 import gps_io_functions
@@ -28,25 +34,26 @@ import stations_within_radius
 import haversine
 
 
-def driver(EQcoords, outfile_name, deltat1, deltat2, component='horizontal'):
-	[stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name] = configure(EQcoords, outfile_name, deltat1, deltat2);
+def driver(EQcoords, outfile_name, deltat1, deltat2, fit_type):
+	[stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename] = configure(EQcoords, outfile_name, deltat1, deltat2, fit_type);
 	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
-	[noeq_objects, east_slope_obj, north_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end, component);
-	outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name,component);
+	[noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end, fit_type);
+	outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, map_coords, basename);
 	return;
 
 
-def configure(EQcoords, outfile_name, deltat1, deltat2):
+def configure(EQcoords, outfile_name, deltat1, deltat2, fit_type):
+	basename=outfile_name+"_"+fit_type;
 	dt1_start  = dt.datetime.strptime(deltat1[0], "%Y%m%d");
 	dt1_end  = dt.datetime.strptime(deltat1[1], "%Y%m%d");
 	dt2_start  = dt.datetime.strptime(deltat2[0], "%Y%m%d");
 	dt2_end  = dt.datetime.strptime(deltat2[1], "%Y%m%d");
-	radius=450;  # km. 
+	radius=250;  # km. 
 	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
 	stations=gps_input_pipeline.remove_blacklist(stations);
 	stations.append("CME6"); ## A special thing for CME6, not within PBO fields. 
-	return [stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, outfile_name];
+	return [stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename];
 
 def inputs(station_names):
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
@@ -59,12 +66,13 @@ def inputs(station_names):
 
 
 
-def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end, component):
+def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end, fit_type):
 
 	# No earthquakes objects
 	noeq_objects = [];
 	east_slope_obj=[];
 	north_slope_obj=[];
+	vert_slope_obj=[];
 	period_after_start_date=7;  # wait a week. 
 
 	# For the vertical correction. 
@@ -78,31 +86,45 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 		# Remove the earthquakes
 		newobj=offsets.remove_antenna_offsets(dataobj_list[i],offsetobj_list[i]);
 		newobj=offsets.remove_earthquakes(newobj, eqobj_list[i]);
-		newobj=gps_ts_functions.make_detrended_option(newobj, 1, 'fit');
+		newobj=gps_ts_functions.make_detrended_option(newobj, 1, fit_type);  # remove seasonals
 		noeq_objects.append(newobj);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
-		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(newobj,starttime=dt1_start+dt.timedelta(days=period_after_start_date),endtime=dt1_end);
-		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(newobj,starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
+		[east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, usig0]=gps_ts_functions.get_slope(newobj,starttime=dt1_start+dt.timedelta(days=period_after_start_date),endtime=dt1_end);
+		[east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, usig1]=gps_ts_functions.get_slope(newobj,starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
 
-		if component=='horizontal':
-			east_slope_after=np.round(east_slope_after,decimals=1);
-			east_slope_before=np.round(east_slope_before,decimals=1);
-			east_slope_obj.append([east_slope_before, east_slope_after]);
-			north_slope_after=np.round(north_slope_after,decimals=1);
-			north_slope_before=np.round(north_slope_before,decimals=1);
-			north_slope_obj.append([north_slope_before, north_slope_after]);
-		else:
-			vert_slope_after=np.round(vert_slope_after,decimals=1);
-			vert_slope_before=np.round(vert_slope_before,decimals=1);
-			north_slope_obj.append([vert_slope_before, vert_slope_after]);  # tricking the map
-			east_slope_obj.append([0,0])
+
+		# When do we ignore stations? When their detrended time series have a large variance. 
+		# print(dataobj_list[i].name);
+		# print(esig0);
+		# print(esig1);
+
+		critical_value=5;  # mm/yr
+		if abs(esig0)>critical_value or abs(nsig0)>critical_value or abs(esig1)>critical_value or abs(nsig1)>critical_value:
+			print("Kicking station out...")
+			print(dataobj_list[i].name);
+			[east_slope_after, north_slope_after, vert_slope_after]=[np.nan,np.nan,np.nan];
+			[east_slope_before, north_slope_before, vert_slope_before]=[np.nan,np.nan,np.nan];
+
+		# plt.plot();
+		# plt.plot_date(newobj.dtarray,newobj.dE);
+		# plt.savefig('test.eps');
+
+		east_slope_after=np.round(east_slope_after,decimals=1);
+		east_slope_before=np.round(east_slope_before,decimals=1);
+		east_slope_obj.append([east_slope_before, east_slope_after]);
+		north_slope_after=np.round(north_slope_after,decimals=1);
+		north_slope_before=np.round(north_slope_before,decimals=1);
+		north_slope_obj.append([north_slope_before, north_slope_after]);
+
+		vert_slope_after=np.round(vert_slope_after,decimals=1);
+		vert_slope_before=np.round(vert_slope_before,decimals=1);
+		vert_slope_obj.append([vert_slope_before, vert_slope_after]); 
 
 	# Adjusting verticals by a reference station. 
-	if component=='vertical':
-		north_slope_obj = adjust_by_reference_stations(names, coords, north_slope_obj);
+	vert_slope_obj = adjust_by_reference_stations(names, coords, vert_slope_obj);
 
-	return [noeq_objects, east_slope_obj, north_slope_obj];
+	return [noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj];
 
 
 
@@ -148,17 +170,17 @@ def adjust_by_reference_stations(names, coords, slope_obj):
 
 
 
-def outputs(noeq_objects, east_slope_obj, north_slope_obj, map_coords,outfile_name,component):
-	# basename=outfile_name.split(".")[0]
-	ofile=open('accelerations.txt','w');
+def outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_objects, map_coords, basename):
+	ofile1=open(basename+'_horiz.txt','w');
+	ofile2=open(basename+'_vert.txt','w');
 	for i in range(len(noeq_objects)):
-		if component=='vertical':
-			ofile.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0])*1.0) );
-		else:
-			ofile.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], north_slope_obj[i][1]-north_slope_obj[i][0]) );
-		# ofile.write("%f %f %f %f 0 0 0 %s\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], north_slope_obj[i][1]-north_slope_obj[i][0], noeq_objects[i].name) );
-	ofile.close();
-	subprocess.call(['./accel_map_gps.gmt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),outfile_name],shell=False);
-	print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+outfile_name);
+		ofile1.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0])*1.0) );
+		ofile2.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], 0, north_slope_obj[i][1]-north_slope_obj[i][0]) );
+	ofile1.close();
+	ofile2.close();
+	subprocess.call(['./accel_map_gps.gmt',basename+'_horiz.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),basename+'_horiz.ps'],shell=False);
+	subprocess.call(['./accel_map_gps.gmt',basename+'_vert.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),basename+'_vert.ps'],shell=False);
+	print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+basename+'_horiz.ps');
+	print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+basename+'_vert.ps');
 	return;
 

@@ -49,3 +49,5 @@ def compute_strain_components_from_dx(dudx, dvdx, dudy, dvdy):
 	rot=0 - (0.5*0.5*(dvdx-dudy)*(dudy-dvdx));
 	rot=rot*1000.0*5;   # putting a five here to make units consisent with other calculations. This is probably a bug. 
 	return [exx, exy, eyy, rot];
+
+	

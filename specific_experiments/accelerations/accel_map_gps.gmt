@@ -2,12 +2,12 @@
 # Plot GPS Vectors and Topography and Faults at Mendocino Triple Junction. 
 # 07/26/2016 Kathryn Materna
 
-
-lonW=$1
-lonE=$2
-latS=$3
-latN=$4
-output=$5
+infile=$1
+lonW=$2
+lonE=$3
+latS=$4
+latN=$5
+output=$6
 range="$lonW/$lonE/$latS/$latN"
 projection="m1.5i"
 
@@ -15,10 +15,10 @@ projection="m1.5i"
 gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:." ": -Dh -K -P > $output # the title goes here
 
 # Add PBO velocity vectors
-gmt psvelo accelerations.txt -R$range -J$projection -O -P -K -Se0.30/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output
+gmt psvelo $infile -R$range -J$projection -O -P -K -Se0.30/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output
 
 # Put dots for every station
-awk '{print $1, $2}' accelerations.txt | gmt psxy -R$range -J$projection -Sc0.10 -Gred -O -K >> $output
+awk '{print $1, $2}' $infile | gmt psxy -R$range -J$projection -Sc0.10 -Gred -O -K >> $output
 
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.30/0.68/10 -Wblack -K -O <<EOF >> $output
 -124.85 41.8 1 0 0.0 0.0 0.0 1mm/yr

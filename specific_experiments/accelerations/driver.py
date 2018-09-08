@@ -17,10 +17,12 @@ Center_Coords=[-125.134, 40.829]; # MTJ
 # Mend_map_accel.driver(Center_Coords, "MTJ_2010.ps", [EQ0,EQ1],[EQ1,EQ2],'horizontal');
 # Mend_map_accel.driver(Center_Coords, "MTJ_2014.ps", [EQ1,EQ2],[EQ2,EQ3],'horizontal');
 # Mend_map_accel.driver(Center_Coords, "MTJ_2016.ps", [EQ2,EQ3],[EQ3,EQ4],'horizontal');
-# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016.ps", [EQ1,EQ2],[EQ3,EQ4],'horizontal');
 
-# Mend_map_accel.driver(Center_Coords, "MTJ_2016_vert.ps", [EQ2,EQ3],[EQ3,EQ4],'vertical');
-Mend_map_accel.driver(Center_Coords, "MTJ_2014_vert.ps", [EQ1,EQ2],[EQ2,EQ3],'vertical');
+
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], 'lssq');
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016.", [EQ1,EQ2],[EQ3,EQ4],'lssq');
+# Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], 'lssq');
+Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], 'lssq');
 
 
 # Notes: 

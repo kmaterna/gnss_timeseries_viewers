@@ -9,6 +9,7 @@ import subprocess
 import datetime as dt 
 import sys
 from scipy import signal
+from scipy.stats import skew
 import gps_io_functions
 import notch_filter
 import grace_ts_functions
@@ -95,7 +96,7 @@ def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table="../
 	east_params=[0,0,0,0,0];  north_params=[0,0,0,0,0]; up_params=[0,0,0,0,0];
 
 	# Here we are asking to invert the data for linear and seasonal components
-	if seasonals_type=='fit':
+	if seasonals_type=='lssq':
 		if seasonals_remove==1:
 			[east_params, north_params, up_params]=get_linear_annual_semiannual(Data);
 		else:
@@ -399,7 +400,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 		return [np.nan,np.nan,np.nan];
 	if starttime>Data0.dtarray[-1]:
 		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
-		return [np.nan,np.nan,np.nan];
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
 
 	# Cut to desired window, and remove nans
 	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
@@ -413,7 +414,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	time_duration=mydtarray[-1]-mydtarray[0];
 	if time_duration.days<365:
 		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
-		return [np.nan,np.nan,np.nan];
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
 
 	# doing the inversion here, since it's only one line.
 	decyear=get_float_times(mydtarray);
@@ -423,7 +424,20 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	east_slope=east_coef[0];
 	north_slope=north_coef[0];
 	vert_slope=vert_coef[0];
-	return [east_slope, north_slope, vert_slope];
+
+
+	# How bad is the fit to the line? 
+	east_trend=[east_coef[0]*x + east_coef[1] for x in decyear];
+	east_detrended=[myeast[i]-east_trend[i] for i in range(len(myeast))];
+	east_std = np.std(east_detrended);
+	north_trend=[north_coef[0]*x + north_coef[1] for x in decyear];
+	north_detrended=[mynorth[i]-north_trend[i] for i in range(len(mynorth))];
+	north_std = np.std(north_detrended);
+	vert_trend=[vert_coef[0]*x + vert_coef[1] for x in decyear];
+	vert_detrended=[myup[i]-vert_trend[i] for i in range(len(myup))];
+	vert_std = np.std(vert_detrended);	
+
+	return [east_slope, north_slope, vert_slope, east_std, north_std, vert_std];
 
 
 
