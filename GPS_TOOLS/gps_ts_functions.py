@@ -397,7 +397,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 		endttime=Data0.dtarray[-1];
 	if endtime<Data0.dtarray[0]:
 		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
-		return [np.nan,np.nan,np.nan];
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
 	if starttime>Data0.dtarray[-1]:
 		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];

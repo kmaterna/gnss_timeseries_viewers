@@ -106,9 +106,6 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 			[east_slope_after, north_slope_after, vert_slope_after]=[np.nan,np.nan,np.nan];
 			[east_slope_before, north_slope_before, vert_slope_before]=[np.nan,np.nan,np.nan];
 
-		# plt.plot();
-		# plt.plot_date(newobj.dtarray,newobj.dE);
-		# plt.savefig('test.eps');
 
 		east_slope_after=np.round(east_slope_after,decimals=1);
 		east_slope_before=np.round(east_slope_before,decimals=1);
