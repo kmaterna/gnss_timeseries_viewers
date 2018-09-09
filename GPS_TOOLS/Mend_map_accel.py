@@ -8,14 +8,6 @@
 # Reference: 
 # Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 
-# Nice Reference: 
-# EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
-# EQcoords=[-122.834, 37.829]; # San Francisco Bay Area
-# EQcoords=[-123.834, 39.029]; # North Bay Area
-# EQcoords=[-125.134, 43.829]; # Oregon
-# EQcoords=[-125.134, 46.829]; # Washington
-# EQcoords=[-125.134, 48.829]; # Canada
-
 # New goal: verticals and horizontals at the same time, making two output plots
 # This avoids reading the data in many times. 
 # New goal: feed seasonal type as parameter, and include that in the output_file name
@@ -48,7 +40,7 @@ def configure(EQcoords, outfile_name, deltat1, deltat2, fit_type):
 	dt1_end  = dt.datetime.strptime(deltat1[1], "%Y%m%d");
 	dt2_start  = dt.datetime.strptime(deltat2[0], "%Y%m%d");
 	dt2_end  = dt.datetime.strptime(deltat2[1], "%Y%m%d");
-	radius=450;  # km. 
+	radius=350;  # km. 
 	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
 	stations=gps_input_pipeline.remove_blacklist(stations);
@@ -87,6 +79,15 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 		newobj=offsets.remove_antenna_offsets(dataobj_list[i],offsetobj_list[i]);
 		newobj=offsets.remove_earthquakes(newobj, eqobj_list[i]);
 		newobj=gps_ts_functions.make_detrended_option(newobj, 1, fit_type);  # remove seasonals
+
+		if newobj.dN[0]==1.0000:
+			print("Passing because we haven't computed GRACE yet...");
+			noeq_objects.append(newobj);
+			east_slope_obj.append([np.nan, np.nan]);
+			north_slope_obj.append([np.nan, np.nan]);
+			vert_slope_obj.append([np.nan, np.nan]);
+			continue;
+
 		noeq_objects.append(newobj);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
@@ -105,16 +106,16 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 			[east_slope_after, north_slope_after, vert_slope_after]=[np.nan,np.nan,np.nan];
 			[east_slope_before, north_slope_before, vert_slope_before]=[np.nan,np.nan,np.nan];
 
-
-		east_slope_after=np.round(east_slope_after,decimals=1);
-		east_slope_before=np.round(east_slope_before,decimals=1);
+		else:
+			east_slope_after=np.round(east_slope_after,decimals=1);
+			east_slope_before=np.round(east_slope_before,decimals=1);
+			north_slope_after=np.round(north_slope_after,decimals=1);
+			north_slope_before=np.round(north_slope_before,decimals=1);
+			vert_slope_after=np.round(vert_slope_after,decimals=1);
+			vert_slope_before=np.round(vert_slope_before,decimals=1);
+		
 		east_slope_obj.append([east_slope_before, east_slope_after]);
-		north_slope_after=np.round(north_slope_after,decimals=1);
-		north_slope_before=np.round(north_slope_before,decimals=1);
 		north_slope_obj.append([north_slope_before, north_slope_after]);
-
-		vert_slope_after=np.round(vert_slope_after,decimals=1);
-		vert_slope_before=np.round(vert_slope_before,decimals=1);
 		vert_slope_obj.append([vert_slope_before, vert_slope_after]); 
 
 	# Adjusting verticals by a reference station. 

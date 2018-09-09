@@ -333,8 +333,9 @@ def remove_seasonals_by_GRACE(Data, grace_dir):
 	except FileNotFoundError:
 		print("Error! GRACE not found for %s" % Data.name);
 		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
-		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
-		return wimpyObj;
+		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+		print("returning placeholder object");
+		return wimpyObj;  # 1 = error code. 
 
 	# If the station has been pre-computed with GRACE:
 	Data=remove_nans(Data);
@@ -362,7 +363,7 @@ def remove_seasonals_by_GRACE(Data, grace_dir):
 		dU_detrended[i]=(dU_filt[i]-vert_coef*decyear[i]) - (dU_filt[0]-vert_coef*decyear[0]);
 
 	newData=Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err, Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
-	return newData;
+	return newData; # 0 = successful completion
 
 
 
@@ -436,6 +437,10 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	vert_trend=[vert_coef[0]*x + vert_coef[1] for x in decyear];
 	vert_detrended=[myup[i]-vert_trend[i] for i in range(len(myup))];
 	vert_std = np.std(vert_detrended);	
+
+	# if Data0.name=="CME6":
+	# 	print("CME:")
+	# 	print(east_slope);
 
 	return [east_slope, north_slope, vert_slope, east_std, north_std, vert_std];
 

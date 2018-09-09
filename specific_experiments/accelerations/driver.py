@@ -16,19 +16,17 @@ EQ4="20180905"
 Center_Coords=[-125.134, 40.829]; # MTJ
 
 # Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], 'lssq'); # done
-# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016.", [EQ1,EQ2],[EQ3,EQ4],'lssq');  # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016", [EQ1,EQ2],[EQ3,EQ4],'lssq');  # done
 # Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], 'lssq'); # done
 # Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], 'lssq'); # done
 
 # Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], 'notch'); # done
-# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016.", [EQ1,EQ2],[EQ3,EQ4],'notch');  # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016", [EQ1,EQ2],[EQ3,EQ4],'notch');  # done
 # Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], 'notch'); # done
 # Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], 'notch'); # done
 
-# Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], 'notch'); # done
-# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016.", [EQ1,EQ2],[EQ3,EQ4],'notch');  # done
-Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], 'grace'); # done
-# Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], 'notch'); # done
+Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], 'grace'); # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], 'grace'); # done
 
 
 # EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
