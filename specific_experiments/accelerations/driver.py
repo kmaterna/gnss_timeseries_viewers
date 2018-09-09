@@ -15,17 +15,24 @@ EQ4="20180905"
 
 Center_Coords=[-125.134, 40.829]; # MTJ
 
-# Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], 'lssq');
-Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016.", [EQ1,EQ2],[EQ3,EQ4],'lssq');
-# Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], 'lssq');
-# Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], 'lssq');
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], 'lssq'); # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016.", [EQ1,EQ2],[EQ3,EQ4],'lssq');  # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], 'lssq'); # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], 'lssq'); # done
 
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], 'notch'); # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016.", [EQ1,EQ2],[EQ3,EQ4],'notch');  # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], 'notch'); # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], 'notch'); # done
 
-# Notes: 
-# Trying by multiplying the verticals by 0.3
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], 'notch'); # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016.", [EQ1,EQ2],[EQ3,EQ4],'notch');  # done
+Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], 'grace'); # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], 'notch'); # done
+
 
 # EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
 # EQcoords=[-122.834, 37.829]; # San Francisco Bay Area
 # EQcoords=[-123.834, 39.029]; # North Bay Area
 # EQcoords=[-125.134, 43.829]; # Oregon
-# # EQcoords=[-125.134, 46.829]; # Washington
+# EQcoords=[-125.134, 46.829]; # Washington

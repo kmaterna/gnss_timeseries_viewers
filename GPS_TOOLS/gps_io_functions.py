@@ -160,7 +160,13 @@ def read_UNR_magnet_file(filename, coordinates_file):
 	Su=[i*1000.0 for i in Su];
 
 	[lon,lat] = get_coordinates_for_stations([station_name], coordinates_file);  # format [lat, lon]
-	coords = [lon[0]-360, lat[0]];
+	if lon[0]<-360:
+		coords = [lon[0]-360, lat[0]];
+	elif lon[0]>180:
+		coords = [lon[0]+360, lat[0]];
+	else:
+		coords=[lon[0], lat[0]];
+
 	my_data_object=Timeseries(name=station_name,coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
 	return [my_data_object];
 	

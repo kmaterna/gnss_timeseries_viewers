@@ -48,7 +48,7 @@ def configure(EQcoords, outfile_name, deltat1, deltat2, fit_type):
 	dt1_end  = dt.datetime.strptime(deltat1[1], "%Y%m%d");
 	dt2_start  = dt.datetime.strptime(deltat2[0], "%Y%m%d");
 	dt2_end  = dt.datetime.strptime(deltat2[1], "%Y%m%d");
-	radius=250;  # km. 
+	radius=450;  # km. 
 	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
 	stations=gps_input_pipeline.remove_blacklist(stations);
@@ -93,7 +93,6 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 		[east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, usig0]=gps_ts_functions.get_slope(newobj,starttime=dt1_start+dt.timedelta(days=period_after_start_date),endtime=dt1_end);
 		[east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, usig1]=gps_ts_functions.get_slope(newobj,starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
 
-
 		# When do we ignore stations? When their detrended time series have a large variance. 
 		# print(dataobj_list[i].name);
 		# print(esig0);
@@ -128,10 +127,11 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 def adjust_by_reference_stations(names, coords, slope_obj):
 	# How do we adjust the verticals for large-scale drought signatures? 
 
-	reference_station='P060';
+	reference_station='P208';
 	coord_box=[-123,-121,39,42];
 	eq_coords=[-124.81, 40.53];
-	radius=150;
+	radius=250;
+	max_radius=350;
 	reference_type='radius'  # options = 'radius','box','station'
 
 	new_slope_obj=[];
@@ -149,7 +149,8 @@ def adjust_by_reference_stations(names, coords, slope_obj):
 					background_slopes_before.append(slope_obj[i][0]);
 					background_slopes_after.append(slope_obj[i][1]);
 		elif reference_type=='radius':
-			if haversine.distance([coords[i][1],coords[i][0]],[eq_coords[1],eq_coords[0]])<radius:
+			mydistance=haversine.distance([coords[i][1],coords[i][0]],[eq_coords[1],eq_coords[0]]);
+			if mydistance>radius and mydistance<max_radius:
 				background_slopes_before.append(slope_obj[i][0]);
 				background_slopes_after.append(slope_obj[i][1]);
 	
@@ -167,17 +168,12 @@ def adjust_by_reference_stations(names, coords, slope_obj):
 
 
 
-def outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_objects, map_coords, basename):
-	ofile1=open(basename+'_horiz.txt','w');
-	ofile2=open(basename+'_vert.txt','w');
+def outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, map_coords, basename):
+	ofile1=open(basename+'.txt','w');
 	for i in range(len(noeq_objects)):
-		ofile1.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0])*1.0) );
-		ofile2.write("%f %f %f %f 0 0 0\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], 0, north_slope_obj[i][1]-north_slope_obj[i][0]) );
+		ofile1.write("%f %f %f %f 0 %f 0 0 %s\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0]), vert_slope_obj[i][1]-vert_slope_obj[i][0], noeq_objects[i].name) );
 	ofile1.close();
-	ofile2.close();
-	subprocess.call(['./accel_map_gps.gmt',basename+'_horiz.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),basename+'_horiz.ps'],shell=False);
-	subprocess.call(['./accel_map_gps.gmt',basename+'_vert.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),basename+'_vert.ps'],shell=False);
-	print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+basename+'_horiz.ps');
-	print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+basename+'_vert.ps');
+	subprocess.call(['./accel_map_gps.gmt',basename+'.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),basename],shell=False);
+	print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+basename);
 	return;
 

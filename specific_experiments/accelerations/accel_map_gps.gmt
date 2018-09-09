@@ -7,28 +7,44 @@ lonW=$2
 lonE=$3
 latS=$4
 latN=$5
-output=$6
+output1=$6"_horiz.ps"
+output2=$6"_vert.ps"
 range="$lonW/$lonE/$latS/$latN"
 projection="m1.5i"
 
+# The Horizontals
 # # Insert a horizontal scale bar and title
-gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:." ": -Dh -K -P > $output # the title goes here
+gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:." ": -Dh -K -P > $output1 # the title goes here
 
 # Add PBO velocity vectors
-gmt psvelo $infile -R$range -J$projection -O -P -K -Se0.30/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output
-
-# Put dots for every station
-awk '{print $1, $2}' $infile | gmt psxy -R$range -J$projection -Sc0.10 -Gred -O -K >> $output
-
-gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.30/0.68/10 -Wblack -K -O <<EOF >> $output
+awk '{print $1, $2, $3, $4, $7, $8}' $infile | gmt psvelo -R$range -J$projection -O -P -K -Se0.30/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output1
+awk '{print $1, $2}' $infile | gmt psxy -R$range -J$projection -Sc0.10 -Gred -O -K >> $output1  # Put dots and labels
+gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.30/0.68/10 -Wblack -K -O <<EOF >> $output1
 -124.85 41.8 1 0 0.0 0.0 0.0 1mm/yr
 EOF
 
-gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output
+gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output1
+-125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
+-124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 2010M6.5
+EOF
+
+
+
+# The verticals
+# # Insert a horizontal scale bar and title
+gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:." ": -Dh -K -P > $output2 # the title goes here
+
+# Add PBO velocity vectors
+awk '{print $1, $2, $5, $6, $7, $8}' $infile | gmt psvelo -R$range -J$projection -O -P -K -Se0.30/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output2
+awk '{print $1, $2}' $infile | gmt psxy -R$range -J$projection -Sc0.10 -Gred -O -K >> $output2 # Put dots and labels
+gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.30/0.68/10 -Wblack -K -O <<EOF >> $output2
+-124.85 41.8 1 0 0.0 0.0 0.0 1mm/yr
+EOF
+
+gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output2
 -125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
 -124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 2010M6.5
 EOF
 
 
 rm gmt.history
-
