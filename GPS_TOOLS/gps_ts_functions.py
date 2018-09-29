@@ -100,7 +100,7 @@ def make_detrended_option(Data, seasonals_remove, seasonals_type, fit_table="../
 		if seasonals_remove==1:
 			[east_params, north_params, up_params]=get_linear_annual_semiannual(Data);
 		else:
-			[east_vel, north_vel, up_vel]=get_slope(Data);
+			[east_vel, north_vel, up_vel,esig,nsig,usig]=get_slope(Data);
 			east_params[0]=east_vel; north_params[0]=north_vel; up_params[0]=up_vel;
 		trend_out=detrend_data_by_value(Data, east_params, north_params, up_params);
 
