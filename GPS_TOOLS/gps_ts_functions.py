@@ -160,7 +160,8 @@ def detrend_data_by_value(Data0,east_params,north_params,vert_params):
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
 	return newData;
 
-
+# This function is the function that actually gets called by other programs. 
+# It operates on a TimeSeries object and returns another TimeSeries object
 def remove_seasonals_by_notch(Data):
 	# Using Sang-Ho's notch filter script to remove power at frequencies corresponding to 1 year and 6 months. 
 	# We are also removing a linear trend in this step. 

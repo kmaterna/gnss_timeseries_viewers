@@ -4,7 +4,11 @@
 
 import numpy as np
 import matplotlib.pyplot as plt 
+import collections
 import copy
+
+
+Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 
 
 def notchfilt(x,fs,fn,Bn,filtfiltopt=True):
@@ -102,5 +106,8 @@ def notch_filter_example():
 	plt.savefig('notchspectra.eps');
 
 	return;
+
+
+
 
 
