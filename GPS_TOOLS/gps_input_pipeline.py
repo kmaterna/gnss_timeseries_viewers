@@ -119,7 +119,8 @@ def get_pbo_offsets(station, offsets_dir):
 		table = subprocess.check_output("grep "+station+" "+offsets_dir+"*.off",shell=True);
 	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
 		table=[];
-	table=table.decode();  # needed when switching to python 3
+	if len(table)>0:
+		table=table.decode();  # needed when switching to python 3
 	print(table);
 	[e_offsets, n_offsets, u_offsets, evdts]=parse_antenna_table_pbo(table);
 	PBO_offsets=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
@@ -132,7 +133,8 @@ def get_pbo_earthquakes(station, earthquakes_dir):
 		table = subprocess.check_output("grep "+station+" "+earthquakes_dir+"*kalts.evt",shell=True);
 	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
 		table=[];
-	table=table.decode(); # needed when switching to python 3
+	if len(table)>0:
+		table=table.decode(); # needed when switching to python 3
 	print(table);
 	[e_offsets, n_offsets, u_offsets, evdts]=parse_earthquake_table_pbo(table);
 	PBO_earthquakes=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
@@ -145,6 +147,8 @@ def get_pbo_earthquakes(station, earthquakes_dir):
 
 def parse_antenna_table_pbo(table):
 	e_offsets=[]; n_offsets=[]; u_offsets=[]; evdts=[];
+	if len(table)==0:
+		return [e_offsets, n_offsets, u_offsets, evdts];
 	table_rows=table.split('\n');
 	for line in table_rows:
 		if "EQ" in line:
@@ -167,6 +171,8 @@ def parse_antenna_table_pbo(table):
 
 def parse_earthquake_table_pbo(table):
 	e_offsets=[]; n_offsets=[]; u_offsets=[]; evdts=[];
+	if len(table)==0:
+		return [e_offsets, n_offsets, u_offsets, evdts];	
 	tablesplit=table.split('\n');
 	for item in tablesplit:  # for each earthquake
 		if len(item)==0:

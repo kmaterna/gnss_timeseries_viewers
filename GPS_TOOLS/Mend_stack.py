@@ -17,6 +17,7 @@ import datetime as dt
 import gps_io_functions
 import gps_input_pipeline
 import gps_ts_functions
+import gps_seasonal_removals
 import stations_within_radius
 import offsets
 
@@ -61,7 +62,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtime):
 	# Detrended objects
 	detrended_objects=[];
 	for i in range(len(sorted_objects)):
-		newobj=gps_ts_functions.make_detrended_option(sorted_objects[i], 0, 'fit');
+		newobj=gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq');
 		detrended_objects.append(newobj);
 
 	# Objects with no earthquakes or seasonals
@@ -74,16 +75,16 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtime):
 		newobj=offsets.remove_earthquakes(newobj,sorted_eqs[i]);
 
 		# The detrended TS without earthquakes
-		stage1obj=gps_ts_functions.make_detrended_option(newobj, 0, 'fit');
+		stage1obj=gps_seasonal_removals.make_detrended_ts(newobj, 0, 'lssq');
 		stage1_objects.append(stage1obj);
 
 		# The detrended TS without earthquakes or seasonals
-		stage2obj=gps_ts_functions.make_detrended_option(newobj, 1, 'fit');
+		stage2obj=gps_seasonal_removals.make_detrended_ts(newobj, 1, 'lssq');
 		stage2_objects.append(stage2obj);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
-		[east_slope_before, north_slope_before, vert_slope_before]=gps_ts_functions.get_slope(stage2obj,endtime=EQtime);
-		[east_slope_after, north_slope_after, vert_slope_after]=gps_ts_functions.get_slope(stage2obj,starttime=EQtime);
+		[east_slope_before, north_slope_before, vert_slope_before, _, _, _]=gps_ts_functions.get_slope(stage2obj,endtime=EQtime);
+		[east_slope_after, north_slope_after, vert_slope_after, _, _, _]=gps_ts_functions.get_slope(stage2obj,starttime=EQtime);
 		east_slope_after=np.round(east_slope_after,decimals=1);
 		east_slope_before=np.round(east_slope_before,decimals=1);
 		east_slope_obj.append([east_slope_before, east_slope_after]);

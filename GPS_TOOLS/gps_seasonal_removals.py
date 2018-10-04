@@ -15,7 +15,9 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 
 
 # Make a detrended/modeled version of this time series. 
-def make_detrended_ts(Data, seasonals_remove, seasonals_type, fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt", grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"):
+def make_detrended_ts(Data, seasonals_remove, seasonals_type, 
+	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt", grace_dir="../../GPS_POS_DATA/GRACE_loading_model/",
+	STL_dir="../../GPS_POS_DATA/STL_models/"):
 	# Once we have removed earthquake steps... 
 	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
 	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 
@@ -46,7 +48,7 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, fit_table="../../G
 			trend_out=remove_seasonals_by_GRACE(Data,grace_dir);
 
 		elif seasonals_type=='stl':
-			trend_out=remove_seasonals_by_STL(Data);
+			trend_out=remove_seasonals_by_STL(Data, STL_dir);
 
 		else:
 			print("Error: %s not supported as a seasonal removal type" % seasonals_type);
@@ -109,61 +111,85 @@ def remove_seasonals_by_notch(Data):
 	return newData;
 
 
-def remove_seasonals_by_STL(Data):
+def remove_seasonals_by_STL(Data, STL_dir):
 
-	# Preprocess data: remove nans, fill in gaps. 
-	Data=gps_ts_functions.remove_nans(Data);
-	[new_dtarray, dE, Se] = preprocess_stl(Data.dtarray, Data.dE, Data.Se);
-	[new_dtarray, dN, Sn] = preprocess_stl(Data.dtarray, Data.dN, Data.Sn);
-	[new_dtarray, dU, Su] = preprocess_stl(Data.dtarray, Data.dU, Data.Su);
+	# First check if a pre-computed file exists
 
-	# Write E, N, U
-	ofile=open('raw_ts_data.txt','w');
-	for i in range(len(dE)):
-		mystring=dt.datetime.strftime(new_dtarray[i],"%Y%m%d");
-		ofile.write('%s %f %f %f\n' % (mystring, dE[i], dN[i], dU[i]) );
-	ofile.close();
+	filename=STL_dir+Data.name+"_STL_30.txt";
+	recompute=0;
+	try:
+		ifile=open(filename);
+	except FileNotFoundError:
+		print("Warning! STL not found for %s" % Data.name);
+		recompute=1;
 
-	# Call driver in matlab (read, STL, write)
-	subprocess.call(['matlab','-nodisplay','-nosplash','-r','stl_driver'],shell=False);
+	if recompute==0:
+		# If a precomputed file exists... 
+		[dE, dN, dU, Se, Sn, Su]=np.loadtxt(filename,unpack=True,usecols=(1,2,3,4,5,6));
+		final_dtarray=[];
+		for line in ifile:
+			dtstring=line.split()[0];
+			final_dtarray.append(dt.datetime.strptime(dtstring,"%Y%m%d"));
+		Data=Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=Data.EQtimes);
 
-	# Read / Detrended data
-	[dE, dN, dU]=np.loadtxt('filtered_ts_data.txt',unpack=True,usecols=(1,2,3));
+	# ELSE: WE NEED TO RECOMPUTE
+	else:
+		print("We did not find a pre-computed array, so we are re-computing STL. ");
 
-	# East, North, Up Detrending
-	decyear=gps_ts_functions.get_float_times(new_dtarray);		
+		# Preprocess data: remove nans, fill in gaps. 
+		Data=gps_ts_functions.remove_nans(Data);
+		[new_dtarray, dE, Se] = preprocess_stl(Data.dtarray, Data.dE, Data.Se);
+		[new_dtarray, dN, Sn] = preprocess_stl(Data.dtarray, Data.dN, Data.Sn);
+		[new_dtarray, dU, Su] = preprocess_stl(Data.dtarray, Data.dU, Data.Su);
 
-	dE_detrended=np.zeros(np.shape(dE)); dN_detrended=np.zeros(np.shape(dN)); dU_detrended=np.zeros(np.shape(dU));
-	east_coef=np.polyfit(decyear,dE,1)[0];
-	for i in range(len(dE)):
-		dE_detrended[i]=dE[i]-east_coef*decyear[i] - (dE[0]-east_coef*decyear[0]);
-	north_coef=np.polyfit(decyear,dN,1)[0];
-	for i in range(len(dN)):
-		dN_detrended[i]=(dN[i]-north_coef*decyear[i]) - (dN[0]-north_coef*decyear[0]);
-	vert_coef=np.polyfit(decyear,dU,1)[0];
-	for i in range(len(dU)):
-		dU_detrended[i]=(dU[i]-vert_coef*decyear[i]) - (dU[0]-vert_coef*decyear[0]);
+		# Write E, N, U
+		ofile=open('raw_ts_data.txt','w');
+		for i in range(len(dE)):
+			mystring=dt.datetime.strftime(new_dtarray[i],"%Y%m%d");
+			ofile.write('%s %f %f %f\n' % (mystring, dE[i], dN[i], dU[i]) );
+		ofile.close();
 
-	# Put the gaps back in:
-	final_dtarray=[]; final_dE=[]; final_dN=[]; final_dU=[]; final_Se=[]; final_Sn=[]; final_Su=[];
-	for i in range(len(new_dtarray)):
-		if new_dtarray[i] in Data.dtarray:
-			final_dtarray.append(new_dtarray[i]);
-			final_dE.append(dE_detrended[i]);
-			final_dN.append(dN_detrended[i]);
-			final_dU.append(dU_detrended[i]);
-			final_Se.append(Se[i]);
-			final_Sn.append(Sn[i]);
-			final_Su.append(Su[i]);
-	final_dE=np.array(final_dE);
-	final_dN=np.array(final_dN);
-	final_dU=np.array(final_dU);
-	final_Se=np.array(final_Se);
-	final_Sn=np.array(final_Sn);
-	final_Su=np.array(final_Su);
+		# Call driver in matlab (read, STL, write)
+		subprocess.call(['matlab','-nodisplay','-nosplash','-r','stl_driver'],shell=False);
 
-	# Return data
-	Data=Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=final_dN, dE=final_dE, dU=final_dU, Sn=final_Sn, Se=final_Se, Su=final_Su, EQtimes=Data.EQtimes);
+		# Read / Detrended data
+		[dE, dN, dU]=np.loadtxt('filtered_ts_data.txt',unpack=True,usecols=(1,2,3));
+
+		# East, North, Up Detrending
+		decyear=gps_ts_functions.get_float_times(new_dtarray);		
+
+		dE_detrended=np.zeros(np.shape(dE)); dN_detrended=np.zeros(np.shape(dN)); dU_detrended=np.zeros(np.shape(dU));
+		east_coef=np.polyfit(decyear,dE,1)[0];
+		for i in range(len(dE)):
+			dE_detrended[i]=dE[i]-east_coef*decyear[i] - (dE[0]-east_coef*decyear[0]);
+		north_coef=np.polyfit(decyear,dN,1)[0];
+		for i in range(len(dN)):
+			dN_detrended[i]=(dN[i]-north_coef*decyear[i]) - (dN[0]-north_coef*decyear[0]);
+		vert_coef=np.polyfit(decyear,dU,1)[0];
+		for i in range(len(dU)):
+			dU_detrended[i]=(dU[i]-vert_coef*decyear[i]) - (dU[0]-vert_coef*decyear[0]);
+
+		# Put the gaps back in:
+		final_dtarray=[]; final_dE=[]; final_dN=[]; final_dU=[]; final_Se=[]; final_Sn=[]; final_Su=[];
+		for i in range(len(new_dtarray)):
+			if new_dtarray[i] in Data.dtarray:
+				final_dtarray.append(new_dtarray[i]);
+				final_dE.append(dE_detrended[i]);
+				final_dN.append(dN_detrended[i]);
+				final_dU.append(dU_detrended[i]);
+				final_Se.append(Se[i]);
+				final_Sn.append(Sn[i]);
+				final_Su.append(Su[i]);
+		final_dE=np.array(final_dE);
+		final_dN=np.array(final_dN);
+		final_dU=np.array(final_dU);
+		final_Se=np.array(final_Se);
+		final_Sn=np.array(final_Sn);
+		final_Su=np.array(final_Su);
+
+		# Return data
+		Data=Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=final_dN, dE=final_dE, dU=final_dU, Sn=final_Sn, Se=final_Se, Su=final_Su, EQtimes=Data.EQtimes);
+	
 	return Data;
 
 
