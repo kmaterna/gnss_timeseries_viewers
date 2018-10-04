@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 import collections
 import sys, os
 import datetime as dt 
-from scipy import signal
 import gps_io_functions
 import gps_ts_functions
+import gps_seasonal_removals
 import offsets
 import gps_input_pipeline
 
@@ -20,11 +20,11 @@ Parameters = collections.namedtuple("Parameters",['station','outliers_remove', '
 Offsets    = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'dtevts']);
 
 # Types of seasonal options: 
-#    fit: fits seasonals and linear trend by least squares inversion.
+#   lssq: fits seasonals and linear trend by least squares inversion.
 #   noel: uses noel's fits of inter-SSE velocities and seasonal terms.
 #  notch: removes the 1-year and 6-month components by notch filter.
 #  grace: uses GRACE loading model interpolated between monthly points where available, and linear inversion where not available.
-#    stl: not supported yet. 
+#    stl: only works when Matlab is open on your computer. 
 
 
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, seasonals_type='fit',datasource='pbo'):
@@ -36,8 +36,8 @@ def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, ou
 
 # -------------- CONFIGURE ------------ # 
 def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type):
-	fit_table="../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
-	grace_dir="../GPS_POS_DATA/GRACE_loading_model/"
+	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
+	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
 	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, earthquakes_remove=earthquakes_remove, 
@@ -64,7 +64,7 @@ def compute(myData, offset_obj, eq_obj, MyParams):
 	if MyParams.earthquakes_remove==1:
 		newData=offsets.remove_earthquakes(newData, eq_obj);
 	
-	trend_out=gps_ts_functions.make_detrended_option(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams);
+	trend_out=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams.fit_table, MyParams.grace_dir);
 	return [newData, trend_out];
 
 
@@ -114,6 +114,10 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	if MyParams.seasonals_remove:
 		savename=savename+"_noseasons";
 		title_name=title_name+', without seasonals'
+	
+	if MyParams.seasonals_type=="lssq":
+		savename=savename+"_lssq"
+		title_name=title_name+' by least squares'
 	if MyParams.seasonals_type=="noel":
 		savename=savename+"_noelfits"
 		title_name=title_name+' by interSSE data'
