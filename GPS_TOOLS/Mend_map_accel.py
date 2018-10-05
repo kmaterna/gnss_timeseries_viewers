@@ -7,10 +7,8 @@
 
 # Reference: 
 # Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-
-# New goal: verticals and horizontals at the same time, making two output plots
-# This avoids reading the data in many times. 
-# New goal: feed seasonal type as parameter, and include that in the output_file name
+# Feature: verticals and horizontals at the same time, making two output plots
+# Feature: feed seasonal type as parameter, and include that in the output_file name
 # This lets us run several experiments.
 
 
@@ -20,6 +18,7 @@ import datetime as dt
 import subprocess, sys
 import gps_io_functions
 import gps_ts_functions
+import gps_seasonal_removals
 import gps_input_pipeline
 import offsets
 import stations_within_radius
@@ -78,8 +77,12 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 		# Remove the earthquakes
 		newobj=offsets.remove_antenna_offsets(dataobj_list[i],offsetobj_list[i]);
 		newobj=offsets.remove_earthquakes(newobj, eqobj_list[i]);
-		newobj=gps_ts_functions.make_detrended_option(newobj, 1, fit_type);  # remove seasonals
+		if fit_type=='none':
+			newobj=gps_seasonal_removals.make_detrended_ts(newobj, 0, fit_type);  # remove seasonals
+		else:
+			newobj=gps_seasonal_removals.make_detrended_ts(newobj, 1, fit_type);  # remove seasonals
 
+		# What is this? It looks like awful code. 
 		if newobj.dN[0]==1.0000:
 			print("Passing because we haven't computed GRACE yet...");
 			noeq_objects.append(newobj);
@@ -155,8 +158,6 @@ def adjust_by_reference_stations(names, coords, slope_obj):
 				background_slopes_before.append(slope_obj[i][0]);
 				background_slopes_after.append(slope_obj[i][1]);
 	
-	# print(background_slopes_before);
-	# print(background_slopes_after);
 	vert_reference_before=np.nanmean(background_slopes_before);
 	vert_reference_after =np.nanmean(background_slopes_after);
 	print("Vert slope before: %f " % vert_reference_before);

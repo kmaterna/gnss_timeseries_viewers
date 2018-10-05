@@ -1,6 +1,8 @@
 # The purpose of this script is to perform STL on each station in the list. 
 # It will save the data into a text file
 # This process will save time down the line. 
+# 30 may not always be the optimal parameter value (especially for long time series), 
+# But I'm leaving it hard-coded for now. 
 
 import numpy as np 
 import collections
@@ -19,7 +21,7 @@ def main_function():
 	return;
 
 def configure():
-	infile="CA.txt";
+	infile="CA2.txt";
 	outdir="../../GPS_POS_DATA/STL_models/";
 	outliers_def = 15.0;  # mm away from average. 
 	return [infile, outdir, outliers_def];
@@ -47,7 +49,6 @@ def compute(myData, offset_obj, eq_obj, outliers_def, outdir):
 		newData=offsets.remove_earthquakes(newData, eq_obj[i]);
 		stl_filt=gps_seasonal_removals.make_detrended_ts(newData, 1, 'stl');
 		outputs(stl_filt, outdir);
-		break;
 	return;
 
 # ------------ OUTPUTS ------------- # 

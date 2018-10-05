@@ -189,8 +189,19 @@ def remove_seasonals_by_STL(Data, STL_dir):
 
 		# Return data
 		Data=Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=final_dN, dE=final_dE, dU=final_dU, Sn=final_Sn, Se=final_Se, Su=final_Su, EQtimes=Data.EQtimes);
-	
+		
+		# Write the file so that we don't recompute it next time. 
+		output_stl(Data,STL_dir);
+
 	return Data;
+
+def output_stl(Data, outdir):
+	ofile=open(outdir+Data.name+"_STL_30.txt",'w');
+	for i in range(len(Data.dtarray)):
+		timestamp=dt.datetime.strftime(Data.dtarray[i],"%Y%m%d");
+		ofile.write("%s %f %f %f %f %f %f\n" % (timestamp, Data.dE[i], Data.dN[i], Data.dU[i], Data.Se[i], Data.Sn[i], Data.Su[i]) );
+	ofile.close();
+	return;
 
 
 def preprocess_stl(dtarray, data_column, uncertainties):
