@@ -10,7 +10,9 @@ latN=$5
 output1=$6"_horiz.ps"
 output2=$6"_vert.ps"
 range="$lonW/$lonE/$latS/$latN"
-projection="m1.5i"
+# projection="m1.5i" # used for smaller experiments
+# projection="m1.0i"  # used for medium experiments.
+projection="m0.4i"  # used for really large experiments.
 
 # The Horizontals
 # # Insert a horizontal scale bar and title

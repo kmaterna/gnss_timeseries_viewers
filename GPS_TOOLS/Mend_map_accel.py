@@ -25,23 +25,36 @@ import stations_within_radius
 import haversine
 
 
-def driver(EQcoords, outfile_name, deltat1, deltat2, fit_type):
-	[stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename] = configure(EQcoords, outfile_name, deltat1, deltat2, fit_type);
+def driver(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size):
+	[stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename] = configure(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size);
 	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
 	[noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end, fit_type);
 	outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, map_coords, basename);
 	return;
 
 
-def configure(EQcoords, outfile_name, deltat1, deltat2, fit_type):
+def configure(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size):
 	basename=outfile_name+"_"+fit_type;
 	dt1_start  = dt.datetime.strptime(deltat1[0], "%Y%m%d");
 	dt1_end  = dt.datetime.strptime(deltat1[1], "%Y%m%d");
 	dt2_start  = dt.datetime.strptime(deltat2[0], "%Y%m%d");
 	dt2_end  = dt.datetime.strptime(deltat2[1], "%Y%m%d");
-	radius=350;  # km. 
-	map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
-	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
+
+	if overall_size=='medium':
+		radius=550;  # km.  
+		map_coords=[EQcoords[0]-0.6, EQcoords[0]+6, EQcoords[1]-3.0, EQcoords[1]+3.0];
+	elif overall_size=='huge':
+		radius=-1;  # this is a special key for using a coordinate box instead of a radius
+		map_coords=[-125.6, -110.0, 32.5, 48.5];
+	else:
+		map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
+		radius=250;
+	
+	# Getting the stations of interest ('huge' means we just want within the box.)
+	if radius==-1:
+		stations = stations_within_radius.get_stations_within_box(map_coords);
+	else:
+		stations,_ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
 	stations=gps_input_pipeline.remove_blacklist(stations);
 	stations.append("CME6"); ## A special thing for CME6, not within PBO fields. 
 	return [stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename];
