@@ -9,6 +9,7 @@ from scipy.signal import butter, filtfilt
 import subprocess, sys
 import gps_io_functions
 import gps_ts_functions
+import gps_seasonal_removals
 import gps_input_pipeline
 import offsets
 import stations_within_radius
@@ -19,20 +20,20 @@ import stations_within_radius
 #      ['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);
 
 
-def driver(eqtime):
-	[stations, fit_table, grace_dir,start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir] = configure(eqtime);
+def driver(eqtime, starttime, endtime):
+	[stations, fit_table, grace_dir,start_time_infl, end_time_infl,start_time_velo, end_time_velo, N, Wn, seasonal_type, map_coords, outfile_dir] = configure(eqtime, starttime, endtime);
 	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
-	[noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change]=compute(dataobj_list, offsetobj_list, eqobj_list, fit_table, grace_dir,start_time, end_time, seasonal_type, N, Wn);
-	outputs(noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change, start_time, end_time, outfile_dir);
+	[noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change]=compute(dataobj_list, offsetobj_list, eqobj_list, fit_table, grace_dir,start_time_infl, end_time_infl,start_time_velo, end_time_velo, seasonal_type, N, Wn);
+	outputs(noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change, start_time_infl, end_time_infl, outfile_dir);
 	return;
 
 
 # ------------ CONFIGURE ------------- # 
-def configure(eqtime):
+def configure(eqtime,starttime,endtime):
 	EQtime  = dt.datetime.strptime(eqtime, "%Y%m%d");
 	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
 	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
-	seasonal_type="notch";
+	seasonal_type="lssq";
 
 	if eqtime[0:4]=='2016' or eqtime[0:4]=='2017':
 		pre_event_duration = 0.5; # years
@@ -44,19 +45,22 @@ def configure(eqtime):
 		post_event_duration = 0.5; # years
 		print('searching %f years, centered on the event time' % ( pre_event_duration+post_event_duration) );
 
-	start_time=EQtime-dt.timedelta(days=pre_event_duration*365);
-	end_time=EQtime+dt.timedelta(days=post_event_duration*365);
+	start_time_infl=EQtime-dt.timedelta(days=pre_event_duration*365);
+	end_time_infl=EQtime+dt.timedelta(days=post_event_duration*365);
+	start_time_velo=dt.datetime.strptime(starttime, "%Y%m%d");
+	end_time_velo=dt.datetime.strptime(endtime, "%Y%m%d");
 
 	# Butterworth parameters
 	N=3;  # Order of butterworth filter
 	Wn=1/365.0;  # 1/period (days) of cutoff frequency. 	
 
-	map_coords=[-125, -122, 39, 41.5];
+	map_coords=[-125, -118, 36.5, 42.0];
+	# map_coords=[-122, -119, 37.0, 38.0];
 	stations = stations_within_radius.get_stations_within_box(map_coords);
 	stations=gps_input_pipeline.remove_blacklist(stations);
 	stations.append('CME6');
 	outfile_dir='Outputs/'+str(eqtime);
-	return [stations, fit_table, grace_dir, start_time, end_time, N, Wn, seasonal_type, map_coords, outfile_dir];
+	return [stations, fit_table, grace_dir, start_time_infl, end_time_infl, start_time_velo, end_time_velo, N, Wn, seasonal_type, map_coords, outfile_dir];
 
 
 # ------------ INPUTS  ------------- # 
@@ -67,12 +71,11 @@ def inputs(stations):
 		dataobj_list.append(myData);
 		offsetobj_list.append(offset_obj);
 		eqobj_list.append(eq_obj);
-		# break;
 	return [dataobj_list, offsetobj_list, eqobj_list];
 
 
 # ------------ COMPUTE ------------- # 
-def compute(dataobj_list, offsetobj_list, eqobj_list, fit_table, grace_dir,start_time, end_time, seasonal_type, N, Wn):
+def compute(dataobj_list, offsetobj_list, eqobj_list, fit_table, grace_dir,start_time_infl, end_time_infl,start_time_velo, end_time_velo, seasonal_type, N, Wn):
 	
 	# Initialize output objects
 	noeq_objects = []; 
@@ -84,14 +87,16 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, fit_table, grace_dir,start
 		newobj=offsets.remove_antenna_offsets(dataobj_list[i], offsetobj_list[i]);
 		newobj=offsets.remove_earthquakes(newobj,eqobj_list[i]);
 		newobj=gps_ts_functions.remove_outliers(newobj,15);  # 15mm horizontal outliers
-		newobj=gps_ts_functions.make_detrended_option(newobj, 1, seasonal_type, fit_table, grace_dir);  # can remove seasonals a few ways
+		newobj=gps_seasonal_removals.make_detrended_ts(newobj, 1, seasonal_type, fit_table, grace_dir);  # can remove seasonals a few ways
 		noeq_objects.append(newobj);
+
+		print(dataobj_list[i].name);
 
 		# Get the inflection points in the timeseries
 		float_dtarray = gps_ts_functions.get_float_times(newobj.dtarray);
-		[east_filtered, e_inflection_time, echange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dE, N, Wn, start_time, end_time);
-		[north_filtered, n_inflection_time, nchange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dN, N, Wn, start_time, end_time);
-		[vert_filtered, v_inflection_time, vchange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dU, N, Wn, start_time, end_time);
+		[east_filtered, e_inflection_time, echange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dE, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+		[north_filtered, n_inflection_time, nchange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dN, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+		[vert_filtered, v_inflection_time, vchange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dU, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
 
 		east_filt.append(east_filtered);
 		north_filt.append(north_filtered);
@@ -107,37 +112,50 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, fit_table, grace_dir,start
 
 
 # The butterworth filter. 
-def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time, end_time):
+def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo):
+	# dtarray is a datetime object array
+	# x is a float
+	# start_time and end_time are datetime objects
+	# We search withinin starttime_infl to endtime_infl for the inflection point.
+	# We use the larger array starttime_velo to endtime_velo to solve for velocity change. 
 
 	# Build the butterworth filter
 	[b,a]=butter(N, Wn, btype='low',output='ba');
 	y_filtered = filtfilt(b, a, y);
 
 	# Making a shortened filtered time series (for only the region of the earthquake)
-	new_filtered=[]; new_float_time=[];
+	new_filtered_velo=[]; new_float_time_velo=[];
+	new_filtered_infl=[]; new_float_time_infl=[];
 	for i in range(len(dtarray)):
-		if dtarray[i]>=start_time and dtarray[i]<=end_time:
-			new_float_time.append(x[i]);
-			new_filtered.append(y_filtered[i]);			
+		if dtarray[i]>=start_time_velo and dtarray[i]<=end_time_velo:
+			new_float_time_velo.append(x[i]);
+			new_filtered_velo.append(y_filtered[i]);	
+		if dtarray[i]>=start_time_infl and dtarray[i]<=end_time_infl:
+			new_float_time_infl.append(x[i]);
+			new_filtered_infl.append(y_filtered[i]);
+
+	# Pathological case that the station has no data in the time window of interest. 
+	if len(new_float_time_infl)<2:
+		print("Error! Station does not have much data in the time window. Skipping.");
+		return [y_filtered, dtarray[0], 0];
 
 	# Find the inflection points. yfirst and xfirst are derivatives. 
-	dy=np.diff(new_filtered[:],1)
-	dx=np.diff(new_float_time[:],1)
+	dy=np.diff(new_filtered_infl[:],1)
+	dx=np.diff(new_float_time_infl[:],1)
 	yfirst=np.divide(dy,dx);
-	xfirst=np.add(new_float_time[:-1],new_float_time[1:])*0.5;
-
-	# Return a datetime object where the slope is minimized
+	xfirst=np.add(new_float_time_infl[:-1],new_float_time_infl[1:])*0.5;
 	slope=abs(yfirst);
+	
+	# Return a datetime object where the slope is minimized
 	turning_point=np.argmin(slope,0);
 	turning_dt=gps_ts_functions.float_to_dt(xfirst[turning_point]);
 
-	# Get the slope of a time series, but make sure that you can use at least a month on either side. 
-	if turning_point<30 or turning_point>len(yfirst)-30:
-		slope_change=0;
-	else:
-		slope_pre=get_ts_slope(new_float_time, new_filtered, 0, turning_point);  # the slope before
-		slope_post=get_ts_slope(new_float_time, new_filtered, turning_point, -1);  # the slope after 
-		slope_change = slope_post - slope_pre;
+	# Get the slope of a time series
+	# Find the index of the datetime where the slope went to minimum.
+	turning_index_velo=new_float_time_velo.index(new_float_time_infl[turning_point]);
+	slope_pre=get_ts_slope(new_float_time_velo, new_filtered_velo, 0, turning_index_velo);  # the slope before
+	slope_post=get_ts_slope(new_float_time_velo, new_filtered_velo, turning_index_velo, -1);  # the slope after 
+	slope_change = slope_post - slope_pre;
 
 	return [y_filtered, turning_dt, slope_change];
 
@@ -150,13 +168,13 @@ def get_ts_slope(float_time, ts_data, start_index, end_index):
 
 
 # ------------ OUTPUTS ------------- # 
-def outputs(noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change, start_time, end_time, outfile_dir):
+def outputs(noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change, start_time_infl, end_time_infl, outfile_dir):
 	ofile=open(outfile_dir+'_inflections.txt','w');
 	for i in range(len(noeq_objects)):
 		ofile.write("%s %f %f %s %s %s %.3f %.3f %.3f \n" % (noeq_objects[i].name, noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_inf_time[i], north_inf_time[i], vert_inf_time[i], east_change[i], north_change[i], vert_change[i]) );
 	ofile.close();
 	for i in range(len(noeq_objects)):
-		output_plots(noeq_objects[i], east_filt[i], north_filt[i], vert_filt[i], east_inf_time[i], north_inf_time[i], vert_inf_time[i], start_time, end_time, outfile_dir);
+		output_plots(noeq_objects[i], east_filt[i], north_filt[i], vert_filt[i], east_inf_time[i], north_inf_time[i], vert_inf_time[i], start_time_infl, end_time_infl, outfile_dir);
 	return;
 
 def output_plots(noeq_obj, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, start_time, end_time, outfile_dir):
@@ -195,8 +213,8 @@ def output_plots(noeq_obj, east_filt, north_filt, vert_filt, east_inf_time, nort
 # --------- DRIVER ---------- # 
 if __name__=="__main__":
 	
-	eqtime="20140310"; # 2014 M6.8 Earthquake
-	# eqtime="20161208"; # # 2016 M6.6 Earthquake
+	eqtime="20140310"; starttime="20100117"; endtime="20161207"; # 2014 M6.8 Earthquake
+	# eqtime="20161208"; starttime="20140317"; endtime="20180901"; # 2016 M6.6 Earthquake
 	# eqtime="20100110"; # # 2010 M6.5 Earthquake
-	driver(eqtime);
+	driver(eqtime, starttime, endtime);
 
