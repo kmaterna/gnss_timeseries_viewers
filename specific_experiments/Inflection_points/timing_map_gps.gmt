@@ -10,6 +10,7 @@ latN=$5
 output1=$6"_east.ps"
 output2=$6"_north.ps"
 output3=$6"_vert.ps"
+title=$7
 range="$lonW/$lonE/$latS/$latN"
 projection="M4.5i"  
 
@@ -17,7 +18,7 @@ projection="M4.5i"
 
 # EAST
 # Insert a horizontal scale bar and title
-gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:."Days Before/After "$6: -Dh -K -P > $output1 # the title goes here
+gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:."Days Before/After "$7: -Dh -K -P > $output1 # the title goes here
 gmt makecpt -T-200/200/5 -Cno_green > mycpt.cpt 
 awk '{print $1, $2, $3, $6}' $infile | gmt psvelo -R$range -J$projection -O -P -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output1  # vectors
 awk '{print $1, $2, $5, $4*6}' $infile | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -P -O >> $output1

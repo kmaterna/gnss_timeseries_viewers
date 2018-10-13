@@ -85,7 +85,9 @@ def onset_time_map_GMT(name,lon,lat,east,east_change,north, north_change, vert, 
 	# output format: lon, lat, east_size, east_days, north_size, north_days, vert_size, vert_days, name
 
 
-	call(['./timing_map_gps.gmt',outfile_name,'-125', '-118', '36.5', '42.0',earthquake_time],shell=False);
+	call(['./timing_map_gps.gmt',outfile_name,'-125', '-118', '36.5', '42.0',earthquake_time+"_norcal",earthquake_time],shell=False);  # northern California
+	call(['./timing_map_gps.gmt',outfile_name,'-125', '-110', '32.5', '48.5',earthquake_time+"_WUS",earthquake_time],shell=False);   # WUS
+	call(['./timing_map_gps.gmt',outfile_name,'-122', '-115', '32.5', '37.5',earthquake_time+"_socal", earthquake_time],shell=False);   # SoCal
 	return;
 
 
@@ -93,8 +95,8 @@ def onset_time_map_GMT(name,lon,lat,east,east_change,north, north_change, vert, 
 if __name__=="__main__":
 
 	#  THE MAIN PROGRAM
-	earthquake_time="20140310"  # I kicked out TRND and CME6 from this analysis. They have strange non-tectonic signals. 
-	# earthquake_time="20161208";
+	# earthquake_time="20140310"  #
+	earthquake_time="20161208";
 	infile="Outputs/"+earthquake_time+"_inflections.txt"
 	name=[]; lat=[]; lon=[]; east=[]; north=[]; up=[]; east_change=[]; north_change=[]; up_change=[];
 
@@ -111,9 +113,6 @@ if __name__=="__main__":
 		north_change.append(float(temp[10]));
 		up_change.append(float(temp[11]));
 
-
-	# onset_time_map(name,lon,lat,east,east_change,earthquake_time,'East',earthquake_time+'_east.png');
-	# onset_time_map(name,lon,lat,north,north_change,earthquake_time,'North',earthquake_time+'_north.png');
-	# onset_time_map(name,lon,lat,up,up_change,earthquake_time,'Vertical',earthquake_time+'_up.png');
+	# Make GMT maps. 
 	onset_time_map_GMT(name, lon, lat, east, east_change, north, north_change, up, up_change, earthquake_time);
 

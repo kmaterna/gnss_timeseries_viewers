@@ -54,8 +54,9 @@ def configure(eqtime,starttime,endtime):
 	N=3;  # Order of butterworth filter
 	Wn=1/365.0;  # 1/period (days) of cutoff frequency. 	
 
-	map_coords=[-125, -118, 36.5, 42.0];
-	# map_coords=[-122, -119, 37.0, 38.0];
+	# map_coords=[-125, -118, 36.5, 42.0];  # northern CA
+	map_coords=[-125, -110, 32.5, 48.5]; # western US
+	# map_coords=[-122, -119, 37.0, 38.0]; # MTJ
 	stations = stations_within_radius.get_stations_within_box(map_coords);
 	stations=gps_input_pipeline.remove_blacklist(stations);
 	stations.append('CME6');
@@ -153,6 +154,14 @@ def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time_infl, end_time_
 	# Get the slope of a time series
 	# Find the index of the datetime where the slope went to minimum.
 	turning_index_velo=new_float_time_velo.index(new_float_time_infl[turning_point]);
+
+	if turning_index_velo<3:  # In a few rare cases, there's no good data on one side of the earthquake. 
+		print("Error! Station does not have much data before the earthquake. Skipping.");
+		return [y_filtered, dtarray[0], 0];
+	if turning_index_velo>len(new_float_time_velo)-3:  # In a few rare cases, there's no good data on one side of the earthquake. 
+		print("Error! Station does not have much after before the earthquake. Skipping.");
+		return [y_filtered, dtarray[0], 0];
+
 	slope_pre=get_ts_slope(new_float_time_velo, new_filtered_velo, 0, turning_index_velo);  # the slope before
 	slope_post=get_ts_slope(new_float_time_velo, new_filtered_velo, turning_index_velo, -1);  # the slope after 
 	slope_change = slope_post - slope_pre;
@@ -213,8 +222,8 @@ def output_plots(noeq_obj, east_filt, north_filt, vert_filt, east_inf_time, nort
 # --------- DRIVER ---------- # 
 if __name__=="__main__":
 	
-	eqtime="20140310"; starttime="20100117"; endtime="20161207"; # 2014 M6.8 Earthquake
-	# eqtime="20161208"; starttime="20140317"; endtime="20180901"; # 2016 M6.6 Earthquake
+	# eqtime="20140310"; starttime="20100117"; endtime="20161207"; # 2014 M6.8 Earthquake
+	eqtime="20161208"; starttime="20140317"; endtime="20180901"; # 2016 M6.6 Earthquake
 	# eqtime="20100110"; # # 2010 M6.5 Earthquake
 	driver(eqtime, starttime, endtime);
 
