@@ -74,13 +74,17 @@ def onset_time_map(name,lon,lat,data,size,earthquake_time,description,savename):
 def onset_time_map_GMT(name,lon,lat,east,east_change,north, north_change, vert, vert_change, earthquake_time):
 	# Earthquake time
 	eq_dt = dt.datetime.strptime(earthquake_time,"%Y%m%d");
+	max_size=3.5;
 	outfile_name=earthquake_time+".txt";
 	outfile=open(outfile_name,'w');
 	for i in range(len(lon)):
 		east_days=(east[i]-eq_dt).days;
 		north_days=(north[i]-eq_dt).days;
 		vert_days=(vert[i]-eq_dt).days;
-		outfile.write("%f %f %f %f %f %f %f %f %f %f %f %s\n" % (lon[i], lat[i], east_change[i], abs(east_change[i]), east_days, north_change[i], abs(north_change[i]), north_days, vert_change[i], abs(vert_change[i]), vert_days, name[i]) );
+		east_size=np.min([abs(east_change[i]),max_size]);
+		north_size=np.min([abs(north_change[i]),max_size]);
+		vert_size=np.min([abs(vert_change[i]),max_size*1.3]);
+		outfile.write("%f %f %f %f %f %f %f %f %f %f %f %s\n" % (lon[i], lat[i], east_change[i], east_size, east_days, north_change[i], north_size, north_days, vert_change[i], vert_size, vert_days, name[i]) );
 	outfile.close();
 	# output format: lon, lat, east_size, east_days, north_size, north_days, vert_size, vert_days, name
 
@@ -95,8 +99,8 @@ def onset_time_map_GMT(name,lon,lat,east,east_change,north, north_change, vert, 
 if __name__=="__main__":
 
 	#  THE MAIN PROGRAM
-	# earthquake_time="20140310"  #
-	earthquake_time="20161208";
+	earthquake_time="20140310"  #
+	# earthquake_time="20161208";
 	infile="Outputs/"+earthquake_time+"_inflections.txt"
 	name=[]; lat=[]; lon=[]; east=[]; north=[]; up=[]; east_change=[]; north_change=[]; up_change=[];
 
