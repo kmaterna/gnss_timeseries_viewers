@@ -9,16 +9,16 @@ import gps_io_functions
 # Reference: Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']);
 
 # DRIVER 1: STATIONS WITHIN RADIUS
-def get_stations_within_radius(center, radius, coord_box=[]):
-	[input_file, center, radius, num_years, max_sigma, coord_box] = configure_circle(center, radius, coord_box);
-	myVelfield = inputs(input_file, num_years, max_sigma, coord_box);
+def get_stations_within_radius(center, radius, coord_box=[], network='pbo'):
+	[input_file, center, radius, num_years, max_sigma, coord_box] = configure_circle(center, radius, coord_box, network);
+	myVelfield = inputs(input_file, num_years, max_sigma, coord_box, network);
 	close_stations, rad_distance = compute_circle(myVelfield, center, radius);
 	return close_stations, rad_distance;
 
 # DRIVER 2: STATIONS WITHIN BOX
-def get_stations_within_box(coord_box):
-	[input_file, num_years, max_sigma]=configure_box();
-	myVelfield = inputs(input_file, num_years, max_sigma, coord_box);
+def get_stations_within_box(coord_box, network='pbo'):
+	[input_file, num_years, max_sigma]=configure_box(network);
+	myVelfield = inputs(input_file, num_years, max_sigma, coord_box, network);
 	close_stations = compute_box(myVelfield, coord_box);
 	return close_stations;
 
@@ -27,17 +27,27 @@ def get_stations_within_box(coord_box):
 
 
 # ------------ INPUTS ------------------ # 
-def inputs(input_file, num_years, max_sigma, coord_box):
+def inputs(input_file, num_years, max_sigma, coord_box, network):
 	# Purpose: generate input velocity field. 
-	[myVelfield]=gps_io_functions.read_pbo_vel_file(input_file);  # read the raw velfield from file. 
+	if network=='pbo':
+		[myVelfield]=gps_io_functions.read_pbo_vel_file(input_file);  # read the raw velfield from file. 
+	elif network=='unr':
+		[myVelfield]=gps_io_functions.read_unr_vel_file(input_file);  # read the raw velfield from file. 
+	else:
+		print("ERROR! Network %s is not recognized. " % network);
 	[myVelfield]=gps_io_functions.clean_velfield(myVelfield, num_years, max_sigma, coord_box);
 	[myVelfield]=gps_io_functions.remove_duplicates(myVelfield);
 	return myVelfield;
 
 
 # ----------- CIRCLE FUNCTIONS ---------------- # 
-def configure_circle(center, radius, coord_box):
-	input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+def configure_circle(center, radius, coord_box, network):
+	if network=='pbo':
+		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+	elif network=='unr':
+		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
+	else:
+		print("ERROR: Network %s not recognized" % network);
 	num_years=3.0;
 	max_sigma=2.0;
 	if coord_box==[]:
@@ -59,9 +69,14 @@ def compute_circle(myVelfield, center, radius):
 
 
 
-# ----------- CIRCLE FUNCTIONS ---------------- # 
-def configure_box():
-	input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+# ----------- BOX FUNCTIONS ---------------- # 
+def configure_box(network):
+	if network=='pbo':
+		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+	elif network=='unr':
+		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
+	else:
+		print("ERROR: Network %s not recognized" % network);	
 	num_years=3.0;
 	max_sigma=2.0;
 	return [input_file, num_years, max_sigma];

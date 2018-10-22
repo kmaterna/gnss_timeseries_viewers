@@ -154,7 +154,10 @@ def get_slope(Data0, starttime=[], endtime=[]):
 			mynorth.append(Data0.dN[i]);
 			myup.append(Data0.dU[i]);
 
-	time_duration=mydtarray[-1]-mydtarray[0];
+	if len(mydtarray)==0:
+		print("Error: no time array for station %s. Returning Nan" % Data0.name);
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];		
+	time_duration=mydtarray[-1]-mydtarray[0];	
 	if time_duration.days<365:
 		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
@@ -180,10 +183,6 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	vert_detrended=[myup[i]-vert_trend[i] for i in range(len(myup))];
 	vert_std = np.std(vert_detrended);	
 
-	# if Data0.name=="CME6":
-	# 	print("CME:")
-	# 	print(east_slope);
-
 	return [east_slope, north_slope, vert_slope, east_std, north_std, vert_std];
 
 
@@ -202,11 +201,11 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
 	if endtime>Data0.dtarray[-1]:
 		endttime=Data0.dtarray[-1];
 	if endtime<Data0.dtarray[0]:
-		print("Error: end time before start of array for station %s. Returning 0" % Data0.name);
-		return [0,0,0];
+		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
+		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
 	if starttime>Data0.dtarray[-1]:
-		print("Error: start time after end of array for station %s. Returning 0" % Data0.name);
-		return [0,0,0];
+		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
+		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
 
 	# Cut to desired time window, and remove nans.
 	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
@@ -218,8 +217,9 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
 			myup.append(Data0.dU[i]);
 
 	if len(mydtarray)<365:
-		print("Error: using less than one year of data to estimate parameters for station %s. Returning 0" % Data0.name);
-		return [0,0,0];
+		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
+		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
+		return [east_params, north_params, up_params];
 
 	decyear=get_float_times(mydtarray);	
 	east_params_unordered=invert_linear_annual_semiannual(decyear,myeast);

@@ -21,6 +21,8 @@ def get_station_data(station, datasource):
 		[myData, offset_obj, eq_obj] = get_pbo(station);  # PBO data format
 	if datasource=='unr':
 		[myData, offset_obj, eq_obj] = get_unr(station);  # UNR data format
+	if datasource=='error':
+		return [ [], [], [] ];  # Error code. 
 	return [myData, offset_obj, eq_obj];
 
 
@@ -51,13 +53,16 @@ def determine_datasource(station, input_datasource='pbo'):
 	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos";
 	if input_datasource=='pbo' and os.path.isfile(pbo_filename):
 		print("Using PBO file as input data. ");
-		datasource='pbo'
+		datasource='pbo';
 	elif input_datasource=='pbo' and os.path.isfile(unr_filename):
 		print("Using UNR as input data because PBO data file doesn't exist");
 		datasource='unr';
+	elif input_datasource=='unr' and os.path.isfile(unr_filename):
+		print("Using UNR as input data (selected by user).");
+		datasource='unr';
 	elif input_datasource=='unr' and not os.path.isfile(unr_filename):
-		print("Error! Cannot find file in UNR database.");
-		sys.exit(1);
+		print("Error! Cannot find file in UNR database. Skipping.");
+		datasource='error';
 	elif input_datasource != 'unr' and input_datasource != 'pbo':
 		print("Error! Invalid input datasource");
 		sys.exit(1);

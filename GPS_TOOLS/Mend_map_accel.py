@@ -25,15 +25,15 @@ import stations_within_radius
 import haversine
 
 
-def driver(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size):
-	[stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename] = configure(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size);
-	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
+def driver(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size, network):
+	[stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename] = configure(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size, network);
+	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations, network);
 	[noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end, fit_type);
 	outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, map_coords, basename);
 	return;
 
 
-def configure(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size):
+def configure(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size, network):
 	basename=outfile_name+"_"+fit_type;
 	dt1_start  = dt.datetime.strptime(deltat1[0], "%Y%m%d");
 	dt1_end  = dt.datetime.strptime(deltat1[1], "%Y%m%d");
@@ -48,24 +48,29 @@ def configure(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size):
 		map_coords=[-125.6, -110.0, 32.5, 48.5];
 	else:
 		map_coords=[EQcoords[0]-0.6, EQcoords[0]+4, EQcoords[1]-2.0, EQcoords[1]+2.0];
-		radius=250;
+		radius=330;
 	
 	# Getting the stations of interest ('huge' means we just want within the box.)
 	if radius==-1:
-		stations = stations_within_radius.get_stations_within_box(map_coords);
+		stations = stations_within_radius.get_stations_within_box(map_coords, network);
 	else:
-		stations,_ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords);
+		stations,_ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords, network);
 	stations=gps_input_pipeline.remove_blacklist(stations);
-	stations.append("CME6"); ## A special thing for CME6, not within PBO fields. 
+	stations.append("CME6"); ## A special thing for CME6, not within PBO fields and duplicated in UNR fields.
 	return [stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename];
 
-def inputs(station_names):
+
+def inputs(station_names, network):
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in station_names:
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, 'pbo');
-		dataobj_list.append(myData);
-		offsetobj_list.append(offset_obj);
-		eqobj_list.append(eq_obj);
+
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, network);
+		if myData==[]:
+			continue;
+		else:
+			dataobj_list.append(myData);
+			offsetobj_list.append(offset_obj);
+			eqobj_list.append(eq_obj);
 	return [dataobj_list, offsetobj_list, eqobj_list];
 
 
@@ -88,6 +93,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 	# The main processing loop for slopes. 
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes
+		print(names[i]);
 		newobj=offsets.remove_antenna_offsets(dataobj_list[i],offsetobj_list[i]);
 		newobj=offsets.remove_earthquakes(newobj, eqobj_list[i]);
 		if fit_type=='none':
@@ -111,9 +117,6 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_st
 		[east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, usig1]=gps_ts_functions.get_slope(newobj,starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
 
 		# When do we ignore stations? When their detrended time series have a large variance. 
-		# print(dataobj_list[i].name);
-		# print(esig0);
-		# print(esig1);
 
 		critical_value=5;  # mm/yr
 		if abs(esig0)>critical_value or abs(nsig0)>critical_value or abs(esig1)>critical_value or abs(nsig1)>critical_value:
@@ -188,7 +191,7 @@ def outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, map_c
 	for i in range(len(noeq_objects)):
 		ofile1.write("%f %f %f %f 0 %f 0 0 %s\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0]), vert_slope_obj[i][1]-vert_slope_obj[i][0], noeq_objects[i].name) );
 	ofile1.close();
-	subprocess.call(['./accel_map_gps.gmt',basename+'.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),basename],shell=False);
-	print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+basename);
+	# subprocess.call(['./accel_map_gps.gmt',basename+'.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),basename],shell=False);
+	# print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+basename);
 	return;
 
