@@ -31,6 +31,7 @@ def max_shear_strain(exx, exy, eyy):
 def compute_displacement_gradients(up, vp, ur, vr, uq, vq, dx, dy):
 	# up, vp describe velocity at a reference point P
 	# R and Q are two other points: Q offset by dx in the x direction, and R offset by dy in the y direction. 
+	# In practical usage, these are in mm/yr and km. 
 	dudx = (uq-up)/dx;
 	dvdx = (vq-vp)/dx;
 	dudy = (ur-up)/dy;
@@ -41,13 +42,13 @@ def compute_displacement_gradients(up, vp, ur, vr, uq, vq, dx, dy):
 def compute_strain_components_from_dx(dudx, dvdx, dudy, dvdy):
 	# Given a displacement tensor, compute the relevant parts of the strain and rotation tensors. 
 	# Also converts to nanostrain per year.
-	# Rot is the determinant of the rotation tensor. 
+	# Rot is the off-diagonal element of the rotation tensor
 	# http://www.engr.colostate.edu/~thompson/hPage/CourseMat/Tutorials/Solid_Mechanics/rotations.pdf
 	exx=dudx*1000;
 	exy=(0.5 * (dvdx+dudy) )*1000;
 	eyy=dvdy*1000;
-	rot=0 - (0.5*0.5*(dvdx-dudy)*(dudy-dvdx));
-	rot=rot*1000.0*5;   # putting a five here to make units consisent with other calculations. This is probably a bug. 
+	rot=(0.5*(dvdx-dudy));
+	rot=rot*1000.0;
 	return [exx, exy, eyy, rot];
 
 	
