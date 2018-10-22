@@ -10,6 +10,7 @@ latN=$5
 output1=$6"_horiz.ps"
 output2=$6"_vert.ps"
 horiz_scale=0.3  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
+vert_scale=0.1  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
 range="$lonW/$lonE/$latS/$latN"
 projection="M6.0i"  # used for medium experiments.
 
@@ -36,9 +37,9 @@ EOF
 gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:." ": -Dh -K -P > $output2 # the title goes here
 
 # Add PBO velocity vectors
-awk '{print $1, $2, $5, $6, $7, $8}' $infile | gmt psvelo -R$range -J$projection -O -P -K -Se0.30/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output2
+awk '{print $1, $2, $5, $6, $7, $8}' $infile | gmt psvelo -R$range -J$projection -O -P -K -Se$vert_scale/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output2
 awk '{print $1, $2}' $infile | gmt psxy -R$range -J$projection -Sc0.10 -Gred -O -K >> $output2 # Put dots and labels
-gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.30/0.68/10 -Wblack -K -O <<EOF >> $output2
+gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$vert_scale/0.68/10 -Wblack -K -O <<EOF >> $output2
 -124.85 41.8 1 0 0.0 0.0 0.0 1mm/yr
 EOF
 

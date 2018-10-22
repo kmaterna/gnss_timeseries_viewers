@@ -16,7 +16,7 @@ EQ4="20180905"
 # Center_Coords=[-125.134, 43.829]; # Oregon
 Center_Coords=[-124.0, 38.5]; # Western US everything
 filter_type='lssq'; # OPTIONS: lssq, notch, stl, grace, none. 
-size='huge';  # OPTIONS: small, medium, huge
+size='medium';  # OPTIONS: small, medium, huge
 network='unr';
 
 
@@ -24,8 +24,8 @@ network='unr';
 # Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], filter_type, size, network); # done
 # Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016", [EQ1,EQ2],[EQ3,EQ4],filter_type, size, network);  # done
 # Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], filter_type, size, network); # done
-Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], filter_type, size, network); # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], filter_type, size, network); # done
 
-
+Mend_map_accel.driver(Center_Coords, "NAPA", ["20110824","20140824"],["20140824","20170824"], filter_type, size, network); # done
 
 
