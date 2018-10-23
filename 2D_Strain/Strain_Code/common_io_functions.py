@@ -16,22 +16,22 @@ import visr_strain
 
 
 
-Params=collections.namedtuple("Params",['strain_method','input_file','map_range','coord_box','num_years','max_sigma','grid_inc','outdir','gmtfile']);
+Params=collections.namedtuple("Params",['strain_method','input_file','map_range','coord_box','coord_box_data','num_years','max_sigma','grid_inc','outdir','gmtfile']);
 
 
 
 # ----------------- CONFIGURE -------------------------
 def configure(strain_method):
-	# input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
-	input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
+	input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+	# input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
 	# input_file="../../GPS_POS_DATA/PBO_Velocity_Files/TEST_velfield.txt";
 	map_range=[-125, -121, 37.0, 42.2]; # Northern California
 	map_range_string = str(map_range[0])+'/'+str(map_range[1])+'/'+str(map_range[2])+'/'+str(map_range[3]);
 	num_years=3.0;
 	max_sigma=2.0;
-	[grid_inc, coord_box, outdir, gmtfile] = get_tunable_options(strain_method, map_range);
+	[grid_inc, coord_box, coord_box_data, outdir, gmtfile] = get_tunable_options(strain_method, map_range);
 	print("Reading %s to compute strain using %s method" % (input_file, strain_method) );
-	MyParams=Params(strain_method=strain_method, input_file=input_file, map_range=map_range_string, coord_box=coord_box, num_years=num_years, max_sigma=max_sigma, grid_inc=grid_inc, outdir=outdir, gmtfile=gmtfile);
+	MyParams=Params(strain_method=strain_method, input_file=input_file, map_range=map_range_string, coord_box=coord_box, coord_box_data=coord_box_data, num_years=num_years, max_sigma=max_sigma, grid_inc=grid_inc, outdir=outdir, gmtfile=gmtfile);
 	return [MyParams];
 
 
@@ -40,32 +40,43 @@ def get_tunable_options(strain_method, map_range):
 	if strain_method=="gpsgridder":
 		grid_inc   =0.02;
 		coord_box  =[map_range[0]-1, map_range[1]+3, map_range[2]-2, map_range[3]+2];
+		coord_box_data = coord_box;
 		outdir     ="../GPSgridder/";
 		gmtfile    ="gpsgridder_gmt.gmt";
 
 	elif strain_method=="visr":
 		grid_inc   =0.04;
 		coord_box  =[map_range[0]-0.5, map_range[1]+0.5, map_range[2]-0.5, map_range[3]+0.5];
+		coord_box_data = coord_box;
 		outdir     ="../visr/";
 		gmtfile    ="visr_gmt.gmt";
 
 	elif strain_method=="delaunay":
 		grid_inc   =0.04; # larger interval for convenience, because it's slow. 
 		coord_box  =[map_range[0]-0.5, map_range[1]+0.5, map_range[2]-0.5, map_range[3]+0.5];
+		coord_box_data = coord_box;
 		outdir     ="../Delaunay/"
 		gmtfile    ="delaunay_gmt.gmt"
 
 	elif strain_method=="hammond":
 		grid_inc   =0.04; # larger interval for convenience, because it's slow. 
 		coord_box  =[map_range[0]-0.5, map_range[1]+0.5, map_range[2]-0.5, map_range[3]+0.5];
+		coord_box_data = coord_box;
 		outdir     ="../Hammond/"
 		gmtfile    ="hammond_gmt.gmt"
+
+	elif strain_method=="spline":
+		grid_inc   =0.02; 
+		coord_box  =[map_range[0]-0.5, map_range[1]+0.5, map_range[2]-0.5, map_range[3]+0.5];  # big box, small box
+		coord_box_data = [-126, -114, 32, 48,];
+		outdir     ="../spline/"
+		gmtfile    ="spline_gmt.gmt"
 
 	else:
 		print("ERROR: "+strain_method+" is not a known strain method. ");
 		sys.exit(1);
 
-	return [grid_inc, coord_box, outdir, gmtfile];
+	return [grid_inc, coord_box, coord_box_data, outdir, gmtfile];
 
 
 
@@ -80,7 +91,7 @@ def inputs(MyParams):
 		print("Error! Cannot read %s " % MyParams.input_file);
 		sys.exit(1);
 	print("%d stations before applying coord_box." % (len(myVelfield.name)) );
-	[myVelfield]=gps_io_functions.clean_velfield(myVelfield, MyParams.num_years, MyParams.max_sigma, MyParams.coord_box);
+	[myVelfield]=gps_io_functions.clean_velfield(myVelfield, MyParams.num_years, MyParams.max_sigma, MyParams.coord_box_data);
 	[myVelfield]=gps_io_functions.remove_duplicates(myVelfield);
 	print("%d stations after selection criteria." % (len(myVelfield.name)) );
 	return [myVelfield];
@@ -117,26 +128,43 @@ def write_grid_eigenvectors(xdata, ydata, w1, w2, v00, v01, v10, v11, MyParams):
 		eigs_dec=8;
 	elif MyParams.strain_method=='gpsgridder':
 		eigs_dec=12;
+	elif MyParams.strain_method=='spline':
+		eigs_dec=12;
+	else:
+		print("Error! strain method not recognized for eigenvector plotting.");
+
+	do_not_print_value=200;
 
 	for j in range(len(ydata)):
 		for k in range(len(xdata)):
 			if np.mod(j,eigs_dec)==0 and np.mod(k,eigs_dec)==0:
 				if w1[j][k]>0:
 					scale=w1[j][k];
+					if scale>do_not_print_value:
+						scale=0;
 					positive_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], v00[j][k]*scale, v10[j][k]*scale) );
 					positive_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], -v00[j][k]*scale, -v10[j][k]*scale) );
 				if w1[j][k]<0:
 					scale=w1[j][k];
+					if scale>do_not_print_value:
+						scale=0;					
 					negative_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], v00[j][k]*scale, v10[j][k]*scale) );
 					negative_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], -v00[j][k]*scale, -v10[j][k]*scale) );
 				if w2[j][k]>0:
 					scale=w2[j][k];
+					if scale>do_not_print_value:
+						scale=0;					
 					positive_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], v01[j][k]*scale, v11[j][k]*scale) );
 					positive_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], -v01[j][k]*scale, -v11[j][k]*scale) );
 				if w2[j][k]<0:
 					scale=w2[j][k];
+					if scale>do_not_print_value:
+						scale=0;					
 					negative_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], v01[j][k]*scale, v11[j][k]*scale) );
 					negative_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], -v01[j][k]*scale, -v11[j][k]*scale) );
+	positive_file.close();
+	negative_file.close();
+
 	return;
 
 
