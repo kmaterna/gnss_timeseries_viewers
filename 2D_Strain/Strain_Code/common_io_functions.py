@@ -134,32 +134,33 @@ def write_grid_eigenvectors(xdata, ydata, w1, w2, v00, v01, v10, v11, MyParams):
 		print("Error! strain method not recognized for eigenvector plotting.");
 
 	do_not_print_value=200;
+	overmax_scale=200;
 
 	for j in range(len(ydata)):
 		for k in range(len(xdata)):
 			if np.mod(j,eigs_dec)==0 and np.mod(k,eigs_dec)==0:
 				if w1[j][k]>0:
 					scale=w1[j][k];
-					if scale>do_not_print_value:
-						scale=0;
+					if abs(scale)>do_not_print_value:
+						scale=overmax_scale;
 					positive_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], v00[j][k]*scale, v10[j][k]*scale) );
 					positive_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], -v00[j][k]*scale, -v10[j][k]*scale) );
 				if w1[j][k]<0:
 					scale=w1[j][k];
-					if scale>do_not_print_value:
-						scale=0;					
+					if abs(scale)>do_not_print_value:
+						scale=overmax_scale;					
 					negative_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], v00[j][k]*scale, v10[j][k]*scale) );
 					negative_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], -v00[j][k]*scale, -v10[j][k]*scale) );
 				if w2[j][k]>0:
 					scale=w2[j][k];
-					if scale>do_not_print_value:
-						scale=0;					
+					if abs(scale)>do_not_print_value:
+						scale=overmax_scale;
 					positive_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], v01[j][k]*scale, v11[j][k]*scale) );
 					positive_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], -v01[j][k]*scale, -v11[j][k]*scale) );
 				if w2[j][k]<0:
 					scale=w2[j][k];
-					if scale>do_not_print_value:
-						scale=0;					
+					if abs(scale)>do_not_print_value:
+						scale=overmax_scale;
 					negative_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], v01[j][k]*scale, v11[j][k]*scale) );
 					negative_file.write("%s %s %s %s 0 0 0\n" % (xdata[k], ydata[j], -v01[j][k]*scale, -v11[j][k]*scale) );
 	positive_file.close();
