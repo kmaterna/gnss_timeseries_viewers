@@ -53,6 +53,7 @@ def compute(myVelfield, MyParams):
 	v01=[];
 	v10=[];
 	v11=[];
+	dilatation=[];
 
 
 	# for each triangle:
@@ -70,9 +71,9 @@ def compute(myVelfield, MyParams):
 		yindex3 = np.where(myVelfield.nlat==triangle_vertices[i,2,1])
 		index3=np.intersect1d(xindex3,yindex3);
 
-		VE1=myVelfield.e[index1]; VN1=myVelfield.n[index1];
-		VE2=myVelfield.e[index2]; VN2=myVelfield.n[index2];
-		VE3=myVelfield.e[index3]; VN3=myVelfield.n[index3];
+		VE1=myVelfield.e[index1[0]]; VN1=myVelfield.n[index1[0]];
+		VE2=myVelfield.e[index2[0]]; VN2=myVelfield.n[index2[0]];
+		VE3=myVelfield.e[index3[0]]; VN3=myVelfield.n[index3[0]];
 		obs_vel = np.array([[VE1],[VN1],[VE2],[VN2],[VE3],[VN3]]);
 
 		# Get the distance between centroid and vertex (in km)
@@ -97,11 +98,7 @@ def compute(myVelfield, MyParams):
 
 
 		# The components that are easily computed
-		# Units: nanostrain per year. 
-		exx=dVEdE*1000;
-		exy=0.5 * (dVEdN+dVNdE)*1000;
-		eyy=dVNdN*1000;
-		rot.append(1000*0.25*(dVNdE-dVEdN)*(dVNdE-dVEdN));  # is this right? 
+		[exx, exy, eyy, rotation] = strain_tensor_toolbox.compute_strain_components_from_dx(dVEdE, dVNdE, dVEdN, dVNdN);
 
 		# # Compute a number of values based on tensor properties. 
 		I2nd_tri = np.log10(np.abs(strain_tensor_toolbox.second_invariant(exx, exy, eyy)));
@@ -110,14 +107,16 @@ def compute(myVelfield, MyParams):
 
 		e1.append(e11);
 		e2.append(e22);
+		rot.append(abs(rotation));
 		max_shear.append((e11 - e22)/2);
 		v00.append(v[0][0]);
 		v10.append(v[1][0]);
 		v01.append(v[0][1]);
 		v11.append(v[1][1]);
+		dilatation.append(e11+e22);
 
 
-	return [xcentroid, ycentroid, triangle_vertices, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11];
+	return [xcentroid, ycentroid, triangle_vertices, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, dilatation];
 
 
 

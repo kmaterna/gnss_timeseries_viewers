@@ -57,6 +57,7 @@ def compute(myVelfield, MyParams):
 	v01=np.zeros(np.shape(X));  # more complicated: eigenvectors (array of matrix 2x2)
 	v10=np.zeros(np.shape(X));  # more complicated: eigenvectors (array of matrix 2x2)
 	v11=np.zeros(np.shape(X));  # more complicated: eigenvectors (array of matrix 2x2)
+	dilatation=np.zeros(np.shape(X));
 
 	# the strain calculation
 	for j in range(len(yarray)-1):
@@ -85,8 +86,9 @@ def compute(myVelfield, MyParams):
 			v01[j][i]=v1[0][1];
 			v11[j][i]=v1[1][1];
 			max_shear[j][i] = (e11 - e22)/2;
+			dilatation[j][i]= e11+e22; 
 
-	return [xarray, yarray, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11];
+	return [xarray, yarray, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, dilatation];
 
 
 	# For debugging, make a plot of the velocities. 

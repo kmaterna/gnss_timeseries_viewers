@@ -46,8 +46,8 @@ compute_dict={
 
 if __name__=="__main__":
 
-	strain_method="gpsgridder"
-	driver_dict[strain_method](strain_method);
+	# strain_method="gpsgridder"
+	# driver_dict[strain_method](strain_method);
 
 	# strain_method="hammond"
 	# driver_dict[strain_method](strain_method);
@@ -58,7 +58,6 @@ if __name__=="__main__":
 	# strain_method="spline"
 	# driver_dict[strain_method](strain_method);	
 
-	# Doesn't work right now, and similar to Hammond anyway
-	# strain_method="delaunay"
-	# driver_dict[strain_method](strain_method);
+	strain_method="delaunay"
+	driver_dict[strain_method](strain_method);
 
