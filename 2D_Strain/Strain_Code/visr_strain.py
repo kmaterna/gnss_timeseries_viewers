@@ -25,8 +25,8 @@ def compute(myVelfield, MyParams):
 	write_fortran_data_file(strain_data_file, myVelfield);
 	call_fortran_compute(strain_config_file);
 	# We convert that text file into grids, which we will write as GMT grd files. 
-	[xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11] = make_output_grids_from_strain_out(strain_output_file);
-	return [xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11];
+	[xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, dilatation] = make_output_grids_from_strain_out(strain_output_file);
+	return [xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, dilatation];
 
 
 def write_fortran_config_file(strain_config_file, strain_data_file, strain_output_file, MyParams):
@@ -114,7 +114,7 @@ def make_output_grids_from_strain_out(infile):
 	# Then place them into the 2d arrays. 
 	# Then go compute I2nd, eigenvectors and eigenvalues. 
 
-	I2nd=np.zeros((ylen, xlen)); max_shear=np.zeros((ylen, xlen)); rot=np.zeros((ylen, xlen)); e1=np.zeros((ylen, xlen)); e2=np.zeros((ylen, xlen));
+	I2nd=np.zeros((ylen, xlen)); max_shear=np.zeros((ylen, xlen)); rot=np.zeros((ylen, xlen)); e1=np.zeros((ylen, xlen)); e2=np.zeros((ylen, xlen)); dilatation=np.zeros((ylen, xlen))
 	v00=np.zeros((ylen, xlen)); v01=np.zeros((ylen, xlen)); v10=np.zeros((ylen, xlen)); v11=np.zeros((ylen, xlen)); 
 	print(np.shape(xaxis));
 	print(np.shape(I2nd))
@@ -131,9 +131,10 @@ def make_output_grids_from_strain_out(infile):
 		v10[yindex][xindex]=v1[1][0];
 		v01[yindex][xindex]=v1[0][1];
 		v11[yindex][xindex]=v1[1][1];
+		dilatation[yindex][xindex]=e11+e22;
 		max_shear[yindex][xindex] = (e11 - e22)/2;
 
 
-	return [xaxis, yaxis, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11];
+	return [xaxis, yaxis, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, dilatation];
 
 

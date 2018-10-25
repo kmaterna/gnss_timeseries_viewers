@@ -102,7 +102,7 @@ def inputs(MyParams):
 
 # ----------------- OUTPUTS -------------------------
 
-def outputs_2d(xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, myVelfield, MyParams):
+def outputs_2d(xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, dilatation, myVelfield, MyParams):
 	print("Sending outputs");
 	outfile=open(MyParams.outdir+"tempgps.txt",'w');
 	for i in range(len(myVelfield.n)):
@@ -111,7 +111,9 @@ def outputs_2d(xdata, ydata, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, m
 	netcdf_io_functions.produce_output_netcdf(xdata, ydata, I2nd, 'per yr', MyParams.outdir+'I2nd.nc');
 	netcdf_io_functions.flip_if_necessary(MyParams.outdir+'I2nd.nc');
 	netcdf_io_functions.produce_output_netcdf(xdata, ydata, rot, 'per yr', MyParams.outdir+'rot.nc');
-	netcdf_io_functions.flip_if_necessary(MyParams.outdir+'rot.nc');	
+	netcdf_io_functions.flip_if_necessary(MyParams.outdir+'rot.nc');
+	netcdf_io_functions.produce_output_netcdf(xdata, ydata, dilatation, 'per yr', MyParams.outdir+'dila.nc');
+	netcdf_io_functions.flip_if_necessary(MyParams.outdir+'dila.nc');
 	print("Max I2: %f " % (np.amax(I2nd)));
 	print("Max rot: %f " % (np.amax(rot)));
 	print("Min rot: %f " % (np.amin(rot)));
@@ -173,11 +175,12 @@ def write_grid_eigenvectors(xdata, ydata, w1, w2, v00, v01, v10, v11, MyParams):
 
 
 
-def outputs_1d(xcentroid, ycentroid, polygon_vertices, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, myVelfield, MyParams):
+def outputs_1d(xcentroid, ycentroid, polygon_vertices, I2nd, max_shear, rot, e1, e2, v00, v01, v10, v11, dilatation, myVelfield, MyParams):
 	print("Sending outputs");
 
 	rotfile=open(MyParams.outdir+"rotation.txt",'w');
 	I2ndfile=open(MyParams.outdir+"I2nd.txt",'w');
+	Dfile=open(MyParams.outdir+"Dilatation.txt",'w');
 	positive_file=open(MyParams.outdir+"positive_eigs.txt",'w');
 	negative_file=open(MyParams.outdir+"negative_eigs.txt",'w');
 
@@ -198,6 +201,12 @@ def outputs_1d(xcentroid, ycentroid, polygon_vertices, I2nd, max_shear, rot, e1,
 		I2ndfile.write(str(polygon_vertices[i,0,0])+" "+str(polygon_vertices[i,0,1])+"\n");
 		I2ndfile.write(str(polygon_vertices[i,1,0])+" "+str(polygon_vertices[i,1,1])+"\n");
 		I2ndfile.write(str(polygon_vertices[i,2,0])+" "+str(polygon_vertices[i,2,1])+"\n");
+		
+		# Write the dilatation
+		Dfile.write("> -Z"+str(dilatation[i])+"\n"); 
+		Dfile.write(str(polygon_vertices[i,0,0])+" "+str(polygon_vertices[i,0,1])+"\n");
+		Dfile.write(str(polygon_vertices[i,1,0])+" "+str(polygon_vertices[i,1,1])+"\n");
+		Dfile.write(str(polygon_vertices[i,2,0])+" "+str(polygon_vertices[i,2,1])+"\n");
 
 		# Write the eigenvectors and eigenvalues
 		write_single_eigenvector(positive_file, negative_file, e1[i], v00[i], v10[i], xcentroid[i], ycentroid[i]);
@@ -209,6 +218,7 @@ def outputs_1d(xcentroid, ycentroid, polygon_vertices, I2nd, max_shear, rot, e1,
 
 	rotfile.close();
 	I2ndfile.close();
+	Dfile.close();
 	positive_file.close();
 	negative_file.close();
 	subprocess.call("../Strain_Code/"+MyParams.gmtfile+" "+MyParams.map_range,shell=True,cwd=MyParams.outdir);
