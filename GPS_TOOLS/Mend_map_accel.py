@@ -25,9 +25,9 @@ import stations_within_radius
 import haversine
 
 
-def driver(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size, network):
+def driver(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size, network, refframe):
 	[stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename] = configure(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size, network);
-	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations, network);
+	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations, network, refframe);
 	[noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, dt1_start, dt1_end, dt2_start, dt2_end, fit_type);
 	outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, map_coords, basename);
 	return;
@@ -60,11 +60,11 @@ def configure(EQcoords, outfile_name, deltat1, deltat2, fit_type, overall_size, 
 	return [stations, map_coords, dt1_start, dt1_end, dt2_start, dt2_end, basename];
 
 
-def inputs(station_names, network):
+def inputs(station_names, network, refframe):
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in station_names:
 
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, network);
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, network, refframe);
 		if myData==[]:
 			continue;
 		else:

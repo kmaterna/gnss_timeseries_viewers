@@ -15,19 +15,25 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 # DRIVERS, CONFIGURE, AND FILE MASHING ---
 # ----------------------------------------
 
-def get_station_data(station, datasource):
-	datasource=determine_datasource(station, datasource);  # tell us which directory to use. 
+def get_station_data(station, datasource, refframe="NA"):
+	datasource=determine_datasource(station, datasource,refframe);  # tell us which directory to use. 
 	if datasource=='pbo':
-		[myData, offset_obj, eq_obj] = get_pbo(station);  # PBO data format
+		[myData, offset_obj, eq_obj] = get_pbo(station,refframe);  # PBO data format
 	if datasource=='unr':
-		[myData, offset_obj, eq_obj] = get_unr(station);  # UNR data format
+		[myData, offset_obj, eq_obj] = get_unr(station,refframe);  # UNR data format
 	if datasource=='error':
 		return [ [], [], [] ];  # Error code. 
 	return [myData, offset_obj, eq_obj];
 
 
-def get_unr(station):
-	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+".NA12.tenv3"
+def get_unr(station,refframe="NA"):
+	if refframe=="NA":
+		reflabel="NA12";
+	elif refframe=="ITRF":
+		reflabel="IGS08";
+	else:
+		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");	
+	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+"."+reflabel+".tenv3"
 	unr_coords="../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"
 	offsets_dir="../../GPS_POS_DATA/Offsets/"
 	[myData]=gps_io_functions.read_UNR_magnet_file(unr_filename, unr_coords);  # UNR data format
@@ -36,8 +42,14 @@ def get_unr(station):
 	return [myData, Offsets, Earthquakes];
 
 
-def get_pbo(station):
-	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos"
+def get_pbo(station, refframe="NA"):
+	if refframe=="NA":
+		reflabel="nam08";
+	elif refframe=="ITRF":
+		reflabel="igs08";
+	else:
+		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");
+	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_"+reflabel+".pos"
 	pbo_earthquakes_dir="../../GPS_POS_DATA/PBO_Event_Files/"
 	offsets_dir="../../GPS_POS_DATA/Offsets/"
 	[myData]=gps_io_functions.read_pbo_pos_file(pbo_filename);  # PBO data format
@@ -48,9 +60,15 @@ def get_pbo(station):
 
 # Based on whether a file exists in certain directories or not, 
 # Return the 'pbo' or 'unr' datasource that we should be using. 
-def determine_datasource(station, input_datasource='pbo'):
-	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+".NA12.tenv3";
-	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_nam08.pos";
+def determine_datasource(station, input_datasource='pbo',refframe="NA"):
+	if refframe=="NA":
+		unr_reflabel="NA12"; pbo_reflabel="nam08";
+	elif refframe=="ITRF":
+		unr_reflabel="IGS08"; pbo_reflabel="igs08";
+	else:
+		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");		
+	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+"."+unr_reflabel+".tenv3";
+	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_"+pbo_reflabel+".pos";
 	if input_datasource=='pbo' and os.path.isfile(pbo_filename):
 		print("Using PBO file as input data. ");
 		datasource='pbo';

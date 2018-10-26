@@ -5,7 +5,7 @@
 # data_file=$outdir"NAPA_lssq.txt"
 # out_base="_NAPA_lssq"
 
-outdir="Whole_WUS_lssq_UNR/"
+outdir="Whole_WUS_lssq_PBO_itrf/"
 data_file=$outdir"MTJ_2016_lssq.txt"
 out_base="_2016_lssq"
 
