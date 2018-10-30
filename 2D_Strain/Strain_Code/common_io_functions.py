@@ -22,11 +22,11 @@ Params=collections.namedtuple("Params",['strain_method','input_file','map_range'
 
 # ----------------- CONFIGURE -------------------------
 def configure(strain_method):
-	input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
-	# input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
+	# input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+	input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
 	# input_file="../../GPS_POS_DATA/PBO_Velocity_Files/TEST_velfield.txt";
-	# map_range=[-125, -121, 37.0, 42.2]; # Northern California
-	map_range=[-125, -110, 33.0, 48.2]; # WUS
+	map_range=[-125, -121, 37.0, 42.2]; # Northern California
+	# map_range=[-125, -110, 33.0, 48.2]; # WUS
 	map_range_string = str(map_range[0])+'/'+str(map_range[1])+'/'+str(map_range[2])+'/'+str(map_range[3]);
 	num_years=3.0;
 	max_sigma=2.0;
