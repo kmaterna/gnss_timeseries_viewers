@@ -35,20 +35,12 @@ def get_detrended_gps_station(station_name):
 	newData=offsets.remove_antenna_offsets(newData, offset_obj);
 	newData=gps_ts_functions.remove_outliers(newData, 5);  # mm for outliers
 	newData=offsets.remove_earthquakes(newData, eq_obj);
-	trend_out=gps_seasonal_removals.make_detrended_ts(newData, 1, 'lssq');
+	trend_out=gps_seasonal_removals.make_detrended_ts(newData, 1, 'notch');
 	return trend_out;
 
 
-
-def complex_plot(tremor):
-	start_time=dt.datetime.strptime('20120301',"%Y%m%d");
-	end_time=dt.datetime.strptime('20181101',"%Y%m%d");
-	tremor_latmin=39;
-	tremor_latmax=42;
-	box_interest=[-124,-123,40,41];
-	eqtimes=[dt.datetime.strptime('20140310',"%Y%m%d"),
-		dt.datetime.strptime('20161208',"%Y%m%d")];
-
+def get_cumulative_plot(tremor, box_interest, start_time, end_time):
+	# Returns two arrays that can be plotted against each other to give the cumulative tremor plot. 
 	dt_interest=[];
 	cnumber=[];
 	dt_interest.append(start_time);
@@ -61,6 +53,25 @@ def complex_plot(tremor):
 					dt_interest.append(tremor.dtarray[i]);
 					cnumber.append(cnumber[-1]);
 					cnumber.append(cnumber[-1]+1);
+	cnumber=np.array(cnumber);	
+	return [dt_interest, cnumber];
+
+
+def complex_plot(tremor):
+	start_time=dt.datetime.strptime('20120301',"%Y%m%d");
+	end_time=dt.datetime.strptime('20181101',"%Y%m%d");
+	tremor_latmin=39;
+	tremor_latmax=42.5;
+	box_interest1=[-124,-123.35,40,41];
+	box_interest2=[-123.3,-123,40,41];
+	box_interest3=[-122.9,-122,40,41];
+	eqtimes=[dt.datetime.strptime('20140310',"%Y%m%d"),
+		dt.datetime.strptime('20161208',"%Y%m%d")];
+
+	# Cumulative plots. 
+	[dt1, c1]=get_cumulative_plot(tremor, box_interest1, start_time, end_time);
+	[dt2, c2]=get_cumulative_plot(tremor, box_interest2, start_time, end_time);
+	[dt3, c3]=get_cumulative_plot(tremor, box_interest3, start_time, end_time);
 
 	station='P159';
 	trend_out_gps=get_detrended_gps_station(station);
@@ -77,21 +88,24 @@ def complex_plot(tremor):
 	axarr[0].tick_params(axis='both', which='major', labelsize=20);
 
 
-	axarr[1].plot_date(dt_interest,cnumber,color='darkcyan',linestyle='-',linewidth=4,marker=None);
+	h1=axarr[1].plot_date(dt1,c1/max(c1),color='darkcyan',linestyle='-',linewidth=4,marker=None,label='18-27km (flat)');
+	h2=axarr[1].plot_date(dt2,c2/max(c2),color='darkorchid',linestyle='-',linewidth=4,marker=None,label='28-38km (steep)');
+	h3=axarr[1].plot_date(dt3,c3/max(c3),color='darkorange',linestyle='-',linewidth=4,marker=None,label='>40km (steep)');
 	for item in eqtimes:
-		axarr[1].plot_date([item, item],[0,max(cnumber)],color='red',linestyle='--',linewidth=2,marker=None);
+		axarr[1].plot_date([item, item],[0,max(c1)],color='red',linestyle='--',linewidth=2,marker=None);
 	ax2=axarr[1].twinx();
 	ax2.plot_date(trend_out_gps.dtarray, trend_out_gps.dE,marker='.',markersize=4,color='gray');
 	ax2.tick_params(axis='both', which='major', labelsize=20);
 	ax2.tick_params(axis='y', which='major', colors='gray');
 	ax2.set_ylabel(station+' East (mm)',fontsize=20,color='gray');
 
-	axarr[1].set_ylim([-1,max(cnumber)+1]);
-	axarr[1].set_ylabel('Tremor Counts',fontsize=20,color='darkcyan');
+	axarr[1].set_ylim([0,1]);
+	axarr[1].set_ylabel('Norm. Tremor Counts',fontsize=20,color='black');
 	axarr[1].grid(True);
 	axarr[1].set_xlabel('Time',fontsize=20);
-	axarr[1].tick_params(axis='y', which='major', colors='darkcyan');
+	axarr[1].tick_params(axis='y', which='major', colors='black');
 	axarr[1].tick_params(axis='both', which='major', labelsize=20);
+	axarr[1].legend(loc=2,fontsize=18);
 	plt.subplots_adjust(wspace=0, hspace=0.1)
 	plt.savefig('tremor_cumulative.eps');
 	return;
