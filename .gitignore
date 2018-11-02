@@ -19,6 +19,7 @@ specific_experiments/Type_of_Seasonal/grace_box.py
 *_bdr
 *.pdf
 *.ps
+*.eps
 *.png
 *.jpg
 *.txt
@@ -32,3 +33,4 @@ specific_experiments/Type_of_Seasonal/grace_box.py
 *.conf
 *.pptx
 *.ppt
+specific_experiments/accelerations/notes

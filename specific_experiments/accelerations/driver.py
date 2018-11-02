@@ -21,9 +21,9 @@ network='unr';
 refname='ITRF'; # choices: NA, ITRF
 
 # LEAST SQUARES
-# Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], filter_type, size, network, refname); # done
+Mend_map_accel.driver(Center_Coords, "MTJ_2010", [EQ0,EQ1],[EQ1,EQ2], filter_type, size, network, refname); # done
 # Mend_map_accel.driver(Center_Coords, "MTJ_2010_2016", [EQ1,EQ2],[EQ3,EQ4],filter_type, size, network, refname);  # done
-Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], filter_type, size, network, refname); # done
+# Mend_map_accel.driver(Center_Coords, "MTJ_2014", [EQ1,EQ2],[EQ2,EQ3], filter_type, size, network, refname); # done
 # Mend_map_accel.driver(Center_Coords, "MTJ_2016", [EQ2,EQ3],[EQ3,EQ4], filter_type, size, network, refname); # done
 
 # Mend_map_accel.driver(Center_Coords, "NAPA", ["20110824","20140824"],["20140824","20170824"], filter_type, size, network); # done

@@ -53,6 +53,7 @@ def outputs(Diffs, outfile):
 	subprocess.call('./accel_map_gps.gmt '+outfile+' -121.8 -115.0 32.2 37.6 SoCal_differences',shell=True);
 	subprocess.call('./accel_map_gps.gmt '+outfile+' -125.6 -110.0 32.5 48.5 WUS_differences',shell=True);
 	subprocess.call('./accel_map_gps.gmt '+outfile+' -123.5 -119.0 35.6 40.0 SF_differences',shell=True);
+	subprocess.call('./accel_map_gps.gmt '+outfile+' -124.6 -120.4 41.2 46.2 Oregon_differences',shell=True);
 	return;
 
 if __name__=="__main__":
