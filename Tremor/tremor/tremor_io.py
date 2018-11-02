@@ -34,8 +34,4 @@ def read_wech(filename):
 
 
 
-# if __name__=="__main__":
-	# tremor=read_wech("../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt");
-
-
 
