@@ -19,10 +19,10 @@ projection="M4.5i"
 # EAST
 # Insert a horizontal scale bar and title
 gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:."Days Before/After "$7: -Dh -K -P > $output1 # the title goes here
-gmt makecpt -T-200/200/5 -Cno_green > mycpt.cpt 
+gmt makecpt -T-250/250/5 -Cseis > mycpt.cpt 
 awk '{print $1, $2, $3, $6}' $infile | gmt psvelo -R$range -J$projection -O -P -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output1  # vectors
 awk '{print $1, $2, $5, $4*6}' $infile | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -P -O >> $output1
-gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B50:"Turning Point":/:days: -P -O -K >> $output1
+gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B100:"Turning Point":/:days: -P -O -K >> $output1
 gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output1
 -125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
 -124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 2010M6.5
@@ -33,7 +33,7 @@ EOF
 gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:." ": -Dh -K -P > $output2 # the title goes here
 awk '{print $1, $2, $3, $6}' $infile | gmt psvelo -R$range -J$projection -O -P -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output2  # vectors
 awk '{print $1, $2, $8, $7*6}' $infile | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -P -O >> $output2
-gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B50:"Turning Point":/:days: -P -O -K >> $output2
+gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B100:"Turning Point":/:days: -P -O -K >> $output2
 gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output2
 -125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
 -124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 2010M6.5
@@ -43,7 +43,7 @@ EOF
 # VERTICAL
 gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0:." ": -Dh -K -P > $output3 # the title goes here
 awk '{print $1, $2, $11, $10*2}' $infile | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -P -O >> $output3
-gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B50:"Turning Point":/:days: -P -O -K >> $output3
+gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B100:"Turning Point":/:days: -P -O -K >> $output3
 gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output3
 -125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
 -124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 2010M6.5
