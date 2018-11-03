@@ -6,10 +6,6 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import tremor_io
 import tremor_tools
-import gps_input_pipeline
-import offsets
-import gps_ts_functions
-import gps_seasonal_removals
 
 
 def simple_plot(tremor):
@@ -64,9 +60,9 @@ def complex_plot(tremor):
 	axarr[0].tick_params(axis='both', which='major', labelsize=20);
 
 
-	h1=axarr[1].plot_date(dt1,c1/max(c1),color='darkcyan',linestyle='-',linewidth=4,marker=None,label='18-27km (flat)');
-	h2=axarr[1].plot_date(dt2,c2/max(c2),color='darkorchid',linestyle='-',linewidth=4,marker=None,label='28-38km (steep)');
-	h3=axarr[1].plot_date(dt3,c3/max(c3),color='darkorange',linestyle='-',linewidth=4,marker=None,label='>40km (steep)');
+	h1=axarr[1].plot_date(dt1,c1/max(c1),color='darkcyan',linestyle='-',linewidth=4,marker=None,label='coupling zone');
+	h2=axarr[1].plot_date(dt2,c2/max(c2),color='darkorchid',linestyle='-',linewidth=4,marker=None,label='ETS zone');
+	h3=axarr[1].plot_date(dt3,c3/max(c3),color='darkorange',linestyle='-',linewidth=4,marker=None,label='deep slip zone');
 	for item in eqtimes:
 		axarr[1].plot_date([item, item],[0,max(c1)],color='red',linestyle='--',linewidth=2,marker=None);
 	ax2=axarr[1].twinx();

@@ -1,0 +1,54 @@
+#! /bin/bash
+# Make an image of the subducting slab in Mendocino
+# 10/04/2016 Kathryn Materna
+
+lonW=-125.5 # MENDOCINO ONLY
+lonE=-120.2
+latS=39.0
+latN=42.8
+# lonW=-128.5 # FULL CSZ
+# lonE=-117.2
+# latS=39.0
+# latN=50.5
+range="$lonW/$lonE/$latS/$latN"
+projection="M6.75i"
+bigrange="-127/-114.0/35/46.5"
+bigprojection="m0.09i"
+output="mendocino.ps"
+resampling="0.004"  # smaller means more fine sampling (bigger file)
+
+# Make color scale
+gmt makecpt -T-15/15/1 -Cseis -Z > myrainbow.cpt
+
+# # Insert a horizontal scale bar and title
+gmt pscoast -R$range -J$projection -Lf-121.7/39.15/39.15/50+jt -Wblack -N2 -B1.0:."Tremor at MTJ": -Dh -K -P > $output 
+
+# Take slab from USGS model
+gmt grdimage detrended_N4.grd -R$range -J$projection -Cmyrainbow.cpt -K -P > $output
+gmt grdcontour detrended_N4.grd -R$range -J$projection -C10 -Gd8 -A -Wthick,black -K -P -O >> $output
+
+gmt pscoast -R$range -J$projection -Lf-121.7/39.20/39.20/50+jt -Wthick,black -N2 -B1.0:."Residual to Planar Fit": -Dh -K -P -O >> $output 
+
+# FOR FULL CSZ
+# gmt psscale -R -J -DjTR+w3.4c/0.5c+o2.3/5.7 -Cmyrainbow.cpt -B5.0:"Residual":/:km: -P -O -K >> $output  # full CSZ
+
+#  Put a tiny map in the corner to orient you
+gmt pscoast -R$bigrange -J$bigprojection -Ggray -SWhite -Di -N2 -K -O -P >> $output
+gmt psxy -R$bigrange -J$bigprojection -Wthick,red -K -O -P <<EOF >> $output
+$lonW $latS
+$lonE $latS
+$lonE $latN
+$lonW $latN
+$lonW $latS
+EOF
+
+
+
+# FOR MENDOCINO ONLY
+gmt psscale -R -J -DjTR+w3.4c/0.5c+o-1.15/-0.3 -Cmyrainbow.cpt -B5.0:"Residual":/:km: -P -O -K >> $output
+# D: Dimensions (MUST BE IN inches / centimeters)
+# B: Scale has 5km boxes.  I just copied the syntax on the annotation.  
+
+
+
+rm gmt.history

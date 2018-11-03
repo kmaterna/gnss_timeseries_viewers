@@ -16,7 +16,7 @@ import gps_input_pipeline
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 Parameters = collections.namedtuple("Parameters",['station','outliers_remove', 'outliers_def',
-	'earthquakes_remove','offsets_remove','reference_frame','seasonals_remove', 'seasonals_type','fit_table','grace_dir']);
+	'earthquakes_remove','offsets_remove','reference_frame','seasonals_remove', 'seasonals_type','datasource','refframe','fit_table','grace_dir']);
 Offsets    = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'dtevts']);
 
 # Types of seasonal options: 
@@ -27,30 +27,30 @@ Offsets    = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offs
 #    stl: only works when Matlab is open on your computer. 
 
 
-def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, seasonals_type='fit',datasource='pbo'):
-	MyParams = configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type);
-	[myData, offset_obj, eq_obj] = input_data(MyParams.station, datasource);
+def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, seasonals_type='fit',datasource='pbo',refframe='NA'):
+	MyParams = configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe);
+	[myData, offset_obj, eq_obj] = input_data(MyParams.station, MyParams.datasource, MyParams.refframe);
 	[updatedData, detrended] = compute(myData, offset_obj, eq_obj, MyParams);
 	single_ts_plot(updatedData,detrended,MyParams);
 
 
 # -------------- CONFIGURE ------------ # 
-def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type):
+def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe):
 	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
 	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
 	outliers_def       = 15.0;  # mm away from average. 
 	reference_frame    = 0;
 	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, earthquakes_remove=earthquakes_remove, 
 		offsets_remove=offsets_remove, reference_frame=reference_frame, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
-		fit_table=fit_table, grace_dir=grace_dir);
+		datasource=datasource, refframe=refframe, fit_table=fit_table, grace_dir=grace_dir);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d" % (station, earthquakes_remove, outliers_remove, seasonals_remove) );
 	return MyParams;
 
 
 # ----------- INPUTS ---------------- # 
-def input_data(station_name, datasource):
-	[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource);
+def input_data(station_name, datasource, refframe):
+	[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, refframe);
 	return [myData, offset_obj, eq_obj];
 
 
@@ -129,7 +129,13 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 		title_name=title_name+' by GRACE model'
 	if MyParams.seasonals_type=="stl":
 		savename=savename+"_stl"
-		title_name=title_name+' by STL'			
+		title_name=title_name+' by STL'	
+	if MyParams.refframe=='ITRF':
+		title_name=title_name+' in ITRF';
+		savename=savename+"_itrf";		
+	if MyParams.datasource=='unr':
+		title_name=title_name+' unr';
+		savename=savename+"_unr";
 	savename=savename+"_ts.jpg"
 
 	axarr[0].set_title(title_name);
