@@ -3,6 +3,7 @@
 
 import numpy as np 
 import matplotlib.pyplot as plt 
+import sys
 import collections
 import datetime as dt 
 
@@ -33,5 +34,19 @@ def read_wech(filename):
 	return wech_tremor;
 
 
+def read_ide(filename):
+	dtarray=[]; lonarray=[]; latarray=[];
+	ifile=open(filename,'r');
+	for line in ifile:
+		temp=line.split(',');
+		if len(temp)>1:
+			dtarray.append(dt.datetime.strptime(temp[0]+' '+temp[1],"%Y-%m-%d %H:%M:%S"));
+			lonarray.append(float(temp[3]));
+			latarray.append(float(temp[2]));
+	ifile.close();	
+
+	ide_tremor = TremorCat(dtarray=dtarray, lonarray=lonarray, latarray=latarray);
+	print("Successfully read %d tremor counts from %s " % (len(ide_tremor.dtarray),filename));
+	return ide_tremor;
 
 

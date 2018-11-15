@@ -8,9 +8,9 @@ import tremor_io
 import tremor_tools
 
 
-def simple_plot(tremor):
+def simple_plot(tremor, tremortype):
 	# Define bounds. 
-	start_time=dt.datetime.strptime('20120301',"%Y%m%d");
+	start_time=dt.datetime.strptime('20050301',"%Y%m%d");
 	end_time=dt.datetime.strptime('20181101',"%Y%m%d");
 	latmin=39; latmax=42;
 
@@ -23,22 +23,24 @@ def simple_plot(tremor):
 	plt.xlabel('Time',fontsize=20);
 	plt.ylabel('Latitude (degrees)',fontsize=20);
 	plt.tick_params(axis='both', which='major', labelsize=20);
-	plt.savefig('tremor_time_space.eps');
+	plt.savefig(tremortype+'_tremor_time_space.eps');
 	return;
 
 
 
 
-def complex_plot(tremor):
-	start_time=dt.datetime.strptime('20120301',"%Y%m%d");
-	end_time=dt.datetime.strptime('20181101',"%Y%m%d");
+def complex_plot(tremor,tremortype):
+	# start_time=dt.datetime.strptime('20120301',"%Y%m%d");
+	# end_time=dt.datetime.strptime('20181101',"%Y%m%d");
+	start_time=dt.datetime.strptime('20060301',"%Y%m%d");
+	end_time=dt.datetime.strptime('20141201',"%Y%m%d");	
 	tremor_latmin=39;
 	tremor_latmax=42.5;
 	box_interest1=[-124,-123.35,40,41];
 	box_interest2=[-123.3,-123,40,41];
 	box_interest3=[-122.9,-122,40,41];
 	eqtimes=[dt.datetime.strptime('20140310',"%Y%m%d"),
-		dt.datetime.strptime('20161208',"%Y%m%d")];
+		dt.datetime.strptime('20161208',"%Y%m%d"),dt.datetime.strptime('20100110',"%Y%m%d")];
 
 	# Cumulative plots. 
 	[dt1, c1]=tremor_tools.get_cumulative_plot(tremor, box_interest1, start_time, end_time);
@@ -79,13 +81,19 @@ def complex_plot(tremor):
 	axarr[1].tick_params(axis='both', which='major', labelsize=20);
 	axarr[1].legend(loc=2,fontsize=18);
 	plt.subplots_adjust(wspace=0, hspace=0.1)
-	plt.savefig('tremor_cumulative.eps');
+	plt.savefig(tremortype+'_tremor_cumulative.eps');
 	return;
 
 
 
 if __name__=="__main__":
-	tremor=tremor_io.read_wech("../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt");
-	complex_plot(tremor);
+	readfuncs={"wech":tremor_io.read_wech,
+	"ide":tremor_io.read_ide};
+	filenames={"wech":"../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt",
+	"ide":"../../GPS_POS_DATA/tremor/trm_Cascadia.20050101.3652.92921871.csv"};
+
+	tremortype='ide';
+	tremor=readfuncs[tremortype](filenames[tremortype]);
+	complex_plot(tremor, tremortype);
 
 
