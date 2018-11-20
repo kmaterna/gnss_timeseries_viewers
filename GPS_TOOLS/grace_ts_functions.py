@@ -1,5 +1,6 @@
 # GRACE FUNCTIONS
 import numpy as np
+import matplotlib.pyplot as plt 
 import collections
 import datetime as dt 
 
@@ -72,3 +73,22 @@ def get_float_times(datetimes):
 		temp=temp.split();
 		floats.append(float(temp[0])+float(temp[1])/366.0);
 	return floats;
+
+
+def plot_grace(station_name, filename, out_dir):
+
+	grace_ts = input_GRACE_individual_station(filename);
+
+	plt.figure();
+	plt.plot_date(grace_ts.dtarray,grace_ts.u,'-b');
+	plt.plot_date(grace_ts.dtarray,grace_ts.v,'-g');
+	plt.plot_date(grace_ts.dtarray,grace_ts.w,'-r');
+	plt.legend(['east','north','vertical']);
+	plt.grid(True);
+	plt.xlabel('Time');
+	plt.ylabel('Displacement (mm)');
+	plt.savefig(out_dir+station_name+"_gracets.eps");
+
+	return;
+
+
