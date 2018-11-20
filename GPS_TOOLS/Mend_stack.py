@@ -36,9 +36,15 @@ def driver():
 def configure():
 	EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
 	EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
-	radius=120;  # km. 
+	radius=125;  # km. 
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius);
-	return [stations, distances, EQtime];
+	blacklist=["P316","P170","P158","TRND"];
+	stations_new=[]; distances_new=[];
+	for i in range(len(stations)):
+		if stations[i] not in blacklist:
+			stations_new.append(stations[i]);
+			distances_new.append(distances[i]);
+	return [stations_new, distances_new, EQtime];
 
 
 def inputs(station_names):
@@ -98,7 +104,7 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 
 	# plt.figure(figsize=(20,15),dpi=160);
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True,figsize=(10,8))
-	label_date=dt.datetime.strptime("20181031","%Y%m%d");
+	label_date=dt.datetime.strptime("20181230","%Y%m%d");
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
 	end_time_plot=dt.datetime.strptime("20181208", "%Y%m%d");
 
