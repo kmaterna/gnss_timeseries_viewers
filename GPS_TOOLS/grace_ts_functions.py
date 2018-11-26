@@ -9,6 +9,7 @@ Timeseries = collections.namedtuple("Timeseries",[
 	'dN', 'dE','dU',
 	'Sn','Se','Su','EQtimes']);  # in mm
 GRACE_TS_Array=collections.namedtuple('GRACE_TS',[
+	'name','coords',
 	'decyear','dtarray',
 	'u','v','w'])
 Paired_TS=collections.namedtuple('Paired_TS',[
@@ -20,8 +21,10 @@ Paired_TS=collections.namedtuple('Paired_TS',[
 
 def input_GRACE_individual_station(filename):
 	# THE GRACE DATA
+	station_name=filename.split('/')[-1];  # this is the local name of the file
+	station_name=station_name.split('_')[1];  # this is the four-character name
 	try:
-		[u, v, w] = np.loadtxt(filename,usecols=range(4,7),unpack=True);
+		[lon,lat, temp, u, v, w] = np.loadtxt(filename,usecols=range(1,7),unpack=True);
 	except FileNotFoundError:
 		print("ERROR! Cannot find GRACE model for file %s" % filename);
 
@@ -29,7 +32,7 @@ def input_GRACE_individual_station(filename):
 	grace_t = get_grace_datetimes(filename);
 	grace_t = [i+dt.timedelta(days=15) for i in grace_t];  # we add 15 days to plot the GRACE data at the center of the bin. 
 	grace_decyear=get_float_times(grace_t);  # the decimal years of all the grace obs points. 
-	myGRACE_TS=GRACE_TS_Array(decyear=grace_decyear, dtarray=grace_t, u=u, v=v, w=w);
+	myGRACE_TS=GRACE_TS_Array(name=station_name, coords=[lon[0], lat[0]],decyear=grace_decyear, dtarray=grace_t, u=u, v=v, w=w);
 	return myGRACE_TS;
 
 
@@ -73,6 +76,70 @@ def get_float_times(datetimes):
 		temp=temp.split();
 		floats.append(float(temp[0])+float(temp[1])/366.0);
 	return floats;
+
+
+
+def get_slope(Data0, starttime=[], endtime=[]):
+	# Model the data with a best-fit y = mx + b. 
+	if starttime==[]:
+		starttime=Data0.dtarray[0];
+	if endtime==[]:
+		endtime=Data0.dtarray[-1];
+
+	# Defensive programming
+	if starttime<Data0.dtarray[0]:
+		starttime=Data0.dtarray[0];
+	if endtime>Data0.dtarray[-1]:
+		endttime=Data0.dtarray[-1];
+	if endtime<Data0.dtarray[0]:
+		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
+	if starttime>Data0.dtarray[-1]:
+		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
+
+	# Cut to desired window, and remove nans
+	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
+	for i in range(len(Data0.dtarray)):
+		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.u[i]):
+			mydtarray.append(Data0.dtarray[i]);
+			myeast.append(Data0.u[i]);
+			mynorth.append(Data0.v[i]);
+			myup.append(Data0.w[i]);
+
+	if len(mydtarray)==0:
+		print("Error: no time array for station %s. Returning Nan" % Data0.name);
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];		
+	time_duration=mydtarray[-1]-mydtarray[0];
+	if time_duration.days<365:
+		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
+
+	# doing the inversion here, since it's only one line.
+	decyear=get_float_times(mydtarray);
+	east_coef=np.polyfit(decyear,myeast,1);
+	north_coef=np.polyfit(decyear,mynorth,1);
+	vert_coef=np.polyfit(decyear,myup,1);
+	east_slope=east_coef[0];
+	north_slope=north_coef[0];
+	vert_slope=vert_coef[0];
+
+
+	# How bad is the fit to the line? 
+	east_trend=[east_coef[0]*x + east_coef[1] for x in decyear];
+	east_detrended=[myeast[i]-east_trend[i] for i in range(len(myeast))];
+	east_std = np.std(east_detrended);
+	north_trend=[north_coef[0]*x + north_coef[1] for x in decyear];
+	north_detrended=[mynorth[i]-north_trend[i] for i in range(len(mynorth))];
+	north_std = np.std(north_detrended);
+	vert_trend=[vert_coef[0]*x + vert_coef[1] for x in decyear];
+	vert_detrended=[myup[i]-vert_trend[i] for i in range(len(myup))];
+	vert_std = np.std(vert_detrended);	
+
+	return [east_slope, north_slope, vert_slope, east_std, north_std, vert_std];
+
+
+
 
 
 def plot_grace(station_name, filename, out_dir):

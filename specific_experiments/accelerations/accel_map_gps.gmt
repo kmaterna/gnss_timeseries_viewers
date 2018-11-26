@@ -9,8 +9,10 @@ latS=$4
 latN=$5
 output1=$6"_horiz.ps"
 output2=$6"_vert.ps"
-horiz_scale=0.3  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
-vert_scale=0.1  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
+# horiz_scale=0.3  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
+# vert_scale=0.1  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
+horiz_scale=0.9  # used for velocity change vectors (used for tiny grace arrows)
+vert_scale=0.5  # used for velocity change vectors (used for tiny grace arrows)
 range="$lonW/$lonE/$latS/$latN"
 projection="M5.0i"  # used for medium experiments.
 
@@ -68,3 +70,6 @@ EOF
 
 
 rm gmt.history
+rm etopo1.grad
+rm etopo1.hist
+rm etopo1.norm

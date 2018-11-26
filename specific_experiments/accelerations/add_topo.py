@@ -3,7 +3,7 @@
 import subprocess
 
 outdir="Whole_WUS_lssq_PBO_nam/";
-dataset="2010_adj_lssq";
+dataset="2016_lssq";
 
 
 
