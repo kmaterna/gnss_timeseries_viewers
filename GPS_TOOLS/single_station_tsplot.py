@@ -73,37 +73,37 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	# The major figure
 	dpival=500;
 	plt.figure(figsize=(15,15),dpi=dpival);
-	[f,axarr]=plt.subplots(3,1,sharex=True);
+	[f,axarr]=plt.subplots(3,1,sharex=True,figsize=(10,15));
 	axarr[0].plot_date(ts_obj.dtarray, ts_obj.dE,color='blue',markeredgecolor='black',markersize=1.5);
 	axarr[0].grid(linestyle='--',linewidth=0.5);
-	axarr[0].set_ylabel('east (mm)');
+	axarr[0].set_ylabel('east (mm)',fontsize=20);
 	bottom,top=axarr[0].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
 		axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=1);
-	ax1=axarr[0].twinx();
-	ax1.plot_date(detrended.dtarray, detrended.dE,marker='D',markersize=1.0,color='red');
-	ax1.set_ylabel('detrended (mm)')
+	#ax1=axarr[0].twinx();
+	#ax1.plot_date(detrended.dtarray, detrended.dE,marker='D',markersize=1.0,color='red');
+	#ax1.set_ylabel('detrended (mm)')
 
 
 	axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN,color='blue',markeredgecolor='black',markersize=1.5);
 	axarr[1].grid(linestyle='--',linewidth=0.5);
-	axarr[1].set_ylabel('north (mm)');
+	axarr[1].set_ylabel('north (mm)',fontsize=20);
 	bottom,top=axarr[1].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
 		axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=1);	
-	ax2=axarr[1].twinx();
-	ax2.plot_date(detrended.dtarray, detrended.dN,marker='D',markersize=1.0,color='red');
-	ax2.set_ylabel('detrended (mm)')
+	#ax2=axarr[1].twinx();
+	#ax2.plot_date(detrended.dtarray, detrended.dN,marker='D',markersize=1.0,color='red');
+	#ax2.set_ylabel('detrended (mm)')
 	
 	axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU,color='blue',markeredgecolor='black',markersize=1.5);
 	axarr[2].grid(linestyle='--',linewidth=0.5);
-	axarr[2].set_ylabel('vertical (mm)')
+	axarr[2].set_ylabel('vertical (mm)',fontsize=20)
 	bottom,top=axarr[2].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
 		axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=1);	
-	ax3=axarr[2].twinx();
-	ax3.plot_date(detrended.dtarray, detrended.dU,marker='D',markersize=1.0,color='red');
-	ax3.set_ylabel('detrended (mm)')
+	#ax3=axarr[2].twinx();
+	#ax3.plot_date(detrended.dtarray, detrended.dU,marker='D',markersize=1.0,color='red');
+	#ax3.set_ylabel('detrended (mm)')
 	axarr[2].set_xlim([min(ts_obj.dtarray), max(ts_obj.dtarray)]);
 
 	savename="single_plots/"+ts_obj.name;
@@ -138,7 +138,9 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 		savename=savename+"_unr";
 	savename=savename+"_ts.jpg"
 
-	axarr[0].set_title(title_name);
+	axarr[0].set_title(title_name,fontsize=24);
+	plt.yticks(fontsize=20);
+	plt.xticks(fontsize=20);
 
 	plt.savefig(savename,dpi=dpival);
 	return;
