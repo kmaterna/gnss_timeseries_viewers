@@ -10,11 +10,11 @@ range="$lonW/$lonE/$latS/$latN"
 projection="m1.5i"
 bigrange="-127/-114.0/35/46.5"
 bigprojection="m0.09i"
-output="mendocino_march2014.ps"
+output="mendocino_feb2014.ps"
 resampling="0.004"  # smaller means more fine sampling (bigger file)
 
 # Make color scale
-gmt makecpt -T0/20/1 -Cjet -Z > myrainbow.cpt
+gmt makecpt -T0/30/2 -Cjet -Z > myrainbow.cpt
 
 # # Insert a horizontal scale bar and title
 gmt pscoast -R$range -J$projection -Lf-121.7/39.15/39.15/50+jt -Wblack -N2 -B1.0:."Tremor at MTJ": -Dh -K -P > $output 
@@ -25,7 +25,7 @@ gmt grdcontour cas_slab1.0_clip.grd -R$range -J$projection -C10 -Gd8 -A -Wthick,
 # Plot tremor epicenters
 awk '{print $4, $3}' ../../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt | gmt psxy -R$range -J$projection -Sc0.02 -Gblack -K -O -P >> $output
 # Tremor on the day of the March 10 earthquake.
-awk '{print $1, $2, $3}' ../March10.txt | gmt psxy -R$range -J$projection -Sc0.20 -Cmyrainbow.cpt -K -O -P >> $output  
+awk '{print $1, $2, $3}' ../Feb2014.txt | gmt psxy -R$range -J$projection -Sc0.10 -Cmyrainbow.cpt -K -O -P >> $output  
 
 
 # Plot boxes for more in-depth analysis
@@ -74,7 +74,7 @@ $lonW $latS
 EOF
 
 # Plot the scale for the slip rate colors
-gmt psscale -R -J -DjTR+w3.4c/0.5c+o-1.5/-0.3 -Cmyrainbow.cpt -B5.0:"Hours":/:: -P -O -K >> $output
+gmt psscale -R -J -DjTR+w3.4c/0.5c+o-1.5/-0.3 -Cmyrainbow.cpt -B10.0:"Days":/:: -P -O -K >> $output
 # D: Dimensions (MUST BE IN inches / centimeters)
 # B: Scale has 5km boxes.  I just copied the syntax on the annotation.  
 

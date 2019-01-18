@@ -77,4 +77,29 @@ def get_detrended_gps_station(station_name):
 	trend_out=gps_seasonal_removals.make_detrended_ts(newData, 1, 'notch');
 	return trend_out;
 
+
+def write_deltat_certain_day(tremor, eqtime, endtime, outfile,unit='hours'):
+	# This is for GMT plotting. If we want to write the tremor within a time window of a certain event.
+	# Will write lon, lat, time delay in hours
+	ofile=open(outfile,'w');
+	for i in range(len(tremor.dtarray)):
+		if tremor.dtarray[i]>=eqtime:
+			if tremor.dtarray[i]<=endtime:
+				deltat=tremor.dtarray[i]-eqtime;
+				if unit=='hours':
+					ofile.write("%f %f %f \n" % (tremor.lonarray[i], tremor.latarray[i],deltat.days*24+deltat.seconds/3600.0) ); # in hours
+				else:
+					ofile.write("%f %f %f \n" % (tremor.lonarray[i], tremor.latarray[i],deltat.days+deltat.seconds/(24*3600.0)) );  # in days
+	ofile.close();
+	return;
 	
+
+
+
+
+
+
+
+
+
+
