@@ -23,19 +23,24 @@ import offsets
 
 
 def driver():
-	[stations, distances, EQtime] = configure();
+	[stations, distances, EQtimes] = configure();
 	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
-	[detrended_objects, stage1_objects, stage2_objects, sorted_distances, east_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtime);
+	[detrended_objects, stage1_objects, stage2_objects, sorted_distances, east_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtimes);
 	
-	output_full_ts(detrended_objects, sorted_distances, EQtime, "detrended", east_slope_obj);
-	output_full_ts(stage1_objects, sorted_distances, EQtime, "noeq", east_slope_obj);
-	output_full_ts(stage2_objects, sorted_distances, EQtime, "noeq_noseasons", east_slope_obj);
+	output_full_ts(detrended_objects, sorted_distances, EQtimes, "detrended", east_slope_obj);
+	output_full_ts(stage1_objects, sorted_distances, EQtimes, "noeq", east_slope_obj);
+	output_full_ts(stage2_objects, sorted_distances, EQtimes, "noeq_noseasons", east_slope_obj);
 	return;
 
 
 def configure():
 	EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
-	EQtime  = dt.datetime.strptime("20140310", "%Y%m%d");
+	EQtimes = [];  # What black lines do you want added to the figure? 
+	EQtimes.append(dt.datetime.strptime("20140310", "%Y%m%d"));  # starts with the most important one
+	EQtimes.append(dt.datetime.strptime("20050615", "%Y%m%d"));  # other earthquakes added to the figure
+	EQtimes.append(dt.datetime.strptime("20100110", "%Y%m%d"));
+	EQtimes.append(dt.datetime.strptime("20161208", "%Y%m%d"));
+
 	radius=125;  # km. 
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius);
 	blacklist=["P316","P170","P158","TRND"];
@@ -44,10 +49,10 @@ def configure():
 		if stations[i] not in blacklist:
 			stations_new.append(stations[i]);
 			distances_new.append(distances[i]);
-	return [stations_new, distances_new, EQtime];
+	return [stations_new, distances_new, EQtimes];
 
 
-def inputs(station_names):
+def inputs(station_names):  # Returns a list of objects for time series data, offsets, and earthquakes
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in station_names:
 		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, 'pbo');
@@ -57,7 +62,7 @@ def inputs(station_names):
 	return [dataobj_list, offsetobj_list, eqobj_list];
 
 
-def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtime):
+def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtimes):
 
 	latitudes_list=[i.coords[1] for i in dataobj_list];
 	sorted_objects = [x for _,x in sorted(zip(latitudes_list, dataobj_list))];  # the raw, sorted data. 
@@ -89,8 +94,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtime):
 		stage2_objects.append(stage2obj);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
-		[east_slope_before, north_slope_before, vert_slope_before, _, _, _]=gps_ts_functions.get_slope(stage2obj,endtime=EQtime);
-		[east_slope_after, north_slope_after, vert_slope_after, _, _, _]=gps_ts_functions.get_slope(stage2obj,starttime=EQtime);
+		[east_slope_before, north_slope_before, vert_slope_before, _, _, _]=gps_ts_functions.get_slope(stage2obj,endtime=EQtimes[0]);
+		[east_slope_after, north_slope_after, vert_slope_after, _, _, _]=gps_ts_functions.get_slope(stage2obj,starttime=EQtimes[0]);
 		east_slope_after=np.round(east_slope_after,decimals=1);
 		east_slope_before=np.round(east_slope_before,decimals=1);
 		east_slope_obj.append([east_slope_before, east_slope_after]);
@@ -100,17 +105,14 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtime):
 
 
 
-def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
+def output_full_ts(dataobj_list, distances, EQtimes, filename, east_slope_obj):
 
 	# plt.figure(figsize=(20,15),dpi=160);
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True,figsize=(10,8))
-	label_date=dt.datetime.strptime("20181230","%Y%m%d");
+	label_date=dt.datetime.strptime("20190215","%Y%m%d");
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
-	end_time_plot=dt.datetime.strptime("20181208", "%Y%m%d");
+	end_time_plot=dt.datetime.strptime("20190116", "%Y%m%d");
 
-	EQ1time = dt.datetime.strptime("20050615", "%Y%m%d");  # other earthquakes added to the figure
-	EQ2time = dt.datetime.strptime("20100110", "%Y%m%d");
-	EQ3time = dt.datetime.strptime("20161208", "%Y%m%d");
 	offset=0;
 	spacing=10;
 	closest_station=70;  # km from event
@@ -131,10 +133,8 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 	axarr[0].set_xlim(start_time_plot,end_time_plot);
 	axarr[0].set_ylim([-10,offset+10])
 	bottom,top=axarr[0].get_ylim();
-	axarr[0].plot_date([EQtime, EQtime], [bottom, top], '--k');	
-	axarr[0].plot_date([EQ1time, EQ1time], [bottom, top], '--k');
-	axarr[0].plot_date([EQ2time, EQ2time], [bottom, top], '--k');
-	axarr[0].plot_date([EQ3time, EQ3time], [bottom, top], '--k');
+	for i in range(len(EQtimes)):
+		axarr[0].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
 	axarr[0].set_ylabel("East (mm)");
 	axarr[0].set_title("East GPS Time Series")
 	axarr[0].grid(True)
@@ -149,10 +149,8 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 	axarr[1].set_xlim(start_time_plot,end_time_plot);
 	axarr[1].set_ylim([-10,offset+10])
 	bottom,top=axarr[1].get_ylim();
-	axarr[1].plot_date([EQtime, EQtime], [bottom, top], '--k');	
-	axarr[1].plot_date([EQ1time, EQ1time], [bottom, top], '--k');
-	axarr[1].plot_date([EQ2time, EQ2time], [bottom, top], '--k');
-	axarr[1].plot_date([EQ3time, EQ3time], [bottom, top], '--k');
+	for i in range(len(EQtimes)):
+		axarr[1].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
 	axarr[1].set_ylabel("North (mm)");
 	axarr[1].set_title("North GPS Time Series")
 	axarr[1].grid(True)
@@ -161,7 +159,7 @@ def output_full_ts(dataobj_list, distances, EQtime, filename, east_slope_obj):
 	cb.set_label('Kilometers from 2014 Earthquake');
 	plt.savefig('Mend_Collective_TS_'+filename+'.jpg')	
 	plt.close();
-
+	print("Horizontal plots created.");
 
 	return;
 

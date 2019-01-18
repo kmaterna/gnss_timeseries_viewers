@@ -16,14 +16,21 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 # ----------------------------------------
 
 def get_station_data(station, datasource, refframe="NA"):
+	# refframe choices are NA and ITRF
 	datasource=determine_datasource(station, datasource,refframe);  # tell us which directory to use. 
 	if datasource=='pbo':
 		[myData, offset_obj, eq_obj] = get_pbo(station,refframe);  # PBO data format
-	if datasource=='unr':
+	elif datasource=='unr':
 		[myData, offset_obj, eq_obj] = get_unr(station,refframe);  # UNR data format
-	if datasource=='error':
+	elif datasource=='cwu':
+		[myData, offset_obj, eq_obj] = get_cwu(station, refframe); # CWU data
+	elif datasource=='nmt':
+		print('here in nmt');
+		[myData, offset_obj, eq_obj] = get_nmt(station, refframe); # NMT data
+	elif datasource=='error':
 		return [ [], [], [] ];  # Error code. 
 	return [myData, offset_obj, eq_obj];
+
 
 
 def get_unr(station,refframe="NA"):
@@ -57,6 +64,36 @@ def get_pbo(station, refframe="NA"):
 	Earthquakes = get_pbo_earthquakes(station, pbo_earthquakes_dir);
 	return [myData, Offsets, Earthquakes];
 
+def get_cwu(station, refframe="NA"):
+	if refframe=="NA":
+		reflabel="nam08";
+	elif refframe=="ITRF":
+		reflabel="igs08";
+	else:
+		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");
+	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".cwu.final_"+reflabel+".pos"
+	pbo_earthquakes_dir="../../GPS_POS_DATA/PBO_Event_Files/"
+	offsets_dir="../../GPS_POS_DATA/Offsets/"
+	[myData]=gps_io_functions.read_pbo_pos_file(pbo_filename);  # PBO data format
+	Offsets = get_pbo_offsets(station, offsets_dir);
+	Earthquakes = get_pbo_earthquakes(station, pbo_earthquakes_dir);
+	return [myData, Offsets, Earthquakes];
+
+def get_nmt(station, refframe="NA"):
+	if refframe=="NA":
+		reflabel="nam08";
+	elif refframe=="ITRF":
+		reflabel="igs08";
+	else:
+		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");
+	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".nmt.final_"+reflabel+".pos"
+	pbo_earthquakes_dir="../../GPS_POS_DATA/PBO_Event_Files/"
+	offsets_dir="../../GPS_POS_DATA/Offsets/"
+	[myData]=gps_io_functions.read_pbo_pos_file(pbo_filename);  # PBO data format
+	Offsets = get_pbo_offsets(station, offsets_dir);
+	Earthquakes = get_pbo_earthquakes(station, pbo_earthquakes_dir);
+	return [myData, Offsets, Earthquakes];
+
 
 # Based on whether a file exists in certain directories or not, 
 # Return the 'pbo' or 'unr' datasource that we should be using. 
@@ -66,14 +103,20 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	elif refframe=="ITRF":
 		unr_reflabel="IGS08"; pbo_reflabel="igs08";
 	else:
-		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");		
+		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");	
+
+	# Path setting
 	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+"."+unr_reflabel+".tenv3";
 	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_"+pbo_reflabel+".pos";
+	cwu_filename="../../GPS_POS_DATA/PBO_Data/"+station+".cwu.final_"+pbo_reflabel+".pos";
+	nmt_filename="../../GPS_POS_DATA/PBO_Data/"+station+".nmt.final_"+pbo_reflabel+".pos";
+
+	# Setting datasource label
 	if input_datasource=='pbo' and os.path.isfile(pbo_filename):
 		print("Using PBO file as input data. ");
 		datasource='pbo';
 	elif input_datasource=='pbo' and os.path.isfile(unr_filename):
-		print("Using UNR as input data because PBO data file doesn't exist");
+		print("Using UNR as input data because PBO data file doesn't exist");  # this is a default behavior
 		datasource='unr';
 	elif input_datasource=='unr' and os.path.isfile(unr_filename):
 		print("Using UNR as input data (selected by user).");
@@ -81,7 +124,11 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	elif input_datasource=='unr' and not os.path.isfile(unr_filename):
 		print("Error! Cannot find file in UNR database. Skipping.");
 		datasource='error';
-	elif input_datasource != 'unr' and input_datasource != 'pbo':
+	elif input_datasource=='cwu' and os.path.isfile(cwu_filename):
+		datasource='cwu';
+	elif input_datasource=='nmt' and os.path.isfile(nmt_filename):
+		datasource='nmt';
+	elif input_datasource not in ['unr','pbo','cwu','nmt']:
 		print("Error! Invalid input datasource");
 		sys.exit(1);
 	else:
