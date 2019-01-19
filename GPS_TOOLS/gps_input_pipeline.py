@@ -25,7 +25,6 @@ def get_station_data(station, datasource, refframe="NA"):
 	elif datasource=='cwu':
 		[myData, offset_obj, eq_obj] = get_cwu(station, refframe); # CWU data
 	elif datasource=='nmt':
-		print('here in nmt');
 		[myData, offset_obj, eq_obj] = get_nmt(station, refframe); # NMT data
 	elif datasource=='error':
 		return [ [], [], [] ];  # Error code. 

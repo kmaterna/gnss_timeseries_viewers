@@ -29,7 +29,7 @@ def get_stations_within_box(coord_box, network='pbo'):
 # ------------ INPUTS ------------------ # 
 def inputs(input_file, num_years, max_sigma, coord_box, network):
 	# Purpose: generate input velocity field. 
-	if network=='pbo':
+	if network=='pbo' or network=='cwu' or network=='nmt':
 		[myVelfield]=gps_io_functions.read_pbo_vel_file(input_file);  # read the raw velfield from file. 
 	elif network=='unr':
 		[myVelfield]=gps_io_functions.read_unr_vel_file(input_file);  # read the raw velfield from file. 
@@ -42,7 +42,7 @@ def inputs(input_file, num_years, max_sigma, coord_box, network):
 
 # ----------- CIRCLE FUNCTIONS ---------------- # 
 def configure_circle(center, radius, coord_box, network):
-	if network=='pbo':
+	if network=='pbo' or network=='cwu' or network=='nmt':
 		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
 	elif network=='unr':
 		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
@@ -71,7 +71,7 @@ def compute_circle(myVelfield, center, radius):
 
 # ----------- BOX FUNCTIONS ---------------- # 
 def configure_box(network):
-	if network=='pbo':
+	if network=='pbo' or network=='cwu' or network=='nmt':
 		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
 	elif network=='unr':
 		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
