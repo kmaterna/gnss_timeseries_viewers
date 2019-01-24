@@ -20,7 +20,7 @@ gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
 
 # The Horizontals
 # # Insert a horizontal scale bar and title
-gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0wESn -Dh -K -P > $output1 # the title goes here
+gmt pscoast -R$range -J$projection -Lf-121.9/39.15/39.15/50+jt -Slightblue -N1 -N2 -B1.0wESn:.$infile: -Dh -K -P > $output1 # the title goes here
 
 
 gmt grdgradient ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -A320 -R$range -Getopo1.grad -Nt

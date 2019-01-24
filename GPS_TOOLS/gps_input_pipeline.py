@@ -125,8 +125,14 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 		datasource='error';
 	elif input_datasource=='cwu' and os.path.isfile(cwu_filename):
 		datasource='cwu';
+	elif input_datasource=='cwu' and not os.path.isfile(cwu_filename):
+		print("Error! Cannot find file in CWU database. Skipping.");
+		datasource='error';
 	elif input_datasource=='nmt' and os.path.isfile(nmt_filename):
 		datasource='nmt';
+	elif input_datasource=='nmt' and not os.path.isfile(nmt_filename):
+		print("Error! Cannot find file in NMT database. Skipping.");
+		datasource='error';
 	elif input_datasource not in ['unr','pbo','cwu','nmt']:
 		print("Error! Invalid input datasource");
 		sys.exit(1);
