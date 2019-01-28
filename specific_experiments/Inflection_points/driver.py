@@ -42,8 +42,8 @@ def configure(eqtime,starttime,endtime):
 	end_time_velo=dt.datetime.strptime(endtime, "%Y%m%d");
 
 	# Mode
-	# mode='butterworth';  # Butterworth filter option
-	mode='linear_fit';   # linear fit option.
+	mode='butterworth';  # Butterworth filter option
+	# mode='linear_fit';   # linear fit option.
 
 	# Butterworth parameters
 	N=3;  # Order of butterworth filter
@@ -51,7 +51,7 @@ def configure(eqtime,starttime,endtime):
 
 	# map_coords=[-125, -118, 36.5, 42.0];  # northern CA
 	# map_coords=[-125, -110, 32.5, 48.5]; # western US
-	map_coords=[-124, -123, 39.5, 40.5]; # Small test
+	map_coords=[-125, -123, 40, 41]; # Small test
 	stations = stations_within_radius.get_stations_within_box(map_coords);
 	stations=gps_input_pipeline.remove_blacklist(stations);
 
@@ -195,7 +195,7 @@ def inflection_with_linear(dtarray, x, y, start_time_infl, end_time_infl,start_t
 
 	inflection_index=np.where(misfit==min(misfit));
 	turning_dt=dt_with_misfit[inflection_index[0][0]];
-	dm = slope_change[inflection_index[0][0]];
+	dm = slope_change[inflection_index[0][0]]*1000.0;
 
 	print(turning_dt);
 	print(dm);

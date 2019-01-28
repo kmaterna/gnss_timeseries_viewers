@@ -99,8 +99,8 @@ def onset_time_map_GMT(name,lon,lat,east,east_change,north, north_change, vert, 
 if __name__=="__main__":
 
 	#  THE MAIN PROGRAM
-	earthquake_time="20140310"  #
-	# earthquake_time="20161208";
+	# earthquake_time="20140310"  #
+	earthquake_time="20161208";
 	infile="Outputs/"+earthquake_time+"_inflections.txt"
 	name=[]; lat=[]; lon=[]; east=[]; north=[]; up=[]; east_change=[]; north_change=[]; up_change=[];
 
