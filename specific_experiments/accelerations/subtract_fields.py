@@ -7,18 +7,28 @@ import subprocess
 Velfield=collections.namedtuple("Velfield",['lon','lat','east','north','vert','name']);
 
 def configure():
-	year="2016";
-	network="UNR";
-	file1="Whole_WUS_lssq_"+network+"_nam/MTJ_"+year+"_lssq.txt";
-	file2="Whole_WUS_lssq_"+network+"_itrf/MTJ_"+year+"_lssq.txt";
-	outfile="subtracted.txt";
-	return [file1, file2, outfile];
+	
+	# The things we change from experiment to experiment. 
+	expname="2016";
+	network1='pbo'; seas1='lssq'; ref1='NA';
+	network2='unr'; seas2='lssq'; ref2='NA';
+
+	# Don't need to change these things. 
+	file1=network1+"_"+seas1+"_"+ref1+"/"+expname+".txt";
+	file2=network2+"_"+seas2+"_"+ref2+"/"+expname+".txt";
+	outdir='subtract_'+network1+"_"+seas1+"_"+ref1+"_"+network2+"_"+seas2+"_"+ref2;
+	subprocess.call('mkdir -p '+outdir,shell=True);
+	outfile=outdir+"/"+expname+".txt";
+
+	return [file1, file2, expname, outdir, outfile];
 
 def input_field(input_file):
 	lons=[]; lats=[]; east=[]; north=[]; vert=[]; name=[];
 	ifile=open(input_file,'r');
 	for line in ifile:
 		temp=line.split();
+		if temp[0]=='#':
+			continue;
 		lons.append(float(temp[0]));
 		lats.append(float(temp[1]));
 		east.append(float(temp[2]));
@@ -43,23 +53,23 @@ def subtract(vel1, vel2):
 	Diffs=Velfield(lon=lon, lat=lat, east=east, north=north, vert=vert, name=name);
 	return Diffs;
 
-def outputs(Diffs, outfile):
+def outputs(Diffs, expname, outdir, outfile):
 	ofile=open(outfile,'w');
 	for i in range(len(Diffs.name)):
 		ofile.write("%f %f %f %f 0 %f 0 0 %s\n" % (Diffs.lon[i], Diffs.lat[i], Diffs.east[i], Diffs.north[i], Diffs.vert[i], Diffs.name[i]) );
 	ofile.close();
-	subprocess.call('./accel_map_gps.gmt '+outfile+' -125.2 -121.0 38.6 43.0 MTJ_differences',shell=True);
-	subprocess.call('./accel_map_gps.gmt '+outfile+' -124.6 -118.4 35.5 42.2 NorCal_differences',shell=True);
-	subprocess.call('./accel_map_gps.gmt '+outfile+' -121.8 -115.0 32.2 37.6 SoCal_differences',shell=True);
-	subprocess.call('./accel_map_gps.gmt '+outfile+' -125.6 -110.0 32.5 48.5 WUS_differences',shell=True);
-	subprocess.call('./accel_map_gps.gmt '+outfile+' -123.5 -119.0 35.6 40.0 SF_differences',shell=True);
-	subprocess.call('./accel_map_gps.gmt '+outfile+' -124.6 -120.4 41.2 46.2 Oregon_differences',shell=True);
+	subprocess.call('./accel_map_gps.gmt '+outfile+' -126.8 -121.0 38.6 43.0 '+outdir+'/MTJ'+expname,shell=True);
+	subprocess.call('./accel_map_gps.gmt '+outfile+' -124.6 -118.4 35.5 42.2 '+outdir+'/NorCal'+expname,shell=True);
+	subprocess.call('./accel_map_gps.gmt '+outfile+' -121.8 -115.0 32.2 37.6 '+outdir+'/SoCal'+expname,shell=True);
+	subprocess.call('./accel_map_gps.gmt '+outfile+' -125.6 -110.0 32.5 48.5 '+outdir+'/WUS'+expname,shell=True);
+	subprocess.call('./accel_map_gps.gmt '+outfile+' -123.5 -119.0 35.6 40.0 '+outdir+'/SF'+expname,shell=True);
+	subprocess.call('./accel_map_gps.gmt '+outfile+' -124.6 -120.4 41.2 46.2 '+outdir+'/Oregon'+expname,shell=True);
 	return;
 
 if __name__=="__main__":
-	[file1, file2, outfile]=configure();
+	[file1, file2, expname, outdir, outfile]=configure();
 	vel1=input_field(file1);
 	vel2=input_field(file2);
 	Diffs=subtract(vel1,vel2);
-	outputs(Diffs, outfile);
+	outputs(Diffs, expname, outdir, outfile);
 
