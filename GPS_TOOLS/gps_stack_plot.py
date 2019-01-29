@@ -23,45 +23,50 @@ import offsets
 
 
 def driver():
-	[stations, distances, EQtimes, proc_center] = configure();
+	[stations, distances, EQtimes, proc_center, expname] = configure();
 	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations, proc_center);
 	[detrended_objects, stage1_objects, stage2_objects, sorted_distances, east_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtimes);
 	
-	output_full_ts(detrended_objects, sorted_distances, EQtimes, "detrended", east_slope_obj);
-	output_full_ts(stage1_objects, sorted_distances, EQtimes, "noeq", east_slope_obj);
-	output_full_ts(stage2_objects, sorted_distances, EQtimes, "noeq_noseasons", east_slope_obj);
-	vertical_plots(stage2_objects, sorted_distances, EQtimes, "vertical");
+	output_full_ts(detrended_objects, sorted_distances, EQtimes, expname, "detrended", east_slope_obj);
+	output_full_ts(stage1_objects, sorted_distances, EQtimes, expname, "noeq", east_slope_obj);
+	output_full_ts(stage2_objects, sorted_distances, EQtimes, expname, "noeq_noseasons", east_slope_obj);
+	vertical_plots(stage2_objects, sorted_distances, EQtimes, expname, "vertical");
 	return;
 
 
+
 def configure():
-	EQcoords=[-125.134, 40.829]; # The March 10, 2014 M6.8 earthquake
+	EQcoords=[-125.134, 40.829]; expname='Mend'; radius = 120; 
+	EQcoords=[-124.0, 38.0];     expname='Nbay'; radius = 125; 
+	EQcoords=[-119.0, 34.5];     expname='SoCal';  radius = 25; # km
+	EQcoords=[-116.0, 34.5];     expname='Mojave';  radius = 35; # km
+	EQcoords=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
 	EQtimes = [];  # What black lines do you want added to the figure? 
 	EQtimes.append(dt.datetime.strptime("20140310", "%Y%m%d"));  # starts with the most important one
 	EQtimes.append(dt.datetime.strptime("20050615", "%Y%m%d"));  # other earthquakes added to the figure
 	EQtimes.append(dt.datetime.strptime("20100110", "%Y%m%d"));
 	EQtimes.append(dt.datetime.strptime("20161208", "%Y%m%d"));
 	
-	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
-
-	radius=125;  # km. 
+	proc_center='pbo';   # WHICH DATASTREAM DO YOU WANT?
+ 
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius);
-	blacklist=["P316","P170","P158","TRND"];
+	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT"];
 	stations_new=[]; distances_new=[];
 	for i in range(len(stations)):
 		if stations[i] not in blacklist:
 			stations_new.append(stations[i]);
 			distances_new.append(distances[i]);
-	return [stations_new, distances_new, EQtimes, proc_center];
+	return [stations_new, distances_new, EQtimes, proc_center, expname];
 
 
 def inputs(station_names, proc_center):  # Returns a list of objects for time series data, offsets, and earthquakes
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in station_names:
 		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, proc_center);
-		dataobj_list.append(myData);
-		offsetobj_list.append(offset_obj);
-		eqobj_list.append(eq_obj);	
+		if myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d"):  # kicking out the stations that end early. 
+			dataobj_list.append(myData);
+			offsetobj_list.append(offset_obj);
+			eqobj_list.append(eq_obj);	
 	return [dataobj_list, offsetobj_list, eqobj_list];
 
 
@@ -84,9 +89,10 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtimes):
 	stage2_objects = [];
 	east_slope_obj=[];
 	for i in range(len(dataobj_list)):
+
 		# Remove the steps earthquakes
-		newobj=offsets.remove_antenna_offsets(sorted_objects[i], sorted_offsets[i]);
-		newobj=offsets.remove_earthquakes(newobj,sorted_eqs[i]);
+		newobj=offsets.remove_offsets(sorted_objects[i], sorted_offsets[i]);
+		newobj=offsets.remove_offsets(newobj,sorted_eqs[i]);
 
 		# The detrended TS without earthquakes
 		stage1obj=gps_seasonal_removals.make_detrended_ts(newobj, 0, 'lssq');
@@ -108,9 +114,9 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtimes):
 
 
 
-def output_full_ts(dataobj_list, distances, EQtimes, filename, east_slope_obj):
+def output_full_ts(dataobj_list, distances, EQtimes, expname, filename, east_slope_obj):
 
-	# plt.figure(figsize=(20,15),dpi=160);
+	fig = plt.figure(figsize=(20,15),dpi=160);
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True,figsize=(10,8))
 	label_date=dt.datetime.strptime("20190215","%Y%m%d");
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
@@ -118,8 +124,12 @@ def output_full_ts(dataobj_list, distances, EQtimes, filename, east_slope_obj):
 
 	offset=0;
 	spacing=10;
-	closest_station=70;  # km from event
-	farthest_station=120; # km from event
+	if expname=='Mend': # aesthetics only
+		closest_station=70;
+		farthest_station=120;
+	else:
+		closest_station=min(distances);  # km from event
+		farthest_station=max(distances); # km from event
 	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
 	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
 
@@ -157,17 +167,18 @@ def output_full_ts(dataobj_list, distances, EQtimes, filename, east_slope_obj):
 	axarr[1].set_ylabel("North (mm)");
 	axarr[1].set_title("North GPS Time Series")
 	axarr[1].grid(True)
-	custom_cmap.set_array(range(closest_station,farthest_station))
+	custom_cmap.set_array(range(int(closest_station),int(farthest_station)))
 	cb = plt.colorbar(custom_cmap);
 	cb.set_label('Kilometers from 2014 Earthquake');
-	plt.savefig('Mend_Collective_TS_'+filename+'.jpg')	
+
+	plt.savefig(expname+'_Collective_TS_'+filename+'.jpg')	
 	plt.close();
 	print("Horizontal plots created.");
 
 	return;
 
 
-def vertical_plots(dataobj_list, distances, EQtimes, filename):
+def vertical_plots(dataobj_list, distances, EQtimes, expname, filename):
 
 	plt.figure(figsize=(6,8),dpi=160);
 	label_date=dt.datetime.strptime("20190215","%Y%m%d");
@@ -176,8 +187,12 @@ def vertical_plots(dataobj_list, distances, EQtimes, filename):
 
 	offset=0;
 	spacing=40;
-	closest_station=70;  # km from event
-	farthest_station=120; # km from event
+	if expname=='Mend':  # aesthetics only
+		closest_station=70;
+		farthest_station=120;
+	else:
+		closest_station=min(distances);  # km from event
+		farthest_station=max(distances); # km from event
 	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
 	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
 
@@ -200,10 +215,20 @@ def vertical_plots(dataobj_list, distances, EQtimes, filename):
 	plt.gca().set_title("Vertical GPS Time Series")
 	plt.gca().grid(True)
 
-	custom_cmap.set_array(range(closest_station,farthest_station))
+	custom_cmap.set_array(range(int(closest_station),int(farthest_station)));
 	cb = plt.colorbar(custom_cmap);
 	cb.set_label('Kilometers from 2014 Earthquake');
-	plt.savefig('Mend_Collective_TS_'+filename+'.jpg')	
+
+
+	# new axis for plotting the map of california
+	ax=plt.axes(position=[0.75,0.1,0.2,0.2],xticklabels=[],yticklabels=[]);
+	[ca_lons,ca_lats]=np.loadtxt('../california_bdr',unpack=True);
+	ax.plot(ca_lons,ca_lats,'k');
+	for i in range(len(dataobj_list)):
+		ax.plot(dataobj_list[i].coords[0],dataobj_list[i].coords[1],'.g',markersize=0.6);
+
+
+	plt.savefig(expname+'_Collective_TS_'+filename+'.jpg');
 	plt.close();
 	print("Vertical plot created.");
 	return;

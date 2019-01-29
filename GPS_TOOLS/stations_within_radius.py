@@ -51,7 +51,7 @@ def configure_circle(center, radius, coord_box, network):
 	num_years=3.0;
 	max_sigma=2.0;
 	if coord_box==[]:
-		coord_box=[-126, -120, 36.0, 43]; # Northern California
+		coord_box=[-126, -110, 30.0, 49]; # WUS
 	return [input_file, center, radius, num_years, max_sigma, coord_box];
 
 def compute_circle(myVelfield, center, radius):

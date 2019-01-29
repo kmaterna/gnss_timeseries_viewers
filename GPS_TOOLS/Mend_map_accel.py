@@ -99,8 +99,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes
 		print(names[i]);
-		newobj=offsets.remove_antenna_offsets(dataobj_list[i],offsetobj_list[i]);
-		newobj=offsets.remove_earthquakes(newobj, eqobj_list[i]);
+		newobj=offsets.remove_offsets(dataobj_list[i],offsetobj_list[i]);
+		newobj=offsets.remove_offsets(newobj, eqobj_list[i]);
 		if fit_type=='none':
 			newobj=gps_seasonal_removals.make_detrended_ts(newobj, 0, fit_type);  # remove seasonals
 		else:

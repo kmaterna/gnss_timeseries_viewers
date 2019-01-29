@@ -15,7 +15,7 @@ EQ4="20180915"
 Center_Coords=[-124.0, 38.5]; # Western US everything
 filter_type='lssq'; # OPTIONS: lssq, notch, stl, grace, none. 
 size='huge';  # OPTIONS: small, medium, huge
-network='unr';
+network='cwu';
 refname='NA'; # choices: NA, ITRF
 
 # LEAST SQUARES
