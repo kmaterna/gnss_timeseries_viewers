@@ -24,20 +24,18 @@ def remove_outliers(Data0, outliers_def):
 	medfilt_n=signal.medfilt(Data0.dN, 35);
 	medfilt_u=signal.medfilt(Data0.dU, 35);
 
-	newdtarray=[]; newdN=[]; newdE=[]; newdU=[];
+	newdN=[]; newdE=[]; newdU=[];
 	for i in range(len(medfilt_e)):
 		if abs(Data0.dE[i]-medfilt_e[i])<outliers_def and abs(Data0.dN[i]-medfilt_n[i])<outliers_def and abs(Data0.dU[i]-medfilt_u[i])<outliers_def*2:
-			newdtarray.append(Data0.dtarray[i]);
 			newdE.append(Data0.dE[i]);
 			newdN.append(Data0.dN[i]);
 			newdU.append(Data0.dU[i]);
 		else:
-			newdtarray.append(Data0.dtarray[i]);
 			newdE.append(np.nan);
 			newdN.append(np.nan);
 			newdU.append(np.nan);
 	
-	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
 	return newData;
 
 

@@ -43,6 +43,8 @@ gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 
 -125.13 41.8 1 0 0.0 0.0 0.0 1mm/yr
 EOF
 
+grep 'nan' $infile | awk '{print $1, $2}' | gmt psxy -R$range -J$projection -O -P -K -Gdarkblue -Sc0.05 >> $output1
+
 gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output1
 -126.194 40.453 21 -0.13 -0.01 0.14 0.04 0.27 -1.11 26 0 0 2016M6.6
 -125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8

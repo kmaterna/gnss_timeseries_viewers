@@ -13,8 +13,8 @@ import offsets
 import gps_input_pipeline
 
 # For reference of how this gets returned from the read functions.
-# Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-# Offsets    = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'dtevts']);
+Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
+Offsets    = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'dtevts']);
 Parameters = collections.namedtuple("Parameters",['station','outliers_remove', 'outliers_def',
 	'earthquakes_remove','offsets_remove','reference_frame','seasonals_remove', 'seasonals_type','datasource','refframe','fit_table','grace_dir']);
 
@@ -56,13 +56,14 @@ def input_data(station_name, datasource, refframe):
 
 # -------------- COMPUTE ------------ # 
 def compute(myData, offset_obj, eq_obj, MyParams):
-	newData=myData; 
-	if MyParams.offsets_remove==1:  # First step: remove offsets and earthquakes
-		newData=offsets.remove_antenna_offsets(newData, offset_obj);
-	if MyParams.outliers_remove==1:  # Second step: remove outliers
+	# First, embed the data with the eq object (useful no matter what)
+	newData=Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray, dN=myData.dN, dE=myData.dE, dU=myData.dU, Sn=myData.Sn, Se=myData.Se, Su=myData.Su, EQtimes=eq_obj.evdts);
+	if MyParams.offsets_remove==1:  # Remove offsets and antenna changes
+		newData=offsets.remove_offsets(newData, offset_obj);
+	if MyParams.outliers_remove==1:  # Remove outliers
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
-	if MyParams.earthquakes_remove==1: # Third step: remove earthquakes
-		newData=offsets.remove_earthquakes(newData, eq_obj);
+	if MyParams.earthquakes_remove==1: # Remove earthquakes
+		newData=offsets.remove_offsets(newData, eq_obj);
 	
 	trend_out=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams.fit_table, MyParams.grace_dir);
 	return [newData, trend_out];
@@ -81,7 +82,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	axarr[0].set_ylabel('east (mm)',fontsize=label_fontsize);
 	bottom,top=axarr[0].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
-		axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=1);
+		axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=0.5);
 	ax1=axarr[0].twinx();
 	ax1.plot_date(detrended.dtarray, detrended.dE,marker='D',markersize=1.0,color='red');
 	ax1.set_ylabel('detrended (mm)', fontsize=label_fontsize-2);
@@ -95,7 +96,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	axarr[1].set_ylabel('north (mm)',fontsize=label_fontsize);
 	bottom,top=axarr[1].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
-		axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=1);	
+		axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=0.5);	
 	ax2=axarr[1].twinx();
 	ax2.plot_date(detrended.dtarray, detrended.dN,marker='D',markersize=1.0,color='red');
 	ax2.set_ylabel('detrended (mm)', fontsize=label_fontsize-2);
@@ -109,7 +110,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	axarr[2].set_ylabel('vertical (mm)',fontsize=label_fontsize);
 	bottom,top=axarr[2].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
-		axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=1);	
+		axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=0.5);	
 	ax3=axarr[2].twinx();
 	ax3.plot_date(detrended.dtarray, detrended.dU,marker='D',markersize=1.0,color='red');
 	ax3.set_ylabel('detrended (mm)', fontsize=label_fontsize-2);
@@ -138,6 +139,8 @@ def get_figure_name(MyParams):
 	title=MyParams.station;
 
 	title=title+', '+MyParams.datasource
+	if MyParams.earthquakes_remove==0 and MyParams.offsets_remove==0 and MyParams.seasonals_remove==0:
+		title=title+', unaltered';
 	if MyParams.earthquakes_remove:
 		savename=savename+"_noeq";
 		title=title+', no earthquakes'

@@ -40,7 +40,7 @@ def configure(EQcoords, fit_type, overall_size, network, refframe):
 	outdir=network+"_"+fit_type+"_"+refframe;
 	subprocess.call('mkdir -p '+outdir,shell=True);
 
-	time_after_start_date=180;  # optionally, wait a while after the start day. 
+	time_after_start_date=7;  # optionally, wait a while after the start day. 
 	critical_variance=5;  # mm/yr. If the time series have a larger variance, we don't consider them
 
 	map_coords=[];

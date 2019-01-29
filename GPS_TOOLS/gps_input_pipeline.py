@@ -160,28 +160,30 @@ def remove_blacklist(stations):
 # -----------------------------------------------
 
 def get_unr_offsets(Data0, station, offsets_dir):
+	# The grep -1 is the code for antenna and reference frame offsets
 	print("Offset table for station %s:" % (station) );	
 	try:
-		table = subprocess.check_output("grep "+station+" "+offsets_dir+"UNR_steps.txt",shell=True);
+		table = subprocess.check_output("grep -E '"+station+"  [0-9]{2}[A-Z]{3}[0-9]{2}  1' "+offsets_dir+"UNR_steps.txt",shell=True);
+		table = table.decode(); # needed when switching to python 3
 	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
 		table=[];
-	table=table.decode();  # needed when switching to python 3
 	print(table);
-	evdts=parse_table_unr(table, 'antenna');
+	evdts=parse_table_unr(table);
 	[e_offsets, n_offsets, u_offsets, evdts]=solve_for_offsets(Data0, evdts);
 	UNR_offsets=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	return UNR_offsets;
 
 
 def get_unr_earthquakes(Data0, station, offsets_dir):
-	print("Earthquake table for station %s:" % (station) );	
+	# The grep -2 is the code for earthquake offsets
+	print("Earthquakes table for station %s:" % (station) );	
 	try:
-		table = subprocess.check_output("grep "+station+" "+offsets_dir+"UNR_steps.txt",shell=True);
+		table = subprocess.check_output("grep -E '"+station+"  [0-9]{2}[A-Z]{3}[0-9]{2}  2' "+offsets_dir+"UNR_steps.txt",shell=True);
+		table = table.decode(); # needed when switching to python 3
 	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
-		table=[];
-	table=table.decode(); # needed when switching to python 3
+		table=[]; 
 	print(table);
-	evdts=parse_table_unr(table,'eq');
+	evdts=parse_table_unr(table);
 	[e_offsets, n_offsets, u_offsets, evdts]=solve_for_offsets(Data0, evdts); 
 	UNR_earthquakes=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	return UNR_earthquakes;
@@ -267,25 +269,19 @@ def parse_earthquake_table_pbo(table):
 	return [e_offsets, n_offsets, u_offsets, evdts];
 
 
-def parse_table_unr(table,offset_type):
+def parse_table_unr(table):
 	# Here we extract all the antenna or earthquake offsets from the UNR table. 
-	# Offset_type is 'antenna'[1] or 'eq'[2]
 	evdts=[];
-	if offset_type=='antenna':
-		desired_code='1';  # antenna offsets
-	else:
-		desired_code='2';  # earthquakes
-
+	if len(table)==0:  # if an empty list. 
+		return [];
 	tablesplit=table.split('\n');
 	for item in tablesplit:
 		if len(item)==0:
 			continue;
 		words=item.split();
 		datestring=words[1];
-		evtype=words[2];
-		if evtype==desired_code:
-			mydt=get_datetime_from_unrfile(datestring);
-			evdts.append(mydt);
+		mydt=get_datetime_from_unrfile(datestring);
+		evdts.append(mydt);
 	return evdts;
 
 def get_datetime_from_unrfile(input_string):
