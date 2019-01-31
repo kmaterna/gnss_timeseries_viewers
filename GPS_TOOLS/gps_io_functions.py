@@ -144,6 +144,7 @@ def read_pbo_pos_file(filename):
 
 def read_UNR_magnet_file(filename, coordinates_file):
 	[decyeararray,dE,dN,dU,Se,Sn,Su]=np.loadtxt(filename,usecols=(2,8,10,12,14,15,16),skiprows=1,unpack=True);
+
 	dtarray=[];
 	ifile=open(filename);
 	ifile.readline();

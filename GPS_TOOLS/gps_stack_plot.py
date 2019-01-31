@@ -41,13 +41,15 @@ def configure():
 	EQcoords=[-119.0, 34.5];     expname='SoCal';  radius = 25; # km
 	EQcoords=[-116.0, 34.5];     expname='Mojave';  radius = 35; # km
 	EQcoords=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
+	EQcoords=[-117.5, 33.5];     expname='SD';  radius = 47; # km
+	# EQcoords=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
 	EQtimes = [];  # What black lines do you want added to the figure? 
 	EQtimes.append(dt.datetime.strptime("20140310", "%Y%m%d"));  # starts with the most important one
 	EQtimes.append(dt.datetime.strptime("20050615", "%Y%m%d"));  # other earthquakes added to the figure
 	EQtimes.append(dt.datetime.strptime("20100110", "%Y%m%d"));
 	EQtimes.append(dt.datetime.strptime("20161208", "%Y%m%d"));
 	
-	proc_center='pbo';   # WHICH DATASTREAM DO YOU WANT?
+	proc_center='nmt';   # WHICH DATASTREAM DO YOU WANT?
  
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius);
 	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT"];
@@ -62,8 +64,9 @@ def configure():
 def inputs(station_names, proc_center):  # Returns a list of objects for time series data, offsets, and earthquakes
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in station_names:
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, proc_center);
-		if myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d"):  # kicking out the stations that end early. 
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, proc_center, "NA");
+		if myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
+		# kicking out the stations that end early or start late. 
 			dataobj_list.append(myData);
 			offsetobj_list.append(offset_obj);
 			eqobj_list.append(eq_obj);	
