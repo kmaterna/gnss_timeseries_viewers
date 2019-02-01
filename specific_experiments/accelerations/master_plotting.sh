@@ -3,7 +3,7 @@
 # On different areas. 
 #pbo, nmt, cwu, unr
 
-# outdir="nmt_lssq_NA/"
+# outdir="pbo_lssq_NA/"
 # name="2016"
 outdir=$1
 name=$2

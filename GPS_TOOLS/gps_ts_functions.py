@@ -8,6 +8,7 @@ import subprocess, sys, collections
 import datetime as dt 
 from scipy import signal
 import gps_io_functions
+import lssq_model_errors
 
 # A line for referencing the namedtuple definition. 
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
@@ -184,6 +185,26 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	return [east_slope, north_slope, vert_slope, east_std, north_std, vert_std];
 
 
+def get_slope_unc(dataObj, starttime, endtime):
+	# Uses the Allan Variance of Rates. 
+	dataObj=impose_time_limits(dataObj, starttime, endtime);
+	x = get_float_times(dataObj.dtarray);
+	y = dataObj.dE;
+	sig= dataObj.Se;
+	params, covm = lssq_model_errors.AVR(x, y, sig, verbose=0);
+	slope = params[0];
+	Esigma = np.sqrt(covm[0][0]);
+	y = dataObj.dN;
+	sig= dataObj.Sn;
+	params, covm = lssq_model_errors.AVR(x, y, sig, verbose=0);
+	slope = params[0];
+	Nsigma = np.sqrt(covm[0][0]);
+	y = dataObj.dU;
+	sig= dataObj.Su;
+	params, covm = lssq_model_errors.AVR(x, y, sig, verbose=0);
+	slope = params[0];
+	Usigma = np.sqrt(covm[0][0]);
+	return [Esigma, Nsigma, Usigma]; 
 
 
 def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
