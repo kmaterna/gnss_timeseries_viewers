@@ -4,7 +4,7 @@
 #pbo, nmt, cwu, unr
 
 # outdir="pbo_lssq_NA/"
-# name="2016"
+# name="2010_2016"
 outdir=$1
 name=$2
 

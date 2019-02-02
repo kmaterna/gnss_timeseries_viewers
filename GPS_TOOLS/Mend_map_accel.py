@@ -117,8 +117,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
 
 		# When do we ignore stations? When their detrended time series have a large variance. 
 		if abs(esig0)>critical_variance or abs(nsig0)>critical_variance or abs(esig1)>critical_variance or abs(nsig1)>critical_variance:
-			print("Kicking station out...")
-			print(dataobj_list[i].name);
+			print("Kicking station %s out..." % (dataobj_list[i].name) );
 			[east_slope_after, north_slope_after, vert_slope_after]=[np.nan,np.nan,np.nan];
 			[east_slope_before, north_slope_before, vert_slope_before]=[np.nan,np.nan,np.nan];
 			[east_slope_unc1, north_slope_unc1, vert_slope_unc1]=[np.nan, np.nan, np.nan];

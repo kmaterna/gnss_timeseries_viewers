@@ -152,14 +152,19 @@ def get_slope(Data0, starttime=[], endtime=[]):
 			myeast.append(Data0.dE[i]);
 			mynorth.append(Data0.dN[i]);
 			myup.append(Data0.dU[i]);
+	time_duration=mydtarray[-1]-mydtarray[0];
 
+	# More defensive programming
 	if len(mydtarray)==0:
 		print("Error: no time array for station %s. Returning Nan" % Data0.name);
-		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];		
-	time_duration=mydtarray[-1]-mydtarray[0];	
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];	
 	if time_duration.days<365:
 		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
+	if len(myeast)<time_duration.days*0.6:
+		print("Error: Most of the data is missing to estimate parameters for station %s. Returning Nan" % Data0.name);
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];	
+
 
 	# doing the inversion here, since it's only one line.
 	decyear=get_float_times(mydtarray);
