@@ -4,7 +4,7 @@
 
 lonW="-124.9"
 lonE="-118.7"
-latS="35.5"
+latS="36.5"
 latN="42.2"
 range="$lonW/$lonE/$latS/$latN"
 projection="M3.3i"  # used for medium experiments.

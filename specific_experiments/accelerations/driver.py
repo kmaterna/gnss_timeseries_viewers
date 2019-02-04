@@ -15,8 +15,8 @@ EQ4="20180915"
 Center_Coords=[-124.0, 38.5]; # Western US everything
 filter_type='lssq'; # OPTIONS: lssq, notch, stl, grace, none. 
 size='huge';  # OPTIONS: small, medium, huge
-network='pbo';
-refname='NA'; # choices: NA, ITRF
+network='unr';
+refname='ITRF'; # choices: NA, ITRF
 
 # LEAST SQUARES
 Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
