@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import collections
 import datetime as dt 
+import gps_ts_functions
 
 Timeseries = collections.namedtuple("Timeseries",[
 	'name','coords','dtarray',
@@ -138,6 +139,53 @@ def get_slope(Data0, starttime=[], endtime=[]):
 
 	return [east_slope, north_slope, vert_slope, east_std, north_std, vert_std];
 
+
+
+def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
+	# Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F; 
+	if starttime==[]:
+		starttime=Data0.dtarray[0];
+	if endtime==[]:
+		endtime=Data0.dtarray[-1];
+
+	# Defensive programming
+	if starttime<Data0.dtarray[0]:
+		starttime=Data0.dtarray[0];
+	if endtime>Data0.dtarray[-1]:
+		endttime=Data0.dtarray[-1];
+	if endtime<Data0.dtarray[0]:
+		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
+		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
+	if starttime>Data0.dtarray[-1]:
+		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
+		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
+
+	# Cut to desired time window, and remove nans.
+	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
+	for i in range(len(Data0.dtarray)):
+		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.u[i]):
+			mydtarray.append(Data0.dtarray[i]);
+			myeast.append(Data0.u[i]);
+			mynorth.append(Data0.v[i]);
+			myup.append(Data0.w[i]);
+
+	if len(mydtarray)<365/30:
+		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
+		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
+		return [east_params, north_params, up_params];
+
+	decyear=get_float_times(mydtarray);	
+	east_params_unordered=gps_ts_functions.invert_linear_annual_semiannual(decyear,myeast);
+	north_params_unordered=gps_ts_functions.invert_linear_annual_semiannual(decyear, mynorth);
+	vert_params_unordered=gps_ts_functions.invert_linear_annual_semiannual(decyear, myup);
+
+	# The definition for returning parameters, consistent with Noel's reporting:
+	# slope, a2(cos), a1(sin), s2, s1. 
+	east_params=[east_params_unordered[4], east_params_unordered[0], east_params_unordered[1], east_params_unordered[2], east_params_unordered[3]];
+	north_params=[north_params_unordered[4], north_params_unordered[0], north_params_unordered[1], north_params_unordered[2], north_params_unordered[3]];
+	vert_params=[vert_params_unordered[4], vert_params_unordered[0], vert_params_unordered[1], vert_params_unordered[2], vert_params_unordered[3]];
+
+	return [east_params, north_params, vert_params];
 
 
 

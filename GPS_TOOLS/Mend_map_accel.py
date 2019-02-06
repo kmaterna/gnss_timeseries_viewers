@@ -216,7 +216,7 @@ def grace_configure(deltat1,deltat2, grace_dir, outfile_name):
 	dt2_start  = dt.datetime.strptime(deltat2[0], "%Y%m%d");
 	dt2_end  = dt.datetime.strptime(deltat2[1], "%Y%m%d");
 	
-	# Getting the stations of interest ('huge' means we just want within the box.)
+	# Getting the stations of interest
 	file_list=glob.glob(grace_dir+"/*.txt");
 	print("Reading %d files in %s " % (len(file_list), grace_dir) );
 	return [file_list, dt1_start, dt1_end, dt2_start, dt2_end, basename];
@@ -241,20 +241,29 @@ def grace_compute(dt1_start, dt1_end, dt2_start, dt2_end, dataobject_list):
 
 	for i in range(len(dataobject_list)):
 
-		# Get the pre-event and post-event velocities (earthquakes removed)
-		[east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, usig0]=grace_ts_functions.get_slope(dataobject_list[i],starttime=dt1_start+dt.timedelta(days=period_after_start_date),endtime=dt1_end);
-		[east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, usig1]=grace_ts_functions.get_slope(dataobject_list[i],starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
+		# Just fit the best line. 
+		# # Get the pre-event and post-event velocities
+		# [east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, usig0]=grace_ts_functions.get_slope(dataobject_list[i],starttime=dt1_start+dt.timedelta(days=period_after_start_date),endtime=dt1_end);
+		# [east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, usig1]=grace_ts_functions.get_slope(dataobject_list[i],starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
 
-		east_slope_after=np.round(east_slope_after,decimals=num_decimals);
-		east_slope_before=np.round(east_slope_before,decimals=num_decimals);
-		north_slope_after=np.round(north_slope_after,decimals=num_decimals);
-		north_slope_before=np.round(north_slope_before,decimals=num_decimals);
-		vert_slope_after=np.round(vert_slope_after,decimals=num_decimals);
-		vert_slope_before=np.round(vert_slope_before,decimals=num_decimals);
+		# east_slope_after=np.round(east_slope_after,decimals=num_decimals);
+		# east_slope_before=np.round(east_slope_before,decimals=num_decimals);
+		# north_slope_after=np.round(north_slope_after,decimals=num_decimals);
+		# north_slope_before=np.round(north_slope_before,decimals=num_decimals);
+		# vert_slope_after=np.round(vert_slope_after,decimals=num_decimals);
+		# vert_slope_before=np.round(vert_slope_before,decimals=num_decimals);
 
-		east_slope_obj.append([east_slope_before, east_slope_after]);
-		north_slope_obj.append([north_slope_before, north_slope_after]);
-		vert_slope_obj.append([vert_slope_before, vert_slope_after]); 
+		# east_slope_obj.append([east_slope_before, east_slope_after]);
+		# north_slope_obj.append([north_slope_before, north_slope_after]);
+		# vert_slope_obj.append([vert_slope_before, vert_slope_after]); 
+
+		# Experiment: Remove the sinusoidal components. 
+		[east_params_before, north_params_before, vert_params_before] = grace_ts_functions.get_linear_annual_semiannual(dataobject_list[i], starttime=dt1_start+dt.timedelta(days=period_after_start_date),endtime=dt1_end);
+		[east_params_after, north_params_after, vert_params_after]=grace_ts_functions.get_linear_annual_semiannual(dataobject_list[i],starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
+		east_slope_obj.append([east_params_before[0], east_params_after[0]]);
+		north_slope_obj.append([north_params_before[0], north_params_after[0]]);
+		vert_slope_obj.append([vert_params_before[0], vert_params_after[0]]); 
+
 
 	return [east_slope_obj, north_slope_obj, vert_slope_obj];
 
@@ -262,7 +271,7 @@ def grace_compute(dt1_start, dt1_end, dt2_start, dt2_end, dataobject_list):
 def grace_outputs(dataobj_list,east_slope_obj, north_slope_obj, vert_slope_obj, out_dir, basename):
 	ofile1=open(out_dir+basename+'.txt','w');
 	for i in range(len(dataobj_list)):
-		ofile1.write("%f %f %f %f 0 %f 0 0 %s\n" % (dataobj_list[i].coords[0], dataobj_list[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0]), vert_slope_obj[i][1]-vert_slope_obj[i][0], dataobj_list[i].name) );
+		ofile1.write("%f %f %f %f 0 %f 0 0 0 0 %s\n" % (dataobj_list[i].coords[0], dataobj_list[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], (north_slope_obj[i][1]-north_slope_obj[i][0]), vert_slope_obj[i][1]-vert_slope_obj[i][0], dataobj_list[i].name) );
 	ofile1.close();
 	# subprocess.call(['./accel_map_gps.gmt',basename+'.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),basename],shell=False);
 	# print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+basename);

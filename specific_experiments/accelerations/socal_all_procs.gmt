@@ -8,7 +8,7 @@ latN="37.6"
 range="$lonW/$lonE/$latS/$latN"
 projection="M3.0i"  # used for medium experiments.
 horiz_scale=0.1  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
-output1='Figures/SoCalAllprocs_2010.ps'
+output1='Figures/SoCalAllprocs_2016.ps'
 offset=8.5
 
 filename='2016.txt'
