@@ -112,8 +112,12 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
 		[east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, usig0]=gps_ts_functions.get_slope(newobj,starttime=dt1_start+dt.timedelta(days=time_after_start_date),endtime=dt1_end);
 		[east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, usig1]=gps_ts_functions.get_slope(newobj,starttime=dt2_start+dt.timedelta(days=time_after_start_date),endtime=dt2_end);
 
+		# Get the uncertainties on the velocity-change estimate
 		[east_slope_unc1, north_slope_unc1, vert_slope_unc1] = gps_ts_functions.get_slope_unc(newobj,dt1_start+dt.timedelta(days=time_after_start_date),dt1_end);
 		[east_slope_unc2, north_slope_unc2, vert_slope_unc2] = gps_ts_functions.get_slope_unc(newobj,dt2_start+dt.timedelta(days=time_after_start_date),dt2_end);
+		east_dv_unc = gps_ts_functions.add_two_unc_quadrature(east_slope_unc1, east_slope_unc2);
+		north_dv_unc = gps_ts_functions.add_two_unc_quadrature(north_slope_unc1, north_slope_unc2);
+		vert_dv_unc = gps_ts_functions.add_two_unc_quadrature(vert_slope_unc1, vert_slope_unc2);
 
 		# When do we ignore stations? When their detrended time series have a large variance. 
 		if abs(esig0)>critical_variance or abs(nsig0)>critical_variance or abs(esig1)>critical_variance or abs(nsig1)>critical_variance:
@@ -123,9 +127,9 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
 			[east_slope_unc1, north_slope_unc1, vert_slope_unc1]=[np.nan, np.nan, np.nan];
 			[east_slope_unc2, north_slope_unc2, vert_slope_unc2]=[np.nan, np.nan, np.nan];
 		
-		east_slope_obj.append([east_slope_before, east_slope_after, east_slope_unc1, east_slope_unc2]);
-		north_slope_obj.append([north_slope_before, north_slope_after, north_slope_unc1, north_slope_unc2]);
-		vert_slope_obj.append([vert_slope_before, vert_slope_after, vert_slope_unc1, vert_slope_unc2]); 
+		east_slope_obj.append([east_slope_before, east_slope_after, east_dv_unc]);
+		north_slope_obj.append([north_slope_before, north_slope_after, north_dv_unc]);
+		vert_slope_obj.append([vert_slope_before, vert_slope_after, vert_dv_unc]); 
 
 	# Adjusting verticals by a reference station. 
 	vert_slope_obj = vert_adjust_by_reference_stations(names, coords, vert_slope_obj);
@@ -170,7 +174,7 @@ def vert_adjust_by_reference_stations(names, coords, slope_obj):
 	print("Vert slope after: %f " % vert_reference_after);
 
 	for i in range(len(slope_obj)):
-		new_slope_obj.append([slope_obj[i][0]-vert_reference_before, slope_obj[i][1]-vert_reference_after, slope_obj[i][2], slope_obj[i][3]]);
+		new_slope_obj.append([slope_obj[i][0]-vert_reference_before, slope_obj[i][1]-vert_reference_after, slope_obj[i][2] ]);
 	
 	return new_slope_obj;
 
@@ -186,7 +190,7 @@ def outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, outdi
 		# Lon, Lat, East, North, 0, Vert, SigE, SigN, SigV, Corr, Name
 		ofile1.write("%.2f %.2f %.2f %.2f 0 %.2f %.2f %.2f %.2f 0 %s\n" % (noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1]-east_slope_obj[i][0], 
 			(north_slope_obj[i][1]-north_slope_obj[i][0]), vert_slope_obj[i][1]-vert_slope_obj[i][0], 
-			east_slope_obj[i][2]+east_slope_obj[i][3], north_slope_obj[i][2]+north_slope_obj[i][3], vert_slope_obj[i][2]+vert_slope_obj[i][3], noeq_objects[i].name) );
+			east_slope_obj[i][2], north_slope_obj[i][2], vert_slope_obj[i][2], noeq_objects[i].name) );
 	ofile1.close();
 
 	# Here we call the GMT master script, if we want. 

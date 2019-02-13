@@ -302,8 +302,8 @@ def float_to_dt(float_time):
 	my_date = dt.datetime.strptime(myyear+fractional_year,"%Y%j");
 	return my_date;
 
-
-
+def add_two_unc_quadrature(unc1, unc2):
+	return np.sqrt(unc1*unc1 + unc2*unc2);
 
 
 
