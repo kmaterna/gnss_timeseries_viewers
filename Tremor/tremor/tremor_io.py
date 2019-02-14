@@ -9,6 +9,15 @@ import datetime as dt
 
 TremorCat = collections.namedtuple("TremorCat",['dtarray','lonarray','latarray']);
 
+def read_input_tremor(tremortype):
+	# The driver of the inputs (optional)
+	readfuncs={"wech":read_wech,
+	"ide":read_ide};
+	filenames={"wech":"../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt",
+	"ide":"../../GPS_POS_DATA/tremor/trm_Cascadia.20050101.3652.92921871.csv"};
+	tremor=readfuncs[tremortype](filenames[tremortype]);
+	return tremor;
+
 
 def read_wech(filename):
 	dtarray=[]; lonarray=[]; latarray=[];

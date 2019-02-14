@@ -138,13 +138,8 @@ def complex_plot(tremor,tremortype):
 
 
 if __name__=="__main__":
-	readfuncs={"wech":tremor_io.read_wech,
-	"ide":tremor_io.read_ide};
-	filenames={"wech":"../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt",
-	"ide":"../../GPS_POS_DATA/tremor/trm_Cascadia.20050101.3652.92921871.csv"};
-
 	tremortype='ide';
-	tremor=readfuncs[tremortype](filenames[tremortype]);
+	tremor=tremor_io.read_input_tremor(tremortype);
 	complex_plot(tremor, tremortype);
 
 

@@ -10,6 +10,7 @@ import gps_ts_functions
 import gps_seasonal_removals
 
 TremorCat = collections.namedtuple("TremorCat",['dtarray','lonarray','latarray']);
+TremorCatDepths = collections.namedtuple("TremorCatDepths",['dtarray','lonarray','latarray','depth']);
 
 
 def restrict_to_box(tremor, box_interest, start_time, end_time):
@@ -95,9 +96,40 @@ def write_deltat_certain_day(tremor, eqtime, endtime, outfile,unit='hours'):
 	
 
 
+def get_depth_projection(coords, xdata, ydata, zdata):
+	# Coords : a list of two-valued arrays
+	# xdata  : an ascending array of x-values from the fault grd file
+	# ydata  : an ascending array of y-values from the fault grd file
+	# xdata  : a 2D array of depths from the fault grd file
+	# Returns the depths of the tremor locations on the underlying xyz fault surface
+	result=[];
+	for i in range(len(coords)):
+		# Defensive programming
+		if coords[i][0]>np.max(xdata) or coords[i][0]<np.min(xdata):
+			result.append(np.nan);
+			continue;
+		if coords[i][1]>np.max(ydata) or coords[i][1]<np.min(ydata):
+			result.append(np.nan);
+			continue;
+		
+		# Find the part of the array where the given data is located. 
+		idx_left=np.searchsorted(xdata, coords[i][0], side="left");  # the lower value
+		idx_right=np.searchsorted(xdata, coords[i][0], side="right");  # the higher value
+		idy_left=np.searchsorted(ydata, coords[i][1], side="left");  # the lower value
+		idy_right=np.searchsorted(ydata, coords[i][1], side="right");  # the higher value
+		x  = coords[i][0];   # the x coordinate we're going to interpolate over. 
+		xp = [idx_left, idx_right];
+		fp_left  = np.mean([zdata[idy_left][idx_left], zdata[idy_right][idx_left]]);
+		fp_right = np.mean([zdata[idy_left][idx_right], zdata[idy_right][idx_right]]);
+		fp = [fp_left, fp_right];
+		depth = np.interp(x, xp, fp);
+		result.append(depth);
+	return result;
 
 
-
+def associate_depths(tremor, depths):
+	tremor_with_depths = TremorCatDepths(dtarray=tremor.dtarray, lonarray=tremor.lonarray, latarray=tremor.latarray, depth=depths);
+	return tremor_with_depths;
 
 
 

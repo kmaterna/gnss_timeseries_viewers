@@ -7,17 +7,11 @@ import tremor_plots
 
 
 if __name__=="__main__":
-	readfuncs={"wech":tremor_io.read_wech,
-	"ide":tremor_io.read_ide};
-	filenames={"wech":"../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt",
-	"ide":"../../GPS_POS_DATA/tremor/trm_Cascadia.20050101.3652.92921871.csv"};
-	#"wech":"../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt",
 
 	# A detailed time-tremor plot
 	tremortype='wech';
-	tremor=readfuncs[tremortype](filenames[tremortype]);
+	tremor_io.read_input_tremor(tremortype);
 	tremor_plots.timing_2014_plot(tremor, tremortype);
-
 
 	# Print the tremor by time, in hours or days from event time, used for GMT
 	# Really this should not be in this section of code, this is very disorganized
