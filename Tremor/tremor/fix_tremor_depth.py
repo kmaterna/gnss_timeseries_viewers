@@ -1,7 +1,7 @@
 # Goal: 
 # Read McCrory et al. (2012) geometry
-# Use this surface to estimate the depths of all the tremor
-# Based on their lat/lon
+# Use this surface to estimate the depths of all the tremor based on their lat/lon
+# Run the more complicated plots using the depths instead of simple boxes. 
 
 import numpy as np
 import matplotlib.pyplot as plt 
@@ -9,7 +9,7 @@ import subprocess
 import netcdf_read_write
 import tremor_io
 import tremor_tools
-
+import tremor_plots
 
 def read_csz_model():
 	grdname="../slab_geometry/cas_slab1.0_clip.grd";
@@ -36,10 +36,10 @@ def make_plots(xdata, ydata, zdata, tremor):
 
 
 if __name__=="__main__":
-	tremor = tremor_io.read_input_tremor("ide");
+	tremor_type="wech";
+	tremor = tremor_io.read_input_tremor(tremor_type);
 	xdata, ydata, zdata = read_csz_model();
 	tremor_with_depths = compute_depths(tremor, xdata, ydata, zdata);
 	make_plots(xdata, ydata, zdata, tremor_with_depths);
-
-
-
+	tremor_plots.complex_plot_depths(tremor_with_depths,tremor_type);
+	# After this, you must go and make the GMT plots of the tremor (tremor_depth_ranges.sh)

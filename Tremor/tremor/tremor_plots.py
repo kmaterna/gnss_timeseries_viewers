@@ -137,6 +137,75 @@ def complex_plot(tremor,tremortype):
 
 
 
+def complex_plot_depths(tremor,tremortype):
+	# This tremor object has depths associated. 
+	start_time=dt.datetime.strptime('20120301',"%Y%m%d");
+	end_time=dt.datetime.strptime('20181101',"%Y%m%d");
+	# start_time=dt.datetime.strptime('20060301',"%Y%m%d");
+	# end_time=dt.datetime.strptime('20141201',"%Y%m%d");	
+	box_interest = [-125, -121, 40.1, 41];
+	depth_interest1=[10, 27]; name1="10-27km";
+	depth_interest2=[27, 35]; name2="27-35km";
+	depth_interest3=[35, 55]; name3="35-55km";
+	tremor_latmin=39;
+	tremor_latmax=42.5;
+	eqtimes=[dt.datetime.strptime('20140310',"%Y%m%d"),
+		dt.datetime.strptime('20161208',"%Y%m%d"),dt.datetime.strptime('20100110',"%Y%m%d")];
+
+	# Cumulative plots. 
+	[dt1, c1]=tremor_tools.get_cumulative_plot_depths(tremor, box_interest, depth_interest1, start_time, end_time);
+	[dt2, c2]=tremor_tools.get_cumulative_plot_depths(tremor, box_interest, depth_interest2, start_time, end_time);
+	[dt3, c3]=tremor_tools.get_cumulative_plot_depths(tremor, box_interest, depth_interest3, start_time, end_time);
+
+	# Print the coordinates of the tremor in different depths, for GMT
+	shallowT=tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest1, start_time, end_time);
+	mediumT=tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest2, start_time, end_time);
+	deepT=tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest3, start_time, end_time);
+	tremor_io.write_tremor_as_txt(shallowT, 'gmt/shallowrange.txt');
+	tremor_io.write_tremor_as_txt(mediumT, 'gmt/medrange.txt');
+	tremor_io.write_tremor_as_txt(deepT, 'gmt/deeprange.txt');
+
+	station='P159';
+	trend_out_gps=tremor_tools.get_detrended_gps_station(station);
+
+	f,axarr=plt.subplots(2,1, sharex=True,figsize=(16,10));
+	axarr[0].grid(True);
+	axarr[0].plot_date(tremor.dtarray,tremor.latarray,'.',color='k',markersize=1);
+	for item in eqtimes:
+		axarr[0].plot_date([item, item],[tremor_latmin, tremor_latmax],color='red',linestyle='--',linewidth=2,marker=None);	
+	axarr[0].set_xlim([start_time, end_time]);
+	axarr[0].set_ylim([tremor_latmin, tremor_latmax]);
+	axarr[0].set_ylabel('Latitude (degrees)',fontsize=20);
+	axarr[0].tick_params(axis='both', which='major', labelsize=20);
+
+
+	h1=axarr[1].plot_date(dt1,c1/max(c1),color='darkcyan',linestyle='-',linewidth=4,marker=None,label=name1);
+	h2=axarr[1].plot_date(dt2,c2/max(c2),color='darkorchid',linestyle='-',linewidth=4,marker=None,label=name2);
+	h3=axarr[1].plot_date(dt3,c3/max(c3),color='darkorange',linestyle='-',linewidth=4,marker=None,label=name3);
+	for item in eqtimes:
+		axarr[1].plot_date([item, item],[0,max(c1)],color='red',linestyle='--',linewidth=2,marker=None);
+	ax2=axarr[1].twinx();
+	ax2.plot_date(trend_out_gps.dtarray, trend_out_gps.dE,marker='.',markersize=4,color='gray');
+	ax2.tick_params(axis='both', which='major', labelsize=20);
+	ax2.tick_params(axis='y', which='major', colors='gray');
+	ax2.set_ylabel(station+' East (mm)',fontsize=20,color='gray');
+
+	axarr[1].set_ylim([0,1]);
+	axarr[1].set_ylabel('Norm. Tremor Counts',fontsize=20,color='black');
+	axarr[1].grid(True);
+	axarr[1].set_xlabel('Time',fontsize=20);
+	axarr[1].tick_params(axis='y', which='major', colors='black');
+	axarr[1].tick_params(axis='both', which='major', labelsize=20);
+	axarr[1].legend(loc=2,fontsize=18);
+	plt.subplots_adjust(wspace=0, hspace=0.1)
+	plt.savefig(tremortype+'_tremor_depth_cumulative.eps');
+	return;
+
+
+
+
+
+
 if __name__=="__main__":
 	tremortype='ide';
 	tremor=tremor_io.read_input_tremor(tremortype);

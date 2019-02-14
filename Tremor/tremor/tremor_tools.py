@@ -25,6 +25,26 @@ def restrict_to_box(tremor, box_interest, start_time, end_time):
 	newtremor=TremorCat(dtarray=newdt, lonarray=newlon, latarray=newlat);
 	return newtremor;
 
+def restrict_to_box_depth(tremor, box_interest, depth_interest, start_time, end_time):
+	newdt=[]; newlon=[]; newlat=[]; newdepth=[];
+	# If depths come in negative by convention
+	if np.nanmean(tremor.depth)<0:
+		depths=np.multiply(tremor.depth,-1);
+	else:
+		depths=tremor.depth;
+	for i in range(len(tremor.dtarray)):
+		if tremor.dtarray[i]>start_time:
+			if tremor.lonarray[i]>box_interest[0] and tremor.lonarray[i]<box_interest[1]:
+				if tremor.latarray[i]>box_interest[2] and tremor.latarray[i]<box_interest[3]:
+					if depths[i]>depth_interest[0] and depths[i]<depth_interest[1]:
+						newdt.append(tremor.dtarray[i]);
+						newlon.append(tremor.lonarray[i]);
+						newlat.append(tremor.latarray[i]);
+						newdepth.append(depths[i]);
+	
+	newtremor=TremorCatDepths(dtarray=newdt, lonarray=newlon, latarray=newlat, depth=newdepth);
+	return newtremor;
+
 
 def get_cumulative_plot(tremor, box_interest, start_time, end_time):
 	# Returns two arrays that can be plotted against each other to give the cumulative tremor plot. 
@@ -43,6 +63,30 @@ def get_cumulative_plot(tremor, box_interest, start_time, end_time):
 	cnumber=np.array(cnumber);	
 	return [dt_interest, cnumber];
 
+def get_cumulative_plot_depths(tremor, box_interest, depth_interest, start_time, end_time):
+	# Returns two arrays that can be plotted against each other to give the cumulative tremor plot. 
+	dt_interest=[];
+	cnumber=[];
+	dt_interest.append(start_time);
+	cnumber.append(0);
+
+	# If depths come in negative by convention
+	if np.nanmean(tremor.depth)<0:
+		depths=np.multiply(tremor.depth,-1);
+	else:
+		depths=tremor.depth;
+
+	for i in range(len(tremor.dtarray)):
+		if tremor.dtarray[i]>start_time:
+			if tremor.lonarray[i]>box_interest[0] and tremor.lonarray[i]<box_interest[1]:
+				if tremor.latarray[i]>box_interest[2] and tremor.latarray[i]<box_interest[3]:
+					if depths[i]>depth_interest[0] and depths[i]<depth_interest[1]:
+						dt_interest.append(tremor.dtarray[i]);
+						dt_interest.append(tremor.dtarray[i]);
+						cnumber.append(cnumber[-1]);
+						cnumber.append(cnumber[-1]+1);
+	cnumber=np.array(cnumber);	
+	return [dt_interest, cnumber];
 
 
 def get_rates(tremor):
@@ -72,9 +116,9 @@ def get_rates(tremor):
 def get_detrended_gps_station(station_name):
 	datasource='pbo';
 	[newData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource);
-	newData=offsets.remove_antenna_offsets(newData, offset_obj);
+	newData=offsets.remove_offsets(newData, offset_obj);
 	newData=gps_ts_functions.remove_outliers(newData, 5);  # mm for outliers
-	newData=offsets.remove_earthquakes(newData, eq_obj);
+	newData=offsets.remove_offsets(newData, eq_obj);
 	trend_out=gps_seasonal_removals.make_detrended_ts(newData, 1, 'notch');
 	return trend_out;
 
@@ -128,6 +172,7 @@ def get_depth_projection(coords, xdata, ydata, zdata):
 
 
 def associate_depths(tremor, depths):
+	# Build a new tremor catalog, with depths associated to each event. 
 	tremor_with_depths = TremorCatDepths(dtarray=tremor.dtarray, lonarray=tremor.lonarray, latarray=tremor.latarray, depth=depths);
 	return tremor_with_depths;
 

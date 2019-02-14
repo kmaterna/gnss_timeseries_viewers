@@ -58,4 +58,12 @@ def read_ide(filename):
 	print("Successfully read %d tremor counts from %s " % (len(ide_tremor.dtarray),filename));
 	return ide_tremor;
 
+def write_tremor_as_txt(tremor, filename):
+	ofile=open(filename,'w');
+	for i in range(len(tremor.dtarray)):
+		ofile.write("%f %f\n" % (tremor.lonarray[i], tremor.latarray[i]) );
+	ofile.close();
+	return;
+
+
 
