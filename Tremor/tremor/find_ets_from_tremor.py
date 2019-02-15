@@ -15,9 +15,30 @@ def find_ets(tremor):
 	tremor=tremor_tools.restrict_to_box(tremor, box_interest, start_time, end_time);
 	[dts, rate] = tremor_tools.get_rates(tremor);
 
+	ets_dates=[];
 	for i in range(len(dts)):
 		if rate[i]>20:
-			print(dts[i]);
+			# print(dts[i]);
+			ets_dates.append(dts[i]);
+	
+	# Decluster	
+	print("Declustering the ETS days");
+	ets_declustered=[];	
+	post_period=[];
+
+	for i in range(len(ets_dates)-1):
+		post_dt=ets_dates[i+1]-ets_dates[i];
+		post_days=post_dt.days;
+		if post_days>60:  # ignoring the little noise
+			ets_declustered.append(ets_dates[i]);
+			post_period.append(post_days);
+			print(ets_dates[i]);
+			print("Followed by %d days of quiet" % post_days);
+
+	print("Average post-period plus or minus:");
+	print(np.mean(post_period));
+	print(np.std(post_period));
+
 
 	plt.figure();
 	plt.plot_date(dts,rate,linestyle='-',marker=None,color='b',linewidth=4);
@@ -30,8 +51,6 @@ def find_ets(tremor):
 
 
 
-
-
 if __name__=="__main__":
-	tremor=tremor_io.read_wech("../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt");
+	tremor=tremor_io.read_input_tremor("wech");
 	find_ets(tremor);
