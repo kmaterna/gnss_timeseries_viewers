@@ -14,9 +14,9 @@ offset=12
 
 folder="pbo_lssq_NA/"
 file1=2014.txt
-name1="2014"
+name1="2014: T3-T2"
 file2=2016.txt
-name2="2016"
+name2="2016: T4-T3"
 
 
 gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
@@ -32,7 +32,7 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 
-gmt pscoast -R$range -J$projection -Lf-124.9/39.15/39.15/50+jt -N1 -N2 -Wthinner,black -Dh -K -O >> $output1 # the title goes here
+gmt pscoast -R$range -J$projection -Lf-125.9/39.15/39.15/50+jt -N1 -N2 -Wthinner,black -Dh -K -O >> $output1 # the title goes here
 
 # Add the plate boundaries
 gmt psxy ../../../Misc/Mapping_Resources/transform.gmt -R$range -J$projection -Wthin,red -K -O >> $output1
@@ -42,7 +42,7 @@ gmt psxy ../../../Misc/Mapping_Resources/trench.gmt -R$range -J$projection -Wthi
 # Add PBO velocity vectors
 awk '{print $1, $2, $3, $4, $7, $8, $10}' $infile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinnest,black >> $output1
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wthinnest,black -K -O <<EOF >> $output1
--125.2 41.8 2 0 0.2 0.2 0.0 2+-0.2mm/yr
+-125.2 39.4 2 0 0.2 0.2 0.0 2+-0.2mm/yr
 EOF
 
 grep 'nan' $infile | awk '{print $1, $2}' | gmt psxy -R$range -J$projection -O -K -Gdarkblue -Sc0.05 >> $output1
@@ -60,9 +60,13 @@ gmt psmeca -R$range -J$projection -Gspringgreen3 -Sm0.5 -C -K -O <<EOF>> $output
 -125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
 EOF
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--121.8 42.8 $name1
+-122.2 42.8 $name1
 -126.4 42.8 A
 EOF
+# Highlighting the P160 time series
+grep 'P160' $infile | awk '{print $1, $2, $3, $4, $7, $8, $10}' | gmt psvelo -R$range -J$projection -K -O -Se$horiz_scale/0.68/8 -A+e+gred+pthickest,red -Wthinnest,red >> $output1
+
+
 
 
 
@@ -77,7 +81,7 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 
-gmt pscoast -R$range -J$projection -Lf-124.9/39.15/39.15/50+jt -N1 -N2 -Wthinner,black -Dh -K -O >> $output1 # the title goes here
+gmt pscoast -R$range -J$projection -Lf-125.9/39.15/39.15/50+jt -N1 -N2 -Wthinner,black -Dh -K -O >> $output1 # the title goes here
 
 # Add the plate boundaries
 gmt psxy ../../../Misc/Mapping_Resources/transform.gmt -R$range -J$projection -Wthin,red -K -O >> $output1
@@ -87,7 +91,7 @@ gmt psxy ../../../Misc/Mapping_Resources/trench.gmt -R$range -J$projection -Wthi
 # Add PBO velocity vectors
 awk '{print $1, $2, $3, $4, $7, $8, $10}' $infile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinnest,black >> $output1
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wthinnest,black -K -O <<EOF >> $output1
--125.2 41.8 2 0 0.2 0.2 0.0 2+-0.2mm/yr
+-125.2 39.4 2 0 0.2 0.2 0.0 2+-0.2mm/yr
 EOF
 
 grep 'nan' $infile | awk '{print $1, $2}' | gmt psxy -R$range -J$projection -O -K -Gdarkblue -Sc0.05 >> $output1
@@ -104,13 +108,14 @@ EOF
 gmt psmeca -R$range -J$projection -Gspringgreen3 -Sm0.5 -C -K -O <<EOF>> $output1
 -126.194 40.453 21 -0.13 -0.01 0.14 0.04 0.27 -1.11 26 0 0 2016M6.6
 EOF
-gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--121.8 42.8 $name2
+gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -O <<EOF >> $output1
+-122.2 42.8 $name2
 -126.4 42.8 B
 EOF
 
 
-
+# Convert to PNG
+gmt psconvert $output1 -Tg
 
 
 rm gmt.history
