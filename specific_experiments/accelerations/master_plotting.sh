@@ -3,10 +3,10 @@
 # On different areas. 
 #pbo, nmt, cwu, unr
 
-outdir="pbo_lssq_NA/"
-name="2010_2016"
-# outdir=$1
-# name=$2
+# outdir="pbo_lssq_NA/"
+# name="2014"
+outdir=$1
+name=$2
 
 data_file=$outdir$name.txt
 ./accel_map_gps.gmt $data_file -121.8 -115.0 32.2 37.6 $outdir'SoCal'$name

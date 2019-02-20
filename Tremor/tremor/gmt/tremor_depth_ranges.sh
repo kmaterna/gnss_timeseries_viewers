@@ -12,7 +12,7 @@ bigprojection="m0.09i"
 output="MTJ_Tremor_key.ps"
 
 # # Insert a horizontal scale bar and title
-gmt pscoast -R$range -J$projection -Lf-121.7/39.15/39.15/50+jt -Wblack -N2 -B1.0:."Tremor at MTJ": -Dh -K -P > $output 
+gmt pscoast -R$range -J$projection -Lf-121.7/39.15/39.15/50+jt -Wthick,black -N2 -B1.0:."Tremor at MTJ": -Dh -K -P > $output 
 
 # Plot tremor epicenters
 awk '{print $4, $3}' ../../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt | gmt psxy -R$range -J$projection -Sc0.02 -Gblack -K -O -P >> $output
@@ -31,19 +31,21 @@ gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se0.3/0.68/10 -Wblack -
 -124.85 41.8 1 0 0.0 0.0 0.0 1mm/yr
 EOF
 
-gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output
+gmt psmeca -R$range -J$projection -Gblack -Sm0.5 -C -K -O <<EOF>> $output
 -125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
 EOF
 
 #  Put a tiny map in the corner to orient you
 gmt pscoast -R$bigrange -J$bigprojection -Ggray -SWhite -Di -N2 -K -O -P >> $output
-gmt psxy -R$bigrange -J$bigprojection -Wthick,red -K -O -P <<EOF >> $output
+gmt psxy -R$bigrange -J$bigprojection -Wthick,red -O -P <<EOF >> $output
 $lonW $latS
 $lonE $latS
 $lonE $latN
 $lonW $latN
 $lonW $latS
 EOF
+
+gmt psconvert $output -Tg
 
 open $output
 

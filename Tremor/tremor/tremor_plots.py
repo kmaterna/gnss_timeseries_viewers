@@ -98,7 +98,7 @@ def complex_plot(tremor,tremortype):
 	[dt2, c2]=tremor_tools.get_cumulative_plot(tremor, box_interest2, start_time, end_time);
 	[dt3, c3]=tremor_tools.get_cumulative_plot(tremor, box_interest3, start_time, end_time);
 
-	station='P159';
+	station='P160';
 	trend_out_gps=tremor_tools.get_detrended_gps_station(station);
 
 
@@ -127,7 +127,6 @@ def complex_plot(tremor,tremortype):
 	axarr[1].set_ylim([0,1]);
 	axarr[1].set_ylabel('Norm. Tremor Counts',fontsize=20,color='black');
 	axarr[1].grid(True);
-	axarr[1].set_xlabel('Time',fontsize=20);
 	axarr[1].tick_params(axis='y', which='major', colors='black');
 	axarr[1].tick_params(axis='both', which='major', labelsize=20);
 	axarr[1].legend(loc=2,fontsize=18);
@@ -143,7 +142,8 @@ def complex_plot_depths(tremor,tremortype):
 	end_time=dt.datetime.strptime('20181101',"%Y%m%d");
 	# start_time=dt.datetime.strptime('20060301',"%Y%m%d");
 	# end_time=dt.datetime.strptime('20141201',"%Y%m%d");	
-	box_interest = [-125, -121, 40.1, 41];
+	# box_interest = [-125, -121, 40.1, 41];  # Nice
+	box_interest = [-125, -121, 40.2, 40.8];  # Experiment
 	depth_interest1=[10, 27]; name1="10-27km";
 	depth_interest2=[27, 35]; name2="27-35km";
 	depth_interest3=[35, 55]; name3="35-55km";
@@ -165,7 +165,7 @@ def complex_plot_depths(tremor,tremortype):
 	tremor_io.write_tremor_as_txt(mediumT, 'gmt/medrange.txt');
 	tremor_io.write_tremor_as_txt(deepT, 'gmt/deeprange.txt');
 
-	station='P159';
+	station='P160';
 	trend_out_gps=tremor_tools.get_detrended_gps_station(station);
 
 	f,axarr=plt.subplots(2,1, sharex=True,figsize=(16,10));
@@ -182,6 +182,10 @@ def complex_plot_depths(tremor,tremortype):
 	h1=axarr[1].plot_date(dt1,c1/max(c1),color='darkcyan',linestyle='-',linewidth=4,marker=None,label=name1);
 	h2=axarr[1].plot_date(dt2,c2/max(c2),color='darkorchid',linestyle='-',linewidth=4,marker=None,label=name2);
 	h3=axarr[1].plot_date(dt3,c3/max(c3),color='darkorange',linestyle='-',linewidth=4,marker=None,label=name3);
+	axarr[1].text(dt.datetime.strptime("20130610","%Y%m%d"),1.02,'T2',color='red',fontsize=20,fontweight='bold');
+	axarr[1].text(dt.datetime.strptime("20150610","%Y%m%d"),1.02,'T3',color='red',fontsize=20,fontweight='bold');
+	axarr[1].text(dt.datetime.strptime("20171010","%Y%m%d"),1.02,'T4',color='red',fontsize=20,fontweight='bold');
+
 	for item in eqtimes:
 		axarr[1].plot_date([item, item],[0,max(c1)],color='red',linestyle='--',linewidth=2,marker=None);
 	ax2=axarr[1].twinx();
@@ -193,11 +197,10 @@ def complex_plot_depths(tremor,tremortype):
 	axarr[1].set_ylim([0,1]);
 	axarr[1].set_ylabel('Norm. Tremor Counts',fontsize=20,color='black');
 	axarr[1].grid(True);
-	axarr[1].set_xlabel('Time',fontsize=20);
 	axarr[1].tick_params(axis='y', which='major', colors='black');
 	axarr[1].tick_params(axis='both', which='major', labelsize=20);
 	axarr[1].legend(loc=2,fontsize=18);
-	plt.subplots_adjust(wspace=0, hspace=0.1)
+	plt.subplots_adjust(wspace=0, hspace=0.2)
 	plt.savefig(tremortype+'_tremor_depth_cumulative.eps');
 	return;
 

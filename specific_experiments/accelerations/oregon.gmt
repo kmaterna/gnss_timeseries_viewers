@@ -15,11 +15,11 @@ offset=7.2
 
 folder="pbo_lssq_NA/"
 file1=2010.txt
-name1="2010"
+name1="2010: T2-T1"
 file2=2014.txt
-name2="2014"
+name2="2014: T3-T2"
 file3=2016.txt
-name3="2016"
+name3="2016: T4-T3"
 
 
 
@@ -51,7 +51,7 @@ EOF
 # Add the labels
 gmt pscoast -R$range -J$projection -Lf-121.0/41.7/41.7/50+jt -N1 -N2 -Wthinner,black -Dh -K -O >> $output1
 gmt pstext -R$range -J$projection -F+f14p,Helvetica -Gwhite -K -O <<EOF >> $output1
--120.9 46 $name1
+-121.6 46 $name1
 -124.4 46 A
 EOF
 
@@ -83,7 +83,7 @@ EOF
 # Add the labels
 gmt pscoast -R$range -J$projection -Lf-121.0/41.7/41.7/50+jt -N1 -N2 -Wthinner,black -Dh -K -O >> $output1
 gmt pstext -R$range -J$projection -F+f14p,Helvetica -Gwhite -K -O <<EOF >> $output1
--120.9 46 $name2
+-121.6 46 $name2
 -124.4 46 B
 EOF
 
@@ -113,13 +113,17 @@ EOF
 
 # Add the labels
 gmt pscoast -R$range -J$projection -Lf-121.0/41.7/41.7/50+jt -N1 -N2 -Wthinner,black -Dh -K -O >> $output1
-gmt pstext -R$range -J$projection -F+f14p,Helvetica -Gwhite -K -O <<EOF >> $output1
--120.9 46 $name3
+gmt pstext -R$range -J$projection -F+f14p,Helvetica -Gwhite -O <<EOF >> $output1
+-121.6 46 $name3
 -124.4 46 C
 EOF
 
-
+gmt psconvert $output1 -Tg
 
 
 open $output1
 
+rm etopo1.grad
+rm etopo1.hist
+rm etopo1.norm
+rm gmt.history

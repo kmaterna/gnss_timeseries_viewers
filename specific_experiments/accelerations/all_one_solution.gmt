@@ -14,11 +14,11 @@ offset=9
 
 folder="pbo_lssq_NA/"
 file1=2010.txt
-name1="2010"
+name1="2010: T2-T1"
 file2=2014.txt
-name2="2014"
+name2="2014: T3-T2"
 file3=2016.txt
-name3="2016"
+name3="2016: T4-T3"
 
 
 gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
@@ -50,7 +50,7 @@ EOF
 grep 'nan' $infile | awk '{print $1, $2}' | gmt psxy -R$range -J$projection -O -K -Gdarkblue -Sc0.05 >> $output1
 
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--119.5 41.8 $name1
+-120.2 41.8 $name1
 -124 41.8 A
 EOF
 
@@ -83,7 +83,7 @@ EOF
 grep 'nan' $infile | awk '{print $1, $2}' | gmt psxy -R$range -J$projection -O -K -Gdarkblue -Sc0.05 >> $output1
 
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--119.5 41.8 $name2
+-120.2 41.8 $name2
 -124 41.8 B
 EOF
 
@@ -115,11 +115,12 @@ EOF
 
 grep 'nan' $infile | awk '{print $1, $2}' | gmt psxy -R$range -J$projection -O -K -Gdarkblue -Sc0.05 >> $output1
 
-gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--119.5 41.8 $name3
+gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -O <<EOF >> $output1
+-120.2 41.8 $name3
 -124 41.8 C
 EOF
 
+gmt psconvert $output1 -Tg
 
 
 rm gmt.history
