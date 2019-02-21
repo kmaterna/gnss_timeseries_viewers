@@ -33,7 +33,7 @@ def restrict_to_box_depth(tremor, box_interest, depth_interest, start_time, end_
 	else:
 		depths=tremor.depth;
 	for i in range(len(tremor.dtarray)):
-		if tremor.dtarray[i]>start_time:
+		if tremor.dtarray[i]>start_time and tremor.dtarray[i]<end_time:
 			if tremor.lonarray[i]>box_interest[0] and tremor.lonarray[i]<box_interest[1]:
 				if tremor.latarray[i]>box_interest[2] and tremor.latarray[i]<box_interest[3]:
 					if depths[i]>depth_interest[0] and depths[i]<depth_interest[1]:
@@ -56,10 +56,11 @@ def get_cumulative_plot(tremor, box_interest, start_time, end_time):
 		if tremor.dtarray[i]>start_time:
 			if tremor.lonarray[i]>box_interest[0] and tremor.lonarray[i]<box_interest[1]:
 				if tremor.latarray[i]>box_interest[2] and tremor.latarray[i]<box_interest[3]:
-					dt_interest.append(tremor.dtarray[i]);
-					dt_interest.append(tremor.dtarray[i]);
-					cnumber.append(cnumber[-1]);
-					cnumber.append(cnumber[-1]+1);
+					if tremor.dtarray[i]<end_time:
+						dt_interest.append(tremor.dtarray[i]);
+						dt_interest.append(tremor.dtarray[i]);
+						cnumber.append(cnumber[-1]);
+						cnumber.append(cnumber[-1]+1);
 	cnumber=np.array(cnumber);	
 	return [dt_interest, cnumber];
 
@@ -81,10 +82,11 @@ def get_cumulative_plot_depths(tremor, box_interest, depth_interest, start_time,
 			if tremor.lonarray[i]>box_interest[0] and tremor.lonarray[i]<box_interest[1]:
 				if tremor.latarray[i]>box_interest[2] and tremor.latarray[i]<box_interest[3]:
 					if depths[i]>depth_interest[0] and depths[i]<depth_interest[1]:
-						dt_interest.append(tremor.dtarray[i]);
-						dt_interest.append(tremor.dtarray[i]);
-						cnumber.append(cnumber[-1]);
-						cnumber.append(cnumber[-1]+1);
+						if tremor.dtarray[i]<end_time:
+							dt_interest.append(tremor.dtarray[i]);
+							dt_interest.append(tremor.dtarray[i]);
+							cnumber.append(cnumber[-1]);
+							cnumber.append(cnumber[-1]+1);
 	cnumber=np.array(cnumber);	
 	return [dt_interest, cnumber];
 

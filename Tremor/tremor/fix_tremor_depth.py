@@ -28,6 +28,7 @@ def compute_depths(tremor, xdata, ydata, zdata):
 	return tremor_with_depths;
 
 def make_plots(xdata, ydata, zdata, tremor):
+	# Make plot of the csz model vs. tremor depths (IT WORKS!)
 	plt.contourf(xdata,ydata,zdata,30);
 	plt.colorbar();
 	plt.scatter(tremor.lonarray,tremor.latarray,0.5,c=tremor.depth);
@@ -40,6 +41,5 @@ if __name__=="__main__":
 	tremor = tremor_io.read_input_tremor(tremor_type);
 	xdata, ydata, zdata = read_csz_model();
 	tremor_with_depths = compute_depths(tremor, xdata, ydata, zdata);
-	# make_plots(xdata, ydata, zdata, tremor_with_depths);
 	tremor_plots.complex_plot_depths(tremor_with_depths,tremor_type);
 	# After this, you must go and make the GMT plots of the tremor (tremor_depth_ranges.sh)
