@@ -1,5 +1,6 @@
 # Here we make a cumulative plot with GPS
 # Useful for viewing tremor. 
+# Added at the end: a second plot that has bins by depth. 
 
 import numpy as np 
 import matplotlib.pyplot as plt 
@@ -139,9 +140,11 @@ def complex_plot(tremor,tremortype):
 def complex_plot_depths(tremor,tremortype):
 	# This tremor object has depths associated. 
 	# start_time=dt.datetime.strptime('20140201',"%Y%m%d");
-	# end_time=dt.datetime.strptime('20140401',"%Y%m%d");
-	start_time=dt.datetime.strptime('20120301',"%Y%m%d");
-	end_time=dt.datetime.strptime('20181101',"%Y%m%d");
+	# end_time=dt.datetime.strptime('20140401',"%Y%m%d");  # the 2014 earthquake experiment
+	start_time=dt.datetime.strptime('20161101',"%Y%m%d");
+	end_time=dt.datetime.strptime('20170201',"%Y%m%d");  # the 2016 earthquake experiment
+	# start_time=dt.datetime.strptime('20120301',"%Y%m%d");  # the whole time period
+	# end_time=dt.datetime.strptime('20181101',"%Y%m%d");   # the whole time period
 
 	# start_time=dt.datetime.strptime('20060301',"%Y%m%d");
 	# end_time=dt.datetime.strptime('20141201',"%Y%m%d");	
@@ -164,7 +167,6 @@ def complex_plot_depths(tremor,tremortype):
 	shallowT=tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest1, start_time, end_time);
 	mediumT=tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest2, start_time, end_time);
 	deepT=tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest3, start_time, end_time);
-	print(len(deepT.dtarray));
 	tremor_io.write_tremor_as_txt(shallowT, 'gmt/shallowrange.txt');
 	tremor_io.write_tremor_as_txt(mediumT, 'gmt/medrange.txt');
 	tremor_io.write_tremor_as_txt(deepT, 'gmt/deeprange.txt');

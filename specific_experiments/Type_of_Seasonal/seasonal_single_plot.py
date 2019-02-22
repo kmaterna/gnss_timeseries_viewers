@@ -51,11 +51,11 @@ def input_data(station_name, datasource):
 def compute(myData, offset_obj, eq_obj, MyParams):
 	newData=myData; 
 	if MyParams.offsets_remove==1:  # First step: remove offsets and earthquakes
-		newData=offsets.remove_antenna_offsets(newData, offset_obj);
+		newData=offsets.remove_offsets(newData, offset_obj);
 	if MyParams.outliers_remove==1:  # Second step: remove outliers
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
 	if MyParams.earthquakes_remove==1:
-		newData=offsets.remove_earthquakes(newData, eq_obj);
+		newData=offsets.remove_offsets(newData, eq_obj);
 
 	# A few different types of seasonal removal. 
 	notrend=gps_seasonal_removals.make_detrended_ts(newData, 0, 'lssq');
@@ -75,6 +75,11 @@ def single_ts_plot(ts_obj, lssq_fit, notch_filt, grace_filt, stl_filt, MyParams)
 	offset_val=15;
 	text_val=8;
 	labeldate=dt.datetime.strptime("20070101", "%Y%m%d");
+	EQtimes=[];
+	EQtimes.append(dt.datetime.strptime("20050615","%Y%m%d"));
+	EQtimes.append(dt.datetime.strptime("20100110","%Y%m%d"));
+	EQtimes.append(dt.datetime.strptime("20140310","%Y%m%d"));
+	EQtimes.append(dt.datetime.strptime("20161208","%Y%m%d"));
 
 	plt.figure(figsize=(15,15),dpi=dpival);
 	plt.plot_date(ts_obj.dtarray, ts_obj.dE+0*offset_val,color='blue',markeredgecolor='black',markersize=1.5);
@@ -88,6 +93,9 @@ def single_ts_plot(ts_obj, lssq_fit, notch_filt, grace_filt, stl_filt, MyParams)
 	plt.text(labeldate,2*offset_val+text_val,'Notch filter',fontsize=22,color='blue');
 	plt.text(labeldate,3*offset_val+text_val,'GRACE load model',fontsize=22,color='green');
 	plt.text(labeldate,4*offset_val+text_val,'STL filter',fontsize=22,color='magenta');
+	bottom,top=plt.gca().get_ylim();
+	for i in range(len(EQtimes)):
+		plt.plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k',linewidth=1.5);
 	plt.ylabel('detrended east (mm)',fontsize=22)
 	plt.gca().tick_params(labelsize=22);
 	title_name=ts_obj.name+" Seasonal Corrections - East";
