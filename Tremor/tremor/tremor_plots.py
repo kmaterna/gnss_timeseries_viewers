@@ -141,10 +141,14 @@ def complex_plot_depths(tremor,tremortype):
 	# This tremor object has depths associated. 
 	# start_time=dt.datetime.strptime('20140201',"%Y%m%d");
 	# end_time=dt.datetime.strptime('20140401',"%Y%m%d");  # the 2014 earthquake experiment
-	start_time=dt.datetime.strptime('20161101',"%Y%m%d");
-	end_time=dt.datetime.strptime('20170201',"%Y%m%d");  # the 2016 earthquake experiment
-	# start_time=dt.datetime.strptime('20120301',"%Y%m%d");  # the whole time period
-	# end_time=dt.datetime.strptime('20181101',"%Y%m%d");   # the whole time period
+	# start_time=dt.datetime.strptime('20161101',"%Y%m%d");
+	# end_time=dt.datetime.strptime('20170201',"%Y%m%d");  # the 2016 earthquake experiment
+	# start_time=dt.datetime.strptime('20170725',"%Y%m%d");
+	# end_time=dt.datetime.strptime('20170815',"%Y%m%d");  # the 2017 tremor experiment (shallow)
+	# start_time=dt.datetime.strptime('20171215',"%Y%m%d");
+	# end_time=dt.datetime.strptime('20180115',"%Y%m%d");  # the 2018 tremor experiment (shallow)
+	start_time=dt.datetime.strptime('20120301',"%Y%m%d");  # the whole time period
+	end_time=dt.datetime.strptime('20181101',"%Y%m%d");   # the whole time period
 
 	# start_time=dt.datetime.strptime('20060301',"%Y%m%d");
 	# end_time=dt.datetime.strptime('20141201',"%Y%m%d");	
@@ -177,6 +181,8 @@ def complex_plot_depths(tremor,tremortype):
 	f,axarr=plt.subplots(2,1, sharex=True,figsize=(16,10));
 	axarr[0].grid(True);
 	axarr[0].plot_date(tremor.dtarray,tremor.latarray,'.',color='k',markersize=1);
+	axarr[0].plot_date(shallowT.dtarray,shallowT.latarray,'.',color='darkcyan',markersize=2);
+	axarr[0].plot_date(mediumT.dtarray,mediumT.latarray,'.',color='darkorchid',markersize=1);
 	for item in eqtimes:
 		axarr[0].plot_date([item, item],[tremor_latmin, tremor_latmax],color='red',linestyle='--',linewidth=2,marker=None);	
 	axarr[0].set_xlim([start_time, end_time]);

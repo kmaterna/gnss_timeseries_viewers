@@ -40,6 +40,15 @@ def read_pbo_vel_file(infile):
 	myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch);
 	return [myVelfield];
 
+def write_humanread_vel_file(myVelfield, outfile):
+	ofile=open(outfile,'w');
+	ofile.write("Format: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_date(yyyymmdd) last_date(yyyymmdd) name\n");
+	for i in range(len(myVelfield.name)):
+		first_epoch = dt.datetime.strftime(myVelfield.first_epoch[i],'%Y%m%d');
+		last_epoch = dt.datetime.strftime(myVelfield.last_epoch[i],'%Y%m%d');
+		ofile.write("%f %f %f %f %f %f %f %f %s %s %s\n" % (myVelfield.elon[i], myVelfield.nlat[i], myVelfield.e[i], myVelfield.n[i], myVelfield.u[i], myVelfield.se[i], myVelfield.sn[i], myVelfield.su[i],first_epoch, last_epoch, myVelfield.name[i]) );
+	ofile.close();
+	return;
 
 def read_unr_vel_file(infile):
 # Meant for reading velocity files from the MAGNET/MIDAS website. 
