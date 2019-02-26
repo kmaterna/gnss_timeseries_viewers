@@ -127,6 +127,7 @@ if __name__=="__main__":
 	[input_file, output_file, euler_pole] = configure_SNGV();
 	[vels] = gps_io_functions.read_pbo_vel_file(input_file);
 	new_vels = compute_euler_pole_rotation(vels, euler_pole);
-	gps_io_functions.write_humanread_vel_file(new_vels, output_file);
+	# gps_io_functions.write_humanread_vel_file(new_vels, output_file);
+	gps_io_functions.write_gmt_velfile(new_vels, output_file);
 	plot_na_itrf(vels, new_vels);
 

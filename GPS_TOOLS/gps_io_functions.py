@@ -50,6 +50,16 @@ def write_humanread_vel_file(myVelfield, outfile):
 	ofile.close();
 	return;
 
+def write_gmt_velfile(myVelfield, outfile):
+	ofile=open(outfile,'w');
+	ofile.write("# Format: lon(deg) lat(deg) e(mm) n(mm) Se(mm) Sn(mm) 0 0 1 name\n");
+	for i in range(len(myVelfield.name)):
+		if myVelfield.sn[i] < 0.2:  # trying to make a clean dataset
+			ofile.write("%f %f %f %f %f %f 0 0 1 %s\n" % (myVelfield.elon[i], myVelfield.nlat[i], myVelfield.e[i], myVelfield.n[i], myVelfield.se[i], myVelfield.sn[i], myVelfield.name[i]) );
+	ofile.close();
+	return;
+
+
 def read_unr_vel_file(infile):
 # Meant for reading velocity files from the MAGNET/MIDAS website. 
 # Returns a Velfield collections object. 	

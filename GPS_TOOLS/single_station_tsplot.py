@@ -39,9 +39,8 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seas
 	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
 	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
 	outliers_def       = 15.0;  # mm away from average. 
-	reference_frame    = 0;
 	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, earthquakes_remove=earthquakes_remove, 
-		offsets_remove=offsets_remove, reference_frame=reference_frame, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
+		offsets_remove=offsets_remove, reference_frame=refframe, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
 		datasource=datasource, refframe=refframe, fit_table=fit_table, grace_dir=grace_dir);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d, datasource=%s, refframe=%s" % (station, earthquakes_remove, outliers_remove, seasonals_remove,datasource,refframe));
