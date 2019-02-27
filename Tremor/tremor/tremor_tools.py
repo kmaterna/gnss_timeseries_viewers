@@ -45,6 +45,21 @@ def restrict_to_box_depth(tremor, box_interest, depth_interest, start_time, end_
 	newtremor=TremorCatDepths(dtarray=newdt, lonarray=newlon, latarray=newlat, depth=newdepth);
 	return newtremor;
 
+def concatonate_tremor(tremor1, tremor2):
+	# Combine two catalogs
+	newdt=[]; newlon=[]; newlat=[];
+	for i in range(len(tremor1.dtarray)):
+		newdt.append(tremor1.dtarray[i]);
+		newlon.append(tremor1.lonarray[i]);
+		newlat.append(tremor1.latarray[i]);
+	for i in range(len(tremor2.dtarray)):
+		newdt.append(tremor2.dtarray[i]);
+		newlon.append(tremor2.lonarray[i]);
+		newlat.append(tremor2.latarray[i]);
+	newtremor=TremorCat(dtarray=newdt, lonarray=newlon, latarray=newlat);
+	return newtremor;
+
+
 
 def get_cumulative_plot(tremor, box_interest, start_time, end_time):
 	# Returns two arrays that can be plotted against each other to give the cumulative tremor plot. 

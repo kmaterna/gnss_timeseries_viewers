@@ -149,8 +149,8 @@ def complex_plot_depths(tremor,tremortype):
 	# end_time=dt.datetime.strptime('20180115',"%Y%m%d");  # the 2018 tremor experiment (shallow)
 	start_time=dt.datetime.strptime('20120301',"%Y%m%d");  # the whole time period
 	end_time=dt.datetime.strptime('20181101',"%Y%m%d");   # the whole time period
-	# start_time=dt.datetime.strptime('20160101',"%Y%m%d");  # 2016 whole year
-	# end_time=dt.datetime.strptime('20170101',"%Y%m%d");   # 2016 whole year
+	start_time=dt.datetime.strptime('20150101',"%Y%m%d");  # 2016 whole year
+	end_time=dt.datetime.strptime('20180101',"%Y%m%d");   # 2016 whole year
 
 	# start_time=dt.datetime.strptime('20060301',"%Y%m%d");
 	# end_time=dt.datetime.strptime('20141201',"%Y%m%d");	
