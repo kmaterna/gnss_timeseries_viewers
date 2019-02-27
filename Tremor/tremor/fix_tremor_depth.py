@@ -21,20 +21,6 @@ def read_csz_model():
 	zdata=np.flipud(zdata);
 	return xdata, ydata, zdata;
 
-def combine_tremor(tremor_type):
-	if tremor_type=="wech_custom":
-		tremor_website = tremor_io.read_input_tremor("wech");
-		tremor_later = tremor_io.read_input_tremor("wech_custom");
-		transition_time_1 = dt.datetime.strptime("2015-01-01","%Y-%m-%d");
-		transition_time_2 = dt.datetime.strptime("2018-01-01","%Y-%m-%d");
-		box_interest=[-125,-120,38,43];
-		tremor_website1 = tremor_tools.restrict_to_box(tremor_website, box_interest, tremor_website.dtarray[0], transition_time_1);
-		tremor_website2 = tremor_tools.restrict_to_box(tremor_website, box_interest, transition_time_2, tremor_website.dtarray[-1]);
-		tremor_total = tremor_tools.concatonate_tremor(tremor_website1, tremor_later);
-		tremor_total = tremor_tools.concatonate_tremor(tremor_total, tremor_website2)
-	else:
-		tremor_total = tremor_io.read_input_tremor(tremor_type);
-	return tremor_total;
 
 def compute_depths(tremor, xdata, ydata, zdata):
 	coords=[];
@@ -54,7 +40,7 @@ def make_plots(xdata, ydata, zdata, tremor):
 
 if __name__=="__main__":
 	tremor_type="wech_custom";
-	tremor = combine_tremor(tremor_type);
+	tremor = tremor_tools.combine_custom_tremor(tremor_type);
 	xdata, ydata, zdata = read_csz_model();
 	tremor_with_depths = compute_depths(tremor, xdata, ydata, zdata);
 	tremor_plots.complex_plot_depths(tremor_with_depths,tremor_type);

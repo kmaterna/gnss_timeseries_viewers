@@ -8,6 +8,7 @@ import gps_input_pipeline
 import offsets
 import gps_ts_functions
 import gps_seasonal_removals
+import tremor_io
 
 TremorCat = collections.namedtuple("TremorCat",['dtarray','lonarray','latarray']);
 TremorCatDepths = collections.namedtuple("TremorCatDepths",['dtarray','lonarray','latarray','depth']);
@@ -45,6 +46,7 @@ def restrict_to_box_depth(tremor, box_interest, depth_interest, start_time, end_
 	newtremor=TremorCatDepths(dtarray=newdt, lonarray=newlon, latarray=newlat, depth=newdepth);
 	return newtremor;
 
+
 def concatonate_tremor(tremor1, tremor2):
 	# Combine two catalogs
 	newdt=[]; newlon=[]; newlat=[];
@@ -59,6 +61,25 @@ def concatonate_tremor(tremor1, tremor2):
 	newtremor=TremorCat(dtarray=newdt, lonarray=newlon, latarray=newlat);
 	return newtremor;
 
+
+def combine_custom_tremor(tremor_type):
+	# Because Aaron gave me a 2015-2018 catalog, 
+	# I have to construct a special catalog
+	# That combines two catalogs in a careful way. 
+	# Behavior generalizes to less custom catalogs. 
+	if tremor_type=="wech_custom":
+		tremor_website = tremor_io.read_input_tremor("wech");
+		tremor_later = tremor_io.read_input_tremor("wech_custom");
+		transition_time_1 = dt.datetime.strptime("2015-01-01","%Y-%m-%d");
+		transition_time_2 = dt.datetime.strptime("2018-01-01","%Y-%m-%d");
+		box_interest=[-125,-120,38,43];
+		tremor_website1 = restrict_to_box(tremor_website, box_interest, tremor_website.dtarray[0], transition_time_1);
+		tremor_website2 = restrict_to_box(tremor_website, box_interest, transition_time_2, tremor_website.dtarray[-1]);
+		tremor_total = concatonate_tremor(tremor_website1, tremor_later);
+		tremor_total = concatonate_tremor(tremor_total, tremor_website2)
+	else:
+		tremor_total = tremor_io.read_input_tremor(tremor_type);
+	return tremor_total;
 
 
 def get_cumulative_plot(tremor, box_interest, start_time, end_time):

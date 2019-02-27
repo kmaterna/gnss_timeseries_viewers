@@ -1,6 +1,5 @@
 # Identify jumps in the cumulative tremor distribution
 
-
 import numpy as np 
 import matplotlib.pyplot as plt 
 import datetime as dt
@@ -10,7 +9,7 @@ import tremor_tools
 def find_ets(tremor):
 	start_time=dt.datetime.strptime('20120301',"%Y%m%d");
 	end_time=dt.datetime.strptime('20181101',"%Y%m%d");
-	box_interest=[-123.3,-123,40,41];
+	box_interest=[-123.3,-123,40.2,40.8];
 
 	tremor=tremor_tools.restrict_to_box(tremor, box_interest, start_time, end_time);
 	[dts, rate] = tremor_tools.get_rates(tremor);
@@ -52,5 +51,6 @@ def find_ets(tremor):
 
 
 if __name__=="__main__":
-	tremor=tremor_io.read_input_tremor("wech");
+	# tremor = tremor_io.read_input_tremor("wech");
+	tremor = tremor_tools.combine_custom_tremor("wech_custom");
 	find_ets(tremor);

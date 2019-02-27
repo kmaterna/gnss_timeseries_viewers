@@ -79,8 +79,6 @@ def timing_2014_plot(tremor, tremortype):
 	return;
 
 
-
-
 def complex_plot(tremor,tremortype):
 	# start_time=dt.datetime.strptime('20120301',"%Y%m%d");
 	# end_time=dt.datetime.strptime('20181101',"%Y%m%d");
@@ -149,8 +147,8 @@ def complex_plot_depths(tremor,tremortype):
 	# end_time=dt.datetime.strptime('20180115',"%Y%m%d");  # the 2018 tremor experiment (shallow)
 	start_time=dt.datetime.strptime('20120301',"%Y%m%d");  # the whole time period
 	end_time=dt.datetime.strptime('20181101',"%Y%m%d");   # the whole time period
-	start_time=dt.datetime.strptime('20150101',"%Y%m%d");  # 2016 whole year
-	end_time=dt.datetime.strptime('20180101',"%Y%m%d");   # 2016 whole year
+	# start_time=dt.datetime.strptime('20150101',"%Y%m%d");  # Aaron's new data
+	# end_time=dt.datetime.strptime('20180101',"%Y%m%d");   # Aaron's new data
 
 	# start_time=dt.datetime.strptime('20060301',"%Y%m%d");
 	# end_time=dt.datetime.strptime('20141201',"%Y%m%d");	
@@ -173,6 +171,9 @@ def complex_plot_depths(tremor,tremortype):
 	shallowT=tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest1, start_time, end_time);
 	mediumT=tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest2, start_time, end_time);
 	deepT=tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest3, start_time, end_time);
+	name1=name1+' (n='+str(len(shallowT.dtarray))+')';
+	name2=name2+' (n='+str(len(mediumT.dtarray))+')';
+	name3=name3+' (n='+str(len(deepT.dtarray))+')';
 	tremor_io.write_tremor_as_txt(shallowT, 'gmt/shallowrange.txt');
 	tremor_io.write_tremor_as_txt(mediumT, 'gmt/medrange.txt');
 	tremor_io.write_tremor_as_txt(deepT, 'gmt/deeprange.txt');
