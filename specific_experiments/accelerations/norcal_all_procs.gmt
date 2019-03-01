@@ -9,10 +9,10 @@ latN="42.2"
 range="$lonW/$lonE/$latS/$latN"
 projection="M2.0i"  # used for medium experiments.
 horiz_scale=0.1  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
-output1='Figures/Allprocs_2010.ps'
+output1='Figures/Allprocs_2016.ps'
 offset=5.9
 
-filename='2010.txt'
+filename='2016.txt'
 file1=pbo_lssq_NA/
 name1="PBO"
 file2=cwu_lssq_NA/
@@ -176,12 +176,14 @@ EOF
 
 # Add the labels
 gmt pscoast -R$range -J$projection -Lf-123.7/37.2/37.2/50+jt -N1 -N2 -Wthinner,black -Dh -K -O >> $output1
-gmt pstext -R$range -J$projection -F+f14p,Helvetica -Gwhite -K -O <<EOF >> $output1
+gmt pstext -R$range -J$projection -F+f14p,Helvetica -Gwhite -O <<EOF >> $output1
 -120.5 41.8 $name5
 -124 41.8 E
 EOF
 
 
+# Convert to PNG
+gmt psconvert $output1 -Tg
 
 
 open $output1

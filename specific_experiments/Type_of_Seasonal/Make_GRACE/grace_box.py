@@ -1,19 +1,18 @@
-
 # The purpose of this script is to make a file that my GRACE code can use for one-time pre-computing of GRACE loading time series. 
-
 
 import stations_within_radius
 import gps_io_functions
 import datetime as dt 
 
 # Search for a box within northern California
-coord_box=[-125.5,-120,38,42];
-input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt"
-close_stations = stations_within_radius.get_stations_within_box(coord_box, input_file);
+# coord_box=[-125.5,-120,38,42];
+
+coord_box=[-125.5,-120,36,38];
+close_stations = stations_within_radius.get_stations_within_box(coord_box, network='pbo');
 print(close_stations);
 
 # Write them into a file. 
-outfile=open("CA.txt",'w');
+outfile=open("CA3.txt",'w');
 for i in close_stations:
 	[mydata] = gps_io_functions.read_pbo_pos_file("../../GPS_POS_DATA/PBO_Data/"+i+".pbo.final_nam08.pos");
 
