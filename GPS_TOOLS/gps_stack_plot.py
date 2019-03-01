@@ -37,11 +37,11 @@ def driver():
 
 def configure():
 	EQcoords=[-125.134, 40.829]; expname='Mend'; radius = 120; 
-	EQcoords=[-124.0, 38.0];     expname='Nbay'; radius = 125; 
-	EQcoords=[-119.0, 34.5];     expname='SoCal';  radius = 25; # km
-	EQcoords=[-116.0, 34.5];     expname='Mojave';  radius = 35; # km
-	EQcoords=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
-	EQcoords=[-117.5, 33.5];     expname='SD';  radius = 47; # km
+	# EQcoords=[-124.0, 38.0];     expname='Nbay'; radius = 125; 
+	# EQcoords=[-119.0, 34.5];     expname='SoCal';  radius = 25; # km
+	# EQcoords=[-116.0, 34.5];     expname='Mojave';  radius = 35; # km
+	# EQcoords=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
+	# EQcoords=[-117.5, 33.5];     expname='SD';  radius = 47; # km
 	# EQcoords=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
 	EQtimes = [];  # What black lines do you want added to the figure? 
 	EQtimes.append(dt.datetime.strptime("20140310", "%Y%m%d"));  # starts with the most important one
@@ -49,7 +49,7 @@ def configure():
 	EQtimes.append(dt.datetime.strptime("20100110", "%Y%m%d"));
 	EQtimes.append(dt.datetime.strptime("20161208", "%Y%m%d"));
 	
-	proc_center='nmt';   # WHICH DATASTREAM DO YOU WANT?
+	proc_center='pbo';   # WHICH DATASTREAM DO YOU WANT?
  
 	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius);
 	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT"];
@@ -124,6 +124,10 @@ def output_full_ts(dataobj_list, distances, EQtimes, expname, filename, east_slo
 	label_date=dt.datetime.strptime("20190215","%Y%m%d");
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
 	end_time_plot=dt.datetime.strptime("20190116", "%Y%m%d");
+	t1label=dt.datetime.strptime('20070701',"%Y%m%d");
+	t2label=dt.datetime.strptime('20120101',"%Y%m%d");
+	t3label=dt.datetime.strptime('20150501',"%Y%m%d");
+	t4label=dt.datetime.strptime('20171201',"%Y%m%d");	
 
 	offset=0;
 	spacing=10;
@@ -154,6 +158,10 @@ def output_full_ts(dataobj_list, distances, EQtimes, expname, filename, east_slo
 	axarr[0].set_ylabel("East (mm)");
 	axarr[0].set_title("East GPS Time Series")
 	axarr[0].grid(True)
+	axarr[0].text(t1label, top-spacing/2, "T1",fontsize=10, color='blue',fontweight='bold');
+	axarr[0].text(t2label, top-spacing/2, "T2",fontsize=10, color='blue',fontweight='bold');
+	axarr[0].text(t3label, top-spacing/2, "T3",fontsize=10, color='blue',fontweight='bold');
+	axarr[0].text(t4label, top-spacing/2, "T4",fontsize=10, color='blue',fontweight='bold');	
 
 	# North
 	for i in range(len(dataobj_list)):
@@ -170,6 +178,10 @@ def output_full_ts(dataobj_list, distances, EQtimes, expname, filename, east_slo
 	axarr[1].set_ylabel("North (mm)");
 	axarr[1].set_title("North GPS Time Series")
 	axarr[1].grid(True)
+	axarr[1].text(t1label, top-spacing/2, "T1",fontsize=10, color='blue',fontweight='bold');
+	axarr[1].text(t2label, top-spacing/2, "T2",fontsize=10, color='blue',fontweight='bold');
+	axarr[1].text(t3label, top-spacing/2, "T3",fontsize=10, color='blue',fontweight='bold');
+	axarr[1].text(t4label, top-spacing/2, "T4",fontsize=10, color='blue',fontweight='bold');	
 	custom_cmap.set_array(range(int(closest_station),int(farthest_station)))
 	cb = plt.colorbar(custom_cmap);
 	cb.set_label('Kilometers from 2014 Earthquake');

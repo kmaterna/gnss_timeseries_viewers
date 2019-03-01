@@ -17,11 +17,11 @@ Center_Coords=[-124.0, 38.5]; # Western US everything
 filter_type='lssq'; # OPTIONS: lssq, notch, stl, grace, none. 
 size='huge';  # OPTIONS: small, medium, huge
 network='unr';  # choices: unr, pbo, cwu, nmt
-refname='NA'; # choices: NA, ITRF
+refname='ITRF'; # choices: NA, ITRF
 
 # LEAST SQUARES
-Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
-Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016"); # 
+# Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
+# Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016"); # 
 Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ0,EQ0_end],[EQ1,EQ2], "2010"); # 
 Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ3,EQ4], "2010_2016");
 
