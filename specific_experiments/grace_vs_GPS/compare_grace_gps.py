@@ -81,31 +81,28 @@ def outputs(dataobj_list, gps_amp, grace_amp, ampfile):
 	ofile.close();
 	return;
 
+def get_percent_close(gps_amp, grace_amp, close_limit):
+	close_count = 0;
+	total = 0;
+	for i in range(len(gps_amp)):
+		if abs(gps_amp[i] - grace_amp[i])<=close_limit:
+			close_count=close_count+1;
+		if abs(gps_amp[i] - grace_amp[i])>=0:  # for filtering out the nans
+			total = total+1;
+	percent_close = 100* (close_count/total);
+	return percent_close;
+
 def remake_plots():
 	# Make a pretty plot 
-	unrfile="grace_vs_gps_vertamps_unr.txt"
-	pbofile="grace_vs_gps_vertamps_pbo.txt"
-	[lon_unr, lat_unr, _,_, gps_amp_unr, _,_, grace_amp_unr]=np.loadtxt(unrfile,unpack=True,usecols=[0,1,2,3]);
-	[lon_pbo, lat_pbo, _,_, gps_amp_pbo, _,_, grace_amp_pbo]=np.loadtxt(pbofile,unpack=True,usecols=[0,1,2,3]);
+	unrfile="grace_vs_gps_amps_unr.txt"
+	pbofile="grace_vs_gps_amps_pbo.txt"
+	[lon_unr, lat_unr, east_gps_unr, gps_amp_unr, east_grace_unr, grace_amp_unr]=np.loadtxt(unrfile,unpack=True,usecols=[0,1,2,4,5,7]);
+	[lon_pbo, lat_pbo, east_gps_pbo, gps_amp_pbo, east_grace_pbo, grace_amp_pbo]=np.loadtxt(pbofile,unpack=True,usecols=[0,1,2,4,5,7]);
 
 	# Defining a metric of how many stations have GPS and GRACE amplitudes that are pretty close. 
 	close_limit = 1;  # mm
-	unr_close_count=0; 
-	unr_total = 0;
-	pbo_close_count=0;
-	pbo_total = 0;
-	for i in range(len(lon_unr)):
-		if abs(gps_amp_unr[i] - grace_amp_unr[i])<=close_limit:
-			unr_close_count=unr_close_count+1;
-		if abs(gps_amp_unr[i] - grace_amp_unr[i])>=0:  # for filtering out the nans
-			unr_total = unr_total+1;
-	for i in range(len(lon_pbo)):
-		if abs(gps_amp_pbo[i] - grace_amp_pbo[i])<=close_limit:
-			pbo_close_count=pbo_close_count+1;
-		if abs(gps_amp_pbo[i]-grace_amp_pbo[i])>=0:
-			pbo_total = pbo_total+1;
-	unr_percent = 100*(unr_close_count/unr_total);
-	pbo_percent = 100*(pbo_close_count/pbo_total);
+	unr_percent = get_percent_close(gps_amp_unr, grace_amp_unr, close_limit);
+	pbo_percent = get_percent_close(gps_amp_pbo, grace_amp_pbo, close_limit);
 
 	# The plotting guts. 
 	fig = plt.figure();
@@ -122,14 +119,34 @@ def remake_plots():
 	plt.legend()
 	plt.savefig('vert_amp_vs_amp_both.eps');
 
+
+	# Defining a metric of how many stations have GPS and GRACE amplitudes that are pretty close. 
+	close_limit = 1;  # mm
+	unr_percent = get_percent_close(east_gps_unr, east_grace_unr, close_limit);
+	pbo_percent = get_percent_close(east_gps_pbo, east_grace_pbo, close_limit);	
+
+	fig = plt.figure();
+	h1 = plt.plot(east_gps_unr, east_grace_unr,'.',markersize=4,label='UNR: %d%% close to matching' % (unr_percent) );
+	h2 = plt.plot(east_gps_pbo, east_grace_pbo,'.',markersize=4,label='PBO: %d%% close to matching' % (pbo_percent) );
+	plt.xlabel('GPS Seasonal Amplitude (mm)');
+	plt.ylabel('GRACE Seasonal Amplitude (mm)');
+	mmax=3;
+	plt.plot([0,mmax],[0,mmax],'--k');
+	plt.plot([0,mmax],[0-close_limit,mmax-close_limit],'--',color='gray');
+	plt.plot([0,mmax],[0+close_limit,mmax+close_limit],'--',color='gray');
+	plt.xlim([0,mmax]);
+	plt.ylim([0,mmax]);
+	plt.legend()
+	plt.savefig('east_amp_vs_amp_both.eps');	
+
 	return;
 
 
 if __name__=="__main__":
-	[station_list, datasource, refframe, grace_dir, ampfile] = configure();
-	[dataobj_list, offsetobj_list, eqobj_list, graceobj_list] = inputs(station_list, datasource, refframe, grace_dir);
-	[gps_amp, grace_amp] = compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list);
-	outputs(dataobj_list, gps_amp, grace_amp, ampfile);
+	# [station_list, datasource, refframe, grace_dir, ampfile] = configure();
+	# [dataobj_list, offsetobj_list, eqobj_list, graceobj_list] = inputs(station_list, datasource, refframe, grace_dir);
+	# [gps_amp, grace_amp] = compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list);
+	# outputs(dataobj_list, gps_amp, grace_amp, ampfile);
 
-	# remake_plots();
+	remake_plots();
 
