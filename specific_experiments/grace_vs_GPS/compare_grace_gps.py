@@ -14,7 +14,7 @@ import sys
 
 
 def configure():
-	datasource='pbo';
+	datasource='unr';
 	refframe='NA';
 	grace_dir = "../../GPS_POS_DATA/GRACE_loading_model/"
 	coord_box = [-125, -118, 37, 44];
@@ -143,10 +143,10 @@ def remake_plots():
 
 
 if __name__=="__main__":
-	# [station_list, datasource, refframe, grace_dir, ampfile] = configure();
-	# [dataobj_list, offsetobj_list, eqobj_list, graceobj_list] = inputs(station_list, datasource, refframe, grace_dir);
-	# [gps_amp, grace_amp] = compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list);
-	# outputs(dataobj_list, gps_amp, grace_amp, ampfile);
+	[station_list, datasource, refframe, grace_dir, ampfile] = configure();
+	[dataobj_list, offsetobj_list, eqobj_list, graceobj_list] = inputs(station_list, datasource, refframe, grace_dir);
+	[gps_amp, grace_amp] = compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list);
+	outputs(dataobj_list, gps_amp, grace_amp, ampfile);
 
 	remake_plots();
 
