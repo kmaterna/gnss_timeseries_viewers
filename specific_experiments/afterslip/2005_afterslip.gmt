@@ -32,10 +32,10 @@ gmt psxy ../../GPS_TOOLS/Mapping_Resources/trench.gmt -R$range -J$projection -Wt
 
 # Velocity scale
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$hscale1/0.68/10 -Wblack -K -O <<EOF >> $output
--125.90 39.1 4 0 0.0 0.0 0.0 4mm, Model
+-125.85 39.1 10 0 0.0 0.0 0.0 10mm, Model
 EOF
 gmt psvelo -R$range -J$projection -A+e+g$gpscolor+pthickest -Se$hscale1/0.68/10 -W$gpscolor -K -O <<EOF >> $output
--125.90 39.3 4 0 0.0 0.0 0.0 4mm, Obs
+-125.85 39.3 10 0 0.0 0.0 0.0 10mm, Obs
 EOF
 
 # Focal mechanisms

@@ -4,6 +4,7 @@
 import numpy as np 
 import datetime as dt 
 import collections
+import netcdf_read_write
 import gps_input_pipeline
 import offsets
 import gps_ts_functions
@@ -62,11 +63,13 @@ def concatonate_tremor(tremor1, tremor2):
 	return newtremor;
 
 
-def combine_custom_tremor(tremor_type):
+
+def read_custom_tremor(tremor_type):
 	# Because Aaron gave me a 2015-2018 catalog, 
 	# I have to construct a special catalog
 	# That combines two catalogs in a careful way. 
 	# Behavior generalizes to less custom catalogs. 
+	# By default, this returns tremor with depths for wech_custom
 	if tremor_type=="wech_custom":
 		tremor_website = tremor_io.read_input_tremor("wech");
 		tremor_later = tremor_io.read_input_tremor("wech_custom");
@@ -76,13 +79,33 @@ def combine_custom_tremor(tremor_type):
 		tremor_website1 = restrict_to_box(tremor_website, box_interest, tremor_website.dtarray[0], transition_time_1);
 		tremor_website2 = restrict_to_box(tremor_website, box_interest, transition_time_2, tremor_website.dtarray[-1]);
 		tremor_total = concatonate_tremor(tremor_website1, tremor_later);
-		tremor_total = concatonate_tremor(tremor_total, tremor_website2)
+		tremor_total = concatonate_tremor(tremor_total, tremor_website2);
+		xdata, ydata, zdata = read_csz_model();
+		tremor_total = compute_depths(tremor_total, xdata, ydata, zdata);
 	else:
 		tremor_total = tremor_io.read_input_tremor(tremor_type);
 	return tremor_total;
 
 
-def get_cumulative_plot(tremor, box_interest, start_time, end_time):
+def read_csz_model():
+	grdname="../slab_geometry/cas_slab1.0_clip.grd";
+	[xdata, ydata, zdata] = netcdf_read_write.read_grd_xyz(grdname);
+	xdata=np.flipud(xdata);
+	ydata=np.flipud(ydata);
+	zdata=np.flipud(zdata);
+	return xdata, ydata, zdata;
+
+
+def compute_depths(tremor, xdata, ydata, zdata):
+	coords=[];
+	for i in range(len(tremor.lonarray)):
+		coords.append([tremor.lonarray[i], tremor.latarray[i]]);
+	depths=get_depth_projection(coords,xdata,ydata,zdata);	
+	tremor_with_depths=associate_depths(tremor, depths);
+	return tremor_with_depths;
+
+
+def get_cumulative_plot_box(tremor, box_interest, start_time, end_time):
 	# Returns two arrays that can be plotted against each other to give the cumulative tremor plot. 
 	dt_interest=[];
 	cnumber=[];

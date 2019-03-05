@@ -8,40 +8,38 @@ import matplotlib.pyplot as plt
 import datetime as dt 
 import subprocess
 import sys
-import netcdf_read_write
-import tremor_io
 import tremor_tools
 import tremor_plots
 
-def read_csz_model():
-	grdname="../slab_geometry/cas_slab1.0_clip.grd";
-	[xdata, ydata, zdata] = netcdf_read_write.read_grd_xyz(grdname);
-	xdata=np.flipud(xdata);
-	ydata=np.flipud(ydata);
-	zdata=np.flipud(zdata);
-	return xdata, ydata, zdata;
 
-
-def compute_depths(tremor, xdata, ydata, zdata):
-	coords=[];
-	for i in range(len(tremor.lonarray)):
-		coords.append([tremor.lonarray[i], tremor.latarray[i]]);
-	depths=tremor_tools.get_depth_projection(coords,xdata,ydata,zdata);	
-	tremor_with_depths=tremor_tools.associate_depths(tremor, depths);
-	return tremor_with_depths;
-
-def make_plots(xdata, ydata, zdata, tremor):
-	# Make plot of the csz model vs. tremor depths (IT WORKS!)
-	plt.contourf(xdata,ydata,zdata,30);
-	plt.colorbar();
-	plt.scatter(tremor.lonarray,tremor.latarray,0.5,c=tremor.depth);
-	plt.savefig('depth_test.eps');
 
 
 if __name__=="__main__":
 	tremor_type="wech_custom";
-	tremor = tremor_tools.combine_custom_tremor(tremor_type);
-	xdata, ydata, zdata = read_csz_model();
-	tremor_with_depths = compute_depths(tremor, xdata, ydata, zdata);
-	tremor_plots.complex_plot_depths(tremor_with_depths,tremor_type);
+	tremor_with_depths = tremor_tools.read_custom_tremor(tremor_type);
+	# tremor_plots.complex_plot_depths(tremor_with_depths,tremor_type);
 	# After this, you must go and make the GMT plots of the tremor (tremor_depth_ranges.sh)
+
+	depth_interest=[10, 65];
+	box_interest = [-125, -121, 40.2, 40.8];
+	# dt1_start = dt.datetime.strptime("20140222","%Y%m%d");
+	dt1_start = dt.datetime.strptime("20140101","%Y%m%d");
+	dt1_end = dt.datetime.strptime("20140303","%Y%m%d");
+	dt2_start = dt.datetime.strptime("20140905","%Y%m%d");
+	dt2_end = dt.datetime.strptime("20140918","%Y%m%d");
+	dt3_start = dt.datetime.strptime("20150423","%Y%m%d");
+	dt3_end = dt.datetime.strptime("20150517","%Y%m%d");	
+	dt4_start = dt.datetime.strptime("20151221","%Y%m%d");
+	dt4_end = dt.datetime.strptime("20151230","%Y%m%d");
+	dt5_start = dt.datetime.strptime("20160810","%Y%m%d");
+	dt5_end = dt.datetime.strptime("20160820","%Y%m%d");
+	dt6_start = dt.datetime.strptime("20170422","%Y%m%d");
+	dt6_end = dt.datetime.strptime("20170502","%Y%m%d");
+	dt7_start = dt.datetime.strptime("20171221","%Y%m%d");
+	dt7_end = dt.datetime.strptime("20180105","%Y%m%d");
+	interval_list=[[dt1_start, dt1_end], [dt2_start, dt2_end], [dt3_start, dt3_end], [dt4_start, dt4_end], [dt5_start, dt5_end], [dt6_start, dt6_end], [dt7_start, dt7_end]];
+	tremor_plots.histogram_depths(tremor_with_depths, interval_list, box_interest, depth_interest);
+
+	# Get intervals. 
+	# Compute histogram for each interval. 
+

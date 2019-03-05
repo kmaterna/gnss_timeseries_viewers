@@ -22,6 +22,8 @@ def read_input_tremor(tremortype):
 
 
 
+
+
 def read_wech(filename):
 	dtarray=[]; lonarray=[]; latarray=[];
 	start=0;
@@ -84,6 +86,10 @@ def read_ide(filename):
 	ide_tremor = TremorCat(dtarray=dtarray, lonarray=lonarray, latarray=latarray);
 	print("Successfully read %d tremor counts from %s " % (len(ide_tremor.dtarray),filename));
 	return ide_tremor;
+
+
+
+
 
 def write_tremor_as_txt(tremor, filename):
 	ofile=open(filename,'w');

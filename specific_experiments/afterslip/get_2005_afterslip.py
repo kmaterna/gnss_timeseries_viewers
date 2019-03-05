@@ -19,7 +19,7 @@ def configure():
 	stations = stations_within_radius.get_stations_within_box(box);
 	proc_center='pbo';
 	early_date = dt.datetime.strptime("20050616","%Y%m%d");
-	later_date = dt.datetime.strptime("20060615","%Y%m%d");
+	later_date = dt.datetime.strptime("20070615","%Y%m%d");
 	filename="2005_gps_disps.txt"
 	return [stations, proc_center, early_date, later_date, filename]; 
 

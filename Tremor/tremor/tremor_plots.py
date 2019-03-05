@@ -11,6 +11,7 @@ import tremor_tools
 
 # For reference:
 TremorCat = collections.namedtuple("TremorCat",['dtarray','lonarray','latarray']);
+TremorCatDepths = collections.namedtuple("TremorCatDepths",['dtarray','lonarray','latarray','depth']);
 
 def simple_plot(tremor, tremortype):
 	# Define bounds. 
@@ -150,12 +151,10 @@ def complex_plot_depths(tremor,tremortype):
 	# start_time=dt.datetime.strptime('20150101',"%Y%m%d");  # Aaron's new data
 	# end_time=dt.datetime.strptime('20180101',"%Y%m%d");   # Aaron's new data
 
-	# start_time=dt.datetime.strptime('20060301',"%Y%m%d");
-	# end_time=dt.datetime.strptime('20141201',"%Y%m%d");	
 	# box_interest = [-125, -121, 40.1, 41];  # Nice
 	box_interest = [-125, -121, 40.2, 40.8];  # Experiment
-	depth_interest1=[20, 27]; name1="20-27km";
-	depth_interest2=[27, 35]; name2="27-35km";
+	depth_interest1=[20, 24]; name1="20-24km";
+	depth_interest2=[24, 35]; name2="24-35km";
 	depth_interest3=[35, 55]; name3="35-55km";
 	tremor_latmin=39;
 	tremor_latmax=42.5;
@@ -219,6 +218,47 @@ def complex_plot_depths(tremor,tremortype):
 	plt.savefig(tremortype+'_tremor_depth_cumulative.eps');
 	return;
 
+
+def histogram_depths(tremor, interval_list, box_interest, depth_interest):
+	plt.figure();
+	linecolor=[];
+
+	for i in range(len(interval_list)):
+		start_time=interval_list[i][0];
+		end_time=interval_list[i][1];
+		tremor_box = tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest, start_time, end_time);
+		a, b, c = plt.hist(tremor_box.depth,label=dt.datetime.strftime(start_time, "%Y-%m-%d"),histtype='step',density=True);
+		linecolor.append(c[0].get_ec());
+		plt.plot([np.median(tremor_box.depth),np.median(tremor_box.depth)], [0, 1], color=linecolor[i], linestyle='--');
+	
+	plt.legend(loc='upper left');
+	plt.ylim([0, 0.07]);
+	plt.ylabel('Density');
+	plt.xlabel('Depth (km)');
+	plt.savefig('DepthHistogram.eps');
+
+	[ca_lon, ca_lat] = np.loadtxt("gmt/california_bdr",unpack=True);
+	f, axarr = plt.subplots(2,4,figsize=(17,9));
+	for i in range(len(interval_list)):
+		if i<4:
+			horiz_count=0; 
+		else:
+			horiz_count=1;
+		start_time=interval_list[i][0];
+		end_time=interval_list[i][1];
+		tremor_box = tremor_tools.restrict_to_box_depth(tremor, box_interest, depth_interest, start_time, end_time);
+		axarr[horiz_count][np.mod(i,4)].plot(ca_lon, ca_lat, color='k', linewidth=1);
+		axarr[horiz_count][np.mod(i,4)].plot(tremor_box.lonarray, tremor_box.latarray,'s',label=dt.datetime.strftime(start_time, "%Y-%m-%d"),markersize=1.0,color=linecolor[i]);
+		axarr[horiz_count][np.mod(i,4)].legend(loc='upper left');
+		axarr[horiz_count][np.mod(i,4)].set_ylim([39.8, 41.2]);
+		axarr[horiz_count][np.mod(i,4)].set_xlim([-124.4, -122.1]);
+	# plt.ylim([39.8, 41.2]);
+	# plt.xlim([-124.25, -122.25]);
+	# plt.legend(loc='upper left');
+	plt.ylabel('Latitude');
+	plt.xlabel('Longitude');
+	plt.savefig('Map.eps');
+	return; 
 
 
 

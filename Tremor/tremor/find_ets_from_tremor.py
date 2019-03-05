@@ -16,8 +16,8 @@ def find_ets(tremor):
 
 	ets_dates=[];
 	for i in range(len(dts)):
-		if rate[i]>20:
-			# print(dts[i]);
+		if rate[i]>9:
+			print(dts[i]);
 			ets_dates.append(dts[i]);
 	
 	# Decluster	
@@ -38,11 +38,11 @@ def find_ets(tremor):
 	print(np.mean(post_period));
 	print(np.std(post_period));
 
-
 	plt.figure();
 	plt.plot_date(dts,rate,linestyle='-',marker=None,color='b',linewidth=4);
 	plt.xlabel('Time',fontsize=20);
 	plt.ylabel('Daily Tremor Rates',fontsize=20);
+	plt.grid(True);
 	plt.savefig('rates.eps');
 
 	return;
@@ -51,6 +51,5 @@ def find_ets(tremor):
 
 
 if __name__=="__main__":
-	# tremor = tremor_io.read_input_tremor("wech");
-	tremor = tremor_tools.combine_custom_tremor("wech_custom");
+	tremor = tremor_tools.read_custom_tremor("wech_custom");
 	find_ets(tremor);
