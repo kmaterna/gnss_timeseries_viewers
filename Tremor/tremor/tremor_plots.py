@@ -155,7 +155,7 @@ def complex_plot_depths(tremor,tremortype):
 	box_interest = [-125, -121, 40.2, 40.8];  # Experiment
 	depth_interest1=[20, 24]; name1="20-24km";
 	depth_interest2=[24, 35]; name2="24-35km";
-	depth_interest3=[35, 55]; name3="35-55km";
+	depth_interest3=[35, 65]; name3="35-65km";
 	tremor_latmin=39;
 	tremor_latmax=42.5;
 	eqtimes=[dt.datetime.strptime('20140310',"%Y%m%d"),

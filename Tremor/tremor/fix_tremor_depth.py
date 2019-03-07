@@ -17,7 +17,8 @@ import tremor_plots
 if __name__=="__main__":
 	tremor_type="wech_custom";
 	tremor_with_depths = tremor_tools.read_custom_tremor(tremor_type);
-	# tremor_plots.complex_plot_depths(tremor_with_depths,tremor_type);
+	tremor_plots.complex_plot_depths(tremor_with_depths,tremor_type);
+	sys.exit(0);
 	# After this, you must go and make the GMT plots of the tremor (tremor_depth_ranges.sh)
 
 	depth_interest=[10, 65];
