@@ -9,10 +9,10 @@ latN="42.2"
 range="$lonW/$lonE/$latS/$latN"
 projection="M2.0i"  # used for medium experiments.
 horiz_scale=0.1  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
-output1='Figures/Allprocs_2016.ps'
+output1='Figures/Allprocs_2010.ps'
 offset=5.9
 
-filename='2016.txt'
+filename='2010.txt'
 file1=pbo_lssq_NA/
 name1="PBO"
 file2=cwu_lssq_NA/

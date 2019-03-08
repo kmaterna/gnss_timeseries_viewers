@@ -3,11 +3,11 @@
 # Plot that shows data in integrated way
 
 lonW="-124.9"
-lonE="-118.7"
+lonE="-119.4"  # 118.7 shows some LVC
 latS="36.5"
-latN="42.2"
+latN="46.2"  # 42.2
 range="$lonW/$lonE/$latS/$latN"
-projection="M3.3i"  # used for medium experiments.
+projection="M3.1i"  # used for medium experiments.
 horiz_scale=0.3  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
 output1='Figures/NorCal.ps'
 offset=9
@@ -50,8 +50,8 @@ EOF
 grep 'nan' $infile | awk '{print $1, $2}' | gmt psxy -R$range -J$projection -O -K -Gdarkblue -Sc0.05 >> $output1
 
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--120.2 41.8 $name1
--124 41.8 A
+-120.8 45.9 $name1
+-124.5 45.9 A
 EOF
 
 
@@ -83,8 +83,8 @@ EOF
 grep 'nan' $infile | awk '{print $1, $2}' | gmt psxy -R$range -J$projection -O -K -Gdarkblue -Sc0.05 >> $output1
 
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--120.2 41.8 $name2
--124 41.8 B
+-120.8 45.9 $name2
+-124.5 45.9 B
 EOF
 
 
@@ -116,8 +116,8 @@ EOF
 grep 'nan' $infile | awk '{print $1, $2}' | gmt psxy -R$range -J$projection -O -K -Gdarkblue -Sc0.05 >> $output1
 
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -O <<EOF >> $output1
--120.2 41.8 $name3
--124 41.8 C
+-120.8 45.9 $name3
+-124.5 45.9 C
 EOF
 
 gmt psconvert $output1 -Tg
