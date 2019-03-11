@@ -14,7 +14,7 @@ import sys
 
 
 def configure():
-	datasource='unr';
+	datasource='pbo';
 	refframe='NA';
 	grace_dir = "../../GPS_POS_DATA/GRACE_loading_model/"
 	coord_box = [-125, -118, 37, 44];

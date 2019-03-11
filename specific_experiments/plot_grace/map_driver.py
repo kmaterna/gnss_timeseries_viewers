@@ -17,7 +17,7 @@ EQ3="20161210"
 
 dataset="MTJ_2014"
 Mend_map_accel.grace_driver([EQ1,EQ2],[EQ2,EQ3], grace_dir, dataset, out_dir);
-subprocess.call('../accelerations/accel_map_grace.gmt '+out_dir+dataset+'.txt '+' -126.8 -119.4 35.9 42.2 '+out_dir+'/NorCal_'+dataset,shell=True);
+subprocess.call('../accelerations/accel_map_grace.gmt '+out_dir+dataset+'.txt '+' -126.8 -119.4 35.9 44.2 '+out_dir+'/NorCal_'+dataset,shell=True);
 
 # dataset="MTJ_2010"
 # Mend_map_accel.grace_driver([EQ0,EQ1],[EQ1,EQ2], grace_dir, dataset, out_dir);
