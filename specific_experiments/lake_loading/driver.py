@@ -13,33 +13,34 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 
 
 def configure():
-	stations=["P349","P060","P348","P338","P341","ORVB"];
+	stations=["P349","P060","P348","P338","P341","WDCB","ORVB"];
+	lakes = ["shasta","shasta","shasta","shasta","shasta","shasta","oroville"];
 	time0=dt.datetime.strptime("20100610","%Y%m%d");
 	time1=dt.datetime.strptime("20140317","%Y%m%d");
 	time2=dt.datetime.strptime("20161208","%Y%m%d");
 	time3=dt.datetime.strptime("20180915","%Y%m%d");
 	outfile='OUTPUTS/model_vs_data.txt'
-	return [stations, time0, time1, time2, time3, outfile];
+	return [stations, lakes, time0, time1, time2, time3, outfile];
 
-def inputs(stations):
+def inputs(stations, lakes):
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in stations:
 		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, 'pbo');
 		dataobj_list.append(myData);
 		offsetobj_list.append(offset_obj);
 		eqobj_list.append(eq_obj);
-	[loadingobj_list] = input_loading_manystations(stations);
+	[loadingobj_list] = input_loading_manystations(stations, lakes);
 	return [dataobj_list, offsetobj_list, eqobj_list, loadingobj_list];
 
-def input_loading_manystations(stations):
+def input_loading_manystations(stations, lakes):
 	loadingobj_list=[];
-	for station_name in stations:
-		loading_obj=input_loading_onestation(station_name);
+	for i in range(len(stations)):
+		loading_obj=input_loading_onestation(stations[i], lakes[i]);
 		loadingobj_list.append(loading_obj);
 	return [loadingobj_list];
 
-def input_loading_onestation(station):
-	ifile=open("DATA/"+station+"_shasta_defo.txt",'r');
+def input_loading_onestation(station, lake):
+	ifile=open("DATA/"+station+"_"+lake+"_defo.txt",'r');
 	dtarray = []; u = []; v = []; w = []; 
 	for line in ifile:
 		temp=line.split();
@@ -93,7 +94,7 @@ def outputs(T3_T2_gps_slopes, T4_T3_gps_slopes, T3_T2_model_slopes, T4_T3_model_
 
 
 if __name__=="__main__":
-	[stations, time0, time1, time2, time3, outfile] = configure();
-	[myData, offset_obj, eq_obj, loadingobj_list] = inputs(stations);
+	[stations, lakes, time0, time1, time2, time3, outfile] = configure();
+	[myData, offset_obj, eq_obj, loadingobj_list] = inputs(stations, lakes);
 	[T3_T2_gps_slopes, T4_T3_gps_slopes, T3_T2_model_slopes, T4_T3_model_slopes] = compute(myData, offset_obj, eq_obj, loadingobj_list, time0, time1, time2, time3);
 	outputs(T3_T2_gps_slopes, T4_T3_gps_slopes, T3_T2_model_slopes, T4_T3_model_slopes, myData, outfile);

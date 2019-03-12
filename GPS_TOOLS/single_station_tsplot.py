@@ -72,6 +72,7 @@ def compute(myData, offset_obj, eq_obj, MyParams):
 def single_ts_plot(ts_obj, detrended, MyParams):
 
 	label_fontsize=18;
+	eq_2016 = dt.datetime.strptime("20161208","%Y%m%d");
 
 	# The major figure
 	dpival=500;
@@ -82,6 +83,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	bottom,top=axarr[0].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
 		axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=0.5);
+	axarr[0].plot_date([eq_2016, eq_2016], [bottom, top], '--k',linewidth=0.5);  # special plot for SSE experiment
 	ax1=axarr[0].twinx();
 	ax1.plot_date(detrended.dtarray, detrended.dE,marker='D',markersize=1.0,color='red');
 	ax1.set_ylabel('detrended (mm)', fontsize=label_fontsize-2);
