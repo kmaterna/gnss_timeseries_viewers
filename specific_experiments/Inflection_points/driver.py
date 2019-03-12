@@ -49,11 +49,11 @@ def configure(eqtime,starttime,endtime):
 	N=3;  # Order of butterworth filter
 	Wn=1/365.0;  # 1/period (days) of cutoff frequency. 	
 
-	# map_coords=[-125, -118, 36.5, 42.0];  # northern CA
+	map_coords=[-125, -118, 36.5, 42.0];  # northern CA
 	# map_coords=[-125, -110, 32.5, 48.5]; # western US
-	map_coords=[-125, -123, 40, 41]; # Small test
+	# map_coords=[-125, -123, 40, 41]; # Small test
 	stations = stations_within_radius.get_stations_within_box(map_coords);
-	stations=gps_input_pipeline.remove_blacklist(stations);
+	stations = gps_input_pipeline.remove_blacklist(stations);
 
 	outfile_dir='Outputs/'+str(eqtime);
 
@@ -81,8 +81,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list,start_time_infl, end_time_i
 
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes and offsets
-		newobj=offsets.remove_antenna_offsets(dataobj_list[i], offsetobj_list[i]);
-		newobj=offsets.remove_earthquakes(newobj,eqobj_list[i]);
+		newobj=offsets.remove_offsets(dataobj_list[i], offsetobj_list[i]);
+		newobj=offsets.remove_offsets(newobj,eqobj_list[i]);
 		newobj=gps_ts_functions.remove_outliers(newobj,15);  # 15mm horizontal outliers
 		newobj=gps_seasonal_removals.make_detrended_ts(newobj, 1, seasonal_type);  # can remove seasonals a few ways
 		noeq_objects.append(newobj);
@@ -152,6 +152,19 @@ def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time_infl, end_time_
 	# Return a datetime object where the slope is minimized
 	turning_point=np.argmin(slope,0);
 	turning_dt=gps_ts_functions.float_to_dt(xfirst[turning_point]);
+
+
+	# Return a datetime object where the second derivative is maximized
+	# Noel's suggestion. 
+	dy2 = np.diff(yfirst[:],1);
+	dx2 = np.diff(xfirst[:],1);
+	ysecond = np.divide(dy2, dx2);
+	xsecond = np.add(xfirst[:-1],xfirst[1:])*0.5;
+	[b,a]=butter(N, 0.2, btype='low',output='ba');  # due to leap years, sometimes there are high-frequency spikes in the 2nd derivative that we want to suppress
+	ysecond_filtered = filtfilt(b, a, ysecond);
+	curvature = abs(ysecond_filtered);
+	turning_point = np.argmax(curvature,0);
+	turning_dt = gps_ts_functions.float_to_dt(xsecond[turning_point]);
 
 	# Get the slope of a time series
 	# Find the index of the datetime where the slope went to minimum.
@@ -308,8 +321,8 @@ def output_plots(noeq_obj, mode, east_filt, north_filt, vert_filt, east_inf_time
 # --------- DRIVER ---------- # 
 if __name__=="__main__":
 	
-	# eqtime="20140310"; starttime="20100117"; endtime="20161207"; # 2014 M6.8 Earthquake
-	eqtime="20161208"; starttime="20140317"; endtime="20180901"; # 2016 M6.6 Earthquake
+	eqtime="20140310"; starttime="20100617"; endtime="20161207"; # 2014 M6.8 Earthquake
+	# eqtime="20161208"; starttime="20140317"; endtime="20180901"; # 2016 M6.6 Earthquake
 	# eqtime="20100110"; # # 2010 M6.5 Earthquake
 	driver(eqtime, starttime, endtime);
 

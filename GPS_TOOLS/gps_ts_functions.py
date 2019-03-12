@@ -277,15 +277,16 @@ def invert_linear_annual_semiannual(decyear,data):
 def get_float_times(datetimes):
 	floats=[];
 	for item in datetimes:
-		temp=item.strftime("%Y %j");
-		temp=temp.split();
-		floats.append(float(temp[0])+float(temp[1])/365.24);
+		floats.append(get_float_time(item));
 	return floats;
 
 def get_float_time(datetime_item):
 	temp=datetime_item.strftime("%Y %j");
 	temp=temp.split();
-	floats = (float(temp[0])+float(temp[1])/365.24);
+	year = temp[0]
+	last_day_of_year = dt.datetime.strptime(year+"1231","%Y%m%d");
+	num_days_this_year = float(last_day_of_year.strftime("%Y %j").split()[1]);   #This is either 365 or 366
+	floats = (float(temp[0])+float(temp[1])/num_days_this_year);
 	return floats;
 
 

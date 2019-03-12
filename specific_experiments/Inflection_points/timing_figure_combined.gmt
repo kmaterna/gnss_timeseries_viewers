@@ -15,7 +15,7 @@ range="$lonW/$lonE/$latS/$latN"
 projection="M4.0i" 
 
 # Format: lon, lat, east_change, abs(east_change), east_days, north_change, abs(north_change), north_days, vert_change, abs(vert_change), vert_days, name;
-gmt makecpt -T-250/250/5 -Cseis > mycpt.cpt 
+gmt makecpt -T-280/280/5 -Cseis > mycpt.cpt 
 
 # EAST
 # Insert a horizontal scale bar and title
