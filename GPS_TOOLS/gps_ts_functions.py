@@ -289,6 +289,21 @@ def get_float_time(datetime_item):
 	floats = (float(temp[0])+float(temp[1])/num_days_this_year);
 	return floats;
 
+def get_relative_times(datetimes, origin_dt):
+	floats=[];
+	for item in datetimes:
+		floats.append(get_relative_time(item, origin_dt));
+	return floats;
+
+def get_relative_time(datetime_item, origin_dt):
+	timedelta = datetime_item - origin_dt;
+	relative_time = timedelta.days;
+	return relative_time;
+
+def reltime_to_dt(relative_time, origin_dt):
+	timedelta = dt.timedelta(days=relative_time);
+	my_date = origin_dt+timedelta;
+	return my_date;
 
 def float_to_dt(float_time):
 	# Example: 2014.194 --> datetime object

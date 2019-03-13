@@ -49,9 +49,9 @@ def configure(eqtime,starttime,endtime):
 	N=3;  # Order of butterworth filter
 	Wn=1/365.0;  # 1/period (days) of cutoff frequency. 	
 
-	map_coords=[-125, -118, 36.5, 42.0];  # northern CA
+	map_coords=[-125, -118, 37.5, 42.0];  # northern CA
 	# map_coords=[-125, -110, 32.5, 48.5]; # western US
-	# map_coords=[-125, -123, 40, 41]; # Small test
+	# map_coords=[-125, -122, 40, 41]; # Small test
 	stations = stations_within_radius.get_stations_within_box(map_coords);
 	stations = gps_input_pipeline.remove_blacklist(stations);
 
@@ -78,6 +78,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list,start_time_infl, end_time_i
 	noeq_objects = []; 
 	east_filt=[]; north_filt=[]; vert_filt=[]; east_inf_time=[]; north_inf_time=[]; vert_inf_time=[];
 	east_change=[]; north_change=[]; vert_change=[];
+	origin_time = dt.datetime.strptime("20000101","%Y%m%d");
 
 	for i in range(len(dataobj_list)):
 		# Remove the earthquakes and offsets
@@ -88,18 +89,19 @@ def compute(dataobj_list, offsetobj_list, eqobj_list,start_time_infl, end_time_i
 		noeq_objects.append(newobj);
 
 		print(dataobj_list[i].name);
-		float_dtarray = gps_ts_functions.get_float_times(newobj.dtarray);
+		# float_times = gps_ts_functions.get_float_times(newobj.dtarray);
+		float_times = gps_ts_functions.get_relative_times(newobj.dtarray,origin_time);
 		
 		if mode=='butterworth':
 			# Get the inflection points in the timeseries
-			[east_filtered, e_inflection_time, echange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dE, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
-			[north_filtered, n_inflection_time, nchange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dN, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
-			[vert_filtered, v_inflection_time, vchange]=inflection_with_butterworth(newobj.dtarray, float_dtarray, newobj.dU, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+			[east_filtered, e_inflection_time, echange]=inflection_with_butterworth(newobj.dtarray, float_times, newobj.dE, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+			[north_filtered, n_inflection_time, nchange]=inflection_with_butterworth(newobj.dtarray, float_times, newobj.dN, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+			[vert_filtered, v_inflection_time, vchange]=inflection_with_butterworth(newobj.dtarray, float_times, newobj.dU, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
 
 		else:
-			[east_filtered,e_inflection_time, echange]=inflection_with_linear(newobj.dtarray, float_dtarray, newobj.dE, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
-			[north_filtered,n_inflection_time, nchange]=inflection_with_linear(newobj.dtarray, float_dtarray, newobj.dN, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
-			[vert_filtered,v_inflection_time, vchange]=inflection_with_linear(newobj.dtarray, float_dtarray, newobj.dU, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+			[east_filtered,e_inflection_time, echange]=inflection_with_linear(newobj.dtarray, float_times, newobj.dE, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+			[north_filtered,n_inflection_time, nchange]=inflection_with_linear(newobj.dtarray, float_times, newobj.dN, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+			[vert_filtered,v_inflection_time, vchange]=inflection_with_linear(newobj.dtarray, float_times, newobj.dU, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
 
 		east_filt.append(east_filtered);
 		north_filt.append(north_filtered);
@@ -117,7 +119,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list,start_time_infl, end_time_i
 # The butterworth filter. 
 def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo):
 	# dtarray is a datetime object array
-	# x is a float
+	# x is a float (days since a reference day)
 	# start_time and end_time are datetime objects
 	# We search withinin starttime_infl to endtime_infl for the inflection point.
 	# We use the larger array starttime_velo to endtime_velo to solve for velocity change. 
@@ -125,6 +127,7 @@ def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time_infl, end_time_
 	# Build the butterworth filter
 	[b,a]=butter(N, Wn, btype='low',output='ba');
 	y_filtered = filtfilt(b, a, y);
+	origin_time = dt.datetime.strptime("20000101","%Y%m%d");
 
 	# Making a shortened filtered time series (for only the region of the earthquake)
 	new_filtered_velo=[]; new_float_time_velo=[];
@@ -142,29 +145,26 @@ def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time_infl, end_time_
 		print("Error! Station does not have much data in the time window. Skipping.");
 		return [y_filtered, dtarray[0], 0];
 
-	# Find the inflection points. yfirst and xfirst are derivatives. 
+	# Option 1: Return a datetime object where the slope is minimized
 	dy=np.diff(new_filtered_infl[:],1)
 	dx=np.diff(new_float_time_infl[:],1)
-	yfirst=np.divide(dy,dx);
+	yfirst=np.multiply(np.divide(dy,dx),365.0);  # the multiplying is just for avoiding small numbers
 	xfirst=np.add(new_float_time_infl[:-1],new_float_time_infl[1:])*0.5;
 	slope=abs(yfirst);
-	
-	# Return a datetime object where the slope is minimized
 	turning_point=np.argmin(slope,0);
-	turning_dt=gps_ts_functions.float_to_dt(xfirst[turning_point]);
+	turning_dt=gps_ts_functions.reltime_to_dt(xfirst[turning_point], origin_time);
 
-
-	# Return a datetime object where the second derivative is maximized
+	# Option 2: Return a datetime object where the second derivative is maximized
 	# Noel's suggestion. 
-	dy2 = np.diff(yfirst[:],1);
-	dx2 = np.diff(xfirst[:],1);
-	ysecond = np.divide(dy2, dx2);
-	xsecond = np.add(xfirst[:-1],xfirst[1:])*0.5;
-	[b,a]=butter(N, 0.2, btype='low',output='ba');  # due to leap years, sometimes there are high-frequency spikes in the 2nd derivative that we want to suppress
-	ysecond_filtered = filtfilt(b, a, ysecond);
-	curvature = abs(ysecond_filtered);
-	turning_point = np.argmax(curvature,0);
-	turning_dt = gps_ts_functions.float_to_dt(xsecond[turning_point]);
+	# In the end, I didn't like it too much. I stick with the detrended minimum slope. 
+	# Second derivatives are too sensitive to the specific shape of the curve. 
+	# dy2 = np.diff(yfirst[:],1);
+	# dx2 = np.diff(xfirst[:],1);
+	# ysecond = np.multiply(np.divide(dy2, dx2),200.0);
+	# xsecond = np.add(xfirst[:-1],xfirst[1:])*0.5;
+	# curvature = abs(ysecond);
+	# turning_point = np.argmax(curvature,0);
+	# turning_dt = gps_ts_functions.reltime_to_dt(xsecond[turning_point], origin_time);
 
 	# Get the slope of a time series
 	# Find the index of the datetime where the slope went to minimum.
@@ -179,7 +179,7 @@ def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time_infl, end_time_
 
 	slope_pre=get_ts_slope(new_float_time_velo, new_filtered_velo, 0, turning_index_velo);  # the slope before
 	slope_post=get_ts_slope(new_float_time_velo, new_filtered_velo, turning_index_velo, -1);  # the slope after 
-	slope_change = slope_post - slope_pre;
+	slope_change = (slope_post - slope_pre) * 365.24;  # for mm/yr units
 
 	return [y_filtered, turning_dt, slope_change];
 
