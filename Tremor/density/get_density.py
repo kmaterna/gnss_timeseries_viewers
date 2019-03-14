@@ -4,6 +4,8 @@ import collections
 import datetime as dt 
 import tremor_io
 import tremor_tools
+import netcdf_read_write
+import sys
 
 TremorCat = collections.namedtuple("TremorCat",['dtarray','lonarray','latarray']);
 
@@ -37,12 +39,36 @@ def outputs(xarray, yarray, spacing, density, outfile):
 	ofile.close();
 	return;
 
-def plot_outfile(outfile):
-	[lon, lat, density] = np.loadtxt(outfile,unpack=True);
+def plot_outfile(bounds, spacing, outfile):
+	[lon, lat, d] = np.loadtxt(outfile,unpack=True);
 	plt.figure(figsize=(8,6));
-	plt.scatter(lon, lat, c=density, s=60, marker='s');
+	plt.scatter(lon, lat, c=d, s=60, marker='s');
 	plt.colorbar();
 	plt.savefig('tremor_density');
+
+	# Building a new GRD file
+	# The lines below are for floating point errors. 
+	xarray = np.arange(bounds[0], bounds[1], spacing);
+	xarray = [np.round(i,2) for i in xarray];
+	x_lonequiv = [i+0.05 for i in xarray];
+	x_lonequiv = [np.round(i,2) for i in x_lonequiv];
+	yarray = np.arange(bounds[2], bounds[3], spacing);
+	yarray = [np.round(i,2) for i in yarray];	
+	y_lonequiv = [i+spacing/2.0 for i in yarray];
+	y_lonequiv = [np.round(i,2) for i in y_lonequiv];
+	density = np.zeros([len(yarray), len(xarray)]);	
+	
+	for k in range(len(lon)):
+		xind = np.where(x_lonequiv==lon[k])[0];
+		yind = np.where(y_lonequiv==lat[k])[0];
+		xind = xind[0];
+		yind = yind[0];
+		density[yind][xind] = d[k];
+	print(density);
+
+	netcdfname='density.nc';
+	netcdf_read_write.produce_output_netcdf(xarray, yarray, density, 'counts', netcdfname);
+	netcdf_read_write.flip_if_necessary(netcdfname);
 	return;
 
 if __name__=="__main__":
@@ -51,4 +77,4 @@ if __name__=="__main__":
 	# tremor = TremorCat(dtarray=[dt.datetime.strptime("20140202","%Y%m%d")], lonarray=[-122.9],latarray=[40.3]); # a test case 
 	# xarray, yarray, density = compute(tremor, bounds, spacing);
 	# outputs(xarray, yarray, spacing, density, outfile);
-	plot_outfile(outfile);
+	plot_outfile(bounds, spacing, outfile);
