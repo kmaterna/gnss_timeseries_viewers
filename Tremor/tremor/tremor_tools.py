@@ -15,7 +15,7 @@ TremorCat = collections.namedtuple("TremorCat",['dtarray','lonarray','latarray']
 TremorCatDepths = collections.namedtuple("TremorCatDepths",['dtarray','lonarray','latarray','depth']);
 
 
-def restrict_to_box(tremor, box_interest, start_time, end_time):
+def restrict_to_box(tremor, box_interest, start_time=dt.datetime.strptime("20000101","%Y%m%d"), end_time=dt.datetime.strptime("20300101","%Y%m%d")):
 	newdt=[]; newlon=[]; newlat=[];
 	for i in range(len(tremor.dtarray)):
 		if tremor.dtarray[i]>start_time and tremor.dtarray[i]<end_time:
@@ -27,7 +27,7 @@ def restrict_to_box(tremor, box_interest, start_time, end_time):
 	newtremor=TremorCat(dtarray=newdt, lonarray=newlon, latarray=newlat);
 	return newtremor;
 
-def restrict_to_box_depth(tremor, box_interest, depth_interest, start_time, end_time):
+def restrict_to_box_depth(tremor, box_interest, depth_interest, start_time=dt.datetime.strptime("20000101","%Y%m%d"), end_time=dt.datetime.strptime("20300101","%Y%m%d")):
 	newdt=[]; newlon=[]; newlat=[]; newdepth=[];
 	# If depths come in negative by convention
 	if np.nanmean(tremor.depth)<0:
@@ -70,19 +70,21 @@ def read_custom_tremor(tremor_type):
 	# That combines two catalogs in a careful way. 
 	# Behavior generalizes to less custom catalogs. 
 	# By default, this returns tremor with depths for wech_custom
-	if tremor_type=="wech_custom":
-		tremor_website = tremor_io.read_input_tremor("wech");
-		tremor_later = tremor_io.read_input_tremor("wech_custom");
+	# Options: {wech, ide, wech_custom, wech_custom_no_depth}
+	if tremor_type=="wech_custom" or tremor_type=="wech_custom_no_depth":
+		tremor_website = tremor_io.read_input_tremor("wech");  # the website catalog
+		tremor_later = tremor_io.read_input_tremor("wech_custom");  # the 2015-2018 catalog
 		transition_time_1 = dt.datetime.strptime("2015-01-01","%Y-%m-%d");
 		transition_time_2 = dt.datetime.strptime("2018-01-01","%Y-%m-%d");
-		box_interest=[-125,-120,38,43];
+		box_interest=[-125,-120,38,43];  # a pretty big box
 		tremor_website1 = restrict_to_box(tremor_website, box_interest, tremor_website.dtarray[0], transition_time_1);
 		tremor_website2 = restrict_to_box(tremor_website, box_interest, transition_time_2, tremor_website.dtarray[-1]);
 		tremor_total = concatonate_tremor(tremor_website1, tremor_later);
 		tremor_total = concatonate_tremor(tremor_total, tremor_website2);
+	if tremor_type=="wech_custom":
 		xdata, ydata, zdata = read_csz_model();
 		tremor_total = compute_depths(tremor_total, xdata, ydata, zdata);
-	else:
+	if tremor_type=="wech" or tremor_type=="ide":
 		tremor_total = tremor_io.read_input_tremor(tremor_type);
 	return tremor_total;
 
@@ -207,6 +209,7 @@ def get_depth_projection(coords, xdata, ydata, zdata):
 	# ydata  : an ascending array of y-values from the fault grd file
 	# xdata  : a 2D array of depths from the fault grd file
 	# Returns the depths of the tremor locations on the underlying xyz fault surface
+	print("Computing depths of tremor on a slab model interface.");
 	result=[];
 	for i in range(len(coords)):
 		# Defensive programming
