@@ -26,6 +26,12 @@ def get_station_data(station, datasource, refframe="NA"):
 		[myData, offset_obj, eq_obj] = get_cwu(station, refframe); # CWU data
 	elif datasource=='nmt':
 		[myData, offset_obj, eq_obj] = get_nmt(station, refframe); # NMT data
+	elif datasource=='gldas':
+		[myData, offset_obj, eq_obj] = get_gldas(station);  # GLDAS hydro
+	elif datasource=='nldas':
+		[myData, offset_obj, eq_obj] = get_nldas(station);  # NLDAS hydro
+	elif datasource=='noah025':
+		[myData, offset_obj, eq_obj] = get_noah025(station);  # NOAH0.25
 	elif datasource=='error':
 		return [ [], [], [] ];  # Error code. 
 	return [myData, offset_obj, eq_obj];
@@ -94,6 +100,25 @@ def get_nmt(station, refframe="NA"):
 	return [myData, Offsets, Earthquakes];
 
 
+def get_gldas(station):
+	station_name_lower=station.lower();
+	filename="../../GPS_POS_DATA/PBO_Hydro/GLDAS/"+station_name_lower+"_noah10_gldas2.hyd";
+	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
+	return [myData, [], []];
+
+def get_nldas(station):
+	station_name_lower=station.lower();
+	filename="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"+station_name_lower+"_noah125_nldas2.hyd";
+	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
+	return [myData, [], []];
+
+def get_noah025(station):
+	filename="../../GPS_POS_DATA/PBO_Hydro/NOAH025/"+station+"_NOAH025.hyd";
+	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
+	return [myData, [], []];
+
+
+
 # Based on whether a file exists in certain directories or not, 
 # Return the 'pbo' or 'unr' datasource that we should be using. 
 def determine_datasource(station, input_datasource='pbo',refframe="NA"):
@@ -109,6 +134,9 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_"+pbo_reflabel+".pos";
 	cwu_filename="../../GPS_POS_DATA/PBO_Data/"+station+".cwu.final_"+pbo_reflabel+".pos";
 	nmt_filename="../../GPS_POS_DATA/PBO_Data/"+station+".nmt.final_"+pbo_reflabel+".pos";
+	gldas_filename="../../GPS_POS_DATA/PBO_Hydro/GLDAS/"+station.lower()+"_noah10_gldas2.hyd";
+	nldas_filename="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"+station.lower()+"_noah125_nldas2.hyd";
+	noah025_filename="../../GPS_POS_DATA/PBO_Hydro/NOAH025/"+station+"_NOAH025.hyd";
 
 	# Setting datasource label
 	if input_datasource=='pbo' and os.path.isfile(pbo_filename):
@@ -121,25 +149,42 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 		print("Using UNR as input data (selected by user).");
 		datasource='unr';
 	elif input_datasource=='unr' and not os.path.isfile(unr_filename):
-		print("Error! Cannot find file in UNR database. Skipping.");
+		print("Error! Cannot find "+station+" in UNR database. Skipping.");
 		datasource='error';
 	elif input_datasource=='cwu' and os.path.isfile(cwu_filename):
 		datasource='cwu';
 	elif input_datasource=='cwu' and not os.path.isfile(cwu_filename):
-		print("Error! Cannot find file in CWU database. Skipping.");
+		print("Error! Cannot find "+station+" in CWU database. Skipping.");
 		datasource='error';
 	elif input_datasource=='nmt' and os.path.isfile(nmt_filename):
 		datasource='nmt';
 	elif input_datasource=='nmt' and not os.path.isfile(nmt_filename):
-		print("Error! Cannot find file in NMT database. Skipping.");
+		print("Error! Cannot find "+station+" in NMT database. Skipping.");
 		datasource='error';
-	elif input_datasource not in ['unr','pbo','cwu','nmt']:
+	elif input_datasource=='gldas' and os.path.isfile(gldas_filename):
+		datasource='gldas';
+	elif input_datasource=='gldas' and not os.path.isfile(gldas_filename):
+		print("Error! Cannot find "+station+" in GLDAS database. Skipping.");
+		datasource='error';
+	elif input_datasource=='nldas' and os.path.isfile(nldas_filename):
+		datasource='nldas';
+	elif input_datasource=='nldas' and not os.path.isfile(nldas_filename):
+		print("Error! Cannot find "+station+" in NLDAS database. Skipping.");
+		datasource='error';
+	elif input_datasource=='noah025' and os.path.isfile(noah025_filename):
+		datasource='noah025';
+	elif input_datasource=='noah025' and not os.path.isfile(noah025_filename):
+		print("Error! Cannot find "+station+" in NOAH025 database. Skipping.");
+		datasource='error';
+	elif input_datasource not in ['unr','pbo','cwu','nmt','gldas','nldas','noah025']:
 		print("Error! Invalid input datasource");
 		sys.exit(1);
 	else:
 		print("Cannot find input file for station %s ; exiting..." % station);
 		sys.exit(1);
 	return datasource;
+
+
 
 def remove_blacklist(stations):
 	new_stations=[];

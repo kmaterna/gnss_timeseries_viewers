@@ -8,12 +8,14 @@ lonE=$3
 latS=$4
 latN=$5
 output=$6"_vert.ps"
-vert_scale=0.3  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
+vert_scale=0.02  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
 range="$lonW/$lonE/$latS/$latN"
 projection="M5.0i"  # used for medium experiments.
 
 # Input format: 
 # Lon, Lat, East, North, 0, Vert, SigE, SigN, SigV, Corr, Name
+
+gmt makecpt -T-3/5/2 -Cjet > mycpt.cpt
 
 # The verticals
 # # Insert a horizontal scale bar and title
@@ -29,10 +31,6 @@ awk '{print $1, $2}' $infile | gmt psxy -R$range -J$projection -Sc0.10 -Gred -O 
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$vert_scale/0.68/10 -Wblack -K -O <<EOF >> $output
 -124.85 41.8 1 0 0.1 0.1 0.0 1+-0.1 mm/yr
 EOF
-
-gmt psmeca -R$range -J$projection -Gdarkmagenta -Sm0.5 -C -K -O <<EOF>> $output
--125.13383 40.82867 15 -0.06 -2.84 2.90 0.21 -0.08 0.48 26 0 0 2014M6.8
--124.81 40.53 19 -0.03 -0.69 0.73 0.04 -0.06 0.21 26 0 0 2010M6.5
-EOF
+awk '{print $1, $2, $6}' $infile | gmt pscontour -R$range -J$projection -Cmycpt.cpt -Wthin+cl -O -P >> $output
 
 rm gmt.history

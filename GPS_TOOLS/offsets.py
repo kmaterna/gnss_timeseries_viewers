@@ -13,6 +13,8 @@ Offsets = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets
 
 def remove_offsets(Data0, offsets_obj):
 	# the actual subtraction of offsets. 
+	if offsets_obj==[]:
+		return Data0;
 	if len(offsets_obj.e_offsets)==0:
 		return Data0;
 	newdtarray=[]; newdN=[]; newdE=[]; newdU=[];

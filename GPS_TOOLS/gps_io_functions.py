@@ -191,6 +191,23 @@ def read_UNR_magnet_file(filename, coordinates_file):
 	return [my_data_object];
 	
 
+def read_pbo_hydro_file(filename):
+	# Useful for reading hydrology files like NLDAS, GLDAS, etc. 
+	dtarray=[];
+	station_name=filename.split('/')[-1][0:4];
+	station_name=station_name.upper();
+	[lon,lat] = get_coordinates_for_stations([station_name], "../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt");  # format [lat, lon]	
+	[dts, dN, dE, dU] = np.loadtxt(filename,usecols=(0, 3, 4, 5),dtype={'names':('dts','dN','dE','dU'),'formats':('U10', np.float, np.float, np.float)}, skiprows=20, delimiter=',',unpack=True);
+	for i in range(len(dts)):
+		dtarray.append(dt.datetime.strptime(dts[i],"%Y-%m-%d"));
+	Sn=[0.2 for i in range(len(dN))];
+	Se=[0.2 for i in range(len(dE))];
+	Su=[0.2 for i in range(len(dU))];
+	coords=[lon[0], lat[0]];
+	myData = Timeseries(name=station_name,coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
+	return [myData];
+
+
 def get_coordinates_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"):
 	lon=[];
 	lat=[];
