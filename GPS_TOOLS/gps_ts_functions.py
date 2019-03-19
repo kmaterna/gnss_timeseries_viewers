@@ -111,10 +111,40 @@ def detrend_data_by_value(Data0,east_params,north_params,vert_params):
 	return newData;
 
 
+def pair_gps_model(gps_data, model_data):
+	# Takes two time series objects, and returns two paired time series objects. 
+	# It could be that GPS has days that model doesn't, or the other way around. 
+	dtarray=[]; dE_gps=[]; dN_gps=[]; dU_gps=[]; Se_gps=[]; Sn_gps=[]; Su_gps=[];
+	dE_model=[]; dN_model=[]; dU_model=[]; Se_model=[]; Sn_model=[]; Su_model=[]; 
+	for i in range(len(gps_data.dtarray)):
+		if gps_data.dtarray[i] in model_data.dtarray:
+			idx = model_data.dtarray.index(gps_data.dtarray[i]);  # where is this datetime object in the model array? 
+			dtarray.append(gps_data.dtarray[i]);
+			dE_gps.append(gps_data.dE[i]);
+			dN_gps.append(gps_data.dN[i]);
+			dU_gps.append(gps_data.dU[i]);
+			Se_gps.append(gps_data.Se[i]);
+			Sn_gps.append(gps_data.Sn[i]);
+			Su_gps.append(gps_data.Su[i]);
+			dE_model.append(model_data.dE[idx]);
+			dN_model.append(model_data.dN[idx]);
+			dU_model.append(model_data.dU[idx]);
+			Se_model.append(model_data.Se[idx]);
+			Sn_model.append(model_data.Sn[idx]);
+			Su_model.append(model_data.Su[idx]);
+	paired_gps = Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=dtarray, dE=dE_gps, dN=dN_gps, dU=dU_gps, Se=Se_gps, Sn=Sn_gps, Su=Su_gps, EQtimes=gps_data.EQtimes);
+	paired_model = Timeseries(name=model_data.name, coords=model_data.coords, dtarray=dtarray, dE=dE_model, dN=dN_model, dU=dU_model, Se=Se_model, Sn=Sn_model, Su=Su_model, EQtimes=model_data.EQtimes);
+	return [paired_gps, paired_model];
+
+
+
+
 
 # FUTURE FEATURES: 
 def rotate_data():
 	return;
+
+
 
 
 

@@ -6,9 +6,11 @@ import matplotlib.pyplot as plt
 import collections, sys
 import subprocess
 import datetime as dt 
+import glob
 import gps_ts_functions
 import notch_filter
 import grace_ts_functions
+import gps_io_functions
 
 
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
@@ -16,8 +18,11 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 
 # Make a detrended/modeled version of this time series. 
 def make_detrended_ts(Data, seasonals_remove, seasonals_type, 
-	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt", grace_dir="../../GPS_POS_DATA/GRACE_loading_model/",
-	STL_dir="../../GPS_POS_DATA/STL_models/"):
+	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt",
+	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/",
+	STL_dir="../../GPS_POS_DATA/STL_models/",
+	gldas_dir="../../GPS_POS_DATA/PBO_Hydro/GLDAS/",
+	nldas_dir="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"):
 	# Once we have removed earthquake steps... 
 	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
 	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 
@@ -33,6 +38,7 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type,
 		trend_out=gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);		
 
 	else:  # Going into different forms of seasonal removal. 
+		print("Removing seasonals by %s method." % seasonals_type);
 		if seasonals_type=='lssq':
 			[east_params, north_params, up_params]=gps_ts_functions.get_linear_annual_semiannual(Data);
 			trend_out=gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);
@@ -49,6 +55,12 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type,
 
 		elif seasonals_type=='stl':
 			trend_out=remove_seasonals_by_STL(Data, STL_dir);
+
+		elif seasonals_type=='nldas':
+			trend_out=remove_seasonals_by_hydro(Data, nldas_dir);
+
+		elif seasonals_type=='gldas':
+			trend_out=remove_seasonals_by_hydro(Data, gldas_dir);
 
 		else:
 			print("Error: %s not supported as a seasonal removal type" % seasonals_type);
@@ -247,6 +259,55 @@ def preprocess_stl(dtarray, data_column, uncertainties):
 
 	return [new_dtarray, new_data_column, new_sig];
 
+
+def remove_seasonals_by_hydro(Data, hydro_dir):
+	station=Data.name;
+	files=glob.glob(hydro_dir+station.lower()+'*.hyd');
+	# filename=hydro_dir+station.lower()+'_noah10_gldas2.hyd';
+	if len(files)>0:
+		filename=files[0];
+	else:
+		filename='';
+
+	try:
+		ifile=open(filename);
+		print("Opening file %s" % filename);	
+	except FileNotFoundError:
+		print("Error! Hydro file not found for %s" % Data.name);
+		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
+		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+		print("returning placeholder object");
+		return wimpyObj;  # 1 = error code. 
+
+	# Clean up GPS data
+	Data=gps_ts_functions.remove_nans(Data);
+	
+	# Read the hydro model and pair it to the GPS
+	[hydro_data]=gps_io_functions.read_pbo_hydro_file(filename);
+	[gps_data, hydro_data] = gps_ts_functions.pair_gps_model(Data, hydro_data);  # matched in terms of dtarray. 
+
+	#  Subtract the model from the data. 
+	dE_filt=[]; dN_filt=[]; dU_filt=[];
+	for i in range(len(gps_data.dtarray)):
+		dE_filt.append(gps_data.dE[i]-hydro_data.dE[i]);
+		dN_filt.append(gps_data.dN[i]-hydro_data.dN[i]);
+		dU_filt.append(gps_data.dU[i]-hydro_data.dU[i]);
+
+	# A Simple detrending
+	decyear = gps_ts_functions.get_float_times(gps_data.dtarray);
+	dE_detrended=np.zeros(np.shape(decyear)); dN_detrended=np.zeros(np.shape(decyear)); dU_detrended=np.zeros(np.shape(decyear));
+	east_coef=np.polyfit(decyear,dE_filt,1)[0];
+	for i in range(len(dE_filt)):
+		dE_detrended[i]=dE_filt[i]-east_coef*decyear[i] - (dE_filt[0]-east_coef*decyear[0]);	
+	north_coef=np.polyfit(decyear,dN_filt,1)[0];
+	for i in range(len(dN_filt)):
+		dN_detrended[i]=(dN_filt[i]-north_coef*decyear[i]) - (dN_filt[0]-north_coef*decyear[0]);
+	vert_coef=np.polyfit(decyear,dU_filt,1)[0];
+	for i in range(len(dU_filt)):
+		dU_detrended[i]=(dU_filt[i]-vert_coef*decyear[i]) - (dU_filt[0]-vert_coef*decyear[0]);
+
+	corrected_object=Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
+	return corrected_object;
 
 
 # Note: 

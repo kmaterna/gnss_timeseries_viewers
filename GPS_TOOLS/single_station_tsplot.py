@@ -163,6 +163,12 @@ def get_figure_name(MyParams):
 		if MyParams.seasonals_type=="stl":
 			savename=savename+"_stl"
 			title=title+' by STL'
+		if MyParams.seasonals_type=="nldas":
+			savename=savename+"_nldas";
+			title=title+' by NLDAS'
+		if MyParams.seasonals_type=="gldas":
+			savename=savename+"_gldas";
+			title=title+' by GLDAS'			
 	savename=savename+MyParams.datasource;
 	savename=savename+"_ts.jpg";
 	return title, savename;
