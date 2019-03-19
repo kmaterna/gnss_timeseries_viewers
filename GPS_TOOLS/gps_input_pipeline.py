@@ -104,19 +104,25 @@ def get_gldas(station):
 	station_name_lower=station.lower();
 	filename="../../GPS_POS_DATA/PBO_Hydro/GLDAS/"+station_name_lower+"_noah10_gldas2.hyd";
 	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
-	return [myData, [], []];
+	Offset = get_empty_offsets();
+	return [myData, Offset, Offset];
 
 def get_nldas(station):
 	station_name_lower=station.lower();
 	filename="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"+station_name_lower+"_noah125_nldas2.hyd";
 	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
-	return [myData, [], []];
+	Offset = get_empty_offsets();
+	return [myData, Offset, Offset];
 
 def get_noah025(station):
 	filename="../../GPS_POS_DATA/PBO_Hydro/NOAH025/"+station+"_NOAH025.hyd";
 	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
-	return [myData, [], []];
+	Offset = get_empty_offsets();
+	return [myData, Offset, Offset];
 
+def get_empty_offsets():
+	Offset = Offsets(e_offsets=[], n_offsets=[], u_offsets=[], evdts=[]);
+	return Offset;
 
 
 # Based on whether a file exists in certain directories or not, 
