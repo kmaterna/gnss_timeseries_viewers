@@ -291,3 +291,22 @@ def read_noel_file_station(filename,station):
 
 
 
+def read_grace(filename):
+	# Read the GRACE data into a GPS-style time series object. 
+	# THE GRACE DATA
+	station_name=filename.split('/')[-1];  # this is the local name of the file
+	station_name=station_name.split('_')[1];  # this is the four-character name
+	try:
+		[dts, lon, lat, temp, u, v, w] = np.loadtxt(filename,usecols=range(0,7),dtype={'names':('dts','lon','lat','temp','u','v','w'),'formats':('U11', np.float, np.float, np.float,np.float, np.float, np.float)}, unpack=True);
+	except FileNotFoundError:
+		print("ERROR! Cannot find GRACE model for file %s" % filename);	
+	grace_t=[];
+	for i in range(len(dts)):
+		grace_t.append(dt.datetime.strptime(dts[i],"%d-%b-%Y"));
+	grace_t = [i+dt.timedelta(days=15) for i in grace_t];  # we add 15 days to plot the GRACE data at the center of the bin. 
+	u=np.array(u); v=np.array(v); w=np.array(w); S=np.zeros(np.shape(u));
+	GRACE_TS=Timeseries(name=station_name, coords=[lon[0], lat[0]], dtarray=grace_t, dE=u, dN=v, dU=w, Se=S, Sn=S, Su=S, EQtimes=[]);
+	return [GRACE_TS];
+
+
+

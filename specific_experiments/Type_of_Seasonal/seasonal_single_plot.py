@@ -24,8 +24,8 @@ Parameters = collections.namedtuple("Parameters",['station','outliers_remove', '
 def compare_single_seasonals(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, datasource='pbo'):
 	MyParams=configure(station_name, offsets_remove, earthquakes_remove, outliers_remove);
 	[myData, offset_obj, eq_obj] = input_data(station_name, datasource);
-	[updatedData, lssq_fit, notch_filt, grace_filt, stl_filt]=compute(myData, offset_obj, eq_obj, MyParams);
-	single_ts_plot(updatedData,lssq_fit,notch_filt,grace_filt,stl_filt,MyParams);
+	[updatedData, lssq_fit, notch_filt, grace_filt, stl_filt, gldas_filt, nldas_filt]=compute(myData, offset_obj, eq_obj, MyParams);
+	single_ts_plot(updatedData,lssq_fit,notch_filt,grace_filt,stl_filt, gldas_filt, nldas_filt, MyParams);
 
 
 # -------------- CONFIGURE ------------ # 
@@ -63,13 +63,15 @@ def compute(myData, offset_obj, eq_obj, MyParams):
 	notch_filt=gps_seasonal_removals.make_detrended_ts(newData, 1, 'notch');
 	grace_filt=gps_seasonal_removals.make_detrended_ts(newData, 1, 'grace');
 	stl_filt=gps_seasonal_removals.make_detrended_ts(newData, 1, 'stl');
+	gldas_filt=gps_seasonal_removals.make_detrended_ts(newData, 1, 'gldas');
+	nldas_filt=gps_seasonal_removals.make_detrended_ts(newData, 1, 'nldas');
 	# stl_filt=gps_seasonal_removals.make_detrended_ts(newData, 1, 'lssq');
 
-	return [notrend, lssq_fit, notch_filt, grace_filt, stl_filt];
+	return [notrend, lssq_fit, notch_filt, grace_filt, stl_filt, gldas_filt, nldas_filt];
 
 
 # -------------- OUTPUTS ------------ # 
-def single_ts_plot(ts_obj, lssq_fit, notch_filt, grace_filt, stl_filt, MyParams):
+def single_ts_plot(ts_obj, lssq_fit, notch_filt, grace_filt, stl_filt, gldas_filt, nldas_filt, MyParams):
 	# The major figure
 	dpival=100;
 	offset_val=15;
@@ -87,12 +89,16 @@ def single_ts_plot(ts_obj, lssq_fit, notch_filt, grace_filt, stl_filt, MyParams)
 	plt.plot_date(notch_filt.dtarray, notch_filt.dE+2*offset_val,marker='D',markersize=1.0,color='blue');
 	plt.plot_date(grace_filt.dtarray, grace_filt.dE+3*offset_val,marker='D',markersize=1.0,color='green');
 	plt.plot_date(stl_filt.dtarray, stl_filt.dE+4*offset_val,marker='D',markersize=1.0,color='magenta');
+	plt.plot_date(nldas_filt.dtarray, nldas_filt.dE+5*offset_val,marker='D',markersize=1.0,color='cyan');
+	plt.plot_date(gldas_filt.dtarray, gldas_filt.dE+6*offset_val,marker='D',markersize=1.0,color='orange');
 	plt.grid(linestyle='--',linewidth=0.5);	
 	plt.text(labeldate,0*offset_val+text_val,'Uncorrected',fontsize=22,color='black');
 	plt.text(labeldate,1*offset_val+text_val,'LsSq Fit',fontsize=22,color='red');
 	plt.text(labeldate,2*offset_val+text_val,'Notch filter',fontsize=22,color='blue');
 	plt.text(labeldate,3*offset_val+text_val,'GRACE load model',fontsize=22,color='green');
 	plt.text(labeldate,4*offset_val+text_val,'STL filter',fontsize=22,color='magenta');
+	plt.text(labeldate,5*offset_val+text_val,'NLDAS',fontsize=22,color='cyan');
+	plt.text(labeldate,6*offset_val+text_val,'GLDAS',fontsize=22,color='orange');
 	bottom,top=plt.gca().get_ylim();
 	for i in range(len(EQtimes)):
 		plt.plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k',linewidth=1.5);
@@ -110,12 +116,17 @@ def single_ts_plot(ts_obj, lssq_fit, notch_filt, grace_filt, stl_filt, MyParams)
 	plt.plot_date(notch_filt.dtarray, notch_filt.dN+2*offset_val,marker='D',markersize=1.5,color='blue');
 	plt.plot_date(grace_filt.dtarray, grace_filt.dN+3*offset_val,marker='D',markersize=1.0,color='green');
 	plt.plot_date(stl_filt.dtarray, stl_filt.dN+4*offset_val,marker='D',markersize=1.0,color='magenta');
+	plt.plot_date(nldas_filt.dtarray, nldas_filt.dN+5*offset_val,marker='D',markersize=1.0,color='cyan');
+	if len(gldas_filt.dN)>1:
+		plt.plot_date(gldas_filt.dtarray, gldas_filt.dN+6*offset_val,marker='D',markersize=1.0,color='orange');	
 	plt.grid(linestyle='--',linewidth=0.5);	
 	plt.text(labeldate,0*offset_val+text_val,'Uncorrected',fontsize=22,color='black');
 	plt.text(labeldate,1*offset_val+text_val,'LsSq Fit',fontsize=22,color='red');
 	plt.text(labeldate,2*offset_val+text_val,'Notch filter',fontsize=22,color='blue');	
 	plt.text(labeldate,3*offset_val+text_val,'GRACE load model',fontsize=22,color='green');
 	plt.text(labeldate,4*offset_val+text_val,'STL filter',fontsize=22,color='magenta');
+	plt.text(labeldate,5*offset_val+text_val,'NLDAS',fontsize=22,color='cyan');
+	plt.text(labeldate,6*offset_val+text_val,'GLDAS',fontsize=22,color='orange');	
 	plt.ylabel('detrended north (mm)',fontsize=22)
 	plt.gca().tick_params(labelsize=22);
 	title_name=ts_obj.name+" Seasonal Corrections - North";
@@ -130,12 +141,16 @@ def single_ts_plot(ts_obj, lssq_fit, notch_filt, grace_filt, stl_filt, MyParams)
 	plt.plot_date(notch_filt.dtarray, notch_filt.dU+4*offset_val,marker='D',markersize=1.5,color='blue');
 	plt.plot_date(grace_filt.dtarray, grace_filt.dU+6*offset_val,marker='D',markersize=1.0,color='green');
 	plt.plot_date(stl_filt.dtarray, stl_filt.dU+8*offset_val,marker='D',markersize=1.0,color='magenta');
+	plt.plot_date(nldas_filt.dtarray, nldas_filt.dU+10*offset_val,marker='D',markersize=1.0,color='cyan');
+	plt.plot_date(gldas_filt.dtarray, gldas_filt.dU+12*offset_val,marker='D',markersize=1.0,color='orange');
 	plt.grid(linestyle='--',linewidth=0.5);	
 	plt.text(labeldate,0*offset_val+text_val,'Uncorrected',fontsize=22,color='black');
 	plt.text(labeldate,2*offset_val+text_val,'LsSq Fit',fontsize=22,color='red');
 	plt.text(labeldate,4*offset_val+text_val,'Notch filter',fontsize=22,color='blue');	
 	plt.text(labeldate,6*offset_val+text_val,'GRACE load model',fontsize=22,color='green');
 	plt.text(labeldate,8*offset_val+text_val,'STL filter',fontsize=22,color='magenta');
+	plt.text(labeldate,10*offset_val+text_val,'NLDAS',fontsize=22,color='cyan');
+	plt.text(labeldate,12*offset_val+text_val,'GLDAS',fontsize=22,color='orange');	
 	plt.ylabel('detrended vertical (mm)',fontsize=22)
 	plt.gca().tick_params(labelsize=22);
 	title_name=ts_obj.name+" Seasonal Corrections - Vertical";

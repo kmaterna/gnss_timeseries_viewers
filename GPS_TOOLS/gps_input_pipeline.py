@@ -32,6 +32,8 @@ def get_station_data(station, datasource, refframe="NA"):
 		[myData, offset_obj, eq_obj] = get_nldas(station);  # NLDAS hydro
 	elif datasource=='noah025':
 		[myData, offset_obj, eq_obj] = get_noah025(station);  # NOAH0.25
+	elif datasource=='grace':
+		[myData, offset_obj, eq_obj] = get_grace(station);  # GRACE model
 	elif datasource=='error':
 		return [ [], [], [] ];  # Error code. 
 	return [myData, offset_obj, eq_obj];
@@ -120,6 +122,12 @@ def get_noah025(station):
 	Offset = get_empty_offsets();
 	return [myData, Offset, Offset];
 
+def get_grace(station):
+	filename="../../GPS_POS_DATA/GRACE_loading_model/scaled_"+station+"_PREM_model_ts.txt";
+	[myData] = gps_io_functions.read_grace(filename);
+	Offset = get_empty_offsets();
+	return [myData, Offset, Offset];
+
 def get_empty_offsets():
 	Offset = Offsets(e_offsets=[], n_offsets=[], u_offsets=[], evdts=[]);
 	return Offset;
@@ -143,6 +151,7 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	gldas_filename="../../GPS_POS_DATA/PBO_Hydro/GLDAS/"+station.lower()+"_noah10_gldas2.hyd";
 	nldas_filename="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"+station.lower()+"_noah125_nldas2.hyd";
 	noah025_filename="../../GPS_POS_DATA/PBO_Hydro/NOAH025/"+station+"_NOAH025.hyd";
+	grace_filename="../../GPS_POS_DATA/GRACE_loading_model/scaled_"+station+"_PREM_model_ts.txt";
 
 	# Setting datasource label
 	if input_datasource=='pbo' and os.path.isfile(pbo_filename):
@@ -182,6 +191,11 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	elif input_datasource=='noah025' and not os.path.isfile(noah025_filename):
 		print("Error! Cannot find "+station+" in NOAH025 database. Skipping.");
 		datasource='error';
+	elif input_datasource=='grace' and os.path.isfile(grace_filename):
+		datasource='grace';
+	elif input_datasource=='grace' and not os.path.isfile(grace_filename):
+		print("Error! Cannot find "+station+" in GRACE database. Skipping.");
+		datasource='error';		
 	elif input_datasource not in ['unr','pbo','cwu','nmt','gldas','nldas','noah025']:
 		print("Error! Invalid input datasource");
 		sys.exit(1);
