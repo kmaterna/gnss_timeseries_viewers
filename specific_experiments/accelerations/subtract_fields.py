@@ -1,6 +1,7 @@
 # Subtract two datasets
 
 import numpy as np 
+import sys
 import collections
 import subprocess
 
@@ -11,7 +12,7 @@ def configure():
 	# The things we change from experiment to experiment. 
 	expname="2016";
 	network1='pbo'; seas1='lssq'; ref1='NA';
-	network2='unr'; seas2='lssq'; ref2='NA';
+	network2='gldas'; seas2='lssq'; ref2='ITRF';
 
 	# Don't need to change these things. 
 	file1=network1+"_"+seas1+"_"+ref1+"/"+expname+".txt";
@@ -34,7 +35,7 @@ def input_field(input_file):
 		east.append(float(temp[2]));
 		north.append(float(temp[3]));
 		vert.append(float(temp[5]));
-		name.append(temp[8]);
+		name.append(temp[10]);
 	ifile.close();
 	myvels=Velfield(lon=lons, lat=lats, east=east, north=north, vert=vert, name=name);
 	return myvels;
@@ -56,7 +57,7 @@ def subtract(vel1, vel2):
 def outputs(Diffs, expname, outdir, outfile):
 	ofile=open(outfile,'w');
 	for i in range(len(Diffs.name)):
-		ofile.write("%f %f %f %f 0 %f 0 0 %s\n" % (Diffs.lon[i], Diffs.lat[i], Diffs.east[i], Diffs.north[i], Diffs.vert[i], Diffs.name[i]) );
+		ofile.write("%f %f %f %f 0 %f 0 0 0 0 %s\n" % (Diffs.lon[i], Diffs.lat[i], Diffs.east[i], Diffs.north[i], Diffs.vert[i], Diffs.name[i]) );
 	ofile.close();
 	subprocess.call('./accel_map_gps.gmt '+outfile+' -126.8 -121.0 38.6 43.0 '+outdir+'/MTJ'+expname,shell=True);
 	subprocess.call('./accel_map_gps.gmt '+outfile+' -124.6 -118.4 35.5 42.2 '+outdir+'/NorCal'+expname,shell=True);

@@ -8,14 +8,14 @@ lonE=$3
 latS=$4
 latN=$5
 output=$6"_vert.ps"
-vert_scale=0.02  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
+vert_scale=0.3  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
 range="$lonW/$lonE/$latS/$latN"
 projection="M5.0i"  # used for medium experiments.
 
 # Input format: 
 # Lon, Lat, East, North, 0, Vert, SigE, SigN, SigV, Corr, Name
 
-gmt makecpt -T-3/5/2 -Cjet > mycpt.cpt
+gmt makecpt -T-3/5/.2 -Cjet > mycpt.cpt
 
 # The verticals
 # # Insert a horizontal scale bar and title
