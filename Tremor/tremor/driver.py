@@ -13,4 +13,4 @@ if __name__=="__main__":
 	tremor = tremor_tools.read_custom_tremor(tremortype);
 
 	
-
+	tremor_io.write_tremor_as_txt(tremor,"wech_2019_mod_catalog.txt");

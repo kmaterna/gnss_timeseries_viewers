@@ -155,7 +155,7 @@ def rotate_data():
 # AND RETURN SCALARS OR VALUES # 
 # -------------------------------------------- # 
 
-def get_slope(Data0, starttime=[], endtime=[]):
+def get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6):
 	# Model the data with a best-fit y = mx + b. 
 	if starttime==[]:
 		starttime=Data0.dtarray[0];
@@ -191,7 +191,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 	if time_duration.days<365:
 		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
-	if len(myeast)<time_duration.days*0.6:
+	if len(myeast)<time_duration.days*missing_fraction:
 		print("Error: Most of the data is missing to estimate parameters for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];	
 

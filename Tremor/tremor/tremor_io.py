@@ -94,7 +94,7 @@ def read_ide(filename):
 def write_tremor_as_txt(tremor, filename):
 	ofile=open(filename,'w');
 	for i in range(len(tremor.dtarray)):
-		ofile.write("%f %f\n" % (tremor.lonarray[i], tremor.latarray[i]) );
+		ofile.write("%s %f %f\n" % (dt.datetime.strftime(tremor.dtarray[i],"%Y-%m-%d"), tremor.lonarray[i], tremor.latarray[i]) );
 	ofile.close();
 	return;
 
