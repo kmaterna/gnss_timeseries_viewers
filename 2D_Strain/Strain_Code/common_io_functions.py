@@ -22,9 +22,9 @@ Params=collections.namedtuple("Params",['strain_method','input_file','map_range'
 
 # ----------------- CONFIGURE -------------------------
 def configure(strain_method):
-	input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+	input_file="../Example_data/NAM08_pbovelfile_feb2018.vel";
+	# input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
 	# input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
-	# input_file="../../GPS_POS_DATA/PBO_Velocity_Files/TEST_velfield.txt";
 	map_range=[-125, -121, 37.0, 42.2]; # Northern California
 	# map_range=[-125, -110, 33.0, 48.2]; # WUS
 	map_range_string = str(map_range[0])+'/'+str(map_range[1])+'/'+str(map_range[2])+'/'+str(map_range[3]);
@@ -32,6 +32,8 @@ def configure(strain_method):
 	max_sigma=2.0;
 	[grid_inc, coord_box, coord_box_data, outdir, gmtfile] = get_tunable_options(strain_method, map_range);
 	print("Reading %s to compute strain using %s method" % (input_file, strain_method) );
+	print("Putting the outputs in %s " % outdir);
+	subprocess.call(['mkdir','-p',outdir],shell=False);
 	MyParams=Params(strain_method=strain_method, input_file=input_file, map_range=map_range_string, coord_box=coord_box, coord_box_data=coord_box_data, num_years=num_years, max_sigma=max_sigma, grid_inc=grid_inc, outdir=outdir, gmtfile=gmtfile);
 	return [MyParams];
 
