@@ -26,6 +26,11 @@ gfortran visr.f voronoi_area_version.o -o visr.exe"
 
 
 
-The program is controlled from within the Mendocino_Geodesy/2D_Strain/Strain_Code/ directory by calling "python driver.py".  The input and output parameters are controlled in common_io_functions.py.  
+The program is controlled from within the Mendocino_Geodesy/2D_Strain/Strain_Code/ directory by calling "python driver.py".  The input and output parameters are controlled in common_io_functions.py.  Output strain components are written as text files and plotted in GMT.  
 
 Versions: The code is written in Python3, and requires GMT5.  It may require Matlab or a Fortran compiler depending on the choice of strain technique.
+
+Example Output: 
+
+![hammond.png](https://github.com/kmaterna/Mendocino_Geodesy/tree/master/2D_Strain/Example_data/hammond.png)
+
