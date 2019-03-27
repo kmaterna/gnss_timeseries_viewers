@@ -32,5 +32,5 @@ Versions: The code is written in Python3, and requires GMT5.  It may require Mat
 
 Example Output: 
 
-![hammond.png](https://github.com/kmaterna/Mendocino_Geodesy/tree/master/2D_Strain/Example_data/hammond.png)
+![hammond](https://github.com/kmaterna/Mendocino_Geodesy/tree/master/2D_Strain/Example_data/hammond.png)
 
