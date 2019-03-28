@@ -24,7 +24,7 @@ gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0WeSn -D
 awk '{print $1, $2, $3, $6}' $infile1 | gmt psvelo -R$range -J$projection -O -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output1  # vectors
 awk '{print $1, $2, $5, $4*6}' $infile1 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output1
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--119.9 41.8 2014
+-120.4 41.8 03/10/2014
 -124.7 41.8 A
 EOF
 gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0wESn -Dh -K -O -Y0 -X11.5 >> $output1 # the title goes here
@@ -32,7 +32,7 @@ awk '{print $1, $2, $3, $6}' $infile2 | gmt psvelo -R$range -J$projection -O -K 
 awk '{print $1, $2, $5, $4*6}' $infile2 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output1
 gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B100:"Turning Point":/:days: -K -O >> $output1
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -O <<EOF >> $output1
--119.9 41.8 2016
+-120.4 41.8 12/08/2016
 -124.7 41.8 B
 EOF
 
@@ -42,7 +42,7 @@ gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0WeSn -D
 awk '{print $1, $2, $3, $6}' $infile1 | gmt psvelo -R$range -J$projection -O -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output2  # vectors
 awk '{print $1, $2, $8, $7*6}' $infile1 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output2
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output2
--119.9 41.8 2014
+-120.4 41.8 03/10/2014
 -124.7 41.8 A
 EOF
 gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0wESn -Dh -K -O -Y0 -X11.5 >> $output2 # the title goes here
@@ -50,7 +50,7 @@ awk '{print $1, $2, $3, $6}' $infile2 | gmt psvelo -R$range -J$projection -O -K 
 awk '{print $1, $2, $8, $7*6}' $infile2 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output2
 gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B100:"Turning Point":/:days: -K -O >> $output2
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output2
--119.9 41.8 2016
+-120.4 41.8 12/08/2016
 -124.7 41.8 B
 EOF
 
@@ -61,7 +61,7 @@ gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0WeSn -D
 awk '{print $1, $2, $3, $6}' $infile1 | gmt psvelo -R$range -J$projection -O -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output3 # vectors
 awk '{print $1, $2, $11, $10*2}' $infile1 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output3
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output3
--119.9 41.8 2014
+-120.4 41.8 03/10/2014
 -124.7 41.8 A
 EOF
 gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0wESn -Dh -K -O -Y0 -X11.5 >> $output3 # the title goes here
@@ -69,7 +69,7 @@ awk '{print $1, $2, $3, $6}' $infile2 | gmt psvelo -R$range -J$projection -O -K 
 awk '{print $1, $2, $11, $10*2}' $infile2 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output3
 gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B100:"Turning Point":/:days: -K -O >> $output3
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output3
--119.9 41.8 2016
+-120.4 41.8 12/08/2016
 -124.7 41.8 B
 EOF
 

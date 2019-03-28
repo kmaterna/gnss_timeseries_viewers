@@ -3,8 +3,8 @@
 # Plot that shows MTJ data in fancy way
 
 lonW="-126.6"
-lonE="-121.2"
-latS="38.7"
+lonE="-121.2"   # MTJ: -121.2.  NorCal: -120.2
+latS="38.7"  # MTJ: 38.7.  NorCal: 36.7
 latN="43.0"
 range="$lonW/$lonE/$latS/$latN"
 projection="M4.5i"  # used for medium experiments.
