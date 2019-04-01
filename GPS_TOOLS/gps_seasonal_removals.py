@@ -22,7 +22,8 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type,
 	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/",
 	STL_dir="../../GPS_POS_DATA/STL_models/",
 	gldas_dir="../../GPS_POS_DATA/PBO_Hydro/GLDAS/",
-	nldas_dir="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"):
+	nldas_dir="../../GPS_POS_DATA/PBO_Hydro/NLDAS/", 
+	lakes_dir="../../GPS_POS_DATA/Lake_loading/"):
 	# Once we have removed earthquake steps... 
 	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
 	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 
@@ -61,6 +62,11 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type,
 
 		elif seasonals_type=='gldas':
 			trend_out=remove_seasonals_by_hydro(Data, gldas_dir);
+
+		elif seasonals_type=='oroville':
+			trend_out=remove_seasonals_by_lakes(Data, lakes_dir, 'oroville');
+		elif seasonals_type=='shasta':
+			trend_out=remove_seasonals_by_lakes(Data, lakes_dir, 'shasta');
 
 		else:
 			print("Error: %s not supported as a seasonal removal type" % seasonals_type);
@@ -308,6 +314,57 @@ def remove_seasonals_by_hydro(Data, hydro_dir):
 
 	corrected_object=Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
 	return corrected_object;
+
+
+def remove_seasonals_by_lakes(Data, lakes_dir, lake_name):
+	station=Data.name;
+	files=glob.glob(lakes_dir+station+"_"+lake_name+"*.txt");
+	if len(files)==1:
+		print("Finding lake deformation data in %s" % files[0]);
+	else:
+		print("Error! Lake %s file not found for %s" % (lake_name, Data.name));
+		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
+		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+		print("returning placeholder object");
+		return wimpyObj;  # 1 = error code. 
+
+	loading_ts = read_loading_ts(files[0]);
+	[GPS_paired, loading_paired] = gps_ts_functions.pair_gps_model(Data, loading_ts);
+	dE=[GPS_paired.dE[i]-loading_paired.dE[i] for i in range(len(GPS_paired.dE))];
+	dN=[GPS_paired.dN[i]-loading_paired.dN[i] for i in range(len(GPS_paired.dN))];
+	dU=[GPS_paired.dU[i]-loading_paired.dU[i] for i in range(len(GPS_paired.dU))];
+
+	decyear=gps_ts_functions.get_float_times(GPS_paired.dtarray);
+	dE_detrended=np.zeros(np.shape(dE)); dN_detrended=np.zeros(np.shape(dN)); dU_detrended=np.zeros(np.shape(dU));
+
+	east_coef=np.polyfit(decyear,dE,1)[0];
+	for i in range(len(dE)):
+		dE_detrended[i]=dE[i]-east_coef*decyear[i] - (dE[0]-east_coef*decyear[0]);
+	north_coef=np.polyfit(decyear,dN,1)[0];
+	for i in range(len(dN)):
+		dN_detrended[i]=(dN[i]-north_coef*decyear[i]) - (dN[0]-north_coef*decyear[0]);
+	vert_coef=np.polyfit(decyear,dU,1)[0];
+	for i in range(len(dU)):
+		dU_detrended[i]=(dU[i]-vert_coef*decyear[i]) - (dU[0]-vert_coef*decyear[0]);
+
+	corrected_object = Timeseries(name=Data.name, coords=Data.coords, dtarray=GPS_paired.dtarray, dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=GPS_paired.Se, Sn=GPS_paired.Sn, Su=GPS_paired.Su, EQtimes=Data.EQtimes);
+	return corrected_object;
+
+
+def read_loading_ts(infile):
+	dtarray = []; u = []; v = []; w = []; 
+	ifile=open(infile,'r');
+	for line in ifile:
+		temp=line.split();
+		dtarray.append(dt.datetime.strptime(temp[0],"%Y-%m-%d"));
+		u.append(float(temp[4]));
+		v.append(float(temp[5]));
+		w.append(float(temp[6]));
+	S=np.zeros(np.shape(u));
+	# HERE WE WILL MAKE A NEW DATA OBJECT
+	ifile.close();
+	loading_defo = Timeseries(name='', coords=[], dtarray=dtarray, dE=u, dN=v, dU=w, Sn=S, Se=S, Su=S, EQtimes=[]);
+	return loading_defo;
 
 
 # Note: 

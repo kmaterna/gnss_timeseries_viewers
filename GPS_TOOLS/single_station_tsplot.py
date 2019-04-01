@@ -168,8 +168,14 @@ def get_figure_name(MyParams):
 			title=title+' by NLDAS'
 		if MyParams.seasonals_type=="gldas":
 			savename=savename+"_gldas";
-			title=title+' by GLDAS'			
-	savename=savename+MyParams.datasource;
+			title=title+' by GLDAS'	
+		if MyParams.seasonals_type=="shasta":
+			savename=savename+"_shasta";
+			title=title+' by Shasta';
+		if MyParams.seasonals_type=="oroville":
+			savename=savename+"_oroville";
+			title=title+' by Oroville';		
+	savename=savename+'_'+MyParams.datasource;
 	savename=savename+"_ts.jpg";
 	return title, savename;
 

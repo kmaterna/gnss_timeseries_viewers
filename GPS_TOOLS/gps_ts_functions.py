@@ -116,6 +116,8 @@ def pair_gps_model(gps_data, model_data):
 	# It could be that GPS has days that model doesn't, or the other way around. 
 	dtarray=[]; dE_gps=[]; dN_gps=[]; dU_gps=[]; Se_gps=[]; Sn_gps=[]; Su_gps=[];
 	dE_model=[]; dN_model=[]; dU_model=[]; Se_model=[]; Sn_model=[]; Su_model=[]; 
+	gps_data=remove_nans(gps_data);
+	model_data=remove_nans(model_data);
 	for i in range(len(gps_data.dtarray)):
 		if gps_data.dtarray[i] in model_data.dtarray:
 			idx = model_data.dtarray.index(gps_data.dtarray[i]);  # where is this datetime object in the model array? 

@@ -40,7 +40,7 @@ def input_loading_manystations(stations, lakes):
 	return [loadingobj_list];
 
 def input_loading_onestation(station, lake):
-	ifile=open("DATA/"+station+"_"+lake+"_defo.txt",'r');
+	ifile=open("../../GPS_POS_DATA/Lake_loading/"+station+"_"+lake+"_defo.txt",'r');
 	dtarray = []; u = []; v = []; w = []; 
 	for line in ifile:
 		temp=line.split();
