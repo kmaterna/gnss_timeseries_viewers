@@ -27,8 +27,8 @@ import haversine
 import grace_ts_functions
 
 
-def driver(EQcoords, size, network, refframe, fit_type, deltat1, deltat2, expname):
-	[stations, outdir, time_after_start_date, critical_variance] = configure(EQcoords, fit_type, size, network,refframe);
+def driver(EQcoords, size, network, refframe, fit_type, deltat1, deltat2, expname, station_list=[]):
+	[stations, outdir, time_after_start_date, critical_variance] = configure(EQcoords, fit_type, size, network,refframe, station_list);
 	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations, network, refframe);
 	[noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type, time_after_start_date, critical_variance);
 	outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, outdir, expname, fit_type, network, refframe, deltat1, deltat2, time_after_start_date, critical_variance);
@@ -36,7 +36,7 @@ def driver(EQcoords, size, network, refframe, fit_type, deltat1, deltat2, expnam
 
 
 
-def configure(EQcoords, fit_type, overall_size, network, refframe):
+def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=[]):
 	outdir=network+"_"+fit_type+"_"+refframe;
 	subprocess.call('mkdir -p '+outdir,shell=True);
 	if network=='nldas' or network=='gldas' or network=='noah025':
@@ -54,12 +54,16 @@ def configure(EQcoords, fit_type, overall_size, network, refframe):
 	else:
 		radius=150;
 	
-	# Getting the stations of interest ('huge' means we just want within the box.)
-	if radius==-1:
-		stations = stations_within_radius.get_stations_within_box(map_coords, network);
+	if len(station_list)>0:
+		stations=station_list;
 	else:
-		stations,_ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords, network);
-	stations=gps_input_pipeline.remove_blacklist(stations);
+		# Getting the stations of interest ('huge' means we just want within the box.)
+		if radius==-1:
+			stations = stations_within_radius.get_stations_within_box(map_coords, network);
+		else:
+			stations,_ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords, network);
+		stations=gps_input_pipeline.remove_blacklist(stations);
+
 	return [stations, outdir, time_after_start_date, critical_variance];
 
 
@@ -106,6 +110,10 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
 		if fit_type=='none':
 			newobj=gps_seasonal_removals.make_detrended_ts(newobj, 0, fit_type);  # remove seasonals
 		else:
+			if newobj.name=='P349':
+				newobj=gps_seasonal_removals.make_detrended_ts(newobj,1,'shasta');
+			if newobj.name=='ORVB':
+				newobj=gps_seasonal_removals.make_detrended_ts(newobj,1,'oroville');
 			newobj=gps_seasonal_removals.make_detrended_ts(newobj, 1, fit_type);  # remove seasonals
 
 		noeq_objects.append(newobj);
