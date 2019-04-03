@@ -60,6 +60,9 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type,
 		elif seasonals_type=='nldas':
 			trend_out=remove_seasonals_by_hydro(Data, nldas_dir);
 
+		elif seasonals_type=='nldas_scaled':
+			trend_out=remove_seasonals_by_hydro(Data, nldas_dir, scaling=True);
+
 		elif seasonals_type=='gldas':
 			trend_out=remove_seasonals_by_hydro(Data, gldas_dir);
 
@@ -266,7 +269,7 @@ def preprocess_stl(dtarray, data_column, uncertainties):
 	return [new_dtarray, new_data_column, new_sig];
 
 
-def remove_seasonals_by_hydro(Data, hydro_dir):
+def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
 	station=Data.name;
 	files=glob.glob(hydro_dir+station.lower()+'*.hyd');
 	# filename=hydro_dir+station.lower()+'_noah10_gldas2.hyd';
@@ -285,19 +288,38 @@ def remove_seasonals_by_hydro(Data, hydro_dir):
 		print("returning placeholder object");
 		return wimpyObj;  # 1 = error code. 
 
-	# Clean up GPS data
-	Data=gps_ts_functions.remove_nans(Data);
-	
 	# Read the hydro model and pair it to the GPS
 	[hydro_data]=gps_io_functions.read_pbo_hydro_file(filename);
+	
+	# Clean up and pair data
+	Data=gps_ts_functions.remove_nans(Data);
+	# hydro_data=gps_ts_functions.remove_nans(hydro_data);  # this may or may not be necessary. 
 	[gps_data, hydro_data] = gps_ts_functions.pair_gps_model(Data, hydro_data);  # matched in terms of dtarray. 
+
+	if scaling==True:
+		[east_gps, north_gps, vert_gps] = gps_ts_functions.get_linear_annual_semiannual(gps_data);
+		[east_hydro, north_hydro, vert_hydro] = gps_ts_functions.get_linear_annual_semiannual(hydro_data);
+		gps_amp = np.sqrt(vert_gps[1]*vert_gps[1] + vert_gps[2]*vert_gps[2]);
+		hydro_amp = np.sqrt(vert_hydro[1]*vert_hydro[1] + vert_hydro[2]*vert_hydro[2]);
+		if hydro_amp == 0.0:
+			print("ERROR! NLDAS amplitude is exactly 0!!  You should probably fix this. ");
+			placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
+			wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+			print("returning placeholder object");
+			return wimpyObj;  # 1 = error code. 			
+		scale_factor=gps_amp/hydro_amp;
+		# print("GPS Amplitude is %.2f mm" % gps_amp);
+		# print("NLDAS Amplitude is %.2f mm" % hydro_amp);
+		print("NLDAS scaling factor is %.2f" % scale_factor);
+	else:
+		scale_factor=1;
 
 	#  Subtract the model from the data. 
 	dE_filt=[]; dN_filt=[]; dU_filt=[];
 	for i in range(len(gps_data.dtarray)):
-		dE_filt.append(gps_data.dE[i]-hydro_data.dE[i]);
-		dN_filt.append(gps_data.dN[i]-hydro_data.dN[i]);
-		dU_filt.append(gps_data.dU[i]-hydro_data.dU[i]);
+		dE_filt.append(gps_data.dE[i]-scale_factor*hydro_data.dE[i]);
+		dN_filt.append(gps_data.dN[i]-scale_factor*hydro_data.dN[i]);
+		dU_filt.append(gps_data.dU[i]-scale_factor*hydro_data.dU[i]);
 
 	# A Simple detrending
 	decyear = gps_ts_functions.get_float_times(gps_data.dtarray);
