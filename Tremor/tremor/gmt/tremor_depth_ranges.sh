@@ -15,12 +15,12 @@ output="MTJ_Tremor_key.ps"
 gmt pscoast -R$range -J$projection -Lf-121.7/39.15/39.15/50+jt -Wthick,black -N2 -B1.0:."Tremor at MTJ": -Dh -K -P > $output 
 
 # Plot tremor epicenters
-awk '{print $4, $3}' ../../../GPS_POS_DATA/tremor/08_01_2009_10_31_2018.txt | gmt psxy -R$range -J$projection -Sc0.02 -Gblack -K -O -P >> $output
+awk '{print $2, $3}' ../../../GPS_POS_DATA/tremor/wech_2019_mod_catalog.txt | gmt psxy -R$range -J$projection -Sc0.02 -Gblack -K -O -P >> $output
 
 # Plot tremor categories for more in-depth analysis
-gmt psxy shallowrange.txt -R$range -J$projection -Sc0.1 -Gcyan4 -K -O -P >> $output
-gmt psxy medrange.txt -R$range -J$projection -Sc0.1 -Gdarkorchid1 -K -O -P >> $output
-gmt psxy deeprange.txt -R$range -J$projection -Sc0.05 -Gdarkorange1 -K -O -P >> $output
+# gmt psxy shallowrange.txt -R$range -J$projection -Sc0.1 -Gcyan4 -K -O -P >> $output
+awk '{print $2, $3}' medrange.txt | gmt psxy -R$range -J$projection -Sc0.05 -Gdarkorchid1 -K -O -P >> $output
+awk '{print $2, $3}' deeprange.txt | gmt psxy -R$range -J$projection -Sc0.05 -Gdarkorange1 -K -O -P >> $output
 
 # Slab from USGS model
 gmt grdcontour cas_slab1.0_clip.grd -R$range -J$projection -C10 -Gd8 -A -Wthick,black -K -P -O >> $output
