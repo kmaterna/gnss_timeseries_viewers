@@ -1,6 +1,7 @@
 # 2/28/2019: The purpose of this plot is to extract the annual amplitudes in GPS time series
 # We focus on the vertical compontent first
 # And then compare with the equivalent GRACE model that was pre-computed, sitting in a directory somewhere. 
+# 4/7/2019: Expanding this for the NLDAS and GLDAS amplitudes. This makes the code messier. 
 
 import numpy as np 
 import matplotlib.pyplot as plt 
@@ -16,34 +17,32 @@ import sys
 def configure():
 	datasource='pbo';
 	refframe='NA';
+	hydro_type="grace";  # options: grace, nldas, gldas
 	grace_dir = "../../GPS_POS_DATA/GRACE_loading_model/"
+	nldas_dir = "../../GPS_POS_DATA/PBO_Hydro/NLDAS/"
+	gldas_dir = "../../GPS_POS_DATA/PBO_Hydro/GLDAS/"
 	coord_box = [-125, -118, 37, 44];
 	station_list = stations_within_radius.get_stations_within_box(coord_box, datasource);
 	station_list = gps_input_pipeline.remove_blacklist(station_list);
-	ampfile = "grace_vs_gps_amps_"+datasource+".txt";
-	return [station_list, datasource, refframe, grace_dir, ampfile];
+	ampfile = hydro_type+"_vs_gps_amps_"+datasource+".txt";
+	return [station_list, datasource, hydro_type, refframe, grace_dir, nldas_dir, gldas_dir, ampfile];
 
-def inputs(station_list, datasource, refframe, grace_dir):
-	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[]; graceobj_list=[]; 
+def inputs(station_list, datasource, hydro_type, refframe, grace_dir, nldas_dir, gldas_dir):
+	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[]; hydroobj_list=[]; 
 	for station_name in station_list:
-		filename=grace_dir+"scaled_"+station_name+"_PREM_model_ts.txt";
 		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, refframe);
-		if os.path.isfile(filename):
-			print("Opening GRACE for station %s" % station_name);
-			grace_obj=grace_ts_functions.input_GRACE_individual_station(filename);
-		else:
-			print("Error! GRACE not found for %s" % station_name);
-			grace_obj=[];
+		print("Opening "+hydro_type+" for station %s" % station_name);
+		[hydro_obj,_,_]=gps_input_pipeline.get_station_data(station_name,hydro_type);  # this is a very generic function for GPS, GRACE, and Hydro		
 		if myData==[]:
 			continue;
 		else:
 			dataobj_list.append(myData);
 			offsetobj_list.append(offset_obj);
 			eqobj_list.append(eq_obj);	
-			graceobj_list.append(grace_obj);
-	return [dataobj_list, offsetobj_list, eqobj_list, graceobj_list];
+			hydroobj_list.append(hydro_obj);
+	return [dataobj_list, offsetobj_list, eqobj_list, hydroobj_list];
 
-def compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list):
+def compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list, hydro_type):
 	gps_amp=[]; grace_amp=[]; 
 	for i in range(len(dataobj_list)):
 		print(dataobj_list[i].name);
@@ -56,7 +55,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list):
 		
 		# Get the GPS amplitude
 		# Parameter order is slope, cos(wt), sin(wt), cos(2wt), sin(2wt)
-		[east_params_gps, north_params_gps, vert_params_gps] = gps_ts_functions.get_linear_annual_semiannual(newobj);	
+		[east_params_gps, north_params_gps, vert_params_gps] = gps_ts_functions.get_linear_annual_semiannual(newobj);
 		east_amp_gps = np.sqrt(east_params_gps[1]*east_params_gps[1]+east_params_gps[2]*east_params_gps[2]);
 		north_amp_gps = np.sqrt(north_params_gps[1]*north_params_gps[1]+north_params_gps[2]*north_params_gps[2]);
 		vert_amp_gps = np.sqrt(vert_params_gps[1]*vert_params_gps[1]+vert_params_gps[2]*vert_params_gps[2]);
@@ -65,7 +64,11 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list):
 		if graceobj_list[i]==[]:
 			east_amp_grace=np.nan; north_amp_grace=np.nan; vert_amp_grace=np.nan;
 		else:
-			[east_params_grace, north_params_grace, vert_params_grace] = grace_ts_functions.get_linear_annual_semiannual(graceobj_list[i]);
+			if hydro_type=='grace':
+				[east_params_grace, north_params_grace, vert_params_grace] = gps_ts_functions.get_linear_annual_semiannual(graceobj_list[i],critical_len=365/30);
+				# This is a temporary fix because the GPS-read GRACE function doesn't interpolate yet into a daily spacing.
+			else:
+				[east_params_grace, north_params_grace, vert_params_grace] = gps_ts_functions.get_linear_annual_semiannual(graceobj_list[i]);
 			east_amp_grace = np.sqrt(east_params_grace[1]*east_params_grace[1]+east_params_grace[2]*east_params_grace[2]);
 			north_amp_grace = np.sqrt(north_params_grace[1]*north_params_grace[1]+north_params_grace[2]*north_params_grace[2]);
 			vert_amp_grace = np.sqrt(vert_params_grace[1]*vert_params_grace[1]+vert_params_grace[2]*vert_params_grace[2]);
@@ -73,6 +76,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list):
 		gps_amp.append([east_amp_gps, north_amp_gps, vert_amp_gps]);
 		grace_amp.append([east_amp_grace, north_amp_grace, vert_amp_grace]);
 	return [gps_amp, grace_amp];
+
+
 
 def outputs(dataobj_list, gps_amp, grace_amp, ampfile):
 	ofile=open(ampfile,'w');
@@ -143,10 +148,10 @@ def remake_plots():
 
 
 if __name__=="__main__":
-	[station_list, datasource, refframe, grace_dir, ampfile] = configure();
-	[dataobj_list, offsetobj_list, eqobj_list, graceobj_list] = inputs(station_list, datasource, refframe, grace_dir);
-	[gps_amp, grace_amp] = compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list);
+	[station_list, datasource, hydro_type, refframe, grace_dir, nldas_dir, gldas_dir, ampfile] = configure();
+	[dataobj_list, offsetobj_list, eqobj_list, graceobj_list] = inputs(station_list, datasource, hydro_type, refframe, grace_dir, nldas_dir, gldas_dir);
+	[gps_amp, grace_amp] = compute(dataobj_list, offsetobj_list, eqobj_list, graceobj_list, hydro_type);
 	outputs(dataobj_list, gps_amp, grace_amp, ampfile);
 
-	remake_plots();
+	# remake_plots();
 

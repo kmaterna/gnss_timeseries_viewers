@@ -193,6 +193,7 @@ def read_UNR_magnet_file(filename, coordinates_file):
 
 def read_pbo_hydro_file(filename):
 	# Useful for reading hydrology files like NLDAS, GLDAS, etc. 
+	# In the normal pipeline for this function, it is guaranteed to be given a real file. 
 	dtarray=[];
 	station_name=filename.split('/')[-1][0:4];
 	station_name=station_name.upper();

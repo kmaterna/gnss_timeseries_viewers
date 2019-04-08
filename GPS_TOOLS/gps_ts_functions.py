@@ -244,7 +244,8 @@ def get_slope_unc(dataObj, starttime, endtime):
 	return [Esigma, Nsigma, Usigma]; 
 
 
-def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
+def get_linear_annual_semiannual(Data0, starttime=[], endtime=[],critical_len=365):
+	# The critical_len parameter allows us to manually switch this function for both GPS and GRACE time series in GPS format
 	# Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F; 
 	if starttime==[]:
 		starttime=Data0.dtarray[0];
@@ -272,7 +273,7 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
 			mynorth.append(Data0.dN[i]);
 			myup.append(Data0.dU[i]);
 
-	if len(mydtarray)<365:
+	if len(mydtarray)<critical_len:
 		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
 		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
 		return [east_params, north_params, up_params];

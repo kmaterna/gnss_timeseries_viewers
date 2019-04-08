@@ -154,6 +154,7 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	grace_filename="../../GPS_POS_DATA/GRACE_loading_model/scaled_"+station+"_PREM_model_ts.txt";
 
 	# Setting datasource label
+	# Getting ready to return an empty object if we don't find the right file. 
 	if input_datasource=='pbo' and os.path.isfile(pbo_filename):
 		print("Using PBO file as input data. ");
 		datasource='pbo';
@@ -164,39 +165,39 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 		print("Using UNR as input data (selected by user).");
 		datasource='unr';
 	elif input_datasource=='unr' and not os.path.isfile(unr_filename):
-		print("Error! Cannot find "+station+" in UNR database. Skipping.");
+		print("Error! Cannot find "+station+" in UNR database. Returning empty object.");
 		datasource='error';
 	elif input_datasource=='cwu' and os.path.isfile(cwu_filename):
 		datasource='cwu';
 	elif input_datasource=='cwu' and not os.path.isfile(cwu_filename):
-		print("Error! Cannot find "+station+" in CWU database. Skipping.");
+		print("Error! Cannot find "+station+" in CWU database. Returning empty object.");
 		datasource='error';
 	elif input_datasource=='nmt' and os.path.isfile(nmt_filename):
 		datasource='nmt';
 	elif input_datasource=='nmt' and not os.path.isfile(nmt_filename):
-		print("Error! Cannot find "+station+" in NMT database. Skipping.");
+		print("Error! Cannot find "+station+" in NMT database. Returning empty object.");
 		datasource='error';
 	elif input_datasource=='gldas' and os.path.isfile(gldas_filename):
 		datasource='gldas';
 	elif input_datasource=='gldas' and not os.path.isfile(gldas_filename):
-		print("Error! Cannot find "+station+" in GLDAS database. Skipping.");
+		print("Error! Cannot find "+station+" in GLDAS database. Returning empty object.");
 		datasource='error';
 	elif input_datasource=='nldas' and os.path.isfile(nldas_filename):
 		datasource='nldas';
 	elif input_datasource=='nldas' and not os.path.isfile(nldas_filename):
-		print("Error! Cannot find "+station+" in NLDAS database. Skipping.");
+		print("Error! Cannot find "+station+" in NLDAS database. Returning empty object.");
 		datasource='error';
 	elif input_datasource=='noah025' and os.path.isfile(noah025_filename):
 		datasource='noah025';
 	elif input_datasource=='noah025' and not os.path.isfile(noah025_filename):
-		print("Error! Cannot find "+station+" in NOAH025 database. Skipping.");
+		print("Error! Cannot find "+station+" in NOAH025 database. Returning empty object.");
 		datasource='error';
 	elif input_datasource=='grace' and os.path.isfile(grace_filename):
 		datasource='grace';
 	elif input_datasource=='grace' and not os.path.isfile(grace_filename):
-		print("Error! Cannot find "+station+" in GRACE database. Skipping.");
+		print("Error! Cannot find "+station+" in GRACE database. Returning empty object.");
 		datasource='error';		
-	elif input_datasource not in ['unr','pbo','cwu','nmt','gldas','nldas','noah025']:
+	elif input_datasource not in ['unr','pbo','cwu','nmt','gldas','nldas','noah025','grace']:
 		print("Error! Invalid input datasource");
 		sys.exit(1);
 	else:

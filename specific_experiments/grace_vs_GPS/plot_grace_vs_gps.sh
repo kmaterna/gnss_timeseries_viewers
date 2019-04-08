@@ -6,11 +6,12 @@ latS=36.8
 latN=44.2
 
 datasource="pbo"
+hydro_type="grace"
 range="$lonW/$lonE/$latS/$latN"
 projection="M6.0i"  # used for medium experiments.
-ifile="grace_vs_gps_amps_"$datasource".txt"
-output1="grace_vs_gps_vert"$datasource".ps"
-output2="grace_vs_gps_east"$datasource".ps"
+ifile=$hydro_type"_vs_gps_amps_"$datasource".txt"
+output1=$hydro_type"_vs_gps_vert"$datasource".ps"
+output2=$hydro_type"_vs_gps_east"$datasource".ps"
 
 legend_text='AnnualAmp(Vert)'
 legend_unit='mm'
@@ -36,6 +37,7 @@ awk '{print $1, $2, $8}' $ifile | gmt psxy -R$range -J$projection -Sh0.25 -Campt
 gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-1.5/1.5 -B$legend_labelstep:$legend_text:/:$legend_unit: -G$legend_min/$legend_max -Camptopo.cpt -O -K -P >> $output1
 
 # gmt pslegend -R$range -J$projection -O -K -P <<EOF >> $output1
+# This is my wishlist
 # EOF
 
 
