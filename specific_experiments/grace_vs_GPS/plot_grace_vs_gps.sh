@@ -6,7 +6,7 @@ latS=36.8
 latN=44.2
 
 datasource="pbo"
-hydro_type="grace"
+hydro_type="gldas"
 range="$lonW/$lonE/$latS/$latN"
 projection="M6.0i"  # used for medium experiments.
 ifile=$hydro_type"_vs_gps_amps_"$datasource".txt"
