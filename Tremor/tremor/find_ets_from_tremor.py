@@ -9,6 +9,9 @@ import tremor_tools
 def find_ets(tremor):
 	start_time=dt.datetime.strptime('20120301',"%Y%m%d");
 	end_time=dt.datetime.strptime('20181101',"%Y%m%d");
+	EQtimes=[];
+	EQtimes.append(dt.datetime.strptime("20140310","%Y%m%d"));
+	EQtimes.append(dt.datetime.strptime("20161208","%Y%m%d"));
 	box_interest=[-123.3,-123,40.2,40.8];
 
 	tremor=tremor_tools.restrict_to_box(tremor, box_interest, start_time, end_time);
@@ -40,6 +43,9 @@ def find_ets(tremor):
 
 	plt.figure();
 	plt.plot_date(dts,rate,linestyle='-',marker=None,color='b',linewidth=4);
+	plt.plot_date([EQtimes[0],EQtimes[0]],[0,70],'--r');
+	plt.plot_date([EQtimes[1],EQtimes[1]],[0,70],'--r');
+	plt.ylim([0,np.max(rate)+2]);
 	plt.xlabel('Time',fontsize=20);
 	plt.ylabel('Daily Tremor Rates',fontsize=20);
 	plt.grid(True);
