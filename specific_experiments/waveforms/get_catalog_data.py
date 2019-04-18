@@ -13,6 +13,7 @@ from obspy.clients.fdsn import Client
 import collections
 import sys
 import haversine
+from scipy import signal
 
 EQcat = collections.namedtuple('EQcat', ["time","lat","lon","mag","name"]);
 
@@ -88,6 +89,35 @@ def plot_many_eqs(st_total, catalog):
 	plt.savefig("many_eqs/waveforms_vel.png");
 	return;
 
+def plot_many_disps(st_total, catalog):
+	num_eqs=len(st_total);
+	num_plot_rows=int(np.ceil(num_eqs/2));
+
+	f, axarr = plt.subplots(num_plot_rows,2,sharex=True, figsize=(15,15));
+	for i in range(len(st_total)):
+		vert_index=np.mod(i,num_plot_rows);
+		horiz_index=int(np.round(i/num_eqs));		
+		st=st_total[i];
+		tr=st[0];  # the first trace
+		tr.integrate(method='cumtrapz');
+		df=tr.stats.sampling_rate;
+		npts=tr.stats.npts;
+		x=np.arange(0,npts/df,1.0/df);
+
+		st.filter("bandpass", freqmin=0.005, freqmax=0.5);
+
+		h1=axarr[vert_index, horiz_index].plot(x,st[0],label='E');
+		h2=axarr[vert_index, horiz_index].plot(x,st[1],label='N');
+		h3=axarr[vert_index, horiz_index].plot(x,st[2],label='U');
+		axarr[vert_index, horiz_index].set_ylim([-0.01, 0.01]);
+		axarr[vert_index, horiz_index].set_ylabel('Disp (m)');
+		axarr[vert_index, horiz_index].text(4000,0,catalog.name[i],fontsize=16);
+		
+	# axarr[vert_index, horiz_index].set_xlabel('Time (s)');
+	axarr[0, 0].set_title(station+' Records ' ,fontsize=20);
+	plt.savefig("many_eqs/waveforms_disp.png");
+	return;
+
 
 def plot_many_spectrograms(st_total, catalog):
 	# This will eventually be a spectrogram for each earthquake. 
@@ -99,13 +129,18 @@ def plot_many_spectrograms(st_total, catalog):
 		horiz_index=int(np.round(i/num_eqs));
 		st=st_total[i];
 		tr=st[0];  # the first trace
+		data=tr.data;
 		df=tr.stats.sampling_rate;
 		npts=tr.stats.npts;
 		x=np.arange(0,npts/df,1.0/df);
-		# st.filter("bandpass", freqmin=0.5, freqmax=1.0);
-		h1=axarr[vert_index,horiz_index].plot(x,st[0],label='E');
-		axarr[vert_index, horiz_index].text(0,0,catalog.name[i],fontsize=16);
-		axarr[vert_index, horiz_index].set_ylim([-0.005, 0.005]);
+
+		f, t, Sxx = signal.spectrogram(data, df);
+		colormax=0.00000001;
+		axarr[vert_index][horiz_index].pcolormesh(t, f, Sxx, cmap='RdBu',vmin=-colormax, vmax=colormax);
+		axarr[vert_index, horiz_index].text(0,0.02,catalog.name[i],fontsize=16);
+		axarr[vert_index, horiz_index].set_yscale('log');
+		axarr[vert_index, horiz_index].set_ylim([0.01, 10.0]);
+		axarr[vert_index, horiz_index].set_xlim([-100, 3500]);
 	axarr[0,0].set_title(station+' Records ' ,fontsize=20);
 	plt.savefig("many_eqs/spectra.png");
 	return;	
@@ -117,6 +152,7 @@ if __name__=="__main__":
 	# write_obspy_data(catalog, station, client, num_minutes, data_dir);
 	st_total = read_obspy_data(catalog, station, data_dir);
 	# plot_many_eqs(st_total, catalog);
+	# plot_many_disps(st_total, catalog);
 	plot_many_spectrograms(st_total, catalog);
 
 

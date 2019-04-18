@@ -36,3 +36,4 @@ specific_experiments/Type_of_Seasonal/grace_box.py
 *.docx
 *.doc
 specific_experiments/accelerations/notes
+*.mseed
