@@ -23,7 +23,8 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type,
 	STL_dir="../../GPS_POS_DATA/STL_models/",
 	gldas_dir="../../GPS_POS_DATA/PBO_Hydro/GLDAS/",
 	nldas_dir="../../GPS_POS_DATA/PBO_Hydro/NLDAS/", 
-	lakes_dir="../../GPS_POS_DATA/Lake_loading/"):
+	lakes_dir="../../GPS_POS_DATA/Lake_loading/",
+	lsdm_dir="../../GPS_POS_DATA/PBO_Hydro/LSDM/"):
 	# Once we have removed earthquake steps... 
 	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
 	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 
@@ -65,6 +66,9 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type,
 
 		elif seasonals_type=='gldas':
 			trend_out=remove_seasonals_by_hydro(Data, gldas_dir);
+
+		elif seasonals_type=='lsdm':
+			trend_out=remove_seasonals_by_german_load(Data, lsdm_dir);
 
 		elif seasonals_type=='oroville':
 			trend_out=remove_seasonals_by_lakes(Data, lakes_dir, 'oroville');
@@ -320,6 +324,58 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
 		dE_filt.append(gps_data.dE[i]-scale_factor*hydro_data.dE[i]);
 		dN_filt.append(gps_data.dN[i]-scale_factor*hydro_data.dN[i]);
 		dU_filt.append(gps_data.dU[i]-scale_factor*hydro_data.dU[i]);
+
+	# A Simple detrending
+	decyear = gps_ts_functions.get_float_times(gps_data.dtarray);
+	dE_detrended=np.zeros(np.shape(decyear)); dN_detrended=np.zeros(np.shape(decyear)); dU_detrended=np.zeros(np.shape(decyear));
+	east_coef=np.polyfit(decyear,dE_filt,1)[0];
+	for i in range(len(dE_filt)):
+		dE_detrended[i]=dE_filt[i]-east_coef*decyear[i] - (dE_filt[0]-east_coef*decyear[0]);	
+	north_coef=np.polyfit(decyear,dN_filt,1)[0];
+	for i in range(len(dN_filt)):
+		dN_detrended[i]=(dN_filt[i]-north_coef*decyear[i]) - (dN_filt[0]-north_coef*decyear[0]);
+	vert_coef=np.polyfit(decyear,dU_filt,1)[0];
+	for i in range(len(dU_filt)):
+		dU_detrended[i]=(dU_filt[i]-vert_coef*decyear[i]) - (dU_filt[0]-vert_coef*decyear[0]);
+
+	corrected_object=Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
+	return corrected_object;
+
+
+
+def remove_seasonals_by_german_load(Data, lsdm_dir):
+	station=Data.name;
+	files=glob.glob(lsdm_dir+station+'*.txt');
+
+	if len(files)>0:
+		filename=files[0];
+	else:
+		filename='';
+
+	try:
+		ifile=open(filename);
+		print("Opening file %s" % filename);	
+	except FileNotFoundError:
+		print("Error! LSDM file not found for %s" % Data.name);
+		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
+		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+		print("returning placeholder object");
+		return wimpyObj;  # 1 = error code. 
+
+	# Read the hydro model and pair it to the GPS
+	[hydro_data]=gps_io_functions.read_lsdm_file(filename);
+	
+	# Clean up and pair data
+	Data=gps_ts_functions.remove_nans(Data);
+	hydro_data=gps_ts_functions.remove_nans(hydro_data);  # this may or may not be necessary. 
+	[gps_data, hydro_data] = gps_ts_functions.pair_gps_model(Data, hydro_data);  # matched in terms of dtarray. 
+
+	#  Subtract the model from the data. 
+	dE_filt=[]; dN_filt=[]; dU_filt=[];
+	for i in range(len(gps_data.dtarray)):
+		dE_filt.append(gps_data.dE[i]-hydro_data.dE[i]);
+		dN_filt.append(gps_data.dN[i]-hydro_data.dN[i]);
+		dU_filt.append(gps_data.dU[i]-hydro_data.dU[i]);
 
 	# A Simple detrending
 	decyear = gps_ts_functions.get_float_times(gps_data.dtarray);

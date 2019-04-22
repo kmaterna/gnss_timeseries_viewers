@@ -209,6 +209,27 @@ def read_pbo_hydro_file(filename):
 	return [myData];
 
 
+def read_lsdm_file(filename):
+	# Useful for reading hydrology files from LSDM German loading product
+	# In the normal pipeline for this function, it is guaranteed to be given a real file. 
+	dtarray=[];
+	station_name=filename.split('/')[-1][0:4];
+	[lon,lat] = get_coordinates_for_stations([station_name], "../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt");  # format [lat, lon]	
+	[dts, dU, dN, dE] = np.loadtxt(filename,usecols=(0, 1, 2, 3),dtype={'names':('dts','dN','dE','dU'),'formats':('U10', np.float, np.float, np.float)}, skiprows=3, delimiter=',',unpack=True);
+	for i in range(len(dts)):
+		dtarray.append(dt.datetime.strptime(dts[i][0:10],"%Y-%m-%d"));
+	dN=[i*1000.0 for i in dN];
+	dE=[i*1000.0 for i in dE];
+	dU=[i*1000.0 for i in dU];	
+	Sn=[0.2 for i in range(len(dN))];
+	Se=[0.2 for i in range(len(dE))];
+	Su=[0.2 for i in range(len(dU))];
+	coords=[lon[0], lat[0]];
+	myData = Timeseries(name=station_name,coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
+	return [myData];
+
+
+
 def get_coordinates_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"):
 	lon=[];
 	lat=[];

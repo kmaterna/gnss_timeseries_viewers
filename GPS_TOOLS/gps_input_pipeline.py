@@ -34,6 +34,8 @@ def get_station_data(station, datasource, refframe="NA"):
 		[myData, offset_obj, eq_obj] = get_noah025(station);  # NOAH0.25
 	elif datasource=='grace':
 		[myData, offset_obj, eq_obj] = get_grace(station);  # GRACE model
+	elif datasource=='lsdm':
+		[myData, offset_obj, eq_obj] = get_lsdm(station);  # LSDM model
 	elif datasource=='error':
 		return [ [], [], [] ];  # Error code. 
 	return [myData, offset_obj, eq_obj];
@@ -128,6 +130,12 @@ def get_grace(station):
 	Offset = get_empty_offsets();
 	return [myData, Offset, Offset];
 
+def get_lsdm(station):
+	filename="../../GPS_POS_DATA/PBO_Hydro/LSDM/"+station+"_LSDM_hydro.txt.txt";
+	[myData] = gps_io_functions.read_lsdm_file(filename);
+	Offset = get_empty_offsets();
+	return [myData, Offset, Offset];	
+
 def get_empty_offsets():
 	Offset = Offsets(e_offsets=[], n_offsets=[], u_offsets=[], evdts=[]);
 	return Offset;
@@ -152,6 +160,7 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	nldas_filename="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"+station.lower()+"_noah125_nldas2.hyd";
 	noah025_filename="../../GPS_POS_DATA/PBO_Hydro/NOAH025/"+station+"_NOAH025.hyd";
 	grace_filename="../../GPS_POS_DATA/GRACE_loading_model/scaled_"+station+"_PREM_model_ts.txt";
+	lsdm_filename="../../GPS_POS_DATA/PBO_Hydro/LSDM/"+station+"_LSDM_hydro.txt.txt";
 
 	# Setting datasource label
 	# Getting ready to return an empty object if we don't find the right file. 
@@ -192,6 +201,11 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	elif input_datasource=='noah025' and not os.path.isfile(noah025_filename):
 		print("Error! Cannot find "+station+" in NOAH025 database. Returning empty object.");
 		datasource='error';
+	elif input_datasource=='lsdm' and os.path.isfile(lsdm_filename):
+		datasource='lsdm';
+	elif input_datasource=='lsdm' and not os.path.isfile(lsdm_filename):
+		print("Error! Cannot find "+station+" in LSDM database. Returning empty object.");
+		datasource='error';		
 	elif input_datasource=='grace' and os.path.isfile(grace_filename):
 		datasource='grace';
 	elif input_datasource=='grace' and not os.path.isfile(grace_filename):

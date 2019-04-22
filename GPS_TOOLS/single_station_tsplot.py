@@ -169,6 +169,9 @@ def get_figure_name(MyParams):
 		if MyParams.seasonals_type=="gldas":
 			savename=savename+"_gldas";
 			title=title+' by GLDAS'	
+		if MyParams.seasonals_type=="lsdm":
+			savename=savename+"_lsdm";
+			title=title+' by LSDM'				
 		if MyParams.seasonals_type=="shasta":
 			savename=savename+"_shasta";
 			title=title+' by Shasta';

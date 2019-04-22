@@ -16,6 +16,7 @@ GPS_TOOLS/_stl_simple.m
 Manuscript_Draft/*
 ts_viewing/*
 specific_experiments/Type_of_Seasonal/grace_box.py
+*_remote
 *_bdr
 *.pdf
 *.ps

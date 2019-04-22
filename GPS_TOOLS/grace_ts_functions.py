@@ -32,14 +32,14 @@ def input_GRACE_individual_station(filename):
 	u=np.array(u); v=np.array(v); w=np.array(w);
 	grace_t = get_grace_datetimes(filename);
 	grace_t = [i+dt.timedelta(days=15) for i in grace_t];  # we add 15 days to plot the GRACE data at the center of the bin. 
-	grace_decyear=get_float_times(grace_t);  # the decimal years of all the grace obs points. 
+	grace_decyear=gps_ts_functions.get_float_times(grace_t);  # the decimal years of all the grace obs points. 
 	myGRACE_TS=GRACE_TS_Array(name=station_name, coords=[lon[0], lat[0]],decyear=grace_decyear, dtarray=grace_t, u=u, v=v, w=w);
 	return myGRACE_TS;
 
 
 def pair_GPSGRACE(GPS_TS, GRACE_TS):
 	# This resamples the GRACE data to match GPS that is within the range of GRACE, and forms a common time axis. 
-	gps_decyear=get_float_times(GPS_TS.dtarray)
+	gps_decyear=gps_ts_functions.get_float_times(GPS_TS.dtarray)
 	decyear=[]; dt=[]; north_gps=[]; east_gps=[]; vert_gps=[]; N_err=[]; E_err=[]; V_err=[]; u=[]; v=[]; w=[];
 	for i in range(len(GPS_TS.dtarray)): # this if-statement is happening because GPS is more current than GRACE
 		if GPS_TS.dtarray[i]>min(GRACE_TS.dtarray) and GPS_TS.dtarray[i]<max(GRACE_TS.dtarray):
@@ -69,15 +69,6 @@ def get_grace_datetimes(tsfile):
 		dateobjects.append(myobject);
 	ifile.close();
 	return dateobjects;
-
-def get_float_times(datetimes):
-	floats=[];
-	for item in datetimes:
-		temp=item.strftime("%Y %j");
-		temp=temp.split();
-		floats.append(float(temp[0])+float(temp[1])/366.0);
-	return floats;
-
 
 
 def get_slope(Data0, starttime=[], endtime=[]):
@@ -117,7 +108,7 @@ def get_slope(Data0, starttime=[], endtime=[]):
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
 
 	# doing the inversion here, since it's only one line.
-	decyear=get_float_times(mydtarray);
+	decyear=gps_ts_functions.get_float_times(mydtarray);
 	east_coef=np.polyfit(decyear,myeast,1);
 	north_coef=np.polyfit(decyear,mynorth,1);
 	vert_coef=np.polyfit(decyear,myup,1);
@@ -174,7 +165,7 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[]):
 		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
 		return [east_params, north_params, up_params];
 
-	decyear=get_float_times(mydtarray);	
+	decyear=gps_ts_functions.get_float_times(mydtarray);	
 	east_params_unordered=gps_ts_functions.invert_linear_annual_semiannual(decyear,myeast);
 	north_params_unordered=gps_ts_functions.invert_linear_annual_semiannual(decyear, mynorth);
 	vert_params_unordered=gps_ts_functions.invert_linear_annual_semiannual(decyear, myup);
