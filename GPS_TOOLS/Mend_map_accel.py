@@ -39,7 +39,7 @@ def driver(EQcoords, size, network, refframe, fit_type, deltat1, deltat2, expnam
 def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=[]):
 	outdir=network+"_"+fit_type+"_"+refframe;
 	subprocess.call('mkdir -p '+outdir,shell=True);
-	if network=='nldas' or network=='gldas' or network=='noah025':
+	if network=='nldas' or network=='gldas' or network=='noah025' or network=='lsdm':
 		network='pbo';  # This is just for finding which stations we will search for. 
 
 	time_after_start_date=7;  # optionally, wait a while after the start day. 

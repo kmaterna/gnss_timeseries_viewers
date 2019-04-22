@@ -211,7 +211,7 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	elif input_datasource=='grace' and not os.path.isfile(grace_filename):
 		print("Error! Cannot find "+station+" in GRACE database. Returning empty object.");
 		datasource='error';		
-	elif input_datasource not in ['unr','pbo','cwu','nmt','gldas','nldas','noah025','grace']:
+	elif input_datasource not in ['unr','pbo','cwu','nmt','gldas','nldas','noah025','grace','lsdm']:
 		print("Error! Invalid input datasource");
 		sys.exit(1);
 	else:

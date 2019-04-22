@@ -20,6 +20,7 @@ def compare_single_station(station):
 	outputs(station, Time_periods, EQs, gldas, nldas, grace, lsdm, gps, gldas_slopes, nldas_slopes, grace_slopes, lsdm_slopes, gps_slopes);
 	return;
 
+
 def configure_times():
 	T1="20060108:20100109"  # earthquake was 20050615. We want to skip six months
 	T2="20100710:20140309"  # earthquake was 20100110. We want to skip six months. 
@@ -43,12 +44,13 @@ def inputs(station):
 	[gps,offset_obj,EQtimes] = gps_input_pipeline.get_station_data(station,'pbo');
 	gps=offsets.remove_offsets(gps, offset_obj);
 	gps=offsets.remove_offsets(gps, EQtimes);
-	gps=gps_seasonal_removals.make_detrended_ts(gps,0,'lssq');  # removing trend
+	gps=gps_seasonal_removals.make_detrended_ts(gps,0,'lssq');  # removing trend only
 	return [gldas, nldas, grace, lsdm, gps];
-
 
 def compute(ts_obj, Time_periods):
 	slope_collection=[]; 
+	if ts_obj==[]:
+		return [];
 	for i in range(len(Time_periods)):
 		start_time=dt.datetime.strptime(Time_periods[i].split(":")[0],"%Y%m%d");
 		end_time=dt.datetime.strptime(Time_periods[i].split(":")[1],"%Y%m%d");
@@ -64,47 +66,78 @@ def outputs(station, Time_periods, EQs, gldas, nldas, grace, lsdm, gps, gldas_sl
 	markersize=0.9;
 	f,axarr=plt.subplots(3,1,figsize=(14,10),sharex=True);
 
-	axarr[0].plot_date(gldas.dtarray,gldas.dE,'--k',label='GLDAS');
-	axarr[0].plot_date(nldas.dtarray,nldas.dE,'--r',label='NLDAS');
-	axarr[0].plot_date(grace.dtarray,grace.dE,'--b',label='GRACE');
-	axarr[0].plot_date(lsdm.dtarray,lsdm.dE,'--g',label='LSDM');
-	axarr[0].plot_date(gps.dtarray, gps.dE, '.',color='gray',markersize=markersize,label='GPS');
+	# Dealing with error handling (you will end up with [] if there's been an error)
+	plot_gldas=0; plot_nldas=0; plot_grace=0; plot_lsdm=0; 
+	if gldas != []:
+		plot_gldas=1; 
+	if nldas != []:
+		plot_nldas=1; 
+	if grace != []:
+		plot_grace=1;
+	if lsdm != []:
+		plot_lsdm=1; 
+
+	# First plot: East component
+	# Plotting that gets done no matter what. 
+	axarr[0].plot_date(gps.dtarray, gps.dE, '.',color='gray',markersize=markersize,label='GPS');		
 	axarr[0].set_xlim([start_time, end_time]);
 	axarr[0].set_ylim([-5, 5]);
 	axarr[0].set_ylabel('East (mm)');
+	axarr[0].set_title(station+' loading models');
+	for i in range(len(EQs)):
+		lims = axarr[0].get_ylim();
+		axarr[0].plot_date([EQs[i],EQs[i]],[lims[0], lims[1]],'g');
+
+	if plot_gldas:
+		axarr[0].plot_date(gldas.dtarray,gldas.dE,'--k',label='GLDAS');
+		print("Plotting GLDAS");
+	if plot_nldas:
+		axarr[0].plot_date(nldas.dtarray,nldas.dE,'--r',label='NLDAS');
+		print("Plotting NLDAS");
+	if plot_grace:
+		axarr[0].plot_date(grace.dtarray,grace.dE,'--b',label='GRACE');
+		print("Plotting GRACE");
+	if plot_lsdm:
+		axarr[0].plot_date(lsdm.dtarray,lsdm.dE,'--g',label='LSDM');
+		print("Plotting LSDM");
+	
+
 	# Slope annotations
 	for i in range(len(Time_periods)):
 		start=dt.datetime.strptime(Time_periods[i].split(":")[0],"%Y%m%d");
 		end=dt.datetime.strptime(Time_periods[i].split(":")[1],"%Y%m%d");
-		floats = gps_ts_functions.get_float_times([start, end]);
-		end_pos=offsets[i]+(floats[1]-floats[0])*gldas_slopes[i];
-		axarr[0].plot([start, end],[offsets[i], end_pos],'k');
-		end_pos=offsets[i]+(floats[1]-floats[0])*nldas_slopes[i];
-		axarr[0].plot([start, end],[offsets[i], end_pos],'r');
-		end_pos=offsets[i]+(floats[1]-floats[0])*grace_slopes[i];
-		axarr[0].plot([start, end],[offsets[i], end_pos],'b');
-		end_pos=offsets[i]+(floats[1]-floats[0])*lsdm_slopes[i];
-		axarr[0].plot([start, end],[offsets[i], end_pos],'g');		
+		floats = gps_ts_functions.get_float_times([start, end]);		
+		if plot_gldas:
+			end_pos=offsets[i]+(floats[1]-floats[0])*gldas_slopes[i];
+			axarr[0].plot([start, end],[offsets[i], end_pos],'k');		
+		if plot_nldas:
+			end_pos=offsets[i]+(floats[1]-floats[0])*nldas_slopes[i];
+			axarr[0].plot([start, end],[offsets[i], end_pos],'r');
+		if plot_grace:
+			end_pos=offsets[i]+(floats[1]-floats[0])*grace_slopes[i];
+			axarr[0].plot([start, end],[offsets[i], end_pos],'b');
+		if plot_lsdm:
+			end_pos=offsets[i]+(floats[1]-floats[0])*lsdm_slopes[i];
+			axarr[0].plot([start, end],[offsets[i], end_pos],'g');		
 		end_pos=offsets[i]+(floats[1]-floats[0])*gps_slopes[i];
 		axarr[0].plot([start, end],[offsets[i], end_pos],color='gray');	
-	for i in range(len(EQs)):
-		lims = axarr[0].get_ylim();
-		axarr[0].plot_date([EQs[i],EQs[i]],[lims[0], lims[1]],'g');
+	
 	for i in range(len(Time_periods)-1):
 		end=dt.datetime.strptime(Time_periods[i].split(":")[1],"%Y%m%d");
 		vertpos=2;
-		axarr[0].text(end, vertpos, "%.3f mm/yr" % (gldas_slopes[i+1]-gldas_slopes[i]) ,color='k');
-		axarr[0].text(end, vertpos-0.6, "%.3f mm/yr" % (nldas_slopes[i+1]-nldas_slopes[i]) ,color='r');
-		axarr[0].text(end, vertpos-1.2, "%.3f mm/yr" % (grace_slopes[i+1]-grace_slopes[i]) ,color='b');
-		axarr[0].text(end, vertpos-1.8, "%.3f mm/yr" % (lsdm_slopes[i+1]-lsdm_slopes[i]) ,color='g');
-		axarr[0].text(end, vertpos-2.4, "%.3f mm/yr" % (gps_slopes[i+1]-gps_slopes[i]) ,color='gray');
+		axarr[0].text(end, vertpos+0.6, "%.3f mm/yr" % (gps_slopes[i+1]-gps_slopes[i]) ,color='gray');
+		if plot_gldas: 
+			axarr[0].text(end, vertpos, "%.3f mm/yr" % (gldas_slopes[i+1]-gldas_slopes[i]) ,color='k');
+		if plot_nldas: 
+			axarr[0].text(end, vertpos-0.6, "%.3f mm/yr" % (nldas_slopes[i+1]-nldas_slopes[i]) ,color='r');
+		if plot_grace: 
+			axarr[0].text(end, vertpos-1.2, "%.3f mm/yr" % (grace_slopes[i+1]-grace_slopes[i]) ,color='b');
+		if plot_lsdm: 
+			axarr[0].text(end, vertpos-1.8, "%.3f mm/yr" % (lsdm_slopes[i+1]-lsdm_slopes[i]) ,color='g');		
 	axarr[0].legend();
-	axarr[0].set_title(station+' loading models');
 
-	axarr[1].plot_date(gldas.dtarray,gldas.dN,'--k',label='GLDAS');
-	axarr[1].plot_date(nldas.dtarray,nldas.dN,'--r',label='NLDAS');
-	axarr[1].plot_date(grace.dtarray,grace.dN,'--b',label='GRACE');
-	axarr[1].plot_date(lsdm.dtarray,lsdm.dN,'--g',label='LSDM');
+
+	# Second plot
 	axarr[1].plot_date(gps.dtarray, gps.dN, '.',color='gray',markersize=markersize,label='GPS');
 	axarr[1].set_xlim([start_time, end_time]);
 	axarr[1].set_ylim([-5, 5]);
@@ -112,12 +145,16 @@ def outputs(station, Time_periods, EQs, gldas, nldas, grace, lsdm, gps, gldas_sl
 	for i in range(len(EQs)):
 		lims = axarr[1].get_ylim();
 		axarr[1].plot_date([EQs[i],EQs[i]],[lims[0], lims[1]],'g');	
+	if plot_gldas:
+		axarr[1].plot_date(gldas.dtarray,gldas.dN,'--k',label='GLDAS');
+	if plot_nldas:
+		axarr[1].plot_date(nldas.dtarray,nldas.dN,'--r',label='NLDAS');
+	if plot_grace:
+		axarr[1].plot_date(grace.dtarray,grace.dN,'--b',label='GRACE');
+	if plot_lsdm:
+		axarr[1].plot_date(lsdm.dtarray,lsdm.dN,'--g',label='LSDM');
 
 
-	axarr[2].plot_date(gldas.dtarray,gldas.dU,'--k',label='GLDAS');
-	axarr[2].plot_date(nldas.dtarray,nldas.dU,'--r',label='NLDAS');
-	axarr[2].plot_date(grace.dtarray,grace.dU,'--b',label='GRACE');
-	axarr[2].plot_date(lsdm.dtarray,lsdm.dU,'--g',label='LSDM');
 	axarr[2].plot_date(gps.dtarray, gps.dU, '.',color='gray',markersize=markersize,label='GPS');
 	axarr[2].set_xlim([start_time, end_time]);
 	axarr[2].set_ylim([-20, 20]);
@@ -125,11 +162,19 @@ def outputs(station, Time_periods, EQs, gldas, nldas, grace, lsdm, gps, gldas_sl
 	for i in range(len(EQs)):
 		lims = axarr[2].get_ylim();
 		axarr[2].plot_date([EQs[i],EQs[i]],[lims[0], lims[1]],'g');	
+	if plot_gldas:
+		axarr[2].plot_date(gldas.dtarray,gldas.dU,'--k',label='GLDAS');
+	if plot_nldas:
+		axarr[2].plot_date(nldas.dtarray,nldas.dU,'--r',label='NLDAS');
+	if plot_grace:
+		axarr[2].plot_date(grace.dtarray,grace.dU,'--b',label='GRACE');
+	if plot_lsdm:
+		axarr[2].plot_date(lsdm.dtarray,lsdm.dU,'--g',label='LSDM');		
 
 	plt.savefig("GRACEvsLDAS/"+station+"_model_compare.eps");
 	return;
 
 
 if __name__=="__main__":
-	station="P167";
+	station="P204";
 	compare_single_station(station);
