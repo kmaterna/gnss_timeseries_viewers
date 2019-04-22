@@ -38,7 +38,7 @@ def inputs(station):
 	[gldas,_,_] = gps_input_pipeline.get_station_data(station,'gldas');
 	[nldas,_,_] = gps_input_pipeline.get_station_data(station,'nldas');
 	[grace,_,_] = gps_input_pipeline.get_station_data(station,'grace');
-	[gps,offset_obj,EQtimes] = gps_input_pipeline.get_station_data(station,'pbo');
+	[gps,offset_obj,EQtimes] = gps_input_pipeline.get_station_data(station,'unr');
 	gps=offsets.remove_offsets(gps, offset_obj);
 	gps=offsets.remove_offsets(gps, EQtimes);
 	gps=gps_seasonal_removals.make_detrended_ts(gps,0,'lssq');  # removing trend
@@ -56,7 +56,7 @@ def compute(ts_obj, Time_periods):
 
 
 def outputs(station, Time_periods, EQs, gldas, nldas, grace, gps, gldas_slopes, nldas_slopes, grace_slopes, gps_slopes):
-	start_time=dt.datetime.strptime("20120101","%Y%m%d");
+	start_time=dt.datetime.strptime("20060101","%Y%m%d");
 	end_time = dt.datetime.strptime("20181201","%Y%m%d");
 	offsets=[0,0,-1.5,1.5];  # one for each time period (for plotting only)
 	markersize=0.9;
@@ -123,5 +123,5 @@ def outputs(station, Time_periods, EQs, gldas, nldas, grace, gps, gldas_slopes, 
 
 
 if __name__=="__main__":
-	station="P310";
+	station="P324";
 	compare_single_station(station);

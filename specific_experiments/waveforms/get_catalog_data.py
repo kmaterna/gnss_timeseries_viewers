@@ -1,4 +1,5 @@
 # How does a regional M6.6 compare to Tohoku? 
+# April 2019
 
 # Main tasks: 
 # Read catalog
@@ -24,7 +25,9 @@ def configure():
 	station_coords=(40.2022, -123.7086); # kmr
 	num_minutes=90.0;
 	data_dir="many_eqs/data/";
-	return [input_file, station, station_coords, client, num_minutes, data_dir];
+	bandpass=[0.5, 1.0];
+	# bandpass=[0.02, 0.05];
+	return [input_file, station, station_coords, client, num_minutes, bandpass, data_dir];
 
 def read_input_file(input_file):
 	ifile=open(input_file,'r');
@@ -59,9 +62,11 @@ def read_obspy_data(catalog, station, data_dir):
 	for i in range(len(catalog.time)):
 		st = read(data_dir+station+"_"+catalog.name[i]+".mseed");
 		st_total.append(st);
+		# if i==2: break;
 	return st_total;
 
-def plot_many_eqs(st_total, catalog):
+def plot_many_eqs(st_total, catalog, bandpass):
+	print("Making velocity plots");
 	num_eqs=len(st_total);
 	num_plot_rows=int(np.ceil(num_eqs/2));
 
@@ -75,7 +80,7 @@ def plot_many_eqs(st_total, catalog):
 		npts=tr.stats.npts;
 		x=np.arange(0,npts/df,1.0/df);
 
-		st.filter("bandpass", freqmin=0.1, freqmax=1.5);
+		st.filter("bandpass", freqmin=bandpass[0], freqmax=bandpass[1]);
 
 		h1=axarr[vert_index, horiz_index].plot(x,st[0],label='E');
 		h2=axarr[vert_index, horiz_index].plot(x,st[1],label='N');
@@ -85,11 +90,14 @@ def plot_many_eqs(st_total, catalog):
 		axarr[vert_index, horiz_index].text(4000,0,catalog.name[i],fontsize=16);
 		
 	# axarr[vert_index, horiz_index].set_xlabel('Time (s)');
-	axarr[0, 0].set_title(station+' Records ' ,fontsize=20);
-	plt.savefig("many_eqs/waveforms_vel.png");
+	axarr[0, 0].set_title(station+' Records from %.3f to %.3f Hz'  % (bandpass[0], bandpass[1]),fontsize=20);
+	textlabel="%.2f_%.2f" % (bandpass[0], bandpass[1]);
+	plt.savefig("many_eqs/waveforms_vel_"+textlabel+".png");
 	return;
 
-def plot_many_disps(st_total, catalog):
+
+def plot_many_disps(st_total, catalog, bandpass):
+	print("Making displacement plots. ")
 	num_eqs=len(st_total);
 	num_plot_rows=int(np.ceil(num_eqs/2));
 
@@ -104,7 +112,7 @@ def plot_many_disps(st_total, catalog):
 		npts=tr.stats.npts;
 		x=np.arange(0,npts/df,1.0/df);
 
-		st.filter("bandpass", freqmin=0.005, freqmax=0.5);
+		st.filter("bandpass", freqmin=bandpass[0], freqmax=bandpass[1]);
 
 		h1=axarr[vert_index, horiz_index].plot(x,st[0],label='E');
 		h2=axarr[vert_index, horiz_index].plot(x,st[1],label='N');
@@ -114,13 +122,16 @@ def plot_many_disps(st_total, catalog):
 		axarr[vert_index, horiz_index].text(4000,0,catalog.name[i],fontsize=16);
 		
 	# axarr[vert_index, horiz_index].set_xlabel('Time (s)');
-	axarr[0, 0].set_title(station+' Records ' ,fontsize=20);
-	plt.savefig("many_eqs/waveforms_disp.png");
+	axarr[0, 0].set_title(station+' Records from %.3f to %.3f Hz'  % (bandpass[0], bandpass[1]),fontsize=20);
+	textlabel="%.2f_%.2f" % (bandpass[0], bandpass[1]);
+	plt.savefig("many_eqs/waveforms_disp_"+textlabel+".png");
 	return;
 
 
+
 def plot_many_spectrograms(st_total, catalog):
-	# This will eventually be a spectrogram for each earthquake. 
+	# This will eventually be a spectrogram for each earthquake.
+	print("Making spectrogram."); 
 	num_eqs=len(st_total);
 	num_plot_rows=int(np.ceil(num_eqs/2));
 	f, axarr = plt.subplots(num_plot_rows,2,sharex=True, figsize=(15,15));  # a 2xn grid of plots
@@ -134,12 +145,17 @@ def plot_many_spectrograms(st_total, catalog):
 		npts=tr.stats.npts;
 		x=np.arange(0,npts/df,1.0/df);
 
-		f, t, Sxx = signal.spectrogram(data, df);
-		colormax=0.00000001;
-		axarr[vert_index][horiz_index].pcolormesh(t, f, Sxx, cmap='RdBu',vmin=-colormax, vmax=colormax);
-		axarr[vert_index, horiz_index].text(0,0.02,catalog.name[i],fontsize=16);
+		f, t, Sxx = signal.spectrogram(data, fs=df);
+		Sxx=np.log(Sxx);
+
+		colormax=-13;
+		axarr[vert_index][horiz_index].pcolormesh(t, f, Sxx, cmap='Reds',vmin=-20, vmax=colormax);
+		# White in middle: 'RdBu'
+		# White on edges: 'Blues'
+
+		axarr[vert_index, horiz_index].text(0,0.22,catalog.name[i],fontsize=16);
 		axarr[vert_index, horiz_index].set_yscale('log');
-		axarr[vert_index, horiz_index].set_ylim([0.01, 10.0]);
+		axarr[vert_index, horiz_index].set_ylim([0.2, 50.0]);
 		axarr[vert_index, horiz_index].set_xlim([-100, 3500]);
 	axarr[0,0].set_title(station+' Records ' ,fontsize=20);
 	plt.savefig("many_eqs/spectra.png");
@@ -147,13 +163,13 @@ def plot_many_spectrograms(st_total, catalog):
 
 
 if __name__=="__main__":
-	[input_file, station, station_coords, client, num_minutes, data_dir] = configure();
+	[input_file, station, station_coords, client, num_minutes, bandpass, data_dir] = configure();
 	catalog = read_input_file(input_file);
 	# write_obspy_data(catalog, station, client, num_minutes, data_dir);
 	st_total = read_obspy_data(catalog, station, data_dir);
-	# plot_many_eqs(st_total, catalog);
-	# plot_many_disps(st_total, catalog);
-	plot_many_spectrograms(st_total, catalog);
+	plot_many_eqs(st_total, catalog, bandpass);
+	plot_many_disps(st_total, catalog, bandpass);
+	# plot_many_spectrograms(st_total, catalog);
 
 
 
