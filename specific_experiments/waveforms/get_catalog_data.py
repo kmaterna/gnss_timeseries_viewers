@@ -25,8 +25,8 @@ def configure():
 	station_coords=(40.2022, -123.7086); # kmr
 	num_minutes=90.0;
 	data_dir="many_eqs/data/";
-	bandpass=[0.5, 1.0];
-	# bandpass=[0.02, 0.05];
+	bandpass=[0.1, 1.5];
+	# bandpass=[0.01, 0.05];
 	return [input_file, station, station_coords, client, num_minutes, bandpass, data_dir];
 
 def read_input_file(input_file):
@@ -67,7 +67,7 @@ def read_obspy_data(catalog, station, data_dir):
 
 def plot_many_eqs(st_total, catalog, bandpass):
 	print("Making velocity plots");
-	num_eqs=len(st_total);
+	num_eqs=len(st_total)-0.01;
 	num_plot_rows=int(np.ceil(num_eqs/2));
 
 	f, axarr = plt.subplots(num_plot_rows,2,sharex=True, figsize=(15,15));
@@ -98,7 +98,7 @@ def plot_many_eqs(st_total, catalog, bandpass):
 
 def plot_many_disps(st_total, catalog, bandpass):
 	print("Making displacement plots. ")
-	num_eqs=len(st_total);
+	num_eqs=len(st_total)-0.01;
 	num_plot_rows=int(np.ceil(num_eqs/2));
 
 	f, axarr = plt.subplots(num_plot_rows,2,sharex=True, figsize=(15,15));
@@ -132,7 +132,7 @@ def plot_many_disps(st_total, catalog, bandpass):
 def plot_many_spectrograms(st_total, catalog):
 	# This will eventually be a spectrogram for each earthquake.
 	print("Making spectrogram."); 
-	num_eqs=len(st_total);
+	num_eqs=len(st_total)-0.01;
 	num_plot_rows=int(np.ceil(num_eqs/2));
 	f, axarr = plt.subplots(num_plot_rows,2,sharex=True, figsize=(15,15));  # a 2xn grid of plots
 	for i in range(len(st_total)):
@@ -140,6 +140,9 @@ def plot_many_spectrograms(st_total, catalog):
 		horiz_index=int(np.round(i/num_eqs));
 		st=st_total[i];
 		tr=st[0];  # the first trace
+
+		# tr.integrate(method='cumtrapz');  # This only happens when we do displacement spectra
+		
 		data=tr.data;
 		df=tr.stats.sampling_rate;
 		npts=tr.stats.npts;
@@ -153,10 +156,12 @@ def plot_many_spectrograms(st_total, catalog):
 		# White in middle: 'RdBu'
 		# White on edges: 'Blues'
 
-		axarr[vert_index, horiz_index].text(0,0.22,catalog.name[i],fontsize=16);
+		axarr[vert_index, horiz_index].text(0,18.22,catalog.name[i]+", "+catalog.time[i][0:10],fontsize=16);
 		axarr[vert_index, horiz_index].set_yscale('log');
 		axarr[vert_index, horiz_index].set_ylim([0.2, 50.0]);
 		axarr[vert_index, horiz_index].set_xlim([-100, 3500]);
+		axarr[num_plot_rows-1][0].set_xlabel('Time (s)',fontsize=16);
+		axarr[num_plot_rows-1][1].set_xlabel('Time (s)',fontsize=16);
 	axarr[0,0].set_title(station+' Records ' ,fontsize=20);
 	plt.savefig("many_eqs/spectra.png");
 	return;	
@@ -167,9 +172,9 @@ if __name__=="__main__":
 	catalog = read_input_file(input_file);
 	# write_obspy_data(catalog, station, client, num_minutes, data_dir);
 	st_total = read_obspy_data(catalog, station, data_dir);
-	plot_many_eqs(st_total, catalog, bandpass);
-	plot_many_disps(st_total, catalog, bandpass);
-	# plot_many_spectrograms(st_total, catalog);
+	# plot_many_eqs(st_total, catalog, bandpass);
+	# plot_many_disps(st_total, catalog, bandpass);
+	plot_many_spectrograms(st_total, catalog);
 
 
 
