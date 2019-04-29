@@ -288,7 +288,7 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
 	except FileNotFoundError:
 		print("Error! Hydro file not found for %s" % Data.name);
 		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
-		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 		print("returning placeholder object");
 		return wimpyObj;  # 1 = error code. 
 
@@ -308,7 +308,7 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
 		if hydro_amp == 0.0:
 			print("ERROR! NLDAS amplitude is exactly 0!!  You should probably fix this. ");
 			placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
-			wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+			wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 			print("returning placeholder object");
 			return wimpyObj;  # 1 = error code. 			
 		scale_factor=gps_amp/hydro_amp;
@@ -358,7 +358,7 @@ def remove_seasonals_by_german_load(Data, lsdm_dir):
 	except FileNotFoundError:
 		print("Error! LSDM file not found for %s" % Data.name);
 		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
-		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 		print("returning placeholder object");
 		return wimpyObj;  # 1 = error code. 
 
@@ -402,7 +402,7 @@ def remove_seasonals_by_lakes(Data, lakes_dir, lake_name):
 	else:
 		print("Error! Lake %s file not found for %s" % (lake_name, Data.name));
 		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
-		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 		print("returning placeholder object");
 		return wimpyObj;  # 1 = error code. 
 
@@ -467,7 +467,7 @@ def remove_seasonals_by_GRACE(Data, grace_dir):
 	except FileNotFoundError:
 		print("Error! GRACE not found for %s" % Data.name);
 		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
-		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=[1.0000], dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 		print("returning placeholder object");
 		return wimpyObj;  # 1 = error code. 
 
