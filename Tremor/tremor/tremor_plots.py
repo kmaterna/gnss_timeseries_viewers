@@ -179,7 +179,7 @@ def complex_plot_depths(tremor,tremortype):
 	tremor_io.write_tremor_as_txt(mediumT, 'gmt/medrange.txt');
 	tremor_io.write_tremor_as_txt(deepT, 'gmt/deeprange.txt');
 
-	station='P160';
+	station='P330';
 	trend_out_gps=tremor_tools.get_detrended_gps_station(station);
 
 	f,axarr=plt.subplots(2,1, sharex=True,figsize=(16,10));

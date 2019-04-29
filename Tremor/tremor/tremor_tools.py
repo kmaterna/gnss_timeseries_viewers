@@ -182,7 +182,7 @@ def get_detrended_gps_station(station_name):
 	newData=offsets.remove_offsets(newData, offset_obj);
 	newData=gps_ts_functions.remove_outliers(newData, 5);  # mm for outliers
 	newData=offsets.remove_offsets(newData, eq_obj);
-	trend_out=gps_seasonal_removals.make_detrended_ts(newData, 1, 'notch');
+	trend_out=gps_seasonal_removals.make_detrended_ts(newData, 1, 'lssq');
 	return trend_out;
 
 
