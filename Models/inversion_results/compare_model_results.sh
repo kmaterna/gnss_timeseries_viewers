@@ -6,7 +6,7 @@ infolder1="pbo_lssq_NA/"
 infolder2="nmt_lssq_NA/"
 infolder3="pbo_nldas_NA/"
 infolder4="pbo_nldas_scaled_NA/"
-infolder5="pbo_ldsm_NA/"
+infolder5="pbo_lsdm_NA/"
 
 
 lonW=-125.7
@@ -36,7 +36,7 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile -R$range -J$projection -L -Wthin,gray -Cdatacpt.cpt -K -O >> $output1
+gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
@@ -72,7 +72,7 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile -R$range -J$projection -L -Wthin,gray -Cdatacpt.cpt -K -O >> $output1
+gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
@@ -107,7 +107,7 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile -R$range -J$projection -L -Wthin,gray -Cdatacpt.cpt -K -O >> $output1
+gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
@@ -142,7 +142,7 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile -R$range -J$projection -L -Wthin,gray -Cdatacpt.cpt -K -O >> $output1
+gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
@@ -177,7 +177,7 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile -R$range -J$projection -L -Wthin,gray -Cdatacpt.cpt -K -O >> $output1
+gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1

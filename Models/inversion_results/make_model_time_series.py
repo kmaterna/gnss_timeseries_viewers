@@ -27,8 +27,8 @@ import numpy as np
 import scipy.io
 
 def configure_and_read():
-	folder="pbo_nldas_scaled_NA/"
-	year="2016"
+	folder="pbo_lsdm_NA/"
+	year="2014"
 	matlab_file=folder+year+"_inversion.mat";
 	output_file=folder+year+"_inversion.txt";
 	output_file_model=folder+year+"_model.txt";

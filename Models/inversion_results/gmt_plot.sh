@@ -1,3 +1,5 @@
+# This is the plot for the Figure in the paper. 
+
 
 
 infolder="pbo_lssq_NA/"
@@ -32,7 +34,7 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Lf-121.6/39.19/39.19/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile1 -R$range -J$projection -L -Wthin,gray -Cdatacpt.cpt -K -O >> $output1
+gmt psxy $infile1 -R$range -J$projection -L -Wthinner,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
@@ -51,6 +53,7 @@ gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $outp
 EOF
 
 
+# The second image
 gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0WeSn:.$infile2: -Dh -K -O -X13 >> $output1 # the title goes here
 gmt grdgradient ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -A320 -R$range -Getopo1.grad -Nt
 gmt grdhisteq etopo1.grad -Getopo1.hist -N
@@ -58,7 +61,7 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Lf-121.6/39.19/39.19/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile2 -R$range -J$projection -L -Wthin,gray -Cdatacpt.cpt -K -O >> $output1
+gmt psxy $infile2 -R$range -J$projection -L -Wthinner,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
