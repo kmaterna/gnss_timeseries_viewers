@@ -22,8 +22,10 @@ range="$lonW/$lonE/$latS/$latN"
 projection="M4.5i"  # used for medium experiments.
 
 # Make colorscales
-gmt makecpt -T0/29/1 -Ic -Chot > datacpt.cpt
-gmt makecpt -T-2000/2000/200 -Cdrywet > tremor.cpt
+# gmt makecpt -T0/29/1 -Ic -Chot > datacpt.cpt
+gmt makecpt -T-29/29/1 -CBlueWhiteOrangeRed > datacpt2.cpt
+gmt makecpt -T-29/29/1 -Ic -CBlueWhiteOrangeRed > datacpt2_backwards.cpt  # this is for the 2014 case
+gmt makecpt -T-2000/2000/200 -Ic -Ccopper > tremor.cpt  # Cdrywet also works
 gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
 
 
@@ -33,8 +35,9 @@ gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
-gmt pscoast -R$range -J$projection -Lf-121.6/39.19/39.19/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile1 -R$range -J$projection -L -Wthinner,gray -Cdatacpt.cpt -K -O >> $output1
+gmt pscoast -R$range -J$projection -Lf-121.6/39.19/39.19/50+jt -Spaleturquoise -N1 -N2 -Dh -O -K >> $output1 
+gmt psxy $infile1 -R$range -J$projection -L -Wthinner,gray -Cdatacpt2_backwards.cpt -K -O >> $output1
+# gmt psxy $infile1 -R$range -J$projection -L -Wthinner,gray -CBlueWhiteOrangeRed.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
@@ -60,8 +63,8 @@ gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
-gmt pscoast -R$range -J$projection -Lf-121.6/39.19/39.19/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile2 -R$range -J$projection -L -Wthinner,gray -Cdatacpt.cpt -K -O >> $output1
+gmt pscoast -R$range -J$projection -Lf-121.6/39.19/39.19/50+jt -Spaleturquoise -N1 -N2 -Dh -O -K >> $output1 
+gmt psxy $infile2 -R$range -J$projection -L -Wthinner,gray -Cdatacpt2.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
@@ -78,7 +81,8 @@ gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $outp
 -123.9 42.1 B: Coupling Decrease
 EOF
 
-gmt psscale -R$range -J$projection -DjTR+w12c/0.5c+o-1.5/0.2 -Cdatacpt.cpt -B5.0:"":/:mm/yr: -P -O >> $output1
+# gmt psscale -R$range -J$projection -DjTR+w12c/0.5c+o-1.5/0.2 -Cdatacpt.cpt -B5.0:"":/:mm/yr: -P -O -K >> $output1
+gmt psscale -R$range -J$projection -DjTR+w12c/0.5c+o-1.5/0.2 -Cdatacpt2.cpt -B5.0:"":/:mm/yr: -P -O >> $output1
 
 gmt psconvert $output1 -Tg
 

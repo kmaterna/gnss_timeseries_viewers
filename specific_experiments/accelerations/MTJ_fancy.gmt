@@ -10,7 +10,7 @@ range="$lonW/$lonE/$latS/$latN"
 projection="M4.5i"  # used for medium experiments.
 horiz_scale=0.3  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
 output1='Figures/MTJ.ps'
-offset=12
+offset=13
 
 folder="pbo_lssq_NA/"
 file1=2014.txt
@@ -61,7 +61,7 @@ gmt psmeca -R$range -J$projection -Gspringgreen3 -Sm0.5 -C -K -O <<EOF>> $output
 EOF
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
 -122.2 42.8 $name1
--126.4 42.8 A
+# -126.4 42.8 A
 EOF
 # Highlighting the P160 time series
 grep 'P160' $infile | awk '{print $1, $2, $3, $4, $7, $8, $10}' | gmt psvelo -R$range -J$projection -K -O -Se$horiz_scale/0.68/8 -A+e+gred+pthickest,red -Wthinnest,red >> $output1
@@ -110,7 +110,7 @@ gmt psmeca -R$range -J$projection -Gspringgreen3 -Sm0.5 -C -K -O <<EOF>> $output
 EOF
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -O <<EOF >> $output1
 -122.2 42.8 $name2
--126.4 42.8 B
+# -126.4 42.8 B
 EOF
 
 

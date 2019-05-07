@@ -20,10 +20,12 @@ projection="M3.0i"  # used for medium experiments.
 label_lat="42.3"
 
 # Make colorscales
-gmt makecpt -T0/29/1 -Ic -Chot > datacpt.cpt
-gmt makecpt -T-4000/4000/300 -Cdrywet > tremor.cpt
+# gmt makecpt -T0/29/1 -Ic -Chot > datacpt.cpt
+gmt makecpt -T-26/26/1 -CBlueWhiteOrangeRed > datacpt.cpt  # this is for the 2016 case
+gmt makecpt -T-4000/4000/300 -Ic -Ccopper > tremor.cpt
 gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
 
+watercolor=-Spaleturquoise
 
 # The first plot
 infile=$infolder1$name1"_inversion.txt"
@@ -35,7 +37,7 @@ gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
-gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
+gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt $watercolor -N1 -N2 -Dh -O -K >> $output1 
 gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
@@ -71,7 +73,7 @@ gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
-gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
+gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt $watercolor -N1 -N2 -Dh -O -K >> $output1 
 gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
@@ -106,7 +108,7 @@ gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
-gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
+gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt $watercolor -N1 -N2 -Dh -O -K >> $output1 
 gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
@@ -141,7 +143,7 @@ gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
-gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
+gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt $watercolor -N1 -N2 -Dh -O -K >> $output1 
 gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
@@ -176,7 +178,7 @@ gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
-gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt -Slightblue -N1 -N2 -Dh -O -K >> $output1 
+gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt $watercolor -N1 -N2 -Dh -O -K >> $output1 
 gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
