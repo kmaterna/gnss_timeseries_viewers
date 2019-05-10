@@ -23,8 +23,8 @@ projection="M4.5i"  # used for medium experiments.
 
 # Make colorscales
 # gmt makecpt -T0/29/1 -Ic -Chot > datacpt.cpt
-gmt makecpt -T-29/29/1 -CBlueWhiteOrangeRed > datacpt2.cpt
-gmt makecpt -T-29/29/1 -Ic -CBlueWhiteOrangeRed > datacpt2_backwards.cpt  # this is for the 2014 case
+gmt makecpt -T-26/26/1 -CBlueWhiteOrangeRed > datacpt2.cpt
+gmt makecpt -T-26/26/1 -Ic -CBlueWhiteOrangeRed > datacpt2_backwards.cpt  # this is for the 2014 case
 gmt makecpt -T-2000/2000/200 -Ic -Ccopper > tremor.cpt  # Cdrywet also works
 gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
 

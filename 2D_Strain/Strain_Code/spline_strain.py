@@ -21,7 +21,7 @@ import strain_tensor_toolbox
 
 def compute(myVelfield, MyParams):
 
-	interp_kind='quintic';
+	interp_kind='linear';
 	
 	# Scipy returns a function that you can use on a new set of x,y pairs. 
 	f_east = interpolate.interp2d(myVelfield.elon, myVelfield.nlat, myVelfield.e, kind=interp_kind);
