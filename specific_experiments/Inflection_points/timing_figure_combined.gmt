@@ -17,10 +17,18 @@ scalebar="-124.3/38.6/38.6/50+jt"
 
 # Format: lon, lat, east_change, abs(east_change), east_days, north_change, abs(north_change), north_days, vert_change, abs(vert_change), vert_days, name;
 gmt makecpt -T-280/280/5 -Cseis > mycpt.cpt 
+gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
+
+gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0WeSn -Dh -K > $output1 # the title goes here
+gmt grdgradient ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -A320 -R$range -Getopo1.grad -Nt
+gmt grdhisteq etopo1.grad -Getopo1.hist -N
+gmt grdinfo etopo1.hist 
+gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
+gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 
 # EAST
 # Insert a horizontal scale bar and title
-gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0WeSn -Dh -K > $output1 # the title goes here
+gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -Wthin,black -N1 -N2 -B1.0WeSn -Dh -K -O >> $output1 # the title goes here
 awk '{print $1, $2, $3, $6}' $infile1 | gmt psvelo -R$range -J$projection -O -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output1  # vectors
 awk '{print $1, $2, $5, $4*6}' $infile1 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output1
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
@@ -28,6 +36,8 @@ gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $outp
 -124.7 41.8 A
 EOF
 gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0wESn -Dh -K -O -Y0 -X11.5 >> $output1 # the title goes here
+gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
+gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -Wthin,black -N1 -N2 -B1.0wESn -Dh -K -O >> $output1 # the title goes here
 awk '{print $1, $2, $3, $6}' $infile2 | gmt psvelo -R$range -J$projection -O -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output1  # vectors
 awk '{print $1, $2, $5, $4*6}' $infile2 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output1
 gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B100:"Turning Point":/:days: -K -O >> $output1

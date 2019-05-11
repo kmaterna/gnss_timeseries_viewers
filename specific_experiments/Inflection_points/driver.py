@@ -19,9 +19,9 @@ import stations_within_radius
 
 
 def driver(eqtime, starttime, endtime):
-	[stations,start_time_infl, end_time_infl,start_time_velo, end_time_velo, mode, N, Wn, seasonal_type, map_coords, outfile_dir] = configure(eqtime, starttime, endtime);
+	[stations,start_time_infl, end_time_infl,start_time_velo, end_time_velo, mode, turning_point, N, Wn, seasonal_type, map_coords, outfile_dir] = configure(eqtime, starttime, endtime);
 	[dataobj_list, offsetobj_list, eqobj_list] = inputs(stations);
-	[noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change]=compute(dataobj_list, offsetobj_list, eqobj_list, start_time_infl, end_time_infl,start_time_velo, end_time_velo, seasonal_type, mode, N, Wn);
+	[noeq_objects, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change]=compute(dataobj_list, offsetobj_list, eqobj_list, start_time_infl, end_time_infl,start_time_velo, end_time_velo, seasonal_type, mode, turning_point, N, Wn);
 	outputs(noeq_objects, mode, east_filt, north_filt, vert_filt, east_inf_time, north_inf_time, vert_inf_time, east_change, north_change, vert_change, start_time_infl, end_time_infl, outfile_dir);
 	return;
 
@@ -43,21 +43,23 @@ def configure(eqtime,starttime,endtime):
 
 	# Mode
 	mode='butterworth';  # Butterworth filter option
-	# mode='linear_fit';   # linear fit option.
+	# mode='linear_fit';   # linear fit option. This option is terrible - takes too long, and doesn't work. 
+	# turning_point = 'min_slope';
+	turning_point = 'max_curve';
 
 	# Butterworth parameters
 	N=3;  # Order of butterworth filter
 	Wn=1/365.0;  # 1/period (days) of cutoff frequency. 	
 
-	map_coords=[-125, -118, 37.5, 42.0];  # northern CA
+	map_coords=[-125, -118, 36.0, 43.0];  # northern CA
 	# map_coords=[-125, -110, 32.5, 48.5]; # western US
 	# map_coords=[-125, -122, 40, 41]; # Small test
 	stations = stations_within_radius.get_stations_within_box(map_coords);
 	stations = gps_input_pipeline.remove_blacklist(stations);
 
-	outfile_dir='Outputs/'+str(eqtime);
+	outfile_dir='Outputs_'+turning_point+'/'+str(eqtime);
 
-	return [stations, start_time_infl, end_time_infl, start_time_velo, end_time_velo, mode, N, Wn, seasonal_type, map_coords, outfile_dir];
+	return [stations, start_time_infl, end_time_infl, start_time_velo, end_time_velo, mode, turning_point, N, Wn, seasonal_type, map_coords, outfile_dir];
 
 
 # ------------ INPUTS  ------------- # 
@@ -72,7 +74,7 @@ def inputs(stations):
 
 
 # ------------ COMPUTE ------------- # 
-def compute(dataobj_list, offsetobj_list, eqobj_list,start_time_infl, end_time_infl,start_time_velo, end_time_velo, seasonal_type, mode, N, Wn):
+def compute(dataobj_list, offsetobj_list, eqobj_list,start_time_infl, end_time_infl,start_time_velo, end_time_velo, seasonal_type, mode, turning_point, N, Wn):
 	
 	# Initialize output objects
 	noeq_objects = []; 
@@ -94,9 +96,9 @@ def compute(dataobj_list, offsetobj_list, eqobj_list,start_time_infl, end_time_i
 		
 		if mode=='butterworth':
 			# Get the inflection points in the timeseries
-			[east_filtered, e_inflection_time, echange]=inflection_with_butterworth(newobj.dtarray, float_times, newobj.dE, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
-			[north_filtered, n_inflection_time, nchange]=inflection_with_butterworth(newobj.dtarray, float_times, newobj.dN, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
-			[vert_filtered, v_inflection_time, vchange]=inflection_with_butterworth(newobj.dtarray, float_times, newobj.dU, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+			[east_filtered, e_inflection_time, echange]=inflection_with_butterworth(newobj.dtarray, float_times, newobj.dE, N, Wn, turning_point, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+			[north_filtered, n_inflection_time, nchange]=inflection_with_butterworth(newobj.dtarray, float_times, newobj.dN, N, Wn, turning_point, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
+			[vert_filtered, v_inflection_time, vchange]=inflection_with_butterworth(newobj.dtarray, float_times, newobj.dU, N, Wn, turning_point, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
 
 		else:
 			[east_filtered,e_inflection_time, echange]=inflection_with_linear(newobj.dtarray, float_times, newobj.dE, start_time_infl, end_time_infl,start_time_velo, end_time_velo);
@@ -117,7 +119,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list,start_time_infl, end_time_i
 
 
 # The butterworth filter. 
-def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time_infl, end_time_infl,start_time_velo, end_time_velo):
+def inflection_with_butterworth(dtarray, x, y, N, Wn, turning_point, start_time_infl, end_time_infl,start_time_velo, end_time_velo):
 	# dtarray is a datetime object array
 	# x is a float (days since a reference day)
 	# start_time and end_time are datetime objects
@@ -145,26 +147,29 @@ def inflection_with_butterworth(dtarray, x, y, N, Wn, start_time_infl, end_time_
 		print("Error! Station does not have much data in the time window. Skipping.");
 		return [y_filtered, dtarray[0], 0];
 
-	# Option 1: Return a datetime object where the slope is minimized
 	dy=np.diff(new_filtered_infl[:],1)
 	dx=np.diff(new_float_time_infl[:],1)
 	yfirst=np.multiply(np.divide(dy,dx),365.0);  # the multiplying is just for avoiding small numbers
 	xfirst=np.add(new_float_time_infl[:-1],new_float_time_infl[1:])*0.5;
-	slope=abs(yfirst);
-	turning_point=np.argmin(slope,0);
-	turning_dt=gps_ts_functions.reltime_to_dt(xfirst[turning_point], origin_time);
+
+	# Option 1: Return a datetime object where the slope is minimized
+	if turning_point=='min_slope':
+		slope=abs(yfirst);
+		turning_point=np.argmin(slope,0);
+		turning_dt=gps_ts_functions.reltime_to_dt(xfirst[turning_point], origin_time);
 
 	# Option 2: Return a datetime object where the second derivative is maximized
-	# Noel's suggestion. 
-	# In the end, I didn't like it too much. I stick with the detrended minimum slope. 
-	# Second derivatives are too sensitive to the specific shape of the curve. 
-	# dy2 = np.diff(yfirst[:],1);
-	# dx2 = np.diff(xfirst[:],1);
-	# ysecond = np.multiply(np.divide(dy2, dx2),200.0);
-	# xsecond = np.add(xfirst[:-1],xfirst[1:])*0.5;
-	# curvature = abs(ysecond);
-	# turning_point = np.argmax(curvature,0);
-	# turning_dt = gps_ts_functions.reltime_to_dt(xsecond[turning_point], origin_time);
+	if turning_point=='max_curve':
+		# Noel's suggestion. 
+		# In the end, I didn't like it too much. I stick with the detrended minimum slope. 
+		# Second derivatives are too sensitive to the specific shape of the curve. 
+		dy2 = np.diff(yfirst[:],1);
+		dx2 = np.diff(xfirst[:],1);
+		ysecond = np.multiply(np.divide(dy2, dx2),200.0);
+		xsecond = np.add(xfirst[:-1],xfirst[1:])*0.5;
+		curvature = abs(ysecond);
+		turning_point = np.argmax(curvature,0);
+		turning_dt = gps_ts_functions.reltime_to_dt(xsecond[turning_point], origin_time);
 
 	# Get the slope of a time series
 	# Find the index of the datetime where the slope went to minimum.
@@ -321,9 +326,8 @@ def output_plots(noeq_obj, mode, east_filt, north_filt, vert_filt, east_inf_time
 # --------- DRIVER ---------- # 
 if __name__=="__main__":
 	
-	eqtime="20140310"; starttime="20100617"; endtime="20161207"; # 2014 M6.8 Earthquake
-	# eqtime="20161208"; starttime="20140317"; endtime="20180901"; # 2016 M6.6 Earthquake
-	# eqtime="20100110"; # # 2010 M6.5 Earthquake
+	# eqtime="20140310"; starttime="20100617"; endtime="20161207"; # 2014 M6.8 Earthquake
+	eqtime="20161208"; starttime="20140317"; endtime="20180901"; # 2016 M6.6 Earthquake
 	driver(eqtime, starttime, endtime);
 
 
