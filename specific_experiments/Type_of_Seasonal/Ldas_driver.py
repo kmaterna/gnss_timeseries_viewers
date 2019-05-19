@@ -176,5 +176,5 @@ def outputs(station, Time_periods, EQs, gldas, nldas, grace, lsdm, gps, gldas_sl
 
 
 if __name__=="__main__":
-	station="P204";
+	station="P330";
 	compare_single_station(station);
