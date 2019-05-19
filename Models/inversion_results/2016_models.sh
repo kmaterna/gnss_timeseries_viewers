@@ -43,8 +43,8 @@ gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
 # -W+cl takes the colors of the contour lines from the cpt
-awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output1
-awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthick,red >> $output1
+awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinner,black >> $output1
+awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthinner,red >> $output1
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wblack -K -O <<EOF >> $output1
 -125.4 39.6 2 0 0.0 0.0 0.0 
 EOF
@@ -78,8 +78,8 @@ gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
-awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output1
-awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthick,red >> $output1
+awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinner,black >> $output1
+awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthinner,red >> $output1
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wblack -K -O <<EOF >> $output1
 -125.4 39.6 2 0 0.0 0.0 0.0 
 EOF
@@ -113,8 +113,8 @@ gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
-awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output1
-awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthick,red >> $output1
+awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinner,black >> $output1
+awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthinner,red >> $output1
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wblack -K -O <<EOF >> $output1
 -125.4 39.6 2 0 0.0 0.0 0.0 
 EOF
@@ -148,8 +148,8 @@ gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
-awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output1
-awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthick,red >> $output1
+awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinner,black >> $output1
+awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthinner,red >> $output1
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wblack -K -O <<EOF >> $output1
 -125.4 39.6 2 0 0.0 0.0 0.0 
 EOF
@@ -183,8 +183,8 @@ gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
-awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output1
-awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthick,red >> $output1
+awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinner,black >> $output1
+awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthinner,red >> $output1
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wblack -K -O <<EOF >> $output1
 -125.4 39.6 2 0 0.0 0.0 0.0 
 EOF

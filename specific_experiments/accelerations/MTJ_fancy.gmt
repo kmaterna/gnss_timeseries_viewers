@@ -65,6 +65,8 @@ gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $outp
 EOF
 # Highlighting the P160 time series
 grep 'P160' $infile | awk '{print $1, $2, $3, $4, $7, $8, $10}' | gmt psvelo -R$range -J$projection -K -O -Se$horiz_scale/0.68/8 -A+e+gred+pthickest,red -Wthinnest,red >> $output1
+# Highlighting the P160 time series
+grep 'P330' $infile | awk '{print $1, $2, $3, $4, $7, $8, $10}' | gmt psvelo -R$range -J$projection -K -O -Se$horiz_scale/0.68/8 -A+e+groyalblue2+pthickest,royalblue2 -Wthinnest,royalblue2 >> $output1
 
 
 

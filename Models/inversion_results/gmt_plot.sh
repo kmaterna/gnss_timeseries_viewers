@@ -23,8 +23,9 @@ projection="M4.5i"  # used for medium experiments.
 
 # Make colorscales
 # gmt makecpt -T0/29/1 -Ic -Chot > datacpt.cpt
-gmt makecpt -T-26/26/1 -CBlueWhiteOrangeRed > datacpt2.cpt
-gmt makecpt -T-26/26/1 -Ic -CBlueWhiteOrangeRed > datacpt2_backwards.cpt  # this is for the 2014 case
+gmt makecpt -T-26/26/1 -CBlueWhiteOrangeRed > datacpt2.cpt # this is for the 2016 case
+gmt makecpt -T-20/20/1 -Ic -CBlueWhiteOrangeRed > datacpt2_backwards.cpt  # this is for the 2014 case
+gmt makecpt -T-20/20/1 -CBlueWhiteOrangeRed > datacpt2_scale.cpt # this is for the 2014 color scale
 gmt makecpt -T-2000/2000/200 -Ic -Ccopper > tremor.cpt  # Cdrywet also works
 gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
 
@@ -37,13 +38,13 @@ gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Lf-121.6/39.19/39.19/50+jt -Spaleturquoise -N1 -N2 -Dh -O -K >> $output1 
 gmt psxy $infile1 -R$range -J$projection -L -Wthinner,gray -Cdatacpt2_backwards.cpt -K -O >> $output1
-# gmt psxy $infile1 -R$range -J$projection -L -Wthinner,gray -CBlueWhiteOrangeRed.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
+gmt grdcontour ../../Tremor/slab_geometry/cas_slab1.0_clip.grd -R$range -J$projection -Wthin,purple -C30 -A -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
 # -W+cl takes the colors of the contour lines from the cpt
-awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile1 | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output1
-awk '{print $1, $2, $3*-1, $4*-1}' $modelfile1 | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthick,red >> $output1
+awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile1 | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthin,black >> $output1
+awk '{print $1, $2, $3*-1, $4*-1}' $modelfile1 | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthin,red >> $output1
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wblack -K -O <<EOF >> $output1
 -124.1 39.4 2 0 0.0 0.0 0.0 2mm/yr data
 EOF
@@ -57,7 +58,7 @@ EOF
 
 
 # The second image
-gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0WeSn:.$infile2: -Dh -K -O -X13 >> $output1 # the title goes here
+gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0weSn:.$infile2: -Dh -K -O -X12.5 >> $output1 # the title goes here
 gmt grdgradient ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -A320 -R$range -Getopo1.grad -Nt
 gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
@@ -66,10 +67,11 @@ gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g
 gmt pscoast -R$range -J$projection -Lf-121.6/39.19/39.19/50+jt -Spaleturquoise -N1 -N2 -Dh -O -K >> $output1 
 gmt psxy $infile2 -R$range -J$projection -L -Wthinner,gray -Cdatacpt2.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
+gmt grdcontour ../../Tremor/slab_geometry/cas_slab1.0_clip.grd -R$range -J$projection -Wthin,purple -C30 -A -K -O >> $output1
 
 gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
-awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile2 | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthick,black >> $output1
-gmt psvelo $modelfile2 -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthick,red >> $output1
+awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile2 | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthin,black >> $output1
+gmt psvelo $modelfile2 -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthin,red >> $output1
 gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wblack -K -O <<EOF >> $output1
 -124.1 39.4 2 0 0.0 0.0 0.0 2mm/yr data
 EOF
@@ -77,12 +79,13 @@ gmt psvelo -R$range -J$projection -A+e+gred+pthickest -Se$horiz_scale/0.68/10 -W
 -124.1 39.2 2 0 0.0 0.0 0.0 2mm/yr model
 EOF
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--121.7 42.1 $name1: T4-T3
+-121.7 42.1 $name2: T4-T3
 -123.9 42.1 B: Coupling Decrease
 EOF
 
 # gmt psscale -R$range -J$projection -DjTR+w12c/0.5c+o-1.5/0.2 -Cdatacpt.cpt -B5.0:"":/:mm/yr: -P -O -K >> $output1
-gmt psscale -R$range -J$projection -DjTR+w12c/0.5c+o-1.5/0.2 -Cdatacpt2.cpt -B5.0:"":/:mm/yr: -P -O >> $output1
+gmt psscale -R$range -J$projection -DjTR+w6c/0.5c+o-1.5/0.2 -G0/25 -Cdatacpt2.cpt -B5.0:"":/:mm/yr: -P -K -O >> $output1
+gmt psscale -R$range -J$projection -DjTR+w6c/0.5c+o-1.5/6.2 -G-20/-1 -Cdatacpt2_scale.cpt -B5.0:"":/:"": -P -O >> $output1
 
 gmt psconvert $output1 -Tg
 
