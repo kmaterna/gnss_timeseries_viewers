@@ -9,10 +9,10 @@ latN="46.2"  # 42.2
 range="$lonW/$lonE/$latS/$latN"
 projection="M3.1i"  # used for medium experiments.
 horiz_scale=0.3  # used for velocity change vectors (0.3 sometimes, sometimes smaller)
-output1='Figures/NorCal_gldas_model.ps'
+output1='Figures/NorCal_nldas_scaled.ps'
 offset=9
 
-folder="gldas_lssq_ITRF/"
+folder="pbo_nldas_scaled_NA/"
 file1=2010.txt
 name1="2010: T2-T1"
 file2=2014.txt
