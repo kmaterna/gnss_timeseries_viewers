@@ -81,11 +81,17 @@ def read_custom_tremor(tremor_type):
 		tremor_website2 = restrict_to_box(tremor_website, box_interest, transition_time_2, tremor_website.dtarray[-1]);
 		tremor_total = concatonate_tremor(tremor_website1, tremor_later);
 		tremor_total = concatonate_tremor(tremor_total, tremor_website2);
-	if tremor_type=="wech_custom":
-		xdata, ydata, zdata = read_csz_model();
-		tremor_total = compute_depths(tremor_total, xdata, ydata, zdata);
 	if tremor_type=="wech" or tremor_type=="ide":
 		tremor_total = tremor_io.read_input_tremor(tremor_type);
+	if tremor_type=="pnsn_052019":
+		tremor_total = tremor_io.read_input_tremor(tremor_type);
+		box_interest=[-125,-120,38,43];  # a pretty big box
+		tremor_total = restrict_to_box(tremor_total, box_interest);
+	if tremor_type=="wech_custom" or tremor_type=="pnsn_052019" or tremor_type=="wech":
+		xdata, ydata, zdata = read_csz_model();
+		tremor_total = compute_depths(tremor_total, xdata, ydata, zdata);		
+	else:
+		print("Error! Tremor type %s not supported in read_custom_tremor()" % tremor_type);
 	return tremor_total;
 
 

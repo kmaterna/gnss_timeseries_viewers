@@ -30,16 +30,26 @@ def inputs(input_file):
 
 def compute(mycat):
 	cdts=[]; cnums=[];
+	cdts_shallow=[]; cnums_shallow=[];
+	cdts_shallow.append(mycat.dtarray[0]);
+	cnums_shallow.append(1);
 	cdts.append(mycat.dtarray[0]);
 	cnums.append(1);
 	for i in range(1,len(mycat.dtarray)):
-		cdts.append(mycat.dtarray[i]);
-		cdts.append(mycat.dtarray[i]);
-		cnums.append(cnums[-1]);
-		cnums.append(cnums[-1]+1);
-	return [cdts, cnums];
+		if mycat.lon[i]>=-123.8 and mycat.lon[i]<=-122.9:
+			if mycat.dep[i]>=20:
+				cdts.append(mycat.dtarray[i]);
+				cdts.append(mycat.dtarray[i]);
+				cnums.append(cnums[-1]);
+				cnums.append(cnums[-1]+1);
+			else:
+				cdts_shallow.append(mycat.dtarray[i]);
+				cdts_shallow.append(mycat.dtarray[i]);
+				cnums_shallow.append(cnums_shallow[-1]);
+				cnums_shallow.append(cnums_shallow[-1]+1);			
+	return [cdts, cnums, cdts_shallow, cnums_shallow];
 
-def outputs(mycat, cdts, cnums):
+def outputs(mycat, cdts, cnums, cdts_shallow, cnums_shallow):
 	eqtimes=[];
 	eqtimes.append(dt.datetime.strptime("20050615","%Y%m%d"));
 	eqtimes.append(dt.datetime.strptime("20100110","%Y%m%d"));
@@ -49,13 +59,15 @@ def outputs(mycat, cdts, cnums):
 	endtime=dt.datetime.strptime("20190505","%Y%m%d");
 
 	plt.figure();
-	plt.plot(cdts, cnums, color='indianred');
+	plt.plot(cdts, cnums, color='indianred',label='Deep (>20 km depth)');
+	plt.plot(cdts_shallow, cnums_shallow, color='blue',label='Shallow (<20 km depth)');
 	plt.grid(True);
 	[ymin, ymax] = plt.gca().get_ylim();
 	for i in range(len(eqtimes)):
 		plt.plot([eqtimes[i], eqtimes[i]],[ymin, ymax],'--k');
-	plt.ylabel("Cumulative Seismicity");
+	plt.ylabel("Cumulative Seismicity (number of earthquakes) ");
 	plt.xlabel("Time");
+	plt.legend();
 	plt.savefig('Seismicity.jpg');
 	return;
 
@@ -63,5 +75,5 @@ def outputs(mycat, cdts, cnums):
 if __name__=="__main__":
 	infile = configure();
 	mycat = inputs(infile);
-	[cdts, cnums] = compute(mycat);
-	outputs(mycat, cdts, cnums);
+	[cdts, cnums, cdts_shallow, cnums_shallow] = compute(mycat);
+	outputs(mycat, cdts, cnums, cdts_shallow, cnums_shallow);

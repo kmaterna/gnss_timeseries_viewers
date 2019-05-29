@@ -148,7 +148,7 @@ def complex_plot_depths(tremor,tremortype):
 	# end_time=dt.datetime.strptime('20170815',"%Y%m%d");  # the 2017 tremor experiment (shallow)
 	# start_time=dt.datetime.strptime('20171215',"%Y%m%d");
 	# end_time=dt.datetime.strptime('20180115',"%Y%m%d");  # the 2018 tremor experiment (shallow)
-	start_time=dt.datetime.strptime('20120301',"%Y%m%d");  # the whole time period
+	start_time=dt.datetime.strptime('20100301',"%Y%m%d");  # the whole time period
 	end_time=dt.datetime.strptime('20181101',"%Y%m%d");   # the whole time period
 	# start_time=dt.datetime.strptime('20150101',"%Y%m%d");  # Aaron's new data
 	# end_time=dt.datetime.strptime('20180101',"%Y%m%d");   # Aaron's new data
@@ -324,7 +324,8 @@ def timespace_events(tremor, interval_list, box_interest, depth_interest):
 
 
 if __name__=="__main__":
-	tremortype='wech_custom';
+	# tremortype='wech_custom';
+	tremortype='pnsn_052019';
 	tremor=tremor_tools.read_custom_tremor(tremortype);
 	complex_plot_depths(tremor, tremortype);
 	# After this, you must go and make the GMT plots of the tremor (tremor_depth_ranges.sh)
