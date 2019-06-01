@@ -25,6 +25,7 @@ import offsets
 import stations_within_radius
 import haversine
 import grace_ts_functions
+import remove_ets_events
 
 
 def driver(EQcoords, size, network, refframe, fit_type, deltat1, deltat2, expname, station_list=[]):
@@ -74,6 +75,7 @@ def inputs(station_names, network, refframe):
 		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, network, refframe);
 		if myData==[]:
 			continue;
+
 		else:
 			dataobj_list.append(myData);
 			offsetobj_list.append(offset_obj);
@@ -117,6 +119,12 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
 			newobj=gps_seasonal_removals.make_detrended_ts(newobj, 1, fit_type);  # remove seasonals
 
 		noeq_objects.append(newobj);
+		
+		# NOTE: WRITTEN IN JUNE 2019
+		# An experiment for removing ETS events
+		# ets_intervals=remove_ets_events.input_tremor_days();
+		# myData=remove_ets_events.remove_ETS_times(newobj,ets_intervals);
+
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
 		[east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, usig0]=gps_ts_functions.get_slope(newobj,starttime=dt1_start+dt.timedelta(days=time_after_start_date),endtime=dt1_end);
