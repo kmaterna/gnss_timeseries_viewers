@@ -48,7 +48,7 @@ def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=
 
 	map_coords=[];
 	if overall_size=='medium':
-		radius=300;  # km. 
+		radius=500;  # km. 
 	elif overall_size=='huge':
 		radius=-1;  # this is a special key for using a coordinate box instead of a radius
 		map_coords=[-125.6, -110.0, 32.5, 48.5];
@@ -123,7 +123,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
 		# NOTE: WRITTEN IN JUNE 2019
 		# An experiment for removing ETS events
 		# ets_intervals=remove_ets_events.input_tremor_days();
-		# myData=remove_ets_events.remove_ETS_times(newobj,ets_intervals);
+		# myData=remove_ets_events.remove_ETS_times(newobj,ets_intervals, offset_num_days=15);
 
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
