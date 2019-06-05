@@ -15,25 +15,24 @@ import single_station_tsplot
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 Offsets    = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
-Parameters = collections.namedtuple("Parameters",['station','outliers_remove', 'outliers_def',
-	'earthquakes_remove','offsets_remove','reference_frame','seasonals_remove', 'seasonals_type','datasource','refframe','fit_table','grace_dir']);
+Parameters = collections.namedtuple("Parameters",['station','outliers_remove', 'outliers_def','offset_num_days', 
+	'earthquakes_remove','offsets_remove','seasonals_remove', 'seasonals_type','datasource','refframe']);
 
 
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, seasonals_type='lssq',datasource='pbo',refframe='NA'):
 	MyParams = configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe);
 	[myData, offset_obj, eq_obj, ets_intervals] = input_data(MyParams.station, MyParams.datasource, MyParams.refframe);
-	[ETS_removed, detrended1, ETS_within, detrended2] = compute(myData, offset_obj, eq_obj, MyParams, ets_intervals);
+	[ETS_within, detrended2, ETS_removed, detrended1] = compute(myData, offset_obj, eq_obj, MyParams, ets_intervals);
 	single_ts_plot(ETS_removed,detrended1,MyParams, ets_intervals,'corrected');
 	single_ts_plot(ETS_within,detrended2,MyParams, ets_intervals,'uncorrected');
 
 # -------------- CONFIGURE ------------ # 
 def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe):
-	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
-	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
-	outliers_def       = 10.0;  # mm away from average. 
-	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, earthquakes_remove=earthquakes_remove, 
-		offsets_remove=offsets_remove, reference_frame=refframe, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
-		datasource=datasource, refframe=refframe, fit_table=fit_table, grace_dir=grace_dir);
+	outliers_def       = 5.0;  # mm away from average. 
+	offset_num_days    = 15;  # days averaged on either side of offset. 
+	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, offset_num_days=offset_num_days, earthquakes_remove=earthquakes_remove, 
+		offsets_remove=offsets_remove, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
+		datasource=datasource, refframe=refframe);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d, datasource=%s, refframe=%s" % (station, earthquakes_remove, outliers_remove, seasonals_remove,datasource,refframe));
 	return MyParams;
@@ -66,15 +65,17 @@ def compute(myData, offset_obj, eq_obj, MyParams, ets_intervals):
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
 	if MyParams.earthquakes_remove==1: # Remove earthquakes
 		newData=offsets.remove_offsets(newData, eq_obj);
-	trend_out__uncorrected=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams.fit_table, MyParams.grace_dir);
+	trend_out_uncorrected=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type);
 
-	ETS_removed=remove_ETS_times(newData,ets_intervals);
-	trend_out_corrected=gps_seasonal_removals.make_detrended_ts(ETS_removed, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams.fit_table, MyParams.grace_dir);
-	return [ETS_removed, trend_out_corrected, newData, trend_out__uncorrected];
+	ETS_removed=remove_ETS_times(trend_out_uncorrected,ets_intervals, MyParams.offset_num_days);
+	trend_out_corrected=gps_seasonal_removals.make_detrended_ts(ETS_removed, MyParams.seasonals_remove, MyParams.seasonals_type);
+	return [newData, trend_out_uncorrected, ETS_removed, trend_out_corrected];
 
 
-def remove_ETS_times(ts_obj, ets_intervals):
+def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
 	dtarray=[]; dE=[]; dN=[]; dU=[]; Se=[]; Sn=[]; Su=[];
+
+	# Introduce gaps into the time series. 
 	for i in range(len(ts_obj.dtarray)):
 		report = True;
 		for j in range(len(ets_intervals)):
@@ -89,38 +90,52 @@ def remove_ETS_times(ts_obj, ets_intervals):
 			Sn.append(ts_obj.Sn[i]);
 			Su.append(ts_obj.Su[i]);
 	
-	ts_obj_fix=Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=dtarray, dE=dE, dN=dN, dU=dU, Se=Se, Sn=Sn, Su=Su, EQtimes=ts_obj.EQtimes);
+	# A time series that is missing days during major tremor episodes
+	ts_obj_gaps=Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=dtarray, dE=dE, dN=dN, dU=dU, Se=Se, Sn=Sn, Su=Su, EQtimes=ts_obj.EQtimes);
 
 	# Find the offsets associated with each ETS interval
 	e_offsets=[]; n_offsets=[]; u_offsets=[]; evdts=[]; 
 	for i in range(len(ets_intervals)):
-		e_offset=fit_offset(dtarray, dE, ets_intervals[i]);
-		n_offset=fit_offset(dtarray, dN, ets_intervals[i]);
-		u_offset=fit_offset(dtarray, dU, ets_intervals[i]);
+		e_offset=fit_offset(dtarray, dE, ets_intervals[i], offset_num_days);
+		n_offset=fit_offset(dtarray, dN, ets_intervals[i], offset_num_days);
+		u_offset=fit_offset(dtarray, dU, ets_intervals[i], offset_num_days);
 		e_offsets.append(e_offset);
 		n_offsets.append(n_offset);
 		u_offsets.append(u_offset);
 		evdts.append(ets_intervals[i][1]);
-	print(e_offsets);
+		# print(evdts[-1]);
+		# print(e_offsets[-1]);
+	# print(e_offsets);
 	offset_obj = Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 
-	ts_obj_fix = offsets.remove_offsets(ts_obj_fix,offset_obj);
+	ts_obj_fix = offsets.remove_offsets(ts_obj_gaps,offset_obj);
 	ts_obj_new=Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=ts_obj_fix.dtarray, dE=ts_obj_fix.dE, dN=ts_obj_fix.dN, dU=ts_obj_fix.dU, Se=ts_obj_fix.Se, Sn=ts_obj_fix.Sn, Su=ts_obj_fix.Su, EQtimes=ts_obj_fix.EQtimes);
 	return ts_obj_new;
 
-def fit_offset(dtarray, data, interval):
-	num_days=10;  
-	start_dt_index=[];
+def fit_offset(dtarray, data, interval, offset_num_days):
+	before_indeces = [];
+	after_indeces = [];
+
+	# Find the indeces of nearby days
 	for i in range(len(dtarray)):
-		deltat=dtarray[i]-interval[0];
-		if abs(deltat.days)<=1:
-			start_dt_index=i;
-	if start_dt_index==[]:
+		deltat_start=dtarray[i]-interval[0];  # the beginning of the interval
+		deltat_end = dtarray[i]-interval[1];  # the end of the interval
+		if deltat_start.days >= -offset_num_days and deltat_start.days<=0: 
+			before_indeces.append(i);
+		if deltat_end.days <= offset_num_days and deltat_end.days >= 0: 
+			after_indeces.append(i);
+
+	# Identify the value of the offset. 
+	if before_indeces==[] or after_indeces==[] or len(before_indeces)==1 or len(after_indeces)==1:
 		offset=0;
+		print("Warning: no data before or after offset. Returning 0");
 	else:
-		before_mean=np.mean(data[start_dt_index-num_days:start_dt_index]);
-		after_mean=np.mean(data[start_dt_index+1:start_dt_index+num_days]);
+		before_mean= np.nanmean( [data[x] for x in before_indeces] );
+		after_mean = np.nanmean( [data[x] for x in after_indeces] );
 		offset=after_mean-before_mean;
+		if offset==np.nan:
+			print("Warning: np.nan offset found. Returning 0");
+			offset=0;
 	return offset;
 
 

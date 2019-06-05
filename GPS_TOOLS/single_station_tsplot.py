@@ -16,7 +16,7 @@ import gps_input_pipeline
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 Offsets    = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
 Parameters = collections.namedtuple("Parameters",['station','outliers_remove', 'outliers_def',
-	'earthquakes_remove','offsets_remove','reference_frame','seasonals_remove', 'seasonals_type','datasource','refframe','fit_table','grace_dir']);
+	'earthquakes_remove','offsets_remove','seasonals_remove', 'seasonals_type','datasource','refframe']);
 
 
 # Types of seasonal options: 
@@ -36,12 +36,10 @@ def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, ou
 
 # -------------- CONFIGURE ------------ # 
 def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe):
-	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
-	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
 	outliers_def       = 15.0;  # mm away from average. 
 	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, earthquakes_remove=earthquakes_remove, 
-		offsets_remove=offsets_remove, reference_frame=refframe, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
-		datasource=datasource, refframe=refframe, fit_table=fit_table, grace_dir=grace_dir);
+		offsets_remove=offsets_remove, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
+		datasource=datasource, refframe=refframe);
 	print("------- %s --------" %(station));
 	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d, datasource=%s, refframe=%s" % (station, earthquakes_remove, outliers_remove, seasonals_remove,datasource,refframe));
 	return MyParams;
@@ -64,7 +62,7 @@ def compute(myData, offset_obj, eq_obj, MyParams):
 	if MyParams.earthquakes_remove==1: # Remove earthquakes
 		newData=offsets.remove_offsets(newData, eq_obj);
 	
-	trend_out=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams.fit_table, MyParams.grace_dir);
+	trend_out=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type);
 	return [newData, trend_out];
 
 
