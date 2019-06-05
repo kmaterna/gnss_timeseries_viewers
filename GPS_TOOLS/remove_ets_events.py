@@ -20,11 +20,23 @@ Parameters = collections.namedtuple("Parameters",['station','outliers_remove', '
 
 
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, seasonals_type='lssq',datasource='pbo',refframe='NA'):
-	MyParams = single_station_tsplot.configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe);
+	MyParams = configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe);
 	[myData, offset_obj, eq_obj, ets_intervals] = input_data(MyParams.station, MyParams.datasource, MyParams.refframe);
 	[ETS_removed, detrended1, ETS_within, detrended2] = compute(myData, offset_obj, eq_obj, MyParams, ets_intervals);
 	single_ts_plot(ETS_removed,detrended1,MyParams, ets_intervals,'corrected');
 	single_ts_plot(ETS_within,detrended2,MyParams, ets_intervals,'uncorrected');
+
+# -------------- CONFIGURE ------------ # 
+def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe):
+	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt"
+	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/"
+	outliers_def       = 10.0;  # mm away from average. 
+	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, earthquakes_remove=earthquakes_remove, 
+		offsets_remove=offsets_remove, reference_frame=refframe, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
+		datasource=datasource, refframe=refframe, fit_table=fit_table, grace_dir=grace_dir);
+	print("------- %s --------" %(station));
+	print("Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d, datasource=%s, refframe=%s" % (station, earthquakes_remove, outliers_remove, seasonals_remove,datasource,refframe));
+	return MyParams;
 
 
 # ----------- INPUTS ---------------- # 

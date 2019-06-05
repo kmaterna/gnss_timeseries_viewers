@@ -10,7 +10,8 @@ EQ0_end="20100110"  # the earthquake time
 EQ1="20100703"  # earthquake was 20100110. We want to skip six months. 
 EQ2="20140310"
 EQ3="20161208"
-EQ4="20180915"
+# EQ4="20180915"
+EQ4="20170915"
 
 
 Center_Coords=[-124.0, 38.5]; # Western US everything
@@ -18,11 +19,11 @@ filter_type='lssq'; # OPTIONS: lssq, notch, stl, grace, gldas, nldas, lsdm, shas
 size='medium';  # OPTIONS: small, medium, huge
 network='pbo';  # choices: unr, pbo, cwu, nmt, nldas, gldas, noah025, lsdm
 refname='NA'; # choices: NA, ITRF
-stations=["P160","WDCB","P349","P159","P332","P330","P161","P158","P162","P337"];  # In case you only want to do a few stations manually. 
+stations=["P337"];  # In case you only want to do a few stations manually. 
 
 # LEAST SQUARES
-Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
-Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016"); # 
+# Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
+Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016", stations); # 
 # Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ0,EQ0_end],[EQ1,EQ2], "2010",stations); # 
 # Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ3,EQ4], "2010_2016");
 
