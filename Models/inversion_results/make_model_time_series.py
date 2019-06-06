@@ -27,8 +27,8 @@ import numpy as np
 import scipy.io
 
 def configure_and_read():
-	folder="pbo_lsdm_NA/"
-	year="2014"
+	folder="HET/nmt_lssq_NA/"
+	year="2016"
 	matlab_file=folder+year+"_inversion_het.mat";
 	output_file=folder+year+"_inversion.txt";
 	output_file_model=folder+year+"_model.txt";
