@@ -25,18 +25,26 @@ def remove_outliers(Data0, outliers_def):
 	medfilt_n=signal.medfilt(Data0.dN, 35);
 	medfilt_u=signal.medfilt(Data0.dU, 35);
 
-	newdN=[]; newdE=[]; newdU=[];
+	newdt=[]; newdN=[]; newdE=[]; newdU=[]; newSe=[]; newSn=[]; newSu=[]; 
 	for i in range(len(medfilt_e)):
 		if abs(Data0.dE[i]-medfilt_e[i])<outliers_def and abs(Data0.dN[i]-medfilt_n[i])<outliers_def and abs(Data0.dU[i]-medfilt_u[i])<outliers_def*2:
+			newdt.append(Data0.dtarray[i]);
 			newdE.append(Data0.dE[i]);
 			newdN.append(Data0.dN[i]);
 			newdU.append(Data0.dU[i]);
-		else:
-			newdE.append(np.nan);
-			newdN.append(np.nan);
-			newdU.append(np.nan);
-	
-	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newdN, dE=newdE, dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+			newSe.append(Data0.Se[i]);
+			newSn.append(Data0.Sn[i]);
+			newSu.append(Data0.Su[i]);
+		# else:
+		# 	newdt.append(Data0.dtarray[i]);
+		# 	newdE.append(np.nan);
+		# 	newdN.append(np.nan);
+		# 	newdU.append(np.nan);
+		# 	newSe.append(Data0.Se[i]);
+		# 	newSn.append(Data0.Sn[i]);
+		# 	newSu.append(Data0.Su[i]);
+
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdt, dN=newdN, dE=newdE, dU=newdU, Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
 	return newData;
 
 
@@ -165,6 +173,9 @@ def get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6):
 		endtime=Data0.dtarray[-1];
 
 	# Defensive programming
+	if len(Data0.dtarray)==0:
+		print("Error: length of dtarray is 0 for station %s. Returning nan" % Data0.name);
+		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
 	if starttime<Data0.dtarray[0]:
 		starttime=Data0.dtarray[0];
 	if endtime>Data0.dtarray[-1]:
@@ -178,8 +189,9 @@ def get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6):
 
 	# Cut to desired window, and remove nans
 	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
+
 	for i in range(len(Data0.dtarray)):
-		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.dE[i]):
+		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.dE[i]) and ~np.isnan(Data0.dN[i]) and ~np.isnan(Data0.dU[i]):
 			mydtarray.append(Data0.dtarray[i]);
 			myeast.append(Data0.dE[i]);
 			mynorth.append(Data0.dN[i]);

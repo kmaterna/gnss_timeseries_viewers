@@ -28,8 +28,8 @@ def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, ou
 
 # -------------- CONFIGURE ------------ # 
 def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe):
-	outliers_def       = 5.0;  # mm away from average. 
-	offset_num_days    = 15;  # days averaged on either side of offset. 
+	outliers_def       =  2.0;  # mm away from average. 
+	offset_num_days    =  30;  # days averaged on either side of offset. 
 	MyParams=Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def, offset_num_days=offset_num_days, earthquakes_remove=earthquakes_remove, 
 		offsets_remove=offsets_remove, seasonals_remove=seasonals_remove, seasonals_type=seasonals_type, 
 		datasource=datasource, refframe=refframe);
@@ -67,12 +67,13 @@ def compute(myData, offset_obj, eq_obj, MyParams, ets_intervals):
 		newData=offsets.remove_offsets(newData, eq_obj);
 	trend_out_uncorrected=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type);
 
-	ETS_removed=remove_ETS_times(trend_out_uncorrected,ets_intervals, MyParams.offset_num_days);
+	ETS_removed=remove_ETS_times(trend_out_uncorrected, ets_intervals, MyParams.offset_num_days);
 	trend_out_corrected=gps_seasonal_removals.make_detrended_ts(ETS_removed, MyParams.seasonals_remove, MyParams.seasonals_type);
 	return [newData, trend_out_uncorrected, ETS_removed, trend_out_corrected];
 
 
 def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
+	print("Removing ETS event times.");
 	dtarray=[]; dE=[]; dN=[]; dU=[]; Se=[]; Sn=[]; Su=[];
 
 	# Introduce gaps into the time series. 
