@@ -48,7 +48,7 @@ def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=
 
 	map_coords=[];
 	if overall_size=='medium':
-		radius=600;  # km. 
+		radius=550;  # km. 
 	elif overall_size=='huge':
 		radius=-1;  # this is a special key for using a coordinate box instead of a radius
 		map_coords=[-125.6, -110.0, 32.5, 48.5];

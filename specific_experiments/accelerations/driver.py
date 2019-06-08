@@ -21,9 +21,10 @@ network='pbo';  # choices: unr, pbo, cwu, nmt, nldas, gldas, lsdm
 refname='NA'; # choices: NA, ITRF
 stations=["P337"];  # In case you only want to do a few stations manually. 
 
+
 # LEAST SQUARES
-# Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
-# Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016"); #
+Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
+Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016"); #
 
 
 # # Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ0,EQ0_end],[EQ1,EQ2], "2010",stations); # 
@@ -37,11 +38,11 @@ stations=["P337"];  # In case you only want to do a few stations manually.
 # # nldas
 # # lsdm
 
-filter_type='lsdm'; # OPTIONS: lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville, none. 
-Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
-Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016"); # 
+# filter_type='lsdm'; # OPTIONS: lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville, none. 
+# Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
+# Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016"); # 
 
 
-filter_type='nldas'; # OPTIONS: lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville, none. 
-Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
-Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016"); # 
+# filter_type='nldas'; # OPTIONS: lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville, none. 
+# Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
+# Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,EQ3],[EQ3,EQ4], "2016"); # 

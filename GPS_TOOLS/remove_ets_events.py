@@ -51,6 +51,8 @@ def input_tremor_days():
 		temp=line.split();
 		t1=dt.datetime.strptime(temp[0],"%Y-%m-%d");
 		t2=dt.datetime.strptime(temp[2],"%Y-%m-%d");
+		# t1=t1+dt.timedelta(days=180);
+		# t2=t2+dt.timedelta(days=180); # An experiment for teasing the difference between seasonal and ETS corrections. 
 		ets_ints.append([t1, t2]);
 	ifile.close();
 	return ets_ints;

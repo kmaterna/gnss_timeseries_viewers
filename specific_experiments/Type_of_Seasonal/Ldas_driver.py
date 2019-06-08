@@ -8,6 +8,7 @@ import gps_io_functions
 import gps_ts_functions
 import offsets
 import gps_seasonal_removals
+import remove_ets_events
 
 def compare_single_station(station):
 	Time_periods, EQs=configure_times();
@@ -45,6 +46,13 @@ def inputs(station):
 	gps=offsets.remove_offsets(gps, offset_obj);
 	gps=offsets.remove_offsets(gps, EQtimes);
 	gps=gps_seasonal_removals.make_detrended_ts(gps,0,'lssq');  # removing trend only
+
+	# NOTE: A test for removing ETS events. 
+	ets_intervals=remove_ets_events.input_tremor_days();
+	gps=gps_ts_functions.remove_outliers(gps,3.0);  # 3 mm outlier def. 
+	gps=remove_ets_events.remove_ETS_times(gps,ets_intervals, offset_num_days=30);  # 30 days on either end of the offsets
+	gps=gps_seasonal_removals.make_detrended_ts(gps,0,'lssq');
+
 	return [gldas, nldas, grace, lsdm, gps];
 
 def compute(ts_obj, Time_periods):
@@ -176,5 +184,5 @@ def outputs(station, Time_periods, EQs, gldas, nldas, grace, lsdm, gps, gldas_sl
 
 
 if __name__=="__main__":
-	station="WDCB";
+	station="P332";
 	compare_single_station(station);

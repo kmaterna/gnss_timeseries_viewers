@@ -204,39 +204,39 @@ gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $outp
 EOF
 
 
-# The sixth plot
-infile=$infolder6$name1"_inversion.txt"
-gpsfile=$infolder6$name1".txt"
-modelfile=$infolder6$name1"_model.txt"
-gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0WeSn:.$infile2: -Dh -K -O -X9 -Y0 >> $output1 # the title goes here
-gmt grdgradient ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -A320 -R$range -Getopo1.grad -Nt
-gmt grdhisteq etopo1.grad -Getopo1.hist -N
-gmt grdinfo etopo1.hist 
-gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
-gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
-gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt $watercolor -N1 -N2 -Dh -O -K >> $output1 
-gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
-gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
+# # The sixth plot
+# infile=$infolder6$name1"_inversion.txt"
+# gpsfile=$infolder6$name1".txt"
+# modelfile=$infolder6$name1"_model.txt"
+# gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0WeSn:.$infile2: -Dh -K -O -X9 -Y0 >> $output1 # the title goes here
+# gmt grdgradient ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -A320 -R$range -Getopo1.grad -Nt
+# gmt grdhisteq etopo1.grad -Getopo1.hist -N
+# gmt grdinfo etopo1.hist 
+# gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
+# gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
+# gmt pscoast -R$range -J$projection -Lf-121.6/39.3/39.3/50+jt $watercolor -N1 -N2 -Dh -O -K >> $output1 
+# gmt psxy $infile -R$range -J$projection -L -Wthinnest,gray -Cdatacpt.cpt -K -O >> $output1
+# gmt pscoast -R$range -J$projection -Wthicker,black -N1 -N2 -Dh -K -O >> $output1
 
-gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
-awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinner,black >> $output1
-awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthinner,red >> $output1
-gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wblack -K -O <<EOF >> $output1
--125.4 39.6 2 0 0.0 0.0 0.0 
-EOF
-gmt pstext -R$range -J$projection -F+f10p,Helvetica -K -O <<EOF >> $output1
--124.9 39.8 2mm/yr data
-EOF
-gmt psvelo -R$range -J$projection -A+e+gred+pthickest -Se$horiz_scale/0.68/10 -Wred -K -O <<EOF >> $output1
--125.4 39.2 2 0 0.0 0.0 0.0
-EOF
-gmt pstext -R$range -J$projection -F+f10p,Helvetica,red -K -O <<EOF >> $output1
--124.85 39.4 2mm/yr model
-EOF
-gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
--121.55 $label_lat $name1
--124.0 $label_lat F: PBO LSSQ HET
-EOF
+# gmt grdcontour mapping_data/tremor_density.nc -Ctremor.cpt -A- -W+cl -R$range -Wthick -J$projection -K -O >> $output1
+# awk '{print $1, $2, $3, $4, $7, $8, $10}' $gpsfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinner,black >> $output1
+# awk '{print $1, $2, $3*1, $4*1}' $modelfile | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthinner,red >> $output1
+# gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wblack -K -O <<EOF >> $output1
+# -125.4 39.6 2 0 0.0 0.0 0.0 
+# EOF
+# gmt pstext -R$range -J$projection -F+f10p,Helvetica -K -O <<EOF >> $output1
+# -124.9 39.8 2mm/yr data
+# EOF
+# gmt psvelo -R$range -J$projection -A+e+gred+pthickest -Se$horiz_scale/0.68/10 -Wred -K -O <<EOF >> $output1
+# -125.4 39.2 2 0 0.0 0.0 0.0
+# EOF
+# gmt pstext -R$range -J$projection -F+f10p,Helvetica,red -K -O <<EOF >> $output1
+# -124.85 39.4 2mm/yr model
+# EOF
+# gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
+# -121.55 $label_lat $name1
+# -124.0 $label_lat F: PBO LSSQ HET
+# EOF
 
 
 

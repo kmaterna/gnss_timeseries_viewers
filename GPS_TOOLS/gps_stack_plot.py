@@ -20,6 +20,7 @@ import gps_ts_functions
 import gps_seasonal_removals
 import stations_within_radius
 import offsets
+import remove_ets_events
 
 
 def driver():
@@ -36,7 +37,9 @@ def driver():
 
 
 def configure():
-	EQcoords=[-125.134, 40.829]; expname='Mend'; radius = 120; 
+	# EQcoords=[-125.134, 40.829]; expname='Mend'; radius = 120; 
+	EQcoords=[-123.4, 40.3]; expname='Mend'; radius = 60; 
+
 	# EQcoords=[-124.0, 38.0];     expname='Nbay'; radius = 125; 
 	# EQcoords=[-119.0, 34.5];     expname='SoCal';  radius = 25; # km
 	# EQcoords=[-116.0, 34.5];     expname='Mojave';  radius = 35; # km
@@ -103,6 +106,14 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtimes):
 
 		# The detrended TS without earthquakes or seasonals
 		stage2obj=gps_seasonal_removals.make_detrended_ts(newobj, 1, 'lssq');
+
+		# NOTE: WRITTEN IN JUNE 2019
+		# An experiment for removing ETS events
+		ets_intervals=remove_ets_events.input_tremor_days();
+		stage2obj=gps_ts_functions.remove_outliers(stage2obj,3.0);  # 3 mm outlier def. 
+		stage2obj=remove_ets_events.remove_ETS_times(stage2obj,ets_intervals, offset_num_days=20);  # 30 days on either end of the offsets
+		stage2obj=gps_seasonal_removals.make_detrended_ts(stage2obj,0,'lssq');
+
 		stage2_objects.append(stage2obj);
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
@@ -134,6 +145,8 @@ def output_full_ts(dataobj_list, distances, EQtimes, expname, filename, east_slo
 	if expname=='Mend': # aesthetics only
 		closest_station=70;
 		farthest_station=120;
+		closest_station=10;
+		farthest_station=60;		
 	else:
 		closest_station=min(distances);  # km from event
 		farthest_station=max(distances); # km from event
@@ -203,8 +216,8 @@ def vertical_plots(dataobj_list, distances, EQtimes, expname, filename):
 	offset=0;
 	spacing=40;
 	if expname=='Mend':  # aesthetics only
-		closest_station=70;
-		farthest_station=120;
+		closest_station=10;
+		farthest_station=60;  # 70 to 120 was good for regular Mendocino
 	else:
 		closest_station=min(distances);  # km from event
 		farthest_station=max(distances); # km from event
