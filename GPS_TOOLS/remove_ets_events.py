@@ -103,13 +103,20 @@ def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
 		n_offset=fit_offset(dtarray, dN, ets_intervals[i], offset_num_days);
 		u_offset=fit_offset(dtarray, dU, ets_intervals[i], offset_num_days);
 		e_offsets.append(e_offset);
-		n_offsets.append(n_offset);
+		n_offsets.append(0);
+		# n_offsets.append(n_offset);
 		u_offsets.append(u_offset);
 		evdts.append(ets_intervals[i][1]);
-		# print(evdts[-1]);
-		# print(e_offsets[-1]);
-	# print(e_offsets);
+	# for i in range(len(evdts)):  # A nice sanity check
+		# print(str(evdts[i])+" %f" % (n_offsets[i]) );
 	offset_obj = Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	# print("Mean east offset: %.3f mm" % (np.mean(e_offsets) ));
+	# print("Mean north offset: %.3f mm" % (np.mean(n_offsets) ));
+	# print("Mean vert offset: %.3f mm" % (np.mean(u_offsets) ));
+	
+	# ofile=open("Offsets.txt","a");
+	# ofile.write("%s %f %f %.2f %.2f %.2f %.2f %.2f %.2f\n" % (ts_obj.name, ts_obj.coords[0], ts_obj.coords[1], np.mean(e_offsets), np.mean(n_offsets), np.mean(u_offsets), np.std(e_offsets), np.std(n_offsets), np.std(u_offsets) ) );
+	# ofile.close();
 
 	ts_obj_fix = offsets.remove_offsets(ts_obj_gaps,offset_obj);
 	ts_obj_new=Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=ts_obj_fix.dtarray, dE=ts_obj_fix.dE, dN=ts_obj_fix.dN, dU=ts_obj_fix.dU, Se=ts_obj_fix.Se, Sn=ts_obj_fix.Sn, Su=ts_obj_fix.Su, EQtimes=ts_obj_fix.EQtimes);
