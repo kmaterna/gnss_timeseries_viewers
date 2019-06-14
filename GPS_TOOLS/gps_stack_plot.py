@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.cm as cm
 import collections
+import sys
 import datetime as dt 
 import gps_io_functions
 import gps_input_pipeline
@@ -38,7 +39,7 @@ def driver():
 
 def configure():
 	# EQcoords=[-125.134, 40.829]; expname='Mend'; radius = 120; 
-	EQcoords=[-123.4, 40.3]; expname='Mend'; radius = 60; 
+	EQcoords=[-123.0, 40.6]; expname='Mend'; radius = 75; 
 
 	# EQcoords=[-124.0, 38.0];     expname='Nbay'; radius = 125; 
 	# EQcoords=[-119.0, 34.5];     expname='SoCal';  radius = 25; # km
@@ -61,6 +62,8 @@ def configure():
 		if stations[i] not in blacklist:
 			stations_new.append(stations[i]);
 			distances_new.append(distances[i]);
+	print(len(stations_new));
+	print(stations_new);	
 	return [stations_new, distances_new, EQtimes, proc_center, expname];
 
 
@@ -104,15 +107,17 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtimes):
 		stage1obj=gps_seasonal_removals.make_detrended_ts(newobj, 0, 'lssq');
 		stage1_objects.append(stage1obj);
 
-		# The detrended TS without earthquakes or seasonals
-		stage2obj=gps_seasonal_removals.make_detrended_ts(newobj, 1, 'lssq');
 
 		# NOTE: WRITTEN IN JUNE 2019
 		# An experiment for removing ETS events
 		ets_intervals=remove_ets_events.input_tremor_days();
-		stage2obj=gps_ts_functions.remove_outliers(stage2obj,3.0);  # 3 mm outlier def. 
-		stage2obj=remove_ets_events.remove_ETS_times(stage2obj,ets_intervals, offset_num_days=20);  # 30 days on either end of the offsets
+		stage2obj=gps_ts_functions.remove_outliers(stage1obj,3.0);  # 3 mm outlier def. 
+		stage2obj=remove_ets_events.remove_ETS_times(stage2obj,ets_intervals, offset_num_days=15);  # 30 days on either end of the offsets
 		stage2obj=gps_seasonal_removals.make_detrended_ts(stage2obj,0,'lssq');
+
+
+		# The detrended TS without earthquakes or seasonals
+		stage2obj=gps_seasonal_removals.make_detrended_ts(stage2obj, 1, 'lssq');
 
 		stage2_objects.append(stage2obj);
 

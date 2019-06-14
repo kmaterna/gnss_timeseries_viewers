@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import collections
 import datetime as dt 
+import subprocess
 import gps_io_functions
 import gps_ts_functions
 import gps_seasonal_removals
@@ -69,9 +70,54 @@ def compute(myData, offset_obj, eq_obj, MyParams, ets_intervals):
 		newData=offsets.remove_offsets(newData, eq_obj);
 	trend_out_uncorrected=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type);
 
-	ETS_removed=remove_ETS_times(trend_out_uncorrected, ets_intervals, MyParams.offset_num_days);
+	# ETS_removed=remove_ETS_times(trend_out_uncorrected, ets_intervals, MyParams.offset_num_days);
+	ETS_removed=remove_characteristic_ETS(trend_out_uncorrected, ets_intervals);
 	trend_out_corrected=gps_seasonal_removals.make_detrended_ts(ETS_removed, MyParams.seasonals_remove, MyParams.seasonals_type);
 	return [newData, trend_out_uncorrected, ETS_removed, trend_out_corrected];
+
+
+
+def remove_characteristic_ETS(ts_obj,ets_intervals):
+	print("Removing a characteristic ETS offset during ETS event times.");
+	dtarray=[]; dE=[]; dN=[]; dU=[]; Se=[]; Sn=[]; Su=[];
+
+	# Introduce gaps into the time series. 
+	for i in range(len(ts_obj.dtarray)):
+		report = True;
+		for j in range(len(ets_intervals)):
+			if ts_obj.dtarray[i]>=ets_intervals[j][0] and ts_obj.dtarray[i]<=ets_intervals[j][1]:
+				report=False;
+		if report==True and ts_obj.dtarray[i]>=dt.datetime.strptime("20120101","%Y%m%d"):
+			dtarray.append(ts_obj.dtarray[i]);
+			dE.append(ts_obj.dE[i]);
+			dN.append(ts_obj.dN[i]);
+			dU.append(ts_obj.dU[i]);
+			Se.append(ts_obj.Se[i]);
+			Sn.append(ts_obj.Sn[i]);
+			Su.append(ts_obj.Su[i]);
+	# A time series that is missing days during major tremor episodes
+	ts_obj_gaps=Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=dtarray, dE=dE, dN=dN, dU=dU, Se=Se, Sn=Sn, Su=Su, EQtimes=ts_obj.EQtimes);
+
+
+	# Find the offsets associated with each ETS interval
+	# Task: Get the east and north and up offsets here. 
+	offset_string = subprocess.check_output("grep "+ts_obj.name+" ../../GPS_POS_DATA/Tremor/Offsets_2mm_30days.txt",shell=True);
+	e_offset=float(offset_string.split()[3]);
+	n_offset=float(offset_string.split()[4]);
+	u_offset=float(offset_string.split()[5]);
+	e_offsets=[]; n_offsets=[]; u_offsets=[]; evdts=[]; 
+	for i in range(len(ets_intervals)):
+		e_offsets.append(e_offset);
+		n_offsets.append(n_offset);
+		u_offsets.append(u_offset);
+		evdts.append(ets_intervals[i][1]);
+	# for i in range(len(evdts)):  # A nice sanity check
+		# print(str(evdts[i])+" %f" % (n_offsets[i]) );
+	offset_obj = Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	ts_obj_fix = offsets.remove_offsets(ts_obj_gaps,offset_obj);
+	ts_obj_new=Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=ts_obj_fix.dtarray, dE=ts_obj_fix.dE, dN=ts_obj_fix.dN, dU=ts_obj_fix.dU, Se=ts_obj_fix.Se, Sn=ts_obj_fix.Sn, Su=ts_obj_fix.Su, EQtimes=ts_obj_fix.EQtimes);
+	return ts_obj_new;
+	# using only the characteristic offset
 
 
 def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
@@ -103,8 +149,7 @@ def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
 		n_offset=fit_offset(dtarray, dN, ets_intervals[i], offset_num_days);
 		u_offset=fit_offset(dtarray, dU, ets_intervals[i], offset_num_days);
 		e_offsets.append(e_offset);
-		n_offsets.append(0);
-		# n_offsets.append(n_offset);
+		n_offsets.append(n_offset);
 		u_offsets.append(u_offset);
 		evdts.append(ets_intervals[i][1]);
 	# for i in range(len(evdts)):  # A nice sanity check

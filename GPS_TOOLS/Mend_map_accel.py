@@ -116,18 +116,19 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
 				newobj=gps_seasonal_removals.make_detrended_ts(newobj,1,'shasta');
 			if newobj.name=='ORVB':
 				newobj=gps_seasonal_removals.make_detrended_ts(newobj,1,'oroville');
+
+		if fit_type!='none':
 			newobj=gps_seasonal_removals.make_detrended_ts(newobj, 1, fit_type);  # remove seasonals
 
-		noeq_objects.append(newobj);
-
-		
 		# NOTE: WRITTEN IN JUNE 2019
 		# An experiment for removing ETS events
-		# if newobj.name in ["P349","P060","P330","P331","P332","P343"]:
+		# if newobj.name in ["P349","P060","P330","P331","P332","P343","P338","P341"]:
 		ets_intervals=remove_ets_events.input_tremor_days();
-		newobj=gps_ts_functions.remove_outliers(newobj,3.0);  # 3 mm outlier def. 
-		newobj=remove_ets_events.remove_ETS_times(newobj,ets_intervals, offset_num_days=30);  # 30 days on either end of the offsets
+			# newobj=gps_ts_functions.remove_outliers(newobj,3.0);  # 3 mm outlier def. 
+			# newobj=remove_ets_events.remove_ETS_times(newobj,ets_intervals, offset_num_days=15);  # 30 days on either end of the offsets
+		newobj=remove_ets_events.remove_characteristic_ETS(newobj,ets_intervals); # using only the characteristic offset
 		
+		noeq_objects.append(newobj);
 
 
 		# Get the pre-event and post-event velocities (earthquakes removed)
