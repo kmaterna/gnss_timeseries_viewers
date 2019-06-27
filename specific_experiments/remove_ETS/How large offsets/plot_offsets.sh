@@ -55,10 +55,21 @@ gmt pscoast -R$range -J$projection -Lf-124.9/39.15/39.15/50+jt -N1 -N2 -B+t"Aver
 awk '{print $2, $3, $6}' $infile | gmt psxy -R$range -J$projection -Sc0.3 -Ccolors.cpt -Wthinnest,black -K -O >> $output2
 awk '{print $2, $3, $1}' $infile | gmt pstext -R$range -J$projection -D0/.15 -F+f6p,Helvetica -K -O >> $output2
 awk '{print $2, $3, $4, $5}' $infile | gmt psvelo -R$range -J$projection -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black -K -O >> $output2
+gmt psvelo -R$range -J$projection -Se0.2/0.68/12 -A+e+gblack+pthickest -Wthick,black -K -O <<EOF >> $output2
+-124.8 39.5 2 0 0 0 0 2mm
+EOF
+gmt psxy -R$range -J$projection -Wthick,red -K -O <<EOF >> $output2
+-123 40.2
+-123.3 40.2
+-123.3 40.8
+-123 40.8
+-123 40.2
+EOF
 
-gmt psscale -R$range -J$projection -DjTR+w8c/0.5c+o-1.5/1.5 -Ccolors.cpt -B1:"Average Offset":/:mm: -P -O >> $output2
+gmt psscale -R$range -J$projection -DjTR+w8c/0.5c+o-1.5/1.5 -Ccolors.cpt -B1:"Average Vertical Offset":/:mm: -P -O >> $output2
 
-
+# Convert to PNG
+gmt psconvert $output2 -Tg
 
 
 gmt makecpt -T0/2/0.2 -Cjet > colors.cpt
@@ -89,4 +100,4 @@ gmt psscale -R$range -J$projection -DjTR+w8c/0.5c+o-1.5/1.5 -Ccolors.cpt -B1:"Si
 
 
 
-open $output3
+open $output2

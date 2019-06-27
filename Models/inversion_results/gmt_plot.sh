@@ -2,7 +2,7 @@
 
 
 
-infolder="pbo_lssq_NA/"
+infolder="HET/pbo_nldas_NA_characteristic/"
 name1="2014"
 name2="2016"
 infile1=$infolder$name1"_inversion.txt"
@@ -23,9 +23,9 @@ projection="M4.5i"  # used for medium experiments.
 
 # Make colorscales
 # gmt makecpt -T0/29/1 -Ic -Chot > datacpt.cpt
-gmt makecpt -T-26/26/1 -CBlueWhiteOrangeRed > datacpt2.cpt # this is for the 2016 case
-gmt makecpt -T-20/20/1 -Ic -CBlueWhiteOrangeRed > datacpt2_backwards.cpt  # this is for the 2014 case
-gmt makecpt -T-20/20/1 -CBlueWhiteOrangeRed > datacpt2_scale.cpt # this is for the 2014 color scale
+gmt makecpt -T-22/22/1 -CBlueWhiteOrangeRed > datacpt2.cpt # this is for the 2016 case
+gmt makecpt -T-22/22/1 -Ic -CBlueWhiteOrangeRed > datacpt2_backwards.cpt  # this is for the 2014 case
+gmt makecpt -T-22/22/1 -CBlueWhiteOrangeRed > datacpt2_scale.cpt # this is for the 2014 color scale
 gmt makecpt -T-2000/2000/200 -Ic -Ccopper > tremor.cpt  # Cdrywet also works
 gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
 
@@ -84,8 +84,8 @@ gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $outp
 EOF
 
 # gmt psscale -R$range -J$projection -DjTR+w12c/0.5c+o-1.5/0.2 -Cdatacpt.cpt -B5.0:"":/:mm/yr: -P -O -K >> $output1
-gmt psscale -R$range -J$projection -DjTR+w6c/0.5c+o-1.5/0.2 -G0/25 -Cdatacpt2.cpt -B5.0:"":/:mm/yr: -P -K -O >> $output1
-gmt psscale -R$range -J$projection -DjTR+w6c/0.5c+o-1.5/6.2 -G-20/-1 -Cdatacpt2_scale.cpt -B5.0:"":/:"": -P -O >> $output1
+gmt psscale -R$range -J$projection -DjTR+w12c/0.5c+o-1.5/0.2 -G-22/22 -Cdatacpt2.cpt -B5.0:"":/:mm/yr: -P -O >> $output1
+# gmt psscale -R$range -J$projection -DjTR+w6c/0.5c+o-1.5/6.2 -G-22/-1 -Cdatacpt2_scale.cpt -B5.0:"":/:"": -P -O >> $output1
 
 gmt psconvert $output1 -Tg
 

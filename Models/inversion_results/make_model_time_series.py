@@ -27,9 +27,9 @@ import numpy as np
 import scipy.io
 
 def configure_and_read():
-	folder="HET/pbo_nldas_scaled_NA/"
+	folder="HET/pbo_nldas_NA_characteristic_homog/"
 	year="2016"
-	matlab_file=folder+year+"_inversion_het.mat";
+	matlab_file=folder+year+"_inversion_homog.mat";
 	output_file=folder+year+"_inversion.txt";
 	output_file_model=folder+year+"_model.txt";
 	print("Making text files for %s %s" % (folder, year) );

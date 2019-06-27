@@ -12,7 +12,7 @@ horiz_scale=0.3  # used for velocity change vectors (0.3 sometimes, sometimes sm
 output1='Figures/MTJ.ps'
 offset=13
 
-folder="pbo_lssq_NA/"
+folder="pbo_nldas_NA_characteristic/"
 file1=2014.txt
 name1="2014: T3-T2"
 file2=2016.txt

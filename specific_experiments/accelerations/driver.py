@@ -15,7 +15,7 @@ EQ4="20180915"
 
 
 Center_Coords=[-124.0, 40.1]; # Western US everything is -124, 38.5. Higher north for MTJ. 
-filter_type='lssq'; # OPTIONS: lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville, none. 
+filter_type='nldas'; # OPTIONS: lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville, none. 
 size='medium';  # OPTIONS: small, medium, huge
 network='pbo';  # choices: unr, pbo, cwu, nmt, nldas, gldas, lsdm
 refname='NA'; # choices: NA, ITRF
@@ -31,11 +31,6 @@ Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ2,E
 # # Mend_map_accel.driver(Center_Coords, size, network, refname, ["20110824","20140824"],["20140824","20170824"], "NAPA");
 
 # 😇
-
-# # wish list: 
-# # lssq
-# # nldas
-# # lsdm
 
 # filter_type='lsdm'; # OPTIONS: lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville, none. 
 # Mend_map_accel.driver(Center_Coords, size, network, refname, filter_type, [EQ1,EQ2],[EQ2,EQ3], "2014"); # 
