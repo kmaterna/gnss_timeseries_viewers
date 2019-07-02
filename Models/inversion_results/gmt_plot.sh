@@ -1,6 +1,7 @@
 # This is the plot for the Figure in the paper. 
 
-
+# The preferred method for the paper: 
+# infolder="HET/pbo_nldas_NA_characteristic/"
 
 infolder="HET/pbo_nldas_NA_characteristic/"
 name1="2014"
@@ -30,7 +31,8 @@ gmt makecpt -T-2000/2000/200 -Ic -Ccopper > tremor.cpt  # Cdrywet also works
 gmt makecpt -T-29000/8000/500 -Cgray -Z > blue_topo.cpt
 
 
-gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0WeSn:.$infile1: -Dh -K > $output1 # the title goes here
+# gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0WeSn:.$infile1: -Dh -K > $output1 # the title goes here
+gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0WeSn -Dh -K > $output1 # the title goes here
 gmt grdgradient ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -A320 -R$range -Getopo1.grad -Nt
 gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
@@ -58,7 +60,8 @@ EOF
 
 
 # The second image
-gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0weSn:.$infile2: -Dh -K -O -X12.5 >> $output1 # the title goes here
+# gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0weSn:.$infile2: -Dh -K -O -X12.5 >> $output1 # the title goes here
+gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0weSn -Dh -K -O -X12.5 >> $output1 # the title goes here
 gmt grdgradient ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -A320 -R$range -Getopo1.grad -Nt
 gmt grdhisteq etopo1.grad -Getopo1.hist -N
 gmt grdinfo etopo1.hist 
