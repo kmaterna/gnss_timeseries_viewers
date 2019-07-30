@@ -11,8 +11,11 @@ import datetime as dt
 import gps_ts_functions
 
 def configure():
-	input_file="CA_OR.txt";
-	output_dir="../../../GPS_POS_DATA/PBO_Hydro/LSDM/";
+	# input_file="CA_OR.txt";
+	# output_dir="../../../GPS_POS_DATA/PBO_Hydro/LSDM/";
+	# For Myanmar: 
+	input_file="Test.txt";
+	output_dir="../../../../Myanmar/MODEL_DATA/LSDM/NONE/";
 	return [input_file, output_dir];
 
 def get_stations(input_file, output_dir):

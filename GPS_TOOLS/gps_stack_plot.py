@@ -38,8 +38,8 @@ def driver():
 
 
 def configure():
-	# EQcoords=[-125.134, 40.829]; expname='Mend'; radius = 120; 
-	EQcoords=[-123.0, 40.6]; expname='Mend'; radius = 75; 
+	EQcoords=[-125.134, 40.829]; expname='Mend'; radius = 120; 
+	# EQcoords=[-123.0, 40.6]; expname='Mend'; radius = 75; 
 
 	# EQcoords=[-124.0, 38.0];     expname='Nbay'; radius = 125; 
 	# EQcoords=[-119.0, 34.5];     expname='SoCal';  radius = 25; # km
@@ -110,6 +110,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, EQtimes):
 
 		# NOTE: WRITTEN IN JUNE 2019
 		# An experiment for removing ETS events
+		# stage2obj=stage1obj;
 		ets_intervals=remove_ets_events.input_tremor_days();
 		stage2obj=gps_ts_functions.remove_outliers(stage1obj,3.0);  # 3 mm outlier def. 
 		stage2obj=remove_ets_events.remove_ETS_times(stage2obj,ets_intervals, offset_num_days=15);  # 30 days on either end of the offsets
@@ -150,8 +151,8 @@ def output_full_ts(dataobj_list, distances, EQtimes, expname, filename, east_slo
 	if expname=='Mend': # aesthetics only
 		closest_station=70;
 		farthest_station=120;
-		closest_station=10;
-		farthest_station=60;		
+		# closest_station=10;
+		# farthest_station=60;		
 	else:
 		closest_station=min(distances);  # km from event
 		farthest_station=max(distances); # km from event
