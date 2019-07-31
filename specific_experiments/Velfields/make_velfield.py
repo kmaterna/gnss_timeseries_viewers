@@ -25,11 +25,11 @@ import remove_ets_events
 
 
 def configure():
-	overall_size = 'small';
+	overall_size = 'medium';
 	network = 'pbo';  # choices: unr, pbo, cwu, nmt, nldas, gldas, lsdm
 	refname = 'NA'; # choices: NA, ITRF
-	seasonal_type = 'lssq'; # OPTIONS: none, lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville. 
-	outfile = "Fields/"+network+"_"+refname+"_"+seasonal_type+"_"+overall_size+"_velocities.txt";
+	seasonal_type = 'notch'; # OPTIONS: none, lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville. 
+	outfile = "Fields/"+network+"_"+refname+"_"+seasonal_type+"_"+"small"+"_velocities.txt";
 
 	if overall_size=='small':
 		map_coords=[-125.6, -123.0, 39.5, 41.5];
@@ -72,9 +72,9 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, seasonal_type):
 			newobj=newobj;
 		else:
 			if newobj.name=='P349':
-				newobj_detrended, newobj=gps_seasonal_removals.make_detrended_ts(newobj,1,'shasta', remove_trend=0);  # special considerations for stations near lakes
+				newobj=gps_seasonal_removals.make_detrended_ts(newobj,1,'shasta', remove_trend=0);  # special considerations for stations near lakes
 			if newobj.name=='ORVB':
-				newobj_detrended, newobj=gps_seasonal_removals.make_detrended_ts(newobj,1,'oroville', remove_trend=0);
+				newobj=gps_seasonal_removals.make_detrended_ts(newobj,1,'oroville', remove_trend=0);
 			# For each object, remove seasonals in the specified way. 
 			newobj=gps_seasonal_removals.make_detrended_ts(newobj, 1, seasonal_type, remove_trend=0);  # remove seasonals but do not remove the trend. 
 

@@ -420,7 +420,7 @@ def remove_seasonals_by_lakes(Data, lakes_dir, lake_name):
 		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
 		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 		print("returning placeholder object");
-		return wimpyObj;  # 1 = error code. 
+		return wimpyObj, wimpyObj;  # 1 = error code. 
 
 	loading_ts = read_loading_ts(files[0]);
 	[GPS_paired, loading_paired] = gps_ts_functions.pair_gps_model(Data, loading_ts);

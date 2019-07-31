@@ -1,9 +1,6 @@
 # Velocity field experiment
 # July 2019
-# Make velocity fields from various GPS solutions. 
-# Removing earthquakes, seasonals, etc. 
-# How different are they really? 
-# 2D vs 3D? 
+# Plot a single station- what happens to its time series under each of these corrections? 
 
 
 
