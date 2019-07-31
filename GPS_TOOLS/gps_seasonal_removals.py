@@ -17,7 +17,7 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 
 
 # Make a detrended/modeled version of this time series. 
-def make_detrended_ts(Data, seasonals_remove, seasonals_type, 
+def make_detrended_ts(Data, seasonals_remove, seasonals_type, remove_trend=1, 
 	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt",
 	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/",
 	STL_dir="../../GPS_POS_DATA/STL_models/",
@@ -37,43 +37,47 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type,
 		east_params=[0,0,0,0,0];  north_params=[0,0,0,0,0]; up_params=[0,0,0,0,0];
 		[east_vel, north_vel, up_vel,esig,nsig,usig]=gps_ts_functions.get_slope(Data);
 		east_params[0]=east_vel; north_params[0]=north_vel; up_params[0]=up_vel;
-		trend_out=gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);		
+		trend_out=gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);
+		trend_in = Data;	
 
 	else:  # Going into different forms of seasonal removal. 
 		print("Removing seasonals by %s method." % seasonals_type);
 		if seasonals_type=='lssq':
 			[east_params, north_params, up_params]=gps_ts_functions.get_linear_annual_semiannual(Data);
-			trend_out=gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);
+			trend_out= gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);
+			trend_in = gps_ts_functions.remove_seasonal_by_value(Data, east_params, north_params, up_params);
 
 		elif seasonals_type=='noel':
 			[east_params, north_params, up_params] = gps_ts_functions.look_up_seasonal_coefs(Data.name, fit_table);
-			trend_out=gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);	
+			trend_out= gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);	
+			trend_in = Data; # Broken because I don't really use this option anymore. 
 		
 		elif seasonals_type=='notch':
-			trend_out=remove_seasonals_by_notch(Data);
+			trend_out, trend_in = remove_seasonals_by_notch(Data);
 
 		elif seasonals_type=='grace':
-			trend_out=remove_seasonals_by_GRACE(Data,grace_dir);
+			trend_out, trend_in = remove_seasonals_by_GRACE(Data,grace_dir);
 
 		elif seasonals_type=='stl':
-			trend_out=remove_seasonals_by_STL(Data, STL_dir);
+			trend_out, trend_in = remove_seasonals_by_STL(Data, STL_dir);
 
 		elif seasonals_type=='nldas':
-			trend_out=remove_seasonals_by_hydro(Data, nldas_dir);
+			trend_out, trend_in = remove_seasonals_by_hydro(Data, nldas_dir);
 
 		elif seasonals_type=='nldas_scaled':
-			trend_out=remove_seasonals_by_hydro(Data, nldas_dir, scaling=True);
+			trend_out, trend_in = remove_seasonals_by_hydro(Data, nldas_dir, scaling=True);
 
 		elif seasonals_type=='gldas':
-			trend_out=remove_seasonals_by_hydro(Data, gldas_dir);
+			trend_out, trend_in = remove_seasonals_by_hydro(Data, gldas_dir);
 
 		elif seasonals_type=='lsdm':
-			trend_out=remove_seasonals_by_german_load(Data, lsdm_dir);
+			trend_out, trend_in = remove_seasonals_by_german_load(Data, lsdm_dir);
 
 		elif seasonals_type=='oroville':
-			trend_out=remove_seasonals_by_lakes(Data, lakes_dir, 'oroville');
+			trend_out, trend_in = remove_seasonals_by_lakes(Data, lakes_dir, 'oroville');
+
 		elif seasonals_type=='shasta':
-			trend_out=remove_seasonals_by_lakes(Data, lakes_dir, 'shasta');
+			trend_out, trend_in = remove_seasonals_by_lakes(Data, lakes_dir, 'shasta');
 
 		else:
 			print("Error: %s not supported as a seasonal removal type" % seasonals_type);
@@ -81,7 +85,10 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type,
 			print("Exiting!\n");
 			sys.exit(1);
 
-	return trend_out;
+		if remove_trend==0:
+			return trend_in;
+		else:
+			return trend_out;
 
 
 
@@ -107,6 +114,7 @@ def remove_seasonals_by_notch(Data):
 
 	decyear=gps_ts_functions.get_float_times(Data.dtarray);
 	dE_detrended=np.zeros(np.shape(Data.dE)); dN_detrended=np.zeros(np.shape(Data.dN)); dU_detrended=np.zeros(np.shape(Data.dU));
+	dE_trended=np.zeros(np.shape(Data.dE)); dN_trended=np.zeros(np.shape(Data.dN)); dU_trended=np.zeros(np.shape(Data.dU));
 
 	# East
 	x = Data.dE;
@@ -115,6 +123,7 @@ def remove_seasonals_by_notch(Data):
 	east_coef=np.polyfit(decyear,dE_filt,1)[0];
 	for i in range(len(dE_filt)):
 		dE_detrended[i]=dE_filt[i]-east_coef*decyear[i] - (dE_filt[0]-east_coef*decyear[0]);
+		dE_trended[i]  =dE_filt[i]; 
 
 	# North
 	x = Data.dN;
@@ -122,7 +131,8 @@ def remove_seasonals_by_notch(Data):
 	dN_filt = notch_filter.notchfilt(dN_filt,fs,fn2,Bn2,filtfiltopt=True);
 	north_coef=np.polyfit(decyear,dN_filt,1)[0];
 	for i in range(len(dN_filt)):
-		dN_detrended[i]=(dN_filt[i]-north_coef*decyear[i]) - (dN_filt[0]-north_coef*decyear[0]);
+		dN_detrended[i]=dN_filt[i]-north_coef*decyear[i] - (dN_filt[0]-north_coef*decyear[0]);
+		dN_trended[i]  =dN_filt[i];
 
 	# Up
 	x = Data.dU;
@@ -130,13 +140,17 @@ def remove_seasonals_by_notch(Data):
 	dU_filt = notch_filter.notchfilt(dU_filt,fs,fn2,Bn2,filtfiltopt=True);
 	vert_coef=np.polyfit(decyear,dU_filt,1)[0];
 	for i in range(len(dU_filt)):
-		dU_detrended[i]=(dU_filt[i]-vert_coef*decyear[i]) - (dU_filt[0]-vert_coef*decyear[0]);
+		dU_detrended[i]=dU_filt[i]-vert_coef*decyear[i] - (dU_filt[0]-vert_coef*decyear[0]);
+		dU_trended[i] = dU_filt[i];
 
-	newData=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
-	return newData;
+	detrended=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+	trended  =Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_trended, dE=dE_trended, dU=dU_trended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
+	return detrended, trended;
 
 
 def remove_seasonals_by_STL(Data, STL_dir):
+	# Has an issue: Not sure if it returns trended data. 
+	# Right now only returns detrended data. 
 
 	# First check if a pre-computed file exists
 
@@ -218,7 +232,7 @@ def remove_seasonals_by_STL(Data, STL_dir):
 		# Write the file so that we don't recompute it next time. 
 		output_stl(Data,STL_dir);
 
-	return Data;
+	return Data, Data;
 
 def output_stl(Data, outdir):
 	ofile=open(outdir+Data.name+"_STL_30.txt",'w');
@@ -290,7 +304,7 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
 		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
 		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 		print("returning placeholder object");
-		return wimpyObj;  # 1 = error code. 
+		return wimpyObj, wimpyObj;  # 1 = error code. 
 
 	# Read the hydro model and pair it to the GPS
 	[hydro_data]=gps_io_functions.read_pbo_hydro_file(filename);
@@ -310,7 +324,7 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
 			placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
 			wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 			print("returning placeholder object");
-			return wimpyObj;  # 1 = error code. 			
+			return wimpyObj, wimpyObj;  # 1 = error code. 			
 		scale_factor=gps_amp/hydro_amp;
 		# print("GPS Amplitude is %.2f mm" % gps_amp);
 		# print("NLDAS Amplitude is %.2f mm" % hydro_amp);
@@ -339,7 +353,8 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
 		dU_detrended[i]=(dU_filt[i]-vert_coef*decyear[i]) - (dU_filt[0]-vert_coef*decyear[0]);
 
 	corrected_object=Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
-	return corrected_object;
+	trended=Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_filt, dN=dN_filt, dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
+	return corrected_object, trended;
 
 
 
@@ -360,7 +375,7 @@ def remove_seasonals_by_german_load(Data, lsdm_dir):
 		placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
 		wimpyObj=Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes);
 		print("returning placeholder object");
-		return wimpyObj;  # 1 = error code. 
+		return wimpyObj, wimpyObj;  # 1 = error code. 
 
 	# Read the hydro model and pair it to the GPS
 	[hydro_data]=gps_io_functions.read_lsdm_file(filename);
@@ -390,8 +405,9 @@ def remove_seasonals_by_german_load(Data, lsdm_dir):
 	for i in range(len(dU_filt)):
 		dU_detrended[i]=(dU_filt[i]-vert_coef*decyear[i]) - (dU_filt[0]-vert_coef*decyear[0]);
 
-	corrected_object=Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
-	return corrected_object;
+	detrended=Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
+	trended=Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_filt, dN=dN_filt, dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
+	return detrended, trended;
 
 
 def remove_seasonals_by_lakes(Data, lakes_dir, lake_name):
@@ -426,7 +442,8 @@ def remove_seasonals_by_lakes(Data, lakes_dir, lake_name):
 		dU_detrended[i]=(dU[i]-vert_coef*decyear[i]) - (dU[0]-vert_coef*decyear[0]);
 
 	corrected_object = Timeseries(name=Data.name, coords=Data.coords, dtarray=GPS_paired.dtarray, dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=GPS_paired.Se, Sn=GPS_paired.Sn, Su=GPS_paired.Su, EQtimes=Data.EQtimes);
-	return corrected_object;
+	trended = Timeseries(name=Data.name, coords=Data.coords, dtarray=GPS_paired.dtarray, dE=dE, dN=dN, dU=dU, Se=GPS_paired.Se, Sn=GPS_paired.Sn, Su=GPS_paired.Su, EQtimes=Data.EQtimes);
+	return corrected_object, trended;
 
 
 def read_loading_ts(infile):
@@ -496,8 +513,9 @@ def remove_seasonals_by_GRACE(Data, grace_dir):
 	for i in range(len(dU_filt)):
 		dU_detrended[i]=(dU_filt[i]-vert_coef*decyear[i]) - (dU_filt[0]-vert_coef*decyear[0]);
 
-	newData=Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err, Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
-	return newData; # 0 = successful completion
+	detrended=Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err, Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
+	trended=Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_filt, dE=dE_filt, dU=dU_filt, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err, Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
+	return detrended, trended; # 0 = successful completion
 
 
 

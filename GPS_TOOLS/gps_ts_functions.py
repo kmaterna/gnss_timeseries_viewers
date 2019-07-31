@@ -9,6 +9,7 @@ import datetime as dt
 from scipy import signal
 import gps_io_functions
 import lssq_model_errors
+import matplotlib.pyplot as plt 
 
 # A line for referencing the namedtuple definition. 
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
@@ -98,6 +99,7 @@ def look_up_seasonal_coefs(name,table_file):
 
 
 def detrend_data_by_value(Data0,east_params,north_params,vert_params):
+	# Parameters Format: slope, a2(cos), a1(sin), s2, s1. 
 	east_detrended=[]; north_detrended=[]; vert_detrended=[];
 	idx=np.isnan(Data0.dE);
 	if(sum(idx))>0:  # if there are nans, please pull them out. 
@@ -117,6 +119,27 @@ def detrend_data_by_value(Data0,east_params,north_params,vert_params):
 	vert_detrended=vert_detrended-vert_detrended[0];
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
 	return newData;
+
+def remove_seasonal_by_value(Data0,east_params,north_params,vert_params):
+	# Least squares seasonal parameters. Remove seasonal components. 
+	# Parameters Format: slope, a2(cos), a1(sin), s2, s1. 
+	east_detrended=[]; north_detrended=[]; vert_detrended=[];
+	idx=np.isnan(Data0.dE);
+	if(sum(idx))>0:  # if there are nans, please pull them out. 
+		Data0=remove_nans(Data0);
+	decyear=get_float_times(Data0.dtarray);
+	
+	east_model=	annual_semiannual_only_function(decyear,east_params[1:]);
+	north_model=annual_semiannual_only_function(decyear,north_params[1:]);
+	vert_model=annual_semiannual_only_function(decyear,vert_params[1:]);
+
+	for i in range(len(decyear)):
+		east_detrended.append(Data0.dE[i]-(east_model[i]) );
+		north_detrended.append(Data0.dN[i]-(north_model[i]) );
+		vert_detrended.append(Data0.dU[i]-(vert_model[i]) );
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended, dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+	return newData;
+
 
 
 def pair_gps_model(gps_data, model_data):
