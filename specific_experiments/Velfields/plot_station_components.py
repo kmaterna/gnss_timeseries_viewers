@@ -25,7 +25,7 @@ def configure():
 	network = 'pbo';  # choices: unr, pbo, cwu, nmt, nldas, gldas, lsdm
 	refname = 'NA'; # choices: NA, ITRF
 	seasonal_types = ['none','lssq','notch','nldas','lsdm','gldas','grace']; # OPTIONS: none, lssq, notch, stl, grace, gldas, nldas, lsdm, shasta, oroville. 
-	station = "P170"
+	station = "P155"
 	return [station, network, refname, seasonal_types];
 
 def inputs(station_name, network, refframe):
@@ -59,7 +59,7 @@ def compute(dataobj, offsetobj, eqobj, seasonal_types):
 def write_outputs(trended_objects, seasonal_types):
 
 	colors=['black','blue','red','green','purple','orange','cyan'];
-	offset=20; 
+	offset=25; 
 
 	plt.figure(figsize=(16,3));
 	for i in range(len(seasonal_types)):
@@ -72,8 +72,11 @@ def write_outputs(trended_objects, seasonal_types):
 	for i in range(len(seasonal_types)):
 		plot_function = [offset*i + trended_objects[i].dU[j] for j in range(len(trended_objects[i].dU))];
 		plt.plot(trended_objects[i].dtarray, plot_function,'.',color=colors[i],label=seasonal_types[i]);
-	plt.ylim([-20, 180])
-	plt.legend(loc=3,fontsize=16);
+	# plt.ylim([-20, 180])
+	plt.ylabel("Vertical velocity (mm)",fontsize=20)
+	plt.gca().tick_params(axis="x", labelsize=20)
+	plt.gca().tick_params(axis="y", labelsize=20)
+	plt.legend(loc=1,fontsize=24);
 	plt.savefig(trended_objects[0].name+"_vert_no_seasonals");
 
 	return;

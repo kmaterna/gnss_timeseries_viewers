@@ -12,6 +12,7 @@ horiz_scale=5.9  # used for velocity change vectors (0.3 sometimes, sometimes sm
 output1='MTJ_vels.ps'
 output2='Overall_vels.ps'
 output3='Vertical_vels.ps'
+output4='MIDAS.ps'
 
 folder="Fields/"
 file1=$folder"pbo_NA_none_small_velocities.txt"
@@ -167,6 +168,57 @@ EOF
 
 
 
+# The vert velocities
+horiz_scale=0.3
+gmt makecpt -T-3/3/0.05 -Cpolar -D > vert.cpt
+gmt pscoast -R$range -J$projection -Slightblue -N1 -N2 -B1.0WeSn -Dh -K -X2 -Y2 > $output4
+gmt grdgradient ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -A320 -R$range -Getopo1.grad -Nt
+gmt grdhisteq etopo1.grad -Getopo1.hist -N
+gmt grdinfo etopo1.hist 
+gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
+gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output4
+gmt pscoast -R$range -J$projection -Lf-125.3/39.15/39.15/50+jt -N1 -N2 -Wthinner,black -Dh -K -O >> $output4 # the title goes here
+
+# Add the plate boundaries
+gmt psxy ../../../Misc/Mapping_Resources/transform.gmt -R$range -J$projection -Wthin,red -K -O >> $output4
+gmt psxy ../../../Misc/Mapping_Resources/ridge.gmt -R$range -J$projection -Wthin,red -K -O >> $output4
+gmt psxy ../../../Misc/Mapping_Resources/trench.gmt -R$range -J$projection -Wthin,red -Sf1.5/0.6+r+t+o1.8 -K -O >> $output4
+
+# Add PBO velocity vectors
+awk '{print $1, $2, $5}' $folder"MIDAS.txt" | gmt psxy -R$range -J$projection -Sc0.3 -Cvert.cpt -O -K >> $output4
+awk '{print $1, $2, -0.6, $5, 0, 0, $9}' $folder"file21.txt" | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblack+pthickest -Wthinnest,black >> $output4
+awk '{print $1, $2, -0.3, $5, 0, 0, $9}' $folder"file31.txt" | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gblue+pthickest -Wthinnest,blue >> $output4
+awk '{print $1, $2, 0, $5, 0, 0, $9}' $folder"file41.txt" | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gred+pthickest -Wthinnest,red >> $output4
+awk '{print $1, $2, 0.3, $5, 0, 0, $9}' $folder"file51.txt" | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+ggreen+pthickest -Wthinnest,green >> $output4
+awk '{print $1, $2, 0.6, $5, 0, 0, $9}' $folder"file61.txt" | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gdarkorchid2+pthickest -Wthinnest,darkorchid2 >> $output4
+awk '{print $1, $2, 0.1, $5, 0, 0, $9}' $folder"MIDAS.txt" | gmt psvelo -R$range -J$projection -O -K -Se$horiz_scale/0.68/8 -A+e+gorange1+pthickest -Wthinnest,orange1 >> $output4
 
 
-open $output3
+gmt psvelo -R$range -J$projection -A+e+gblack+pthickest -Se$horiz_scale/0.68/10 -Wthinnest,black -K -O <<EOF >> $output4
+-125.0 39.4 1 0 .2 .2 0.0 1+-.2 mm/yr
+EOF
+
+gmt psscale -R$range -J$projection -D6.5i/3i+w7/0.7 -S -B0.5 -Cvert.cpt -K -O >> $output4
+
+gmt pslegend -R$range -J$projection -F+gazure1 -Dx0.1i/6.1i+w2i/1.7i+jTL+l1.2 -C0.1i/0.1i -K -O << EOF >> $output4
+# Legend test for pslegend
+# G is vertical gap, V is vertical line, N sets # of columns, D draws horizontal line.
+# H is header, L is label, S is symbol, T is paragraph text, M is map scale.
+#
+G -0.1i
+H 16 Times-Roman Velocities
+D 0.2i 1p
+N 1
+S 0.1i v0.1i+a40+e 0.2i black 1.8p 0.3i LSSQ
+S 0.1i v0.1i+a40+e 0.2i blue 1.8p,blue 0.3i LSDM
+S 0.1i v0.1i+a40+e 0.2i red 1.8p,red 0.3i NLDAS
+S 0.1i v0.1i+a40+e 0.2i green 1.8p,green 0.3i GLDAS
+S 0.1i v0.1i+a40+e 0.2i darkorchid2 1.8p,darkorchid2 0.3i GRACE
+S 0.1i v0.1i+a40+e 0.2i orange1 1.8p,orange1 0.3i MIDAS
+D 0.2i 1p
+P
+EOF
+
+
+
+open $output4

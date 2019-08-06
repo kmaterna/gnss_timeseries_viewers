@@ -97,9 +97,19 @@ def write_outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj,
 	return;
 
 
+def write_NA12_MIDAS():
+	[myVelfield] = gps_io_functions.read_unr_vel_file("../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt");
+	gps_io_functions.write_humanread_vel_file(myVelfield, "Fields/MIDAS.txt");
+	return;
+
+
 if __name__=="__main__":
-	[station_names, network, refframe, seasonal_type, outfile] = configure();
-	[dataobj_list, offsetobj_list, eqobj_list] = inputs(station_names, network, refframe);
-	[noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, seasonal_type); 
-	write_outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, outfile);
+	# [station_names, network, refframe, seasonal_type, outfile] = configure();
+	# [dataobj_list, offsetobj_list, eqobj_list] = inputs(station_names, network, refframe);
+	# [noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj] = compute(dataobj_list, offsetobj_list, eqobj_list, seasonal_type); 
+	# write_outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, outfile);
+
+	write_NA12_MIDAS();
+
+
 

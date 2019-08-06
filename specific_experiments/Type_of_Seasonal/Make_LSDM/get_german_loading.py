@@ -14,11 +14,12 @@ def configure():
 	# input_file="CA_OR.txt";
 	# output_dir="../../../GPS_POS_DATA/PBO_Hydro/LSDM/";
 	# For Myanmar: 
-	input_file="Test.txt";
-	output_dir="../../../../Myanmar/MODEL_DATA/LSDM/NONE/";
-	return [input_file, output_dir];
+	input_file="Myanmar.txt";
+	output_dir="../../../../Myanmar/MODEL_DATA/LSDM_NTAL/";
+	product="NTAL+NTOL";  # OPTIONS: HYDL, NTAL, NTOL+NTAL, etc. 
+	return [input_file, product, output_dir];
 
-def get_stations(input_file, output_dir):
+def get_stations(input_file, product, output_dir):
 	ifile=open(input_file,'r');
 	ofile=open("new_stations.txt",'w');
 	ofile.close();
@@ -44,8 +45,8 @@ def get_stations(input_file, output_dir):
 			continue;
 
 		print("Getting LSDM Hydro for station %s " % station_name);
-		print("extractlatlon_bilinintp_remote HYDL CF "+dt.datetime.strftime(start_date,"%Y-%m-%d")+" "+dt.datetime.strftime(end_date,"%Y-%m-%d")+" "+lat+" "+lon+" -o "+output_dir+station_name+"_LSDM_hydro.txt");
-		subprocess.call(["./extractlatlon_bilinintp_remote HYDL CF "+dt.datetime.strftime(start_date,"%Y-%m-%d")+" "+dt.datetime.strftime(end_date,"%Y-%m-%d")+" "+lat+" "+lon+" -o "+output_dir+station_name+"_LSDM_hydro.txt"],shell=True);
+		print("extractlatlon_bilinintp_remote "+product+" CF "+dt.datetime.strftime(start_date,"%Y-%m-%d")+" "+dt.datetime.strftime(end_date,"%Y-%m-%d")+" "+lat+" "+lon+" -o "+output_dir+station_name+"_LSDM_hydro.txt");
+		subprocess.call(["./extractlatlon_bilinintp_remote "+product+" CF "+dt.datetime.strftime(start_date,"%Y-%m-%d")+" "+dt.datetime.strftime(end_date,"%Y-%m-%d")+" "+lat+" "+lon+" -o "+output_dir+station_name+"_LSDM_hydro.txt"],shell=True);
 		ofile.write(line+"\n");
 		ofile.close();
 	ifile.close();
@@ -53,5 +54,5 @@ def get_stations(input_file, output_dir):
 
 
 if __name__=="__main__":
-	[input_file, output_dir]=configure();
-	get_stations(input_file, output_dir);
+	[input_file, product, output_dir]=configure();
+	get_stations(input_file, product, output_dir);
