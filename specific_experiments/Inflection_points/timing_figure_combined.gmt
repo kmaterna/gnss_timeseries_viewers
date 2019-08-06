@@ -1,9 +1,12 @@
 #! /bin/bash
 # Plot GPS Vectors
 # Kathryn Materna
+# Used for Figure 2 in the GRL paper. 
 
 infile1=$1
 infile2=$2
+infile_velos2014="Other_Data/2014.txt"
+infile_velos2016="Other_Data/2016.txt"
 lonW=$3
 lonE=$4
 latS=$5
@@ -26,25 +29,50 @@ gmt grdinfo etopo1.hist
 gmt grdmath etopo1.hist 8.41977 DIV = etopo1.norm
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 
+
+
 # EAST
 # Insert a horizontal scale bar and title
 gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -Wthin,black -N1 -N2 -B1.0WeSn -Dh -K -O >> $output1 # the title goes here
-awk '{print $1, $2, $3, $6}' $infile1 | gmt psvelo -R$range -J$projection -O -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output1  # vectors
+# awk '{print $1, $2, $3, $6}' $infile1 | gmt psvelo -R$range -J$projection -O -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output1  # vectors
+awk '{print $1, $2, $3, $4, 0, 0, 0}' $infile_velos2014 | gmt psvelo -R$range -J$projection -Se0.2/0.68/8 -A+e+gblack+pthickest -Wthinnest,black -K -O >> $output1
 awk '{print $1, $2, $5, $4*6}' $infile1 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output1
 gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
 -120.4 41.8 03/10/2014
 -124.7 41.8 A
 EOF
+gmt psvelo -R$range -J$projection -Se0.2/0.68/10 -A+e+gblack+pthickest -Wthinnest,black -K -O <<EOF >> $output1 # the vector
+-124.4 39.15 2 0 0 0 0
+EOF
+gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O <<EOF >>$output1  # the triangle
+-124.4 39.15 0 12
+EOF
+gmt pstext -R$range -J$projection -F+f10p,Helvetica -K -O <<EOF >> $output1
+-124.4 38.95 2 mm/yr
+EOF
+
 gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -N1 -N2 -B1.0wESn -Dh -K -O -Y0 -X11.5 >> $output1 # the title goes here
 gmt grdimage ../../../Misc/Mapping_Resources/Global_topography_data/ETOPO1_Bed_g_gmt4.grd -Ietopo1.norm -R$range -J$projection -Cblue_topo.cpt -K -O >> $output1
 gmt pscoast -R$range -J$projection -Lf$scalebar -Slightblue -Wthin,black -N1 -N2 -B1.0wESn -Dh -K -O >> $output1 # the title goes here
-awk '{print $1, $2, $3, $6}' $infile2 | gmt psvelo -R$range -J$projection -O -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output1  # vectors
-awk '{print $1, $2, $5, $4*6}' $infile2 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output1
+# # awk '{print $1, $2, $3, $6}' $infile2 | gmt psvelo -R$range -J$projection -O -K -Se0.2/0.68/0 -A+e+gblack+pthickest -Wthick,black >> $output1  # vectors
+awk '{print $1, $2, $3, $4, 0, 0, 0}' $infile_velos2016 | gmt psvelo -R$range -J$projection -Se0.2/0.68/8 -A+e+gblack+pthickest -Wthinnest,black -K -O >> $output1
+awk '{print $1, $2, $5, $4*6}' $infile2 | gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O >> $output1  # The triangles
 gmt psscale -R$range -J$projection -DjTR+w4c/0.5c+o-2.5/1.5 -Cmycpt.cpt -B100:"Turning Point":/:days: -K -O >> $output1
-gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -O <<EOF >> $output1
+gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $output1
 -120.4 41.8 12/08/2016
 -124.7 41.8 B
 EOF
+gmt psvelo -R$range -J$projection -Se0.2/0.68/10 -A+e+gblack+pthickest -Wthinnest,black -K -O <<EOF >> $output1 # the vector
+-124.4 39.15 2 0 0 0 0
+EOF
+gmt psxy -R$range -J$projection -Cmycpt -Sip -Wthinner,black -K -O <<EOF >>$output1  # the triangle
+-124.4 39.15 0 12
+EOF
+gmt pstext -R$range -J$projection -F+f10p,Helvetica -O <<EOF >> $output1
+-124.4 38.95 2 mm/yr
+EOF
+
+
 
 
 # # NORTH

@@ -1,4 +1,5 @@
 #!/bin/bash
+# This makes the figure in the paper
 
 
 # infile1='Fall2018/20140310.txt'
