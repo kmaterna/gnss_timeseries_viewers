@@ -22,6 +22,7 @@ sig_dEv
 
 import numpy as np 
 import scipy.io
+import sys
 
 def configure_and_read():
 	matlab_file="forKathryn.mat";
@@ -47,9 +48,9 @@ def write_gmt(mat, output_file):
 	area = np.array(mat['a']).T;
 	mean_area=np.mean(area);
 
-	median_area_adjusted = [(median_Kern[i]/area[i])*mean_area for i in range(len(median_Kern))];
+	# median_area_adjusted = [(median_Kern[i]/area[i])*mean_area for i in range(len(median_Kern))];
 
-	print(np.max(median_Kern)*1000)
+	# print(np.max(median_Kern)*1000)
 
 
 	ofile=open(output_file,'w');
