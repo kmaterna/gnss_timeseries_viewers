@@ -38,7 +38,7 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, remove_trend=1,
 		[east_vel, north_vel, up_vel,esig,nsig,usig]=gps_ts_functions.get_slope(Data);
 		east_params[0]=east_vel; north_params[0]=north_vel; up_params[0]=up_vel;
 		trend_out=gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);
-		trend_in = Data;	
+		trend_in = Data;
 
 	else:  # Going into different forms of seasonal removal. 
 		print("Removing seasonals by %s method." % seasonals_type);
@@ -85,10 +85,10 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, remove_trend=1,
 			print("Exiting!\n");
 			sys.exit(1);
 
-		if remove_trend==0:
-			return trend_in;
-		else:
-			return trend_out;
+	if remove_trend==0:
+		return trend_in;
+	else:
+		return trend_out;
 
 
 
