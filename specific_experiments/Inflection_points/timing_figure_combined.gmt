@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 # Plot GPS Vectors
 # Kathryn Materna
 # Used for Figure 2 in the GRL paper. 
@@ -111,7 +111,7 @@ gmt pstext -R$range -J$projection -F+f18p,Helvetica -Gwhite -K -O <<EOF >> $outp
 -124.7 41.8 B
 EOF
 
-gmt psconvert -Tg $output1
+gmt psconvert -Tf $output1
 
 rm gmt.history
 open $output1

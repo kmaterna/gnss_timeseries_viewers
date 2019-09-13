@@ -33,6 +33,26 @@ def simple_plot(tremor, tremortype):
 	plt.savefig(tremortype+'_tremor_time_space.eps');
 	return;
 
+def simple_plot_2015_2017(tremor, tremortype):
+	# Define bounds. 
+	start_time=dt.datetime.strptime('20150101',"%Y%m%d");
+	end_time=dt.datetime.strptime('20180101',"%Y%m%d");
+	latmin=39; latmax=42;
+
+	# Make a very simple plot. 
+	plt.figure(figsize=(15,8));
+	plt.grid(True);
+	plt.title('Tremor catalog near the Mendocino Triple Junction, 2015-2017',fontsize=23);
+	plt.plot_date(tremor.dtarray,tremor.latarray,'.',color='k',markersize=2);
+	plt.xlim([start_time, end_time]);
+	plt.ylim([latmin, latmax]);
+	plt.xlabel('Time',fontsize=20);
+	plt.ylabel('Latitude (degrees)',fontsize=20);
+	plt.tick_params(axis='both', which='major', labelsize=20);
+	plt.savefig('Wech_Mendeley_tremor_time_space.png');
+	return;
+
+
 
 def timing_2014_plot(tremor, tremortype):
 	# Looking at 2014 in more detail. 

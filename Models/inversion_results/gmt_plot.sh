@@ -103,7 +103,7 @@ EOF
 gmt psscale -R$range -J$projection -DjTR+w12c/0.5c+o-1.5/0.2 -G-22/22 -Cdatacpt2.cpt -B5.0:"":/:mm/yr: -P -O >> $output1
 # gmt psscale -R$range -J$projection -DjTR+w6c/0.5c+o-1.5/6.2 -G-22/-1 -Cdatacpt2_scale.cpt -B5.0:"":/:"": -P -O >> $output1
 
-gmt psconvert $output1 -Tg
+gmt psconvert $output1 -Tf
 
 open $output1
 

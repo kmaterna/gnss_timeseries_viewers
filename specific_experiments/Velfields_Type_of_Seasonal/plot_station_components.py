@@ -66,7 +66,7 @@ def write_outputs(trended_objects, seasonal_types):
 		plot_function = [offset*i + trended_objects[i].dE[j] for j in range(len(trended_objects[i].dE))];
 		plt.plot(trended_objects[i].dtarray, plot_function,'.',color=colors[i],label=seasonal_types[i]);
 	plt.legend(loc=3);
-	plt.savefig(trended_objects[0].name+"_east_no_seasonals");
+	plt.savefig("stations/"+trended_objects[0].name+"_east_no_seasonals");
 
 	plt.figure(figsize=(15,15));
 	for i in range(len(seasonal_types)):
@@ -77,7 +77,7 @@ def write_outputs(trended_objects, seasonal_types):
 	plt.gca().tick_params(axis="x", labelsize=20)
 	plt.gca().tick_params(axis="y", labelsize=20)
 	plt.legend(loc=1,fontsize=24);
-	plt.savefig(trended_objects[0].name+"_vert_no_seasonals");
+	plt.savefig("stations/"+trended_objects[0].name+"_vert_no_seasonals");
 
 	return;
 
