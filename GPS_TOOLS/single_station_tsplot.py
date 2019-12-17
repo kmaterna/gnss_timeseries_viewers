@@ -121,6 +121,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	title, savename= get_figure_name(MyParams);
 	axarr[0].set_title(title,fontsize=label_fontsize+2);
 	plt.savefig(savename,dpi=dpival);
+	print("Saving figure as %s " % savename)
 	return;
 
 

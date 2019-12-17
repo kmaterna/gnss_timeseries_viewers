@@ -18,6 +18,7 @@ def remove_offsets(Data0, offsets_obj):
 	if len(offsets_obj.e_offsets)==0:
 		return Data0;
 	newdtarray=[]; newdN=[]; newdE=[]; newdU=[];
+
 	# Removing offsets
 	for i in range(len(Data0.dtarray)):
 		# For each day...
@@ -25,7 +26,7 @@ def remove_offsets(Data0, offsets_obj):
 		tempN=Data0.dN[i];
 		tempU=Data0.dU[i];
 		for j in range(len(offsets_obj.evdts)):
-			# print("removing %f mm from east at %s" % (e_offset[j], evdt[j]));
+			# print("removing %f mm from east at %s" % (offsets_obj.e_offsets[j], offsets_obj.evdts[j]));
 			if Data0.dtarray[i]>=offsets_obj.evdts[j]:
 				tempE=tempE-offsets_obj.e_offsets[j];
 				tempN=tempN-offsets_obj.n_offsets[j];

@@ -361,7 +361,8 @@ def parse_table_unr(table):
 		words=item.split();
 		datestring=words[1];
 		mydt=get_datetime_from_unrfile(datestring);
-		evdts.append(mydt);
+		if mydt not in evdts:  # we don't need redundant entries on the same date. What if it happens within a week of each other?  Haven't figured this out yet. 
+			evdts.append(mydt);
 	return evdts;
 
 def get_datetime_from_unrfile(input_string):
