@@ -26,13 +26,13 @@ import remove_ets_events
 import pygmt
 
 
-Parameters=collections.namedtuple("Parameters",['expname','proc_center','center','radius','stations','distances', 'outdir', 'outname']);
+Parameters=collections.namedtuple("Parameters",['expname','proc_center','center','radius','stations','distances','blacklist','outdir', 'outname']);
 
 
 def driver():
 	myparams = configure();
-	[dataobj_list, offsetobj_list, eqobj_list] = inputs(myparams.stations, myparams.proc_center);
-	[detrend_objects, stage1_objects, stage2_objects, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, myparams.distances);
+	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = inputs(myparams.stations, myparams.distances, myparams.blacklist, myparams.proc_center);
+	[detrend_objects, stage1_objects, stage2_objects, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances);
 	output_full_ts(detrend_objects, sorted_distances, myparams, "detrended");
 	output_full_ts(stage1_objects, sorted_distances, myparams, "noeq");
 	output_full_ts(stage2_objects, sorted_distances, myparams, "noeq_noseasons");
@@ -55,34 +55,35 @@ def configure():
 	center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
 	# center=[-115.5, 33.0]; expname='SSGF'; radius = 35; 
 
-	proc_center='pbo';   # WHICH DATASTREAM DO YOU WANT?
+	proc_center='unr';   # WHICH DATASTREAM DO YOU WANT?
 
-	stations, distances = stations_within_radius.get_stations_within_radius(center, radius);
+	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
 	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT"];  # This is global, just keeps growing
-	stations_new=[]; distances_new=[];
-	for i in range(len(stations)):
-		if stations[i] not in blacklist:
-			stations_new.append(stations[i]);
-			distances_new.append(distances[i]);
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
-	print(stations_new);
 	# FIX THIS RETURN PARAMETER
-	myparams=Parameters(expname=expname, proc_center=proc_center, center=center, radius=radius, stations=stations, distances=distances, outdir=outdir, outname=outname);
+	myparams=Parameters(expname=expname, proc_center=proc_center, center=center, radius=radius, stations=stations, distances=distances, blacklist=blacklist, outdir=outdir, outname=outname);
 	return myparams;
 
 
-def inputs(station_names, proc_center):  # Returns a list of objects for time series data, offsets, and earthquakes
-	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
-	for station_name in station_names:
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, proc_center, "NA");
-		if myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
-		# kicking out the stations that end early or start late. 
-			dataobj_list.append(myData);
-			offsetobj_list.append(offset_obj);
-			eqobj_list.append(eq_obj);	
-	return [dataobj_list, offsetobj_list, eqobj_list];
+def inputs(station_names, distances, blacklist, proc_center):  # Returns a list of objects for time series data, offsets, and earthquakes
+	# Also kicks out stations when necessary based on blacklist or timing criteria
+	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[]; stations_surviving=[]; distances_surviving=[]; 
+	for i in range(len(station_names)):
+		if station_names[i] in blacklist:
+			continue;
+		else:
+			[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_names[i], proc_center, "NA");
+			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
+			# kicking out the stations that end early or start late. 
+				dataobj_list.append(myData);
+				offsetobj_list.append(offset_obj);
+				eqobj_list.append(eq_obj);
+				stations_surviving.append(station_names[i]);
+				distances_surviving.append(distances[i]);
+				print(station_names[i])
+	return [dataobj_list, offsetobj_list, eqobj_list, distances_surviving];
 
 
 def compute(dataobj_list, offsetobj_list, eqobj_list, distances):

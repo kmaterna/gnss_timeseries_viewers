@@ -254,6 +254,7 @@ def get_unr_offsets(Data0, station, offsets_dir):
 	return UNR_offsets;
 
 
+
 def get_unr_earthquakes(Data0, station, offsets_dir):
 	# The grep -2 is the code for earthquake offsets
 	print("Earthquakes table for station %s:" % (station) );	
@@ -263,7 +264,17 @@ def get_unr_earthquakes(Data0, station, offsets_dir):
 	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
 		table=[]; 
 	print(table);
-	evdts=parse_table_unr(table);
+	evdts1=parse_table_unr(table);
+
+	try:
+		table = subprocess.check_output("grep -E '"+station+"  [0-9]{2}[A-Z]{3}[0-9]{2}  2' "+offsets_dir+"UNR_small_offsets.txt",shell=True);
+		table = table.decode(); # needed when switching to python 3
+	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
+		table=[];
+	print(table);
+	evdts2=parse_table_unr(table);
+
+	evdts=evdts1+evdts2;
 	[e_offsets, n_offsets, u_offsets, evdts]=solve_for_offsets(Data0, evdts); 
 	UNR_earthquakes=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	return UNR_earthquakes;
