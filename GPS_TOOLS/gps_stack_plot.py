@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import matplotlib
 import matplotlib.cm as cm
+import scipy.ndimage
 import collections
 import subprocess
 import sys
@@ -37,6 +38,7 @@ def driver():
 	output_full_ts(stage1_objects, sorted_distances, myparams, "noeq");
 	output_full_ts(stage2_objects, sorted_distances, myparams, "noeq_noseasons");
 	vertical_plots(stage2_objects, sorted_distances, myparams);
+	vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
 	pygmt_map(stage2_objects,myparams);
 	return;
 
@@ -52,17 +54,16 @@ def configure():
 	# center=[-116.0, 34.5];     expname='Mojave';  radius = 35; # km
 	# center=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
 	# center=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
-	center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
-	# center=[-115.5, 33.0]; expname='SSGF'; radius = 35; 
+	# center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
+	center=[-115.5, 32.85]; expname='SSGF'; radius = 30; 
 
 	proc_center='unr';   # WHICH DATASTREAM DO YOU WANT?
 
 	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
-	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT"];  # This is global, just keeps growing
+	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI"];  # This is global, just keeps growing
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
-	# FIX THIS RETURN PARAMETER
 	myparams=Parameters(expname=expname, proc_center=proc_center, center=center, radius=radius, stations=stations, distances=distances, blacklist=blacklist, outdir=outdir, outname=outname);
 	return myparams;
 
@@ -74,7 +75,7 @@ def inputs(station_names, distances, blacklist, proc_center):  # Returns a list 
 		if station_names[i] in blacklist:
 			continue;
 		else:
-			[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_names[i], proc_center, "NA");
+			[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_names[i], proc_center, "ITRF");
 			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
 			# kicking out the stations that end early or start late. 
 				dataobj_list.append(myData);
@@ -174,9 +175,9 @@ def output_full_ts(dataobj_list, distances, myparams, filename):
 
 	fig = plt.figure(figsize=(20,15),dpi=160);
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True,figsize=(10,8))
-	label_date=dt.datetime.strptime("20190215","%Y%m%d");
+	label_date=dt.datetime.strptime("20200215","%Y%m%d");
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
-	end_time_plot=dt.datetime.strptime("20190116", "%Y%m%d");
+	end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d");
 
 
 	offset=0;
@@ -190,7 +191,8 @@ def output_full_ts(dataobj_list, distances, myparams, filename):
 	for i in range(len(dataobj_list)):
 		offset=spacing*i;
 		edata=dataobj_list[i].dE;
-		edata=[x + offset for x in edata];
+		emean=np.nanmean(dataobj_list[i].dE);
+		edata=[x + offset - emean for x in edata];
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = axarr[0].plot_date(dataobj_list[i].dtarray,edata,marker='+',markersize=1.5,color=line_color);
 		axarr[0].text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
@@ -209,7 +211,8 @@ def output_full_ts(dataobj_list, distances, myparams, filename):
 	for i in range(len(dataobj_list)):
 		offset=spacing*i;
 		ndata=dataobj_list[i].dN;
-		ndata=[x + offset for x in ndata];
+		nmean=np.nanmean(dataobj_list[i].dN);
+		ndata=[x + offset - nmean for x in ndata];
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = axarr[1].plot_date(dataobj_list[i].dtarray,ndata,marker='+',markersize=1.5, color=line_color);
 	axarr[1].set_xlim(start_time_plot,end_time_plot);
@@ -236,9 +239,9 @@ def output_full_ts(dataobj_list, distances, myparams, filename):
 def vertical_plots(dataobj_list, distances, myparams):
 
 	plt.figure(figsize=(6,8),dpi=160);
-	label_date=dt.datetime.strptime("20190215","%Y%m%d");
+	label_date=dt.datetime.strptime("20200215","%Y%m%d");
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
-	end_time_plot=dt.datetime.strptime("20190116", "%Y%m%d");
+	end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d");
 
 	offset=0;
 	spacing=40;
@@ -250,7 +253,8 @@ def vertical_plots(dataobj_list, distances, myparams):
 	for i in range(len(dataobj_list)):
 		offset=spacing*i;
 		udata=dataobj_list[i].dU;
-		udata=[x + offset for x in udata];
+		umean=np.nanmean(dataobj_list[i].dU)
+		udata=[x + offset - umean for x in udata];
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = plt.gca().plot_date(dataobj_list[i].dtarray,udata,marker='+',markersize=1.5,color=line_color);
 		plt.gca().text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
@@ -288,6 +292,60 @@ def vertical_plots(dataobj_list, distances, myparams):
 	return;
 
 
+def vertical_filtered_plots(dataobj_list, distances, myparams):
+
+	plt.figure(figsize=(15,8),dpi=160);
+	label_date=dt.datetime.strptime("20200215","%Y%m%d");
+	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
+	end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d");
+
+	spacing=40;
+	EQtimes, labeltimes, labels, closest_station, farthest_station=configure_beautiful_plots(myparams.expname, distances);
+	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
+	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
+
+	# Vertical
+	for i in range(len(dataobj_list)):
+		umean=np.mean(dataobj_list[i].dU);
+		line_color=custom_cmap.to_rgba(distances[i]);
+		# l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' );
+		udata=scipy.ndimage.median_filter(dataobj_list[i].dU-umean,size=365);
+		l1 = plt.gca().plot(dataobj_list[i].dtarray,udata,linestyle='solid',linewidth=1,color=line_color );
+		# break;
+		# plt.gca().text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
+	plt.gca().set_xlim(start_time_plot,end_time_plot);
+	bottom,top=plt.gca().get_ylim();
+	for i in range(len(EQtimes)):
+		plt.gca().plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
+	plt.gca().set_ylabel("Filtered Vertical (mm)");
+	plt.gca().set_title("Filtered Vertical GPS Time Series")
+	plt.gca().grid(True)
+
+	custom_cmap.set_array(range(int(closest_station),int(farthest_station)));
+	cb = plt.colorbar(custom_cmap);
+	cb.set_label('Kilometers from center');
+
+	# new axis for plotting the map of california
+	ax=plt.axes(position=[0.8,0.1,0.1,0.2],xticklabels=[],yticklabels=[]);
+	[ca_lons,ca_lats]=np.loadtxt('../california_bdr',unpack=True);
+	ax.plot(ca_lons,ca_lats,'k');
+	for i in range(len(dataobj_list)):
+		ax.plot(dataobj_list[i].coords[0],dataobj_list[i].coords[1],'.g',markersize=0.6);
+
+	# new axis for extra labels
+	ax=plt.axes(position=[0.8,0.4,0.1,0.2],xticklabels=[],yticklabels=[]);
+	ax.set_ylim([-1,1])
+	ax.set_xlim([-0.1,1])
+	ax.text(0,0.75,myparams.proc_center+" data");
+	ax.text(0,0.37,myparams.center);
+	ax.text(0,0,str(myparams.radius)+" km radius");
+
+	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+"vertical_filt"+'.jpg');
+	plt.close();
+	print("Vertical plot created.");
+	return;
+
+
 def pygmt_map(ts_objects,myparams):
 
 	offset=0.2;
@@ -297,9 +355,11 @@ def pygmt_map(ts_objects,myparams):
 		lons.append(ts_objects[i].coords[0]);
 		lats.append(ts_objects[i].coords[1]);
 		names.append(ts_objects[i].name);
+	region=[min(lons)-offset,max(lons)+offset,min(lats)-offset,max(lats)+offset];		
 
 	fig = pygmt.Figure()
-	fig.basemap(region=[min(lons)-offset,max(lons)+offset,min(lats)-offset,max(lats)+offset],projection="M8i",B="0.25");
+	fig.basemap(region=region,projection="M8i",B="0.25");
+	# fig.grdimage("@earth_relief_30s",region=region,I="+d");  # takes a little while the first time, but faster each time afterwards
 	fig.coast(shorelines="0.5p,black",G='peachpuff2',S='skyblue',D="h");
 	fig.coast(N='1',W='1.0p,black');
 	fig.coast(N='2',W='0.5p,black');

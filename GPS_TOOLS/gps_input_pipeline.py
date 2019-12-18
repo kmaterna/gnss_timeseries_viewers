@@ -46,11 +46,11 @@ def get_unr(station,refframe="NA"):
 	if refframe=="NA":
 		reflabel="NA12";
 	elif refframe=="ITRF":
-		reflabel="IGS08";
+		reflabel="IGS14";
 	else:
 		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");	
 	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+"."+reflabel+".tenv3"
-	unr_coords="../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"
+	unr_coords="../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt"
 	offsets_dir="../../GPS_POS_DATA/Offsets/"
 	[myData]=gps_io_functions.read_UNR_magnet_file(unr_filename, unr_coords);  # UNR data format
 	Offsets = get_unr_offsets(myData, station, offsets_dir);
@@ -147,7 +147,7 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	if refframe=="NA":
 		unr_reflabel="NA12"; pbo_reflabel="nam08";
 	elif refframe=="ITRF":
-		unr_reflabel="IGS08"; pbo_reflabel="igs08";
+		unr_reflabel="IGS14"; pbo_reflabel="igs08";
 	else:
 		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");	
 

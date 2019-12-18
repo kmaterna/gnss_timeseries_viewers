@@ -197,7 +197,7 @@ def read_pbo_hydro_file(filename):
 	dtarray=[];
 	station_name=filename.split('/')[-1][0:4];
 	station_name=station_name.upper();
-	[lon,lat] = get_coordinates_for_stations([station_name], "../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt");  # format [lat, lon]	
+	[lon,lat] = get_coordinates_for_stations([station_name], "../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt");  # format [lat, lon]	
 	[dts, dN, dE, dU] = np.loadtxt(filename,usecols=(0, 3, 4, 5),dtype={'names':('dts','dN','dE','dU'),'formats':('U10', np.float, np.float, np.float)}, skiprows=20, delimiter=',',unpack=True);
 	for i in range(len(dts)):
 		dtarray.append(dt.datetime.strptime(dts[i],"%Y-%m-%d"));
@@ -214,7 +214,7 @@ def read_lsdm_file(filename):
 	# In the normal pipeline for this function, it is guaranteed to be given a real file. 
 	dtarray=[];
 	station_name=filename.split('/')[-1][0:4];
-	[lon,lat] = get_coordinates_for_stations([station_name], "../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt");  # format [lat, lon]	
+	[lon,lat] = get_coordinates_for_stations([station_name], "../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt");  # format [lat, lon]	
 	[dts, dU, dN, dE] = np.loadtxt(filename,usecols=(0, 1, 2, 3),dtype={'names':('dts','dN','dE','dU'),'formats':('U10', np.float, np.float, np.float)}, skiprows=3, delimiter=',',unpack=True);
 	for i in range(len(dts)):
 		dtarray.append(dt.datetime.strptime(dts[i][0:10],"%Y-%m-%d"));
@@ -230,7 +230,7 @@ def read_lsdm_file(filename):
 
 
 
-def get_coordinates_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"):
+def get_coordinates_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt"):
 	lon=[];
 	lat=[];
 	reference_names=[]; reference_lons=[]; reference_lats=[];
@@ -263,7 +263,7 @@ def get_coordinates_for_stations(station_names,coordinates_file="../../GPS_POS_D
 	return [lon,lat];
 
 
-def get_start_times_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_july2018.txt"):
+def get_start_times_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt"):
 	# Meant for UNR stations
 	end_time=[];
 	start_time=[];

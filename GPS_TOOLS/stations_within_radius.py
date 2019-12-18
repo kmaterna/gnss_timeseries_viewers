@@ -45,7 +45,7 @@ def configure_circle(center, radius, coord_box, network):
 	if network=='pbo' or network=='cwu' or network=='nmt':
 		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
 	elif network=='unr':
-		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
+		input_file="../../GPS_POS_DATA/Velocity_Files/IGS14_MAGNET_dec2019.txt";
 	else:
 		print("ERROR: Network %s not recognized" % network);
 	num_years=3.0;
@@ -74,7 +74,7 @@ def configure_box(network):
 	if network=='pbo' or network=='cwu' or network=='nmt':
 		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
 	elif network=='unr':
-		input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_MAGNET_july2018.txt";
+		input_file="../../GPS_POS_DATA/Velocity_Files/IGS14_MAGNET_dec2019.txt";
 	else:
 		print("ERROR: Network %s not recognized" % network);	
 	num_years=3.0;
