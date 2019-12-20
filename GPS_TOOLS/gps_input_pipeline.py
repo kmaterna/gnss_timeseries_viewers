@@ -75,9 +75,9 @@ def get_pbo(station, refframe="NA"):
 
 def get_cwu(station, refframe="NA"):
 	if refframe=="NA":
-		reflabel="nam08";
+		reflabel="nam14";
 	elif refframe=="ITRF":
-		reflabel="igs08";
+		reflabel="igs14";
 	else:
 		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");
 	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".cwu.final_"+reflabel+".pos"
@@ -85,7 +85,7 @@ def get_cwu(station, refframe="NA"):
 	offsets_dir="../../GPS_POS_DATA/Offsets/"
 	[myData]=gps_io_functions.read_pbo_pos_file(pbo_filename);  # PBO data format
 	Offsets = get_pbo_offsets(station, offsets_dir);
-	Earthquakes = get_pbo_earthquakes(station, pbo_earthquakes_dir);
+	Earthquakes = get_cwu_earthquakes(station, pbo_earthquakes_dir);
 	return [myData, Offsets, Earthquakes];
 
 def get_nmt(station, refframe="NA"):
@@ -145,16 +145,16 @@ def get_empty_offsets():
 # Return the 'pbo' or 'unr' datasource that we should be using. 
 def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	if refframe=="NA":
-		unr_reflabel="NA12"; pbo_reflabel="nam08";
+		unr_reflabel="NA12"; pbo_reflabel="nam08"; cwu_reflabel="nam14";
 	elif refframe=="ITRF":
-		unr_reflabel="IGS14"; pbo_reflabel="igs08";
+		unr_reflabel="IGS14"; pbo_reflabel="igs08"; cwu_reflabel="igs14";
 	else:
 		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");	
 
 	# Path setting
 	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+"."+unr_reflabel+".tenv3";
 	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_"+pbo_reflabel+".pos";
-	cwu_filename="../../GPS_POS_DATA/PBO_Data/"+station+".cwu.final_"+pbo_reflabel+".pos";
+	cwu_filename="../../GPS_POS_DATA/PBO_Data/"+station+".cwu.final_"+cwu_reflabel+".pos";
 	nmt_filename="../../GPS_POS_DATA/PBO_Data/"+station+".nmt.final_"+pbo_reflabel+".pos";
 	gldas_filename="../../GPS_POS_DATA/PBO_Hydro/GLDAS/"+station.lower()+"_noah10_gldas2.hyd";
 	nldas_filename="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"+station.lower()+"_noah125_nldas2.hyd";
@@ -298,7 +298,7 @@ def get_pbo_earthquakes(station, earthquakes_dir):
 	print("Earthquake table for station %s:" % (station) );	
 	# Read the offset table
 	try:
-		table = subprocess.check_output("grep "+station+" "+earthquakes_dir+"*kalts.evt",shell=True);
+		table = subprocess.check_output("grep "+station+" "+earthquakes_dir+"pbo*kalts.evt",shell=True);
 	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
 		table=[];
 	if len(table)>0:
@@ -308,6 +308,19 @@ def get_pbo_earthquakes(station, earthquakes_dir):
 	PBO_earthquakes=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	return PBO_earthquakes;
 
+def get_cwu_earthquakes(station, earthquakes_dir):
+	print("Earthquake table for station %s:" % (station) );	
+	# Read the offset table
+	try:
+		table = subprocess.check_output("grep "+station+" "+earthquakes_dir+"cwu*kalts.evt",shell=True);
+	except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files... 
+		table=[];
+	if len(table)>0:
+		table=table.decode(); # needed when switching to python 3
+	print(table);
+	[e_offsets, n_offsets, u_offsets, evdts]=parse_earthquake_table_pbo(table);
+	CWU_earthquakes=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	return CWU_earthquakes;
 
 #
 # TABLE INPUTS --------------------------- 

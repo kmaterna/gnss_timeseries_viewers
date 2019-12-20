@@ -38,7 +38,8 @@ def driver():
 	output_full_ts(stage1_objects, sorted_distances, myparams, "noeq");
 	output_full_ts(stage2_objects, sorted_distances, myparams, "noeq_noseasons");
 	vertical_plots(stage2_objects, sorted_distances, myparams);
-	vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
+	# vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
+	vertical_filtered_plots(detrend_objects, sorted_distances, myparams);
 	pygmt_map(stage2_objects,myparams);
 	return;
 
@@ -55,12 +56,12 @@ def configure():
 	# center=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
 	# center=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
 	# center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
-	center=[-115.5, 32.85]; expname='SSGF'; radius = 30; 
+	center=[-115.5, 33]; expname='SSGF'; radius = 40; 
 
-	proc_center='unr';   # WHICH DATASTREAM DO YOU WANT?
+	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
 
 	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
-	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI"];  # This is global, just keeps growing
+	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","P507"];  # This is global, just keeps growing
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
@@ -75,7 +76,7 @@ def inputs(station_names, distances, blacklist, proc_center):  # Returns a list 
 		if station_names[i] in blacklist:
 			continue;
 		else:
-			[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_names[i], proc_center, "ITRF");
+			[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_names[i], proc_center, "NA");
 			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
 			# kicking out the stations that end early or start late. 
 				dataobj_list.append(myData);
@@ -99,7 +100,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 	detrended_objects=[];
 	for i in range(len(sorted_objects)):
 		newobj=gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq');
-		detrended_objects.append(newobj);
+		# detrended_objects.append(newobj);
+		detrended_objects.append(sorted_objects[i]);  # if you want trends in your vertical data
 
 	# Objects with no earthquakes or seasonals
 	stage1_objects = [];
@@ -306,12 +308,12 @@ def vertical_filtered_plots(dataobj_list, distances, myparams):
 
 	# Vertical
 	for i in range(len(dataobj_list)):
-		umean=np.mean(dataobj_list[i].dU);
+		# umean=np.mean(dataobj_list[i].dU);  # start at the mean. 
+		umean=dataobj_list[i].dU[0];  # start at the beginning
 		line_color=custom_cmap.to_rgba(distances[i]);
-		# l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' );
+		# l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' ); # for debugging the filter
 		udata=scipy.ndimage.median_filter(dataobj_list[i].dU-umean,size=365);
 		l1 = plt.gca().plot(dataobj_list[i].dtarray,udata,linestyle='solid',linewidth=1,color=line_color );
-		# break;
 		# plt.gca().text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
 	plt.gca().set_xlim(start_time_plot,end_time_plot);
 	bottom,top=plt.gca().get_ylim();
