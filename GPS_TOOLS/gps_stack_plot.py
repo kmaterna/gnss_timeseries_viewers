@@ -38,8 +38,8 @@ def driver():
 	output_full_ts(stage1_objects, sorted_distances, myparams, "noeq");
 	output_full_ts(stage2_objects, sorted_distances, myparams, "noeq_noseasons");
 	vertical_plots(stage2_objects, sorted_distances, myparams);
-	# vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
-	vertical_filtered_plots(detrend_objects, sorted_distances, myparams);
+	vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
+	# vertical_filtered_plots(detrend_objects, sorted_distances, myparams);
 	pygmt_map(stage2_objects,myparams);
 	return;
 
@@ -56,12 +56,12 @@ def configure():
 	# center=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
 	# center=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
 	# center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
-	center=[-115.5, 33]; expname='SSGF'; radius = 40; 
+	center=[-115.5, 33]; expname='SSGF'; radius = 80; 
 
 	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
 
 	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
-	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","P507"];  # This is global, just keeps growing
+	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","BOMG"];  # This is global, just keeps growing
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
@@ -308,8 +308,8 @@ def vertical_filtered_plots(dataobj_list, distances, myparams):
 
 	# Vertical
 	for i in range(len(dataobj_list)):
-		# umean=np.mean(dataobj_list[i].dU);  # start at the mean. 
-		umean=dataobj_list[i].dU[0];  # start at the beginning
+		umean=np.mean(dataobj_list[i].dU);  # start at the mean. 
+		# umean=dataobj_list[i].dU[0];  # start at the beginning
 		line_color=custom_cmap.to_rgba(distances[i]);
 		# l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' ); # for debugging the filter
 		udata=scipy.ndimage.median_filter(dataobj_list[i].dU-umean,size=365);
