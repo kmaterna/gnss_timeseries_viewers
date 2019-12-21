@@ -3,7 +3,7 @@
 # Step 1: Determine the stations in the radius. 
 # Step 2: Read them in. Make a list of timeseries objects in one large dataobject. 
 # Step 3: Compute: Remove outliers, earthquakes, and offsets
-# Step 4: Plot maps of velocity
+# Step 4: Plot maps of vertical velocity
 
 # Reference: 
 # Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
@@ -29,7 +29,7 @@ Parameters=collections.namedtuple("Parameters",['expname','proc_center','center'
 
 def driver():
 	myparams = configure();
-	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = inputs(myparams.stations, myparams.distances, myparams.blacklist, myparams.proc_center);
+	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
 	[east_slope_list, north_slope_list, vert_slope_list] = compute(dataobj_list, offsetobj_list, eqobj_list);
 	pygmt_vertical_map(myparams, dataobj_list, vert_slope_list);
 	return;
@@ -49,25 +49,6 @@ def configure():
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
 	myparams=Parameters(expname=expname, proc_center=proc_center, center=center, radius=radius, stations=stations, distances=distances, blacklist=blacklist, outdir=outdir, outname=outname);
 	return myparams;
-
-
-def inputs(station_names, distances, blacklist, proc_center):  # Returns a list of objects for time series data, offsets, and earthquakes
-	# Also kicks out stations when necessary based on blacklist or timing criteria
-	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[]; stations_surviving=[]; distances_surviving=[]; 
-	for i in range(len(station_names)):
-		if station_names[i] in blacklist:
-			continue;
-		else:
-			[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_names[i], proc_center, "NA");
-			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
-			# kicking out the stations that end early or start late. 
-				dataobj_list.append(myData);
-				offsetobj_list.append(offset_obj);
-				eqobj_list.append(eq_obj);
-				stations_surviving.append(station_names[i]);
-				distances_surviving.append(distances[i]);
-				print(station_names[i])
-	return [dataobj_list, offsetobj_list, eqobj_list, distances_surviving];
 
 
 def compute(dataobj_list, offsetobj_list, eqobj_list):
