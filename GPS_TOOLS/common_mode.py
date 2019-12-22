@@ -23,14 +23,16 @@ import pygmt
 
 
 Parameters=collections.namedtuple("Parameters",['expname','proc_center','center','radius','stations','distances','blacklist','outdir', 'outname']);
-
+Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 
 def driver():
 	myparams = configure();
 	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
-	[common_mode, raw_objects, cmr_objects] = compute(dataobj_list, offsetobj_list, eqobj_list);
-	# vertical_filtered_plots(cmr_objects, paired_distances, myparams);
-	# pygmt_map(stage2_objects,myparams);
+	[common_mode, raw_objects, cmr_objects, deltas] = compute(dataobj_list, offsetobj_list, eqobj_list);
+	print(deltas);
+	vertical_filtered_plots(raw_objects, paired_distances, common_mode, myparams, "vertical_filt");
+	vertical_filtered_plots(cmr_objects, paired_distances, common_mode, myparams, "no_cmr_filt");
+	pygmt_map(cmr_objects,myparams, deltas);
 	return;
 
 
@@ -45,24 +47,25 @@ def configure():
 	# center=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
 	# center=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
 	# center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
-	center=[-115.5, 33]; expname='SSGF'; radius = 15; 
+	center=[-115.5, 33]; expname='SSGF'; radius = 40; 
 
 	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
 
 	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
-	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","BOMG"];  # This is global, just keeps growing
+	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","BOMG","FSHB"];  # This is global, just keeps growing
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
-	myparams=Parameters(expname=expname, proc_center=proc_center, center=center, radius=radius, stations=stations, distances=distances, blacklist=blacklist, outdir=outdir, outname=outname);
+	myparams=Parameters(expname=expname, proc_center=proc_center, center=center, radius=radius, stations=stations, distances=distances, 
+		blacklist=blacklist, outdir=outdir, outname=outname);
 	return myparams;
 
 def compute(dataobj_list, offsetobj_list, eqobj_list):
-
+	print("Computing common mode from %d stations " % (len(dataobj_list)) )
 	detrended_objects=[]; raw_objects=[]; cmr_objects = [];  # common-mode-removed objects
+	cmr_deviations=[];
 	# Objects with no earthquakes or seasonals
 	for i in range(len(dataobj_list)):
-		# Remove the steps and earthquakes
 		newobj=offsets.remove_offsets(dataobj_list[i], offsetobj_list[i]);
 		newobj=offsets.remove_offsets(newobj,eqobj_list[i]);
 		newobj=gps_seasonal_removals.make_detrended_ts(newobj, 0, 'lssq');
@@ -70,24 +73,67 @@ def compute(dataobj_list, offsetobj_list, eqobj_list):
 
 	common_mode_obj = define_common_mode(detrended_objects);
 
-	return [common_mode_obj, raw_objects, cmr_objects];
+	print("Removing common mode from %d objects " % (len(dataobj_list)) )
+	for i in range(len(dataobj_list)):		
+		cmr_object=remove_cm_from_object(detrended_objects[i], common_mode_obj);
+		cmr_objects.append(cmr_object);
+
+	# Keep a measure of the spread of this data
+	for i in range(len(cmr_objects)):
+		udata=scipy.ndimage.median_filter(cmr_objects[i].dU,size=365);
+		cmr_deviations.append(np.nanmax(udata) - np.nanmin(udata));
+
+	return [common_mode_obj, detrended_objects, cmr_objects, cmr_deviations];
+
+
 
 
 def define_common_mode(detrended_objects):
+	print("Defining common mode from %d objects" % (len(detrended_objects)) )
 	common_mode_obj=[];
 	total_dtarray, data_array_dE, data_array_dN, data_array_dU = make_ND_arrays(detrended_objects)
 
-	plt.figure()
-	# for i in range(len(detrended_objects)):
-	# 	plt.plot(detrended_objects[i].dtarray,detrended_objects[i].dU);
-	# 	break;
-	for i in range(len(detrended_objects)):
-		plt.plot(total_dtarray, data_array_dE[:,i],linewidth=0.5);
-	plt.savefig("temp.png");
+	cm_dn=[]; cm_de=[]; cm_du=[]; cm_sn=[]; cm_se=[]; cm_su=[];
+	for i in range(len(total_dtarray)):
+		cm_dn.append(get_common_mode_from_list(data_array_dN[i,:]))
+		cm_de.append(get_common_mode_from_list(data_array_dE[i,:]))
+		cm_du.append(get_common_mode_from_list(data_array_dU[i,:]))
+	sigmas = [1 for i in cm_dn];
+	sigmas = np.array(sigmas);
 
-	# YAY WE REARRANGED!  NOW WE JUST HAVE TO TAKE A MEAN/MEDIAN AND MAKE THE COMMON MODE! 
+	common_mode_obj=Timeseries(name='como',coords=[-115, 32], dtarray=np.array(total_dtarray), dN=np.array(cm_dn), dE=np.array(cm_de), dU=np.array(cm_du), 
+		Se=sigmas, Sn=sigmas, Su=sigmas, EQtimes=[]);
 	return common_mode_obj;
 
+
+def get_common_mode_from_list(data_list):
+	# Given a list of stations' values for a certain day, what is the common mode? 
+	# Taking median, since it's robust to outliers
+	if sum(~np.isnan(data_list)) < 5:
+		value = 0;
+	else:
+		value=np.nanmedian(data_list);
+	return value;
+
+
+
+def remove_cm_from_object(data_object, cm_object):
+	cmr_dE=[]; cmr_dN=[]; cmr_dU=[];
+	for i in range(len(data_object.dtarray)):
+		if data_object.dtarray[i] in cm_object.dtarray:
+			cm_object_indices = [d == data_object.dtarray[i] for d in cm_object.dtarray ];   # select which day you're doing
+			cm_value = cm_object.dE[cm_object_indices];  # get the index of the cm_object's day
+			cmr_dE.append(data_object.dE[i] - cm_value);
+			cm_value = cm_object.dN[cm_object_indices];
+			cmr_dN.append(data_object.dN[i] - cm_value);
+			cm_value = cm_object.dU[cm_object_indices];
+			cmr_dU.append(data_object.dU[i] - cm_value);
+	
+	sigmas = [1 for i in cmr_dU];
+	sigmas = np.array(sigmas);
+	cmr_object=Timeseries(name=data_object.name,coords=data_object.coords, dtarray=data_object.dtarray, dN=np.array(cmr_dN), dE=np.array(cmr_dE), dU=np.array(cmr_dU), 
+		Se=sigmas, Sn=sigmas, Su=sigmas, EQtimes=data_object.EQtimes);
+	return cmr_object;
 
 
 def make_ND_arrays(object_list):
@@ -124,31 +170,33 @@ def make_ND_arrays(object_list):
 	return total_dtarray, data_array_dE, data_array_dN, data_array_dU;
 
 
-def vertical_filtered_plots(dataobj_list, distances, myparams):
+def vertical_filtered_plots(dataobj_list, distances, common_mode_obj, myparams, filename):
 
 	plt.figure(figsize=(15,8),dpi=160);
 	label_date=dt.datetime.strptime("20200215","%Y%m%d");
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
 	end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d");
 
-	spacing=40;
-	EQtimes, labeltimes, labels, closest_station, farthest_station=configure_beautiful_plots(myparams.expname, distances);
+	offset=-5;
+	closest_station=min(distances);  # km from event
+	farthest_station=max(distances); # km from event
 	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
 	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
 
 	# Vertical
 	for i in range(len(dataobj_list)):
+		offset=offset+1;
 		umean=np.mean(dataobj_list[i].dU);  # start at the mean. 
-		# umean=dataobj_list[i].dU[0];  # start at the beginning
 		line_color=custom_cmap.to_rgba(distances[i]);
 		# l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' ); # for debugging the filter
 		udata=scipy.ndimage.median_filter(dataobj_list[i].dU-umean,size=365);
 		l1 = plt.gca().plot(dataobj_list[i].dtarray,udata,linestyle='solid',linewidth=1,color=line_color );
-		# plt.gca().text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
+		plt.gca().text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
+	umean=np.mean(common_mode_obj.dU);  # start at the mean. 
+	cm_filt=scipy.ndimage.median_filter(common_mode_obj.dU-umean,size=365);
+	plt.gca().plot(common_mode_obj.dtarray, cm_filt, linestyle='solid',linewidth=2,color='black');
 	plt.gca().set_xlim(start_time_plot,end_time_plot);
 	bottom,top=plt.gca().get_ylim();
-	for i in range(len(EQtimes)):
-		plt.gca().plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
 	plt.gca().set_ylabel("Filtered Vertical (mm)");
 	plt.gca().set_title("Filtered Vertical GPS Time Series")
 	plt.gca().grid(True)
@@ -172,10 +220,44 @@ def vertical_filtered_plots(dataobj_list, distances, myparams):
 	ax.text(0,0.37,myparams.center);
 	ax.text(0,0,str(myparams.radius)+" km radius");
 
-	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+"vertical_filt"+'.jpg');
+	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+filename+'.jpg');
 	plt.close();
 	print("Vertical plot created.");
 	return;
 
+
+
+def pygmt_map(ts_objects, myparams, deltas):
+
+	offset=0.2;
+	geothermals_x=[-115.528300, -115.250000, -115.515300, -115.600000];
+	geothermals_y=[32.716700, 32.783300, 33.015300, 33.200000];
+
+	lons=[]; lats=[]; names=[];
+	for i in range(len(ts_objects)):
+		lons.append(ts_objects[i].coords[0]);
+		lats.append(ts_objects[i].coords[1]);
+		names.append(ts_objects[i].name);
+	region=[min(lons)-offset,max(lons)+offset,min(lats)-offset,max(lats)+offset];		
+
+	# Make a new color bar
+	min_vert=np.min(deltas);
+	max_vert=np.max(deltas);
+	max_vert=20;
+	label_interval=2.0;
+	pygmt.makecpt(C="jet",T=str(min_vert-0.1)+"/"+str(max_vert+0.1)+"/0.1",H="mycpt.cpt");
+
+	fig = pygmt.Figure()
+	fig.basemap(region=region,projection="M8i",B="0.25");
+	fig.coast(shorelines="0.5p,black",G='peachpuff2',S='skyblue',D="h");
+	fig.coast(N='1',W='1.0p,black');
+	fig.coast(N='2',W='0.5p,black');
+	fig.text(x=[i+0.035 for i in lons],y=lats,text=names,font='15p,Helvetica-Bold,black');
+	fig.plot(x=geothermals_x,y=geothermals_y,S='i0.2i',G="purple",W='0.5p,black');
+	fig.plot(x=lons,y=lats,S='c0.2i',C="mycpt.cpt",G=deltas,W='0.5p,black');
+	fig.plot(x=myparams.center[0],y=myparams.center[1],S='a0.1i',G='red',W='0.5p,red')
+	fig.colorbar(D="JBC+w4.0i+h",C="mycpt.cpt",G=str(min_vert)+"/"+str(max_vert),B=["x"+str(label_interval),"y+LVert(mm)"])
+	fig.savefig(myparams.outdir+"/"+myparams.outname+'_map.png');
+	return;
 
 

@@ -39,6 +39,7 @@ def driver():
 	output_full_ts(stage2_objects, sorted_distances, myparams, "noeq_noseasons");
 	vertical_plots(stage2_objects, sorted_distances, myparams);
 	vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
+	horizontal_filtered_plots(stage2_objects, sorted_distances, myparams);
 	# vertical_filtered_plots(detrend_objects, sorted_distances, myparams);
 	pygmt_map(stage2_objects,myparams);
 	return;
@@ -56,7 +57,7 @@ def configure():
 	# center=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
 	# center=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
 	# center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
-	center=[-115.5, 33]; expname='SSGF'; radius = 80; 
+	center=[-115.5, 33]; expname='SSGF'; radius =40; 
 
 	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
 
@@ -282,7 +283,6 @@ def vertical_filtered_plots(dataobj_list, distances, myparams):
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
 	end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d");
 
-	spacing=40;
 	EQtimes, labeltimes, labels, closest_station, farthest_station=configure_beautiful_plots(myparams.expname, distances);
 	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
 	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
@@ -326,6 +326,78 @@ def vertical_filtered_plots(dataobj_list, distances, myparams):
 	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+"vertical_filt"+'.jpg');
 	plt.close();
 	print("Vertical plot created.");
+	return;
+
+
+def horizontal_filtered_plots(dataobj_list, distances, myparams):
+
+	# plt.figure(figsize=(15,8),dpi=160);
+	[f,axarr]=plt.subplots(2,1,sharex=True,figsize=(15,8),dpi=160);
+	print(axarr[0])
+	print(axarr[1])
+	print(np.shape(axarr))
+	label_date=dt.datetime.strptime("20200215","%Y%m%d");
+	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
+	end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d");
+	offset=-15;
+
+	EQtimes, labeltimes, labels, closest_station, farthest_station=configure_beautiful_plots(myparams.expname, distances);
+	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
+	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
+
+	# East and North
+	for i in range(len(dataobj_list)):
+		offset=offset+2;
+		# umean=np.mean(dataobj_list[i].dE);  # start at the mean. 
+		umean=dataobj_list[i].dE[0];  # start at the beginning
+		line_color=custom_cmap.to_rgba(distances[i]);
+		# l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' ); # for debugging the filter
+		udata=scipy.ndimage.median_filter(dataobj_list[i].dE-umean,size=365);
+		axarr[0].plot(dataobj_list[i].dtarray,udata,linestyle='solid',linewidth=1,color=line_color );
+		axarr[0].text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
+	axarr[0].set_xlim(start_time_plot,end_time_plot);
+	bottom,top=axarr[0].get_ylim();
+	for i in range(len(EQtimes)):
+		axarr[0].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
+	axarr[0].set_ylabel("Filtered East (mm)");
+	axarr[0].set_title("Filtered GPS Time Series")
+	axarr[0].grid(True)
+	
+	for i in range(len(dataobj_list)):
+		# umean=np.mean(dataobj_list[i].dE);  # start at the mean. 
+		umean=dataobj_list[i].dN[0];  # start at the beginning
+		line_color=custom_cmap.to_rgba(distances[i]);
+		# l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' ); # for debugging the filter
+		udata=scipy.ndimage.median_filter(dataobj_list[i].dN-umean,size=365);
+		l1 = axarr[1].plot(dataobj_list[i].dtarray,udata,linestyle='solid',linewidth=1,color=line_color );	
+	bottom,top=axarr[1].get_ylim();
+	for i in range(len(EQtimes)):
+		axarr[1].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 		
+	axarr[1].set_ylabel("Filtered North (mm)");		
+	axarr[1].grid(True)
+
+	# custom_cmap.set_array(range(int(closest_station),int(farthest_station)));
+	# cb = plt.colorbar(custom_cmap);
+	# cb.set_label('Kilometers from center');
+
+	# # new axis for plotting the map of california
+	# ax=plt.add_axes(position=[0.8,0.1,0.1,0.2],xticklabels=[],yticklabels=[]);
+	# [ca_lons,ca_lats]=np.loadtxt('../california_bdr',unpack=True);
+	# ax.plot(ca_lons,ca_lats,'k');
+	# for i in range(len(dataobj_list)):
+	# 	ax.plot(dataobj_list[i].coords[0],dataobj_list[i].coords[1],'.g',markersize=0.6);
+
+	# # new axis for extra labels
+	# ax=plt.axes(position=[0.8,0.4,0.1,0.2],xticklabels=[],yticklabels=[]);
+	# ax.set_ylim([-1,1])
+	# ax.set_xlim([-0.1,1])
+	# ax.text(0,0.75,myparams.proc_center+" data");
+	# ax.text(0,0.37,myparams.center);
+	# ax.text(0,0,str(myparams.radius)+" km radius");
+
+	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+"horiz_filt"+'.jpg');
+	plt.close();
+	print("Horiz plot created.");
 	return;
 
 
