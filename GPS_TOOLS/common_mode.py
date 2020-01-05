@@ -33,6 +33,7 @@ def driver():
 	vertical_filtered_plots(raw_objects, paired_distances, common_mode, myparams, "vertical_filt");
 	vertical_filtered_plots(cmr_objects, paired_distances, common_mode, myparams, "no_cmr_filt");
 	pygmt_map(cmr_objects,myparams, deltas);
+	write_cm_object(common_mode, myparams);	
 	return;
 
 
@@ -46,8 +47,8 @@ def configure():
 	# center=[-116.0, 34.5];     expname='Mojave';  radius = 35; # km
 	# center=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
 	# center=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
-	# center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
-	center=[-115.5, 33]; expname='SSGF'; radius = 40; 
+	center=[-115.5, 32.85]; expname='SSGF'; radius = 30; 
+	# center=[-115.5, 33]; expname='SSGF'; radius = 40; 
 
 	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
 
@@ -258,6 +259,13 @@ def pygmt_map(ts_objects, myparams, deltas):
 	fig.plot(x=myparams.center[0],y=myparams.center[1],S='a0.1i',G='red',W='0.5p,red')
 	fig.colorbar(D="JBC+w4.0i+h",C="mycpt.cpt",G=str(min_vert)+"/"+str(max_vert),B=["x"+str(label_interval),"y+LVert(mm)"])
 	fig.savefig(myparams.outdir+"/"+myparams.outname+'_map.png');
+	return;
+
+def write_cm_object(common_mode, myparams):
+	filename=myparams.outdir+"/"+myparams.outname+"_common_mode.pos";
+	print("Writing common_mode into %s " % filename)
+	comment=myparams.stations;  # right now this is all stations, not just the ones that were used. 
+	gps_io_functions.write_pbo_pos_file(common_mode, filename, comment);
 	return;
 
 

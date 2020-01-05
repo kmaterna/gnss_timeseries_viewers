@@ -331,4 +331,20 @@ def read_grace(filename):
 	return [GRACE_TS];
 
 
+# ---------- WRITING FUNCTIONS ----------- # 
+def write_pbo_pos_file(ts_object, filename, comment=""):
+	# Useful for writing common mode objects, etc. 
+	# Opposite of read_pbo_pos_file(filename)
+	ofile=open(filename,'w');
+	ofile.write("%s\n" % comment);
+	for i in range(36):
+		ofile.write("/\n");
+	for i in range(len(ts_object.dtarray)):
+		ofile.write("%s 0 0 0 0 0 0 0 0 0 0 0 " % (dt.datetime.strftime(ts_object.dtarray[i],"%Y%m%d")) );  # the first 12 columns
+		ofile.write("%.5f %.5f 0 " % (ts_object.coords[1], ts_object.coords[0]+360) );
+		ofile.write("%.6f %.6f %.6f %.6f %.6f %.6f\n" % (ts_object.dN[i]/1000, ts_object.dE[i]/1000, ts_object.dU[i]/1000.0, ts_object.Sn[i]/1000.0, ts_object.Se[i]/1000.0, ts_object.Su[i]/1000.0) );
+	ofile.close();
+	return;
+
+
 

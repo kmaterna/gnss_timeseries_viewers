@@ -29,7 +29,7 @@ Parameters=collections.namedtuple("Parameters",['expname','proc_center','center'
 
 def driver():
 	myparams = configure();
-	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
+	[dataobj_list, offsetobj_list, eqobj_list, ~] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
 	[east_slope_list, north_slope_list, vert_slope_list] = compute(dataobj_list, offsetobj_list, eqobj_list);
 	pygmt_vertical_map(myparams, dataobj_list, vert_slope_list);
 	return;
