@@ -34,14 +34,17 @@ def driver():
 	myparams = configure();
 	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
 	[detrend_objects, stage1_objects, stage2_objects, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances);
-	output_full_ts(detrend_objects, sorted_distances, myparams, "detrended");
-	output_full_ts(stage1_objects, sorted_distances, myparams, "noeq");
-	output_full_ts(stage2_objects, sorted_distances, myparams, "noeq_noseasons");
-	vertical_plots(stage2_objects, sorted_distances, myparams);
-	vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
+	
+	# output_full_ts(detrend_objects, sorted_distances, myparams, "trended");
+	horizontal_full_ts(stage1_objects, sorted_distances, myparams, "noeq");
+	horizontal_full_ts(stage2_objects, sorted_distances, myparams, "noeq_noseasons");
+	vertical_full_ts(stage2_objects, sorted_distances, myparams);
+
 	horizontal_filtered_plots(stage2_objects, sorted_distances, myparams);
-	# vertical_filtered_plots(detrend_objects, sorted_distances, myparams);
+	vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
+	vertical_filtered_plots(detrend_objects, sorted_distances, myparams, 'trendsin_'); # the "detrend_objects" is a misnomer. Still has trends. 
 	pygmt_map(stage2_objects,myparams);
+	
 	return;
 
 
@@ -78,12 +81,14 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 	sorted_eqs = [x for _,x in sorted(zip(latitudes_list, eqobj_list))];  # the raw, sorted data. 
 	sorted_distances = [x for _,x in sorted(zip(latitudes_list, distances))];  # the sorted distances.
 
-	# Detrended objects
+	# Detrended objects (or objects with trends and no offsets; depends on what you want.)
 	detrended_objects=[];
 	for i in range(len(sorted_objects)):
-		newobj=gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq');
-		# detrended_objects.append(newobj);
-		detrended_objects.append(sorted_objects[i]);  # if you want trends in your vertical data
+		# newobj=gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq');
+		# detrended_objects.append(newobj);  # still has offsets, doesn't have trends
+		newobj=offsets.remove_offsets(sorted_objects[i], sorted_offsets[i]);
+		newobj=offsets.remove_offsets(newobj,sorted_eqs[i]);
+		detrended_objects.append(newobj);  # still has trends, doesn't have offsets
 
 	# Objects with no earthquakes or seasonals
 	stage1_objects = [];
@@ -154,8 +159,7 @@ def configure_beautiful_plots(expname, distances):
 	return EQtimes, labeltimes, labels, closest_station, farthest_station;
 
 
-
-def output_full_ts(dataobj_list, distances, myparams, filename):
+def horizontal_full_ts(dataobj_list, distances, myparams, filename):
 
 	fig = plt.figure(figsize=(20,15),dpi=160);
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True,figsize=(10,8))
@@ -220,7 +224,7 @@ def output_full_ts(dataobj_list, distances, myparams, filename):
 	return;
 
 
-def vertical_plots(dataobj_list, distances, myparams):
+def vertical_full_ts(dataobj_list, distances, myparams):
 
 	plt.figure(figsize=(6,8),dpi=160);
 	label_date=dt.datetime.strptime("20200215","%Y%m%d");
@@ -276,7 +280,7 @@ def vertical_plots(dataobj_list, distances, myparams):
 	return;
 
 
-def vertical_filtered_plots(dataobj_list, distances, myparams):
+def vertical_filtered_plots(dataobj_list, distances, myparams, label=""):
 
 	plt.figure(figsize=(15,8),dpi=160);
 	label_date=dt.datetime.strptime("20200215","%Y%m%d");
@@ -286,16 +290,25 @@ def vertical_filtered_plots(dataobj_list, distances, myparams):
 	EQtimes, labeltimes, labels, closest_station, farthest_station=configure_beautiful_plots(myparams.expname, distances);
 	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
 	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
+	offset=-10;
+
+
 
 	# Vertical
 	for i in range(len(dataobj_list)):
-		umean=np.mean(dataobj_list[i].dU);  # start at the mean. 
-		# umean=dataobj_list[i].dU[0];  # start at the beginning
+		if label=="trendsin_":
+			umean=dataobj_list[i].dU[0];  # start at the beginning for the trends-in vertical plot
+			label_mm=dataobj_list[i].dU[-1]-dataobj_list[i].dU[0];
+			udata=scipy.ndimage.median_filter(dataobj_list[i].dU-umean,size=60);
+		else:
+			umean=np.mean(dataobj_list[i].dU);  # start at the mean for the detrended vertical plot
+			label_mm=offset;
+			udata=scipy.ndimage.median_filter(dataobj_list[i].dU-umean,size=365);
+
 		line_color=custom_cmap.to_rgba(distances[i]);
-		# l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' ); # for debugging the filter
-		udata=scipy.ndimage.median_filter(dataobj_list[i].dU-umean,size=365);
 		l1 = plt.gca().plot(dataobj_list[i].dtarray,udata,linestyle='solid',linewidth=1,color=line_color );
-		# plt.gca().text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
+		plt.gca().text(label_date,label_mm,dataobj_list[i].name,fontsize=9,color=line_color);
+		offset=offset+1.6;
 	plt.gca().set_xlim(start_time_plot,end_time_plot);
 	bottom,top=plt.gca().get_ylim();
 	for i in range(len(EQtimes)):
@@ -323,7 +336,7 @@ def vertical_filtered_plots(dataobj_list, distances, myparams):
 	ax.text(0,0.37,myparams.center);
 	ax.text(0,0,str(myparams.radius)+" km radius");
 
-	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+"vertical_filt"+'.jpg');
+	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+label+'vertical_filt.jpg');
 	plt.close();
 	print("Vertical plot created.");
 	return;

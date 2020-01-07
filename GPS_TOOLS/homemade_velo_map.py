@@ -29,7 +29,7 @@ Parameters=collections.namedtuple("Parameters",['expname','proc_center','center'
 
 def driver():
 	myparams = configure();
-	[dataobj_list, offsetobj_list, eqobj_list, ~] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
+	[dataobj_list, offsetobj_list, eqobj_list, temp] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
 	[east_slope_list, north_slope_list, vert_slope_list] = compute(dataobj_list, offsetobj_list, eqobj_list);
 	pygmt_vertical_map(myparams, dataobj_list, vert_slope_list);
 	return;
@@ -40,7 +40,7 @@ def configure():
 	# center=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
 	center=[-115.5, 33]; expname='SSGF'; radius = 80; 
 
-	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
+	proc_center='unr';   # WHICH DATASTREAM DO YOU WANT?
 
 	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
 	blacklist=["P340","P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI"];  # This is global, just keeps growing
@@ -66,14 +66,6 @@ def compute(dataobj_list, offsetobj_list, eqobj_list):
 		vert_slope_list.append(vert_slope)
 
 	return [east_slope_list, north_slope_list, vert_slope_list];
-
-		# # NOTE: WRITTEN IN JUNE 2019
-		# # An experiment for removing ETS events
-		# # stage2obj=stage1obj;
-		# ets_intervals=remove_ets_events.input_tremor_days();
-		# stage2obj=gps_ts_functions.remove_outliers(stage1obj,3.0);  # 3 mm outlier def. 
-		# stage2obj=remove_ets_events.remove_ETS_times(stage2obj,ets_intervals, offset_num_days=15);  # 30 days on either end of the offsets
-		# stage2obj=gps_seasonal_removals.make_detrended_ts(stage2obj,0,'lssq');
 
 
 def pygmt_vertical_map(myparams, ts_objects, vert_slopes):
