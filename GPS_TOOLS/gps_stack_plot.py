@@ -27,23 +27,23 @@ import remove_ets_events
 import pygmt
 
 
-Parameters=collections.namedtuple("Parameters",['expname','proc_center','center','radius','stations','distances','blacklist','outdir', 'outname']);
+Parameters=collections.namedtuple("Parameters",['expname','proc_center','refframe','center','radius','stations','distances','blacklist','outdir', 'outname']);
 
 
 def driver():
 	myparams = configure();
-	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
-	[detrend_objects, no_offset_objects, stage1_objects, stage2_objects, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances);
+	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.refframe, myparams.distances);
+	[detrend_objects, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances);
 	
 	# output_full_ts(detrend_objects, sorted_distances, myparams, "detrended");
-	horizontal_full_ts(stage1_objects, sorted_distances, myparams, "noeq");
-	horizontal_full_ts(stage2_objects, sorted_distances, myparams, "noeq_noseasons");
-	vertical_full_ts(stage2_objects, sorted_distances, myparams);
+	# horizontal_full_ts(no_offsets_no_trends, sorted_distances, myparams, "noeq");
+	horizontal_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams, "noeq_noseasons");
+	vertical_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
 
-	horizontal_filtered_plots(stage2_objects, sorted_distances, myparams);
-	vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
+	horizontal_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
+	vertical_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
 	vertical_filtered_plots(no_offset_objects, sorted_distances, myparams, 'trendsin_');
-	pygmt_map(stage2_objects,myparams);
+	pygmt_map(no_offsets_no_trends_no_seasons,myparams);
 	
 	return;
 
@@ -59,18 +59,19 @@ def configure():
 	# center=[-116.0, 34.5];     expname='Mojave';  radius = 35; # km
 	# center=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
 	# center=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
-	center=[-115.5, 32.85]; expname='SSGF'; radius = 50; 
+	# center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
 	# center=[-115.5, 33]; expname='SSGF'; radius = 15; 
-	# center=[-115.5, 33]; expname='SSGF'; radius =40; 
+	center=[-115.5, 33]; expname='SSGF'; radius =40; 
 
-	proc_center='unr';   # WHICH DATASTREAM DO YOU WANT?
+	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
+	refframe = 'NA';     # WHICH REFERENCE FRAME? 
 
 	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
 	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","BOMG","FSHB"];  # This is global, just keeps growing
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
-	myparams=Parameters(expname=expname, proc_center=proc_center, center=center, radius=radius, stations=stations, distances=distances, blacklist=blacklist, outdir=outdir, outname=outname);
+	myparams=Parameters(expname=expname, proc_center=proc_center, refframe=refframe, center=center, radius=radius, stations=stations, distances=distances, blacklist=blacklist, outdir=outdir, outname=outname);
 	return myparams;
 
 
@@ -94,8 +95,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 
 
 	# Objects with no earthquakes or seasonals
-	stage1_objects = [];
-	stage2_objects = [];
+	no_offsets_no_trends = [];
+	no_offsets_no_trends_no_seasons = [];
 	for i in range(len(dataobj_list)):
 
 		# Remove the steps earthquakes
@@ -104,13 +105,13 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 
 		# The detrended TS without earthquakes
 		stage1obj=gps_seasonal_removals.make_detrended_ts(newobj, 0, 'lssq');
-		stage1_objects.append(stage1obj);
+		no_offsets_no_trends.append(stage1obj);
 
 		# The detrended TS without earthquakes or seasonals
 		stage2obj=gps_seasonal_removals.make_detrended_ts(stage1obj, 1, 'lssq');
-		stage2_objects.append(stage2obj);
+		no_offsets_no_trends_no_seasons.append(stage2obj);
 
-	return [detrended_objects, no_offset_objects, stage1_objects, stage2_objects, sorted_distances];
+	return [detrended_objects, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons, sorted_distances];
 
 
 		# # NOTE: WRITTEN IN JUNE 2019

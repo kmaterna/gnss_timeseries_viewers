@@ -22,12 +22,12 @@ import remove_ets_events
 import pygmt
 
 
-Parameters=collections.namedtuple("Parameters",['expname','proc_center','center','radius','stations','distances','blacklist','outdir', 'outname']);
+Parameters=collections.namedtuple("Parameters",['expname','proc_center','refframe','center','radius','stations','distances','blacklist','outdir', 'outname']);
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 
 def driver():
 	myparams = configure();
-	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
+	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.refframe, myparams.distances);
 	[common_mode, raw_objects, cmr_objects, deltas] = compute(dataobj_list, offsetobj_list, eqobj_list);
 	print(deltas);
 	vertical_filtered_plots(raw_objects, paired_distances, common_mode, myparams, "vertical_filt");
@@ -51,13 +51,14 @@ def configure():
 	# center=[-115.5, 33]; expname='SSGF'; radius = 40; 
 
 	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
+	refframe = 'NA';     # WHICH REFERENCE FRAME? 
 
 	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
 	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","BOMG","FSHB"];  # This is global, just keeps growing
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
-	myparams=Parameters(expname=expname, proc_center=proc_center, center=center, radius=radius, stations=stations, distances=distances, 
+	myparams=Parameters(expname=expname, proc_center=proc_center, refframe=refframe, center=center, radius=radius, stations=stations, distances=distances, 
 		blacklist=blacklist, outdir=outdir, outname=outname);
 	return myparams;
 

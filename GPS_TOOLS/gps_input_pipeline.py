@@ -14,7 +14,7 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 #  MULTI STATION DRIVERS               ---
 # ----------------------------------------
 
-def multi_station_inputs(station_names, blacklist, proc_center, distances=[]):  # Returns a list of objects for time series data, offsets, and earthquakes
+def multi_station_inputs(station_names, blacklist, proc_center, refframe, distances=[]):  # Returns a list of objects for time series data, offsets, and earthquakes
 	# Also kicks out stations when necessary based on blacklist or timing criteria
 	# Keeps the distances object as metadata in case you pass it through. 
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[]; stations_surviving=[]; distances_surviving=[]; 
@@ -22,7 +22,7 @@ def multi_station_inputs(station_names, blacklist, proc_center, distances=[]):  
 		if station_names[i] in blacklist:
 			continue;
 		else:
-			[myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, "NA");
+			[myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, refframe);
 			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
 			# kicking out the stations that end early or start late. 
 				dataobj_list.append(myData);
@@ -31,7 +31,7 @@ def multi_station_inputs(station_names, blacklist, proc_center, distances=[]):  
 				stations_surviving.append(station_names[i]);
 				if distances != []:
 					distances_surviving.append(distances[i]);
-				print(station_names[i])
+				# print(station_names[i])
 	return [dataobj_list, offsetobj_list, eqobj_list, distances_surviving];
 
 
