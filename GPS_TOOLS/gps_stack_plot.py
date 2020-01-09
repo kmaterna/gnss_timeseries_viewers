@@ -33,16 +33,16 @@ Parameters=collections.namedtuple("Parameters",['expname','proc_center','center'
 def driver():
 	myparams = configure();
 	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.distances);
-	[detrend_objects, stage1_objects, stage2_objects, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances);
+	[detrend_objects, no_offset_objects, stage1_objects, stage2_objects, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances);
 	
-	# output_full_ts(detrend_objects, sorted_distances, myparams, "trended");
+	# output_full_ts(detrend_objects, sorted_distances, myparams, "detrended");
 	horizontal_full_ts(stage1_objects, sorted_distances, myparams, "noeq");
 	horizontal_full_ts(stage2_objects, sorted_distances, myparams, "noeq_noseasons");
 	vertical_full_ts(stage2_objects, sorted_distances, myparams);
 
 	horizontal_filtered_plots(stage2_objects, sorted_distances, myparams);
 	vertical_filtered_plots(stage2_objects, sorted_distances, myparams);
-	vertical_filtered_plots(detrend_objects, sorted_distances, myparams, 'trendsin_'); # the "detrend_objects" is a misnomer. Still has trends. 
+	vertical_filtered_plots(no_offset_objects, sorted_distances, myparams, 'trendsin_');
 	pygmt_map(stage2_objects,myparams);
 	
 	return;
@@ -66,7 +66,7 @@ def configure():
 	proc_center='unr';   # WHICH DATASTREAM DO YOU WANT?
 
 	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
-	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","BOMG"];  # This is global, just keeps growing
+	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","BOMG","FSHB"];  # This is global, just keeps growing
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
@@ -83,13 +83,15 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 	sorted_distances = [x for _,x in sorted(zip(latitudes_list, distances))];  # the sorted distances.
 
 	# Detrended objects (or objects with trends and no offsets; depends on what you want.)
-	detrended_objects=[];
+	detrended_objects=[]; no_offset_objects=[];
 	for i in range(len(sorted_objects)):
-		# newobj=gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq');
-		# detrended_objects.append(newobj);  # still has offsets, doesn't have trends
+		newobj=gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq');
+		detrended_objects.append(newobj);  # still has offsets, doesn't have trends
+		
 		newobj=offsets.remove_offsets(sorted_objects[i], sorted_offsets[i]);
 		newobj=offsets.remove_offsets(newobj,sorted_eqs[i]);
-		detrended_objects.append(newobj);  # still has trends, doesn't have offsets
+		no_offset_objects.append(newobj);  # still has trends, doesn't have offsets
+
 
 	# Objects with no earthquakes or seasonals
 	stage1_objects = [];
@@ -108,7 +110,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 		stage2obj=gps_seasonal_removals.make_detrended_ts(stage1obj, 1, 'lssq');
 		stage2_objects.append(stage2obj);
 
-	return [detrended_objects, stage1_objects, stage2_objects, sorted_distances];
+	return [detrended_objects, no_offset_objects, stage1_objects, stage2_objects, sorted_distances];
 
 
 		# # NOTE: WRITTEN IN JUNE 2019

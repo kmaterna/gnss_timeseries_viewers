@@ -12,6 +12,7 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 def read_pbo_vel_file(infile):
 # Meant for reading velocity files from the PBO/UNAVCO website. 
 # Returns a Velfield collections object. 
+	print("Reading %s" % infile);
 	start=0;
 	ifile=open(infile,'r');
 	name=[]; nlat=[]; elon=[]; n=[]; e=[]; u=[]; sn=[]; se=[]; su=[]; first_epoch=[]; last_epoch=[];
@@ -63,6 +64,7 @@ def write_gmt_velfile(myVelfield, outfile):
 def read_unr_vel_file(infile):
 # Meant for reading velocity files from the MAGNET/MIDAS website. 
 # Returns a Velfield collections object. 	
+	print("Reading %s" % infile);
 	name=[]; nlat=[]; elon=[]; n=[]; e=[]; u=[]; sn=[]; se=[]; su=[]; 
 	ifile=open(infile,'r');
 	for line in ifile:
@@ -148,6 +150,7 @@ def remove_duplicates(velfield):
 
 
 def read_pbo_pos_file(filename):
+	print("Reading %s" % filename);
 	[yyyymmdd, Nlat, Elong, dN, dE, dU, Sn, Se, Su] = np.loadtxt(filename, skiprows=37, unpack=True,usecols=(0,12,13,15,16,17,18,19,20));
 	dN=[i*1000.0 for i in dN];
 	dE=[i*1000.0 for i in dE];
@@ -162,6 +165,7 @@ def read_pbo_pos_file(filename):
 
 
 def read_UNR_magnet_file(filename, coordinates_file):
+	print("Reading %s" % filename);
 	[decyeararray,dE,dN,dU,Se,Sn,Su]=np.loadtxt(filename,usecols=(2,8,10,12,14,15,16),skiprows=1,unpack=True);
 
 	dtarray=[];
@@ -194,6 +198,7 @@ def read_UNR_magnet_file(filename, coordinates_file):
 def read_pbo_hydro_file(filename):
 	# Useful for reading hydrology files like NLDAS, GLDAS, etc. 
 	# In the normal pipeline for this function, it is guaranteed to be given a real file. 
+	print("Reading %s" % filename);
 	dtarray=[];
 	station_name=filename.split('/')[-1][0:4];
 	station_name=station_name.upper();
@@ -212,6 +217,7 @@ def read_pbo_hydro_file(filename):
 def read_lsdm_file(filename):
 	# Useful for reading hydrology files from LSDM German loading product
 	# In the normal pipeline for this function, it is guaranteed to be given a real file. 
+	print("Reading %s" % filename);
 	dtarray=[];
 	station_name=filename.split('/')[-1][0:4];
 	[lon,lat] = get_coordinates_for_stations([station_name], "../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt");  # format [lat, lon]	
@@ -294,6 +300,7 @@ def get_start_times_for_stations(station_names,coordinates_file="../../GPS_POS_D
 
 
 def read_noel_file(filename):
+	print("Reading %s" % filename);
 	names = np.genfromtxt(filename,skip_header=8, usecols=(0), dtype=('unicode') );
 	E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2 = np.genfromtxt(filename,skip_header=8, usecols=(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), unpack=True );
 	return [names, E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2];
@@ -316,6 +323,7 @@ def read_noel_file_station(filename,station):
 def read_grace(filename):
 	# Read the GRACE data into a GPS-style time series object. 
 	# THE GRACE DATA
+	print("Reading %s" % filename);
 	station_name=filename.split('/')[-1];  # this is the local name of the file
 	station_name=station_name.split('_')[1];  # this is the four-character name
 	try:
@@ -335,6 +343,7 @@ def read_grace(filename):
 def write_pbo_pos_file(ts_object, filename, comment=""):
 	# Useful for writing common mode objects, etc. 
 	# Opposite of read_pbo_pos_file(filename)
+	print("Writing %s" % filename);
 	ofile=open(filename,'w');
 	ofile.write("%s\n" % comment);
 	for i in range(36):

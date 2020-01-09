@@ -4,7 +4,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt 
-import collections
+import collections, sys
 import datetime as dt 
 import gps_io_functions
 import gps_ts_functions
@@ -61,7 +61,7 @@ def compute(myData, offset_obj, eq_obj, MyParams):
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
 	if MyParams.earthquakes_remove==1: # Remove earthquakes
 		newData=offsets.remove_offsets(newData, eq_obj);
-	
+
 	trend_out=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type);
 	return [newData, trend_out];
 
@@ -81,7 +81,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	bottom,top=axarr[0].get_ylim();
 	for i in range(len(ts_obj.EQtimes)):
 		axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=0.5);
-	axarr[0].plot_date([eq_2016, eq_2016], [bottom, top], '--k',linewidth=0.5);  # special plot for SSE experiment
+	# axarr[0].plot_date([eq_2016, eq_2016], [bottom, top], '--k',linewidth=0.5);  # special plot for SSE experiment
 	ax1=axarr[0].twinx();
 	ax1.plot_date(detrended.dtarray, detrended.dE,marker='D',markersize=1.0,color='red');
 	ax1.set_ylabel('detrended (mm)', fontsize=label_fontsize-2,color='red');
@@ -138,7 +138,7 @@ def get_figure_name(MyParams):
 	savename="single_plots/"+MyParams.station;
 	title=MyParams.station;
 
-	title=title+', '+MyParams.datasource
+	title=title+', '+MyParams.datasource+' '+MyParams.refframe
 	if MyParams.earthquakes_remove==0 and MyParams.offsets_remove==0 and MyParams.seasonals_remove==0:
 		title=title+', unaltered';
 	if MyParams.earthquakes_remove:
@@ -177,7 +177,7 @@ def get_figure_name(MyParams):
 		if MyParams.seasonals_type=="oroville":
 			savename=savename+"_oroville";
 			title=title+' by Oroville';		
-	savename=savename+'_'+MyParams.datasource;
+	savename=savename+'_'+MyParams.datasource+'_'+MyParams.refframe;
 	savename=savename+"_ts.jpg";
 	return title, savename;
 

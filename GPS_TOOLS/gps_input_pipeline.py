@@ -22,7 +22,7 @@ def multi_station_inputs(station_names, blacklist, proc_center, distances=[]):  
 		if station_names[i] in blacklist:
 			continue;
 		else:
-			[myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, "ITRF");
+			[myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, "NA");
 			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
 			# kicking out the stations that end early or start late. 
 				dataobj_list.append(myData);
@@ -68,7 +68,7 @@ def get_station_data(station, datasource, refframe="NA"):
 
 def get_unr(station,refframe="NA"):
 	if refframe=="NA":
-		reflabel="NA12";
+		reflabel="NA";
 	elif refframe=="ITRF":
 		reflabel="IGS14";
 	else:
@@ -169,7 +169,7 @@ def get_empty_offsets():
 # Return the 'pbo' or 'unr' datasource that we should be using. 
 def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 	if refframe=="NA":
-		unr_reflabel="NA12"; pbo_reflabel="nam08"; cwu_reflabel="nam14";
+		unr_reflabel="NA"; pbo_reflabel="nam08"; cwu_reflabel="nam14";
 	elif refframe=="ITRF":
 		unr_reflabel="IGS14"; pbo_reflabel="igs08"; cwu_reflabel="igs14";
 	else:
@@ -444,25 +444,34 @@ def solve_for_offsets(ts_object, offset_times):
 		else:  # if the object isn't in the array, then we have some work to do. 
 		# Find the data gap where the earthquake is. 
 			if offset_times[i] > ts_object.dtarray[number_of_days] and offset_times[i] < ts_object.dtarray[-number_of_days]:
+				# If the offset is within a good range for this time series
 				for j in range(len(ts_object.dtarray)-1):
 					if ts_object.dtarray[j]<offset_times[i] and ts_object.dtarray[j+1]>offset_times[i]:
 						index_array.append(j);
 						evdts_new.append(offset_times[i]);
 
 
-
 	for i in index_array:
 		mean_e_before=np.nanmean(ts_object.dE[i-1-number_of_days:i-1]);
 		mean_e_after=np.nanmean(ts_object.dE[i+1:i+1+number_of_days]);
-		e_offsets.append(mean_e_after-mean_e_before);
+		e_offset=mean_e_after-mean_e_before;
+		if np.isnan(e_offset):
+			e_offset=0;
+		e_offsets.append(e_offset);
 
 		mean_n_before=np.nanmean(ts_object.dN[i-1-number_of_days:i-1]);
 		mean_n_after=np.nanmean(ts_object.dN[i+1:i+1+number_of_days]);
-		n_offsets.append(mean_n_after-mean_n_before);
+		n_offset=mean_n_after-mean_n_before;
+		if np.isnan(n_offset):
+			n_offset=0;		
+		n_offsets.append(n_offset);
 
 		mean_u_before=np.nanmean(ts_object.dU[i-1-number_of_days:i-1]);
 		mean_u_after=np.nanmean(ts_object.dU[i+1:i+1+number_of_days]);
-		u_offsets.append(mean_u_after-mean_u_before);
+		u_offset=mean_u_after-mean_u_before;
+		if np.isnan(u_offset):
+			u_offset=0;		
+		u_offsets.append(u_offset);
 
 	return [e_offsets, n_offsets, u_offsets, evdts_new];
 
