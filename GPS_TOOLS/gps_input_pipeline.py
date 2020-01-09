@@ -22,7 +22,7 @@ def multi_station_inputs(station_names, blacklist, proc_center, distances=[]):  
 		if station_names[i] in blacklist:
 			continue;
 		else:
-			[myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, "NA");
+			[myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, "ITRF");
 			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
 			# kicking out the stations that end early or start late. 
 				dataobj_list.append(myData);
@@ -429,7 +429,7 @@ def get_datetime_from_unrfile(input_string):
 
 def solve_for_offsets(ts_object, offset_times):
 	# Here we solve for all the offsets at a given time, which is necessary for UNR data.
-	# Offset_times is a list of datetime objects. 
+	# Offset_times is a list of datetime objects with unique dates. 
 
 	index_array=[];
 	e_offsets=[]; n_offsets=[]; u_offsets=[]; evdts_new=[];
@@ -437,11 +437,19 @@ def solve_for_offsets(ts_object, offset_times):
 
 	for i in range(len(offset_times)):  # Find where the object exists in the array
 		myindex=np.where(ts_object.dtarray==np.datetime64(offset_times[i]));
-		if len(myindex[0])>0:
-			# print(ts_object.dtarray[myindex[0][0]]);
+		if len(myindex[0])>0:  # if the object is in the array, then we will find the exact datetime index of the earthquake itself
 			# Find the datetime object that actually matches the time of the offset. 
 			index_array.append(myindex[0][0]);  # the i'th measurement is where the offset happens. 
 			evdts_new.append(ts_object.dtarray[myindex[0][0]]);
+		else:  # if the object isn't in the array, then we have some work to do. 
+		# Find the data gap where the earthquake is. 
+			if offset_times[i] > ts_object.dtarray[number_of_days] and offset_times[i] < ts_object.dtarray[-number_of_days]:
+				for j in range(len(ts_object.dtarray)-1):
+					if ts_object.dtarray[j]<offset_times[i] and ts_object.dtarray[j+1]>offset_times[i]:
+						index_array.append(j);
+						evdts_new.append(offset_times[i]);
+
+
 
 	for i in index_array:
 		mean_e_before=np.nanmean(ts_object.dE[i-1-number_of_days:i-1]);

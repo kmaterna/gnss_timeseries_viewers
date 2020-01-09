@@ -84,7 +84,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 	axarr[0].plot_date([eq_2016, eq_2016], [bottom, top], '--k',linewidth=0.5);  # special plot for SSE experiment
 	ax1=axarr[0].twinx();
 	ax1.plot_date(detrended.dtarray, detrended.dE,marker='D',markersize=1.0,color='red');
-	ax1.set_ylabel('detrended (mm)', fontsize=label_fontsize-2);
+	ax1.set_ylabel('detrended (mm)', fontsize=label_fontsize-2,color='red');
 	plt.setp(axarr[0].get_xticklabels(),fontsize=label_fontsize);
 	plt.setp(axarr[0].get_yticklabels(),fontsize=label_fontsize);
 	plt.setp(ax1.get_yticklabels(),fontsize=label_fontsize);	
@@ -98,7 +98,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 		axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=0.5);	
 	ax2=axarr[1].twinx();
 	ax2.plot_date(detrended.dtarray, detrended.dN,marker='D',markersize=1.0,color='red');
-	ax2.set_ylabel('detrended (mm)', fontsize=label_fontsize-2);
+	ax2.set_ylabel('detrended (mm)', fontsize=label_fontsize-2,color='red');
 	plt.setp(axarr[1].get_xticklabels(),fontsize=label_fontsize);
 	plt.setp(axarr[1].get_yticklabels(),fontsize=label_fontsize);
 	plt.setp(ax2.get_yticklabels(),fontsize=label_fontsize);
@@ -112,7 +112,7 @@ def single_ts_plot(ts_obj, detrended, MyParams):
 		axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k',linewidth=0.5);	
 	ax3=axarr[2].twinx();
 	ax3.plot_date(detrended.dtarray, detrended.dU,marker='D',markersize=1.0,color='red');
-	ax3.set_ylabel('detrended (mm)', fontsize=label_fontsize-2);
+	ax3.set_ylabel('detrended (mm)', fontsize=label_fontsize-2,color='red');
 	axarr[2].set_xlim([min(ts_obj.dtarray), max(ts_obj.dtarray)]);
 	plt.setp(axarr[2].get_xticklabels(),fontsize=label_fontsize);
 	plt.setp(axarr[2].get_yticklabels(),fontsize=label_fontsize);

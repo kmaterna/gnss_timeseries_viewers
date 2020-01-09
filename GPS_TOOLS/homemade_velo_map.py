@@ -1,4 +1,4 @@
-# Python viewing to see a stack of stations
+# Python viewing of velocities
 
 # Step 1: Determine the stations in the radius. 
 # Step 2: Read them in. Make a list of timeseries objects in one large dataobject. 

@@ -27,7 +27,11 @@ def remove_offsets(Data0, offsets_obj):
 		tempU=Data0.dU[i];
 		for j in range(len(offsets_obj.evdts)):
 			# print("removing %f mm from east at %s" % (offsets_obj.e_offsets[j], offsets_obj.evdts[j]));
-			if Data0.dtarray[i]>=offsets_obj.evdts[j]:
+			if Data0.dtarray[i]==offsets_obj.evdts[j]:   # removing the date of the offset directly (it can be messed up)
+				tempE=np.nan;
+				tempN=np.nan;
+				tempU=np.nan;
+			if Data0.dtarray[i]>offsets_obj.evdts[j]:
 				tempE=tempE-offsets_obj.e_offsets[j];
 				tempN=tempN-offsets_obj.n_offsets[j];
 				tempU=tempU-offsets_obj.u_offsets[j];
