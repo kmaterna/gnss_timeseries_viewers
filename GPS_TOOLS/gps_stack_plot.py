@@ -83,8 +83,12 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 	sorted_eqs = [x for _,x in sorted(zip(latitudes_list, eqobj_list))];  # the raw, sorted data. 
 	sorted_distances = [x for _,x in sorted(zip(latitudes_list, distances))];  # the sorted distances.
 
+	detrended_objects = []; 
+	no_offset_objects = [];
+	no_offsets_no_trends = [];
+	no_offsets_no_trends_no_seasons = [];
+
 	# Detrended objects (or objects with trends and no offsets; depends on what you want.)
-	detrended_objects=[]; no_offset_objects=[];
 	for i in range(len(sorted_objects)):
 		newobj=gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq');
 		detrended_objects.append(newobj);  # still has offsets, doesn't have trends
@@ -93,10 +97,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 		newobj=offsets.remove_offsets(newobj,sorted_eqs[i]);
 		no_offset_objects.append(newobj);  # still has trends, doesn't have offsets
 
-
 	# Objects with no earthquakes or seasonals
-	no_offsets_no_trends = [];
-	no_offsets_no_trends_no_seasons = [];
 	for i in range(len(dataobj_list)):
 
 		# Remove the steps earthquakes

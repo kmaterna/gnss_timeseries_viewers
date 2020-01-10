@@ -31,7 +31,6 @@ def multi_station_inputs(station_names, blacklist, proc_center, refframe, distan
 				stations_surviving.append(station_names[i]);
 				if distances != []:
 					distances_surviving.append(distances[i]);
-				# print(station_names[i])
 	return [dataobj_list, offsetobj_list, eqobj_list, distances_surviving];
 
 

@@ -34,9 +34,9 @@ def driver():
 def configure():
 	# center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
 	# center=[-115.5, 33]; expname='SSGF'; radius = 15; 
-	center=[-115.5, 33]; expname='SSGF'; radius =40; 
+	center=[-115.5, 33]; expname='SSGF'; radius =25; 
 
-	proc_center='unr';   # WHICH DATASTREAM DO YOU WANT?
+	proc_center='nmt';   # WHICH DATASTREAM DO YOU WANT?
 	refframe = 'NA';     # WHICH REFERENCE FRAME? 
 
 	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
@@ -104,18 +104,18 @@ def turn_into_movie_ts(myobjects):
 		downsampled_object = Timeseries(name=myobject.name, coords=myobject.coords, dtarray=dt_ds, dE=dE_ds, dN=dN_ds, dU=dU_ds, Se=Se_ds, Sn=Sn_ds, Su=Su_ds, EQtimes=myobject.EQtimes);
 		ds_objects.append(downsampled_object);
 
-		f,axarr = plt.subplots(3,1, figsize=(15,15));
-		axarr[0].plot(myobject.dtarray, myobject.dE-np.nanmean(myobject.dE), 'o', markersize=1, color='black',linewidth=2);
-		axarr[0].plot(downsampled_object.dtarray, downsampled_object.dE, 'r');
-		axarr[0].set_ylabel('East (mm)');
-		axarr[0].set_title(myobject.name,fontsize=20);
-		axarr[1].plot(myobject.dtarray, myobject.dN-np.nanmean(myobject.dN), 'o', markersize=1, color='black',linewidth=2);
-		axarr[1].plot(downsampled_object.dtarray, downsampled_object.dN, 'r');
-		axarr[1].set_ylabel('North (mm)');
-		axarr[2].plot(myobject.dtarray, myobject.dU-np.nanmean(myobject.dU), 'o', markersize=1, color='black',linewidth=2);
-		axarr[2].plot(downsampled_object.dtarray, downsampled_object.dU, 'r');
-		axarr[2].set_ylabel('Up (mm)');
-		plt.savefig(downsampled_object.name+'_example_timeseries.png');
+		# f,axarr = plt.subplots(3,1, figsize=(15,15));
+		# axarr[0].plot(myobject.dtarray, myobject.dE-np.nanmean(myobject.dE), 'o', markersize=1, color='black',linewidth=2);
+		# axarr[0].plot(downsampled_object.dtarray, downsampled_object.dE, 'r');
+		# axarr[0].set_ylabel('East (mm)');
+		# axarr[0].set_title(myobject.name,fontsize=20);
+		# axarr[1].plot(myobject.dtarray, myobject.dN-np.nanmean(myobject.dN), 'o', markersize=1, color='black',linewidth=2);
+		# axarr[1].plot(downsampled_object.dtarray, downsampled_object.dN, 'r');
+		# axarr[1].set_ylabel('North (mm)');
+		# axarr[2].plot(myobject.dtarray, myobject.dU-np.nanmean(myobject.dU), 'o', markersize=1, color='black',linewidth=2);
+		# axarr[2].plot(downsampled_object.dtarray, downsampled_object.dU, 'r');
+		# axarr[2].set_ylabel('Up (mm)');
+		# plt.savefig(downsampled_object.name+'_example_timeseries.png');
 
 	return ds_objects; 
 
@@ -127,7 +127,6 @@ def get_downsample_dates():
 	number_of_samples = int((end_time-start_time).days / day_interval) + 1;
 	dt_downsample = [start_time+dt.timedelta(days=n*day_interval) for n in range(number_of_samples)];	
 	return dt_downsample; 
-
 
 def interval_downsample(dtarray, dE, dN, dU, dt_downsample):
 	# This is the key math of the program. 
@@ -151,10 +150,9 @@ def interval_downsample(dtarray, dE, dN, dU, dt_downsample):
 			Su_downsample.append(0.1);
 	return [dt_downsample_keep, dE_downsample, dN_downsample, dU_downsample, Se_downsample, Sn_downsample, Su_downsample]; 
 
-
 def write_outputs(objects, outfile1, outfile2):
 	unique_dates=[];
-	ofile=open(outfile1,'w');
+	ofile=open("temp.txt",'w');
 	for i in range(len(objects)):
 		for j in range(len(objects[i].dtarray)):
 			datestring = dt.datetime.strftime(objects[i].dtarray[j], "%Y-%m-%d");
@@ -162,10 +160,38 @@ def write_outputs(objects, outfile1, outfile2):
 				unique_dates.append(datestring);
 			ofile.write("%s %f %f %s %f %f %f \n" % (objects[i].name, objects[i].coords[0], objects[i].coords[1], datestring, objects[i].dE[j], objects[i].dN[j], objects[i].dU[j]) );
 	ofile.close();
+
+	# Make an average displacement value for each day
 	ofile=open(outfile2,'w');
+	edata_means=[]; ndata_means=[]; udata_means=[];
 	for item in unique_dates:
-		ofile.write("%s\n" % item);
+		table = subprocess.check_output("grep "+item+" "+"temp.txt",shell=True);
+		table=table.decode('utf-8');
+		table_rows=table.split('\n');
+		edata=[]; ndata=[]; udata=[]; 
+		for line in table_rows:
+			if len(line)>0:
+				words = line.split();
+				edata.append(float(words[4]));
+				ndata.append(float(words[5]));
+				udata.append(float(words[6]));
+		ofile.write("%s %f %f %f" % (item, np.mean(edata), np.mean(ndata), np.mean(udata) ) );
+		ofile.write("\n");
+		edata_means.append(np.mean(edata))
+		ndata_means.append(np.mean(ndata))
+		udata_means.append(np.mean(udata))
 	ofile.close();
+
+	# Write the average displacement for each date
+	ofile=open(outfile1,'w');
+	ifile=open("temp.txt",'r');
+	for line in ifile:
+		date_item = line.split()[3];
+		myindex=unique_dates.index(date_item);
+		ofile.write(line[0:-1])
+		ofile.write("%f %f %f \n" % (edata_means[myindex], ndata_means[myindex], udata_means[myindex]) );
+	ofile.close();
+
 	return;
 
 
