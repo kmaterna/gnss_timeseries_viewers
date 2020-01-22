@@ -6,7 +6,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt 
 import matplotlib
-import matplotlib.cm as cm
 import scipy.ndimage
 import collections
 import subprocess
@@ -19,6 +18,7 @@ import gps_seasonal_removals
 import stations_within_radius
 import offsets
 import remove_ets_events
+import outputs_gps_stacks
 import pygmt
 
 
@@ -30,8 +30,8 @@ def driver():
 	[dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(myparams.stations, myparams.blacklist, myparams.proc_center, myparams.refframe, myparams.distances);
 	[common_mode, raw_objects, cmr_objects, deltas] = compute(dataobj_list, offsetobj_list, eqobj_list);
 	print(deltas);
-	vertical_filtered_plots(raw_objects, paired_distances, common_mode, myparams, "vertical_filt");
-	vertical_filtered_plots(cmr_objects, paired_distances, common_mode, myparams, "no_cmr_filt");
+	outputs_gps_stacks.vertical_filtered_plots(raw_objects, paired_distances, myparams, "vertical_filt");
+	outputs_gps_stacks.vertical_filtered_plots(cmr_objects, paired_distances, myparams, "no_cmr_filt");
 	pygmt_map(cmr_objects,myparams, deltas);
 	write_cm_object(common_mode, myparams);	
 	return;
@@ -170,63 +170,6 @@ def make_ND_arrays(object_list):
 				data_array_dU[i][j] = object_list[j].dU[indices] # please don't have a duplicated day...
 
 	return total_dtarray, data_array_dE, data_array_dN, data_array_dU;
-
-
-def vertical_filtered_plots(dataobj_list, distances, common_mode_obj, myparams, filename):
-
-	plt.figure(figsize=(15,8),dpi=160);
-	label_date=dt.datetime.strptime("20200215","%Y%m%d");
-	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
-	end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d");
-
-	offset=-5;
-	closest_station=min(distances);  # km from event
-	farthest_station=max(distances); # km from event
-	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
-	custom_cmap = cm.ScalarMappable(norm=color_boundary_object,cmap='jet_r');
-
-	# Vertical
-	for i in range(len(dataobj_list)):
-		offset=offset+1;
-		umean=np.mean(dataobj_list[i].dU);  # start at the mean. 
-		line_color=custom_cmap.to_rgba(distances[i]);
-		# l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' ); # for debugging the filter
-		udata=scipy.ndimage.median_filter(dataobj_list[i].dU-umean,size=365);
-		l1 = plt.gca().plot(dataobj_list[i].dtarray,udata,linestyle='solid',linewidth=1,color=line_color );
-		plt.gca().text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
-	umean=np.mean(common_mode_obj.dU);  # start at the mean. 
-	cm_filt=scipy.ndimage.median_filter(common_mode_obj.dU-umean,size=365);
-	plt.gca().plot(common_mode_obj.dtarray, cm_filt, linestyle='solid',linewidth=2,color='black');
-	plt.gca().set_xlim(start_time_plot,end_time_plot);
-	bottom,top=plt.gca().get_ylim();
-	plt.gca().set_ylabel("Filtered Vertical (mm)");
-	plt.gca().set_title("Filtered Vertical GPS Time Series")
-	plt.gca().grid(True)
-
-	custom_cmap.set_array(range(int(closest_station),int(farthest_station)));
-	cb = plt.colorbar(custom_cmap);
-	cb.set_label('Kilometers from center');
-
-	# new axis for plotting the map of california
-	ax=plt.axes(position=[0.8,0.1,0.1,0.2],xticklabels=[],yticklabels=[]);
-	[ca_lons,ca_lats]=np.loadtxt('../california_bdr',unpack=True);
-	ax.plot(ca_lons,ca_lats,'k');
-	for i in range(len(dataobj_list)):
-		ax.plot(dataobj_list[i].coords[0],dataobj_list[i].coords[1],'.g',markersize=0.6);
-
-	# new axis for extra labels
-	ax=plt.axes(position=[0.8,0.4,0.1,0.2],xticklabels=[],yticklabels=[]);
-	ax.set_ylim([-1,1])
-	ax.set_xlim([-0.1,1])
-	ax.text(0,0.75,myparams.proc_center+" data");
-	ax.text(0,0.37,myparams.center);
-	ax.text(0,0,str(myparams.radius)+" km radius");
-
-	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+filename+'.jpg');
-	plt.close();
-	print("Vertical plot created.");
-	return;
-
 
 
 def pygmt_map(ts_objects, myparams, deltas):

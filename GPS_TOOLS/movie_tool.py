@@ -6,8 +6,6 @@
 
 import numpy as np 
 import matplotlib.pyplot as plt 
-import matplotlib
-import matplotlib.cm as cm
 import scipy.ndimage
 import collections
 import subprocess, sys
@@ -17,6 +15,7 @@ import gps_input_pipeline
 import gps_ts_functions
 import gps_seasonal_removals
 import stations_within_radius
+import outputs_gps_stacks
 import offsets
 
 
@@ -29,6 +28,8 @@ def driver():
 	[detrend_objects, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances);
 	movie_ts_objects = turn_into_movie_ts(no_offsets_no_trends_no_seasons);
 	write_outputs(movie_ts_objects, myparams.outdir+"/data_out.txt", myparams.outdir+"/dates_out.txt");
+	horizontal_full_ts(movie_ts_objects, sorted_distances, myparams, "");
+	vertical_full_ts(movie_ts_objects, sorted_distances, myparams, "");
 	return;
 
 def configure():
@@ -92,6 +93,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 		no_offsets_no_trends_no_seasons.append(stage2obj);
 
 	return [detrended_objects, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons, sorted_distances];
+
+
 
 def turn_into_movie_ts(myobjects):
 	# Here we take a raw time series, and turn it into something that we will movie-ify. 
