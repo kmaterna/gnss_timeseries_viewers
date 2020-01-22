@@ -170,7 +170,22 @@ def pair_gps_model(gps_data, model_data):
 	return [paired_gps, paired_model];
 
 
-
+def get_referenced_data(roving_station_data, base_station_data):
+	# Takes a time series object and removes the motion of a base station (another time series object)
+	dtarray=[]; dE_gps=[]; dN_gps=[]; dU_gps=[]; Se_gps=[]; Sn_gps=[]; Su_gps=[];
+	roving_station_data=remove_nans(roving_station_data);
+	for i in range(len(roving_station_data.dtarray)):
+		if roving_station_data.dtarray[i] in base_station_data.dtarray:
+			idx = base_station_data.dtarray.index(roving_station_data.dtarray[i]);  # where is this datetime object in the model array? 
+			dtarray.append(roving_station_data.dtarray[i]);
+			dE_gps.append(roving_station_data.dE[i] - base_station_data.dE[idx]);
+			dN_gps.append(roving_station_data.dN[i] - base_station_data.dN[idx]);
+			dU_gps.append(roving_station_data.dU[i] - base_station_data.dU[idx]);
+			Se_gps.append(roving_station_data.Se[i]);
+			Sn_gps.append(roving_station_data.Sn[i]);
+			Su_gps.append(roving_station_data.Su[i]);
+	gps_relative = Timeseries(name=roving_station_data.name, coords=roving_station_data.coords, dtarray=dtarray, dE=dE_gps, dN=dN_gps, dU=dU_gps, Se=Se_gps, Sn=Sn_gps, Su=Su_gps, EQtimes=roving_station_data.EQtimes);
+	return gps_relative; 
 
 
 # FUTURE FEATURES: 
