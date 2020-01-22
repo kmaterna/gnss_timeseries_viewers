@@ -21,6 +21,7 @@ import stations_within_radius
 import offsets
 import remove_ets_events
 import outputs_gps_stacks
+import movie_tool
 
 
 Parameters=collections.namedtuple("Parameters",['expname','proc_center','refframe','center','radius','stations','distances','blacklist','outdir', 'outname']);
@@ -32,13 +33,15 @@ def driver():
 	[detrend_objects, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances);
 	
 	# outputs_gps_stacks.horizontal_full_ts(no_offsets_no_trends, sorted_distances, myparams, "noeq");
-	outputs_gps_stacks.horizontal_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams, "noeq_noseasons");
-	outputs_gps_stacks.vertical_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
+	# outputs_gps_stacks.horizontal_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams, "noeq_noseasons");
+	# outputs_gps_stacks.vertical_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
 
-	outputs_gps_stacks.horizontal_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
-	outputs_gps_stacks.vertical_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
-	outputs_gps_stacks.vertical_filtered_plots(no_offset_objects, sorted_distances, myparams, 'trendsin_');
-	outputs_gps_stacks.pygmt_map(no_offsets_no_trends_no_seasons,myparams);
+	# outputs_gps_stacks.horizontal_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
+	# outputs_gps_stacks.vertical_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
+	# outputs_gps_stacks.vertical_filtered_plots(no_offset_objects, sorted_distances, myparams, 'trendsin_');
+	# outputs_gps_stacks.pygmt_map(no_offsets_no_trends_no_seasons,myparams);
+
+	movie_tool.movie_driver(no_offsets_no_trends_no_seasons, myparams);  # make a movie (optional)
 
 	return;
 
@@ -98,6 +101,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 		# Remove the steps earthquakes
 		newobj=offsets.remove_offsets(sorted_objects[i], sorted_offsets[i]);
 		newobj=offsets.remove_offsets(newobj,sorted_eqs[i]);
+		newobj=gps_ts_functions.remove_outliers(newobj, 20);  # 20mm outlier definition
 
 		# The detrended TS without earthquakes
 		stage1obj=gps_seasonal_removals.make_detrended_ts(newobj, 0, 'lssq');
