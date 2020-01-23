@@ -51,7 +51,6 @@ def impose_time_limits(Data0, starttime, endtime):
 			newSe.append(Data0.Se[i]);
 			newSn.append(Data0.Sn[i]);
 			newSu.append(Data0.Su[i]);
-	
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU, Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
 	return newData;
 
@@ -217,24 +216,10 @@ def rotate_data():
 def get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6):
 	# Model the data with a best-fit y = mx + b. 
 	# Returns six numbers: e_slope, n_slope, v_slope, e_std, n_std, v_std
-	if starttime==[]:
-		starttime=Data0.dtarray[0];
-	if endtime==[]:
-		endtime=Data0.dtarray[-1];
 
 	# Defensive programming
-	if len(Data0.dtarray)==0:
-		print("Error: length of dtarray is 0 for station %s. Returning nan" % Data0.name);
-		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
-	if starttime<Data0.dtarray[0]:
-		starttime=Data0.dtarray[0];
-	if endtime>Data0.dtarray[-1]:
-		endttime=Data0.dtarray[-1];
-	if endtime<Data0.dtarray[0]:
-		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
-		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
-	if starttime>Data0.dtarray[-1]:
-		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
+	error_flag, starttime, endtime = basic_defensive_programming(Data0, starttime, endtime);
+	if error_flag:
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
 
 	# Cut to desired window, and remove nans
@@ -309,23 +294,13 @@ def get_slope_unc(dataObj, starttime, endtime):
 def get_linear_annual_semiannual(Data0, starttime=[], endtime=[],critical_len=365):
 	# The critical_len parameter allows us to manually switch this function for both GPS and GRACE time series in GPS format
 	# Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F; 
-	if starttime==[]:
-		starttime=Data0.dtarray[0];
-	if endtime==[]:
-		endtime=Data0.dtarray[-1];
 
 	# Defensive programming
-	if starttime<Data0.dtarray[0]:
-		starttime=Data0.dtarray[0];
-	if endtime>Data0.dtarray[-1]:
-		endttime=Data0.dtarray[-1];
-	if endtime<Data0.dtarray[0]:
-		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
+	error_flag, starttime, endtime = basic_defensive_programming(Data0, starttime, endtime);
+	if error_flag:
 		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
-	if starttime>Data0.dtarray[-1]:
-		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
-		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
-
+		return [east_params, north_params, vert_params];
+	
 	# Cut to desired time window, and remove nans.
 	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
 	for i in range(len(Data0.dtarray)):
@@ -358,20 +333,10 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[],critical_len=36
 def get_means(Data0, starttime=[], endtime=[]):
 	# Return the average value of the time series between starttime and endtime
 	# Can be used to set offsets for plotting, etc. 
-	if starttime==[]:
-		starttime=Data0.dtarray[0];
-	if endtime==[]:
-		endtime=Data0.dtarray[-1];	
+
 	# Defensive programming
-	if starttime<Data0.dtarray[0]:
-		starttime=Data0.dtarray[0];
-	if endtime>Data0.dtarray[-1]:
-		endttime=Data0.dtarray[-1];
-	if endtime<Data0.dtarray[0]:
-		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
-		return [np.nan, np.nan, np.nan];
-	if starttime>Data0.dtarray[-1]:
-		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
+	error_flag, starttime, endtime = basic_defensive_programming(Data0, starttime, endtime);
+	if error_flag:
 		return [np.nan, np.nan, np.nan];
 
 	# Cut to desired window, and remove nans
@@ -384,6 +349,38 @@ def get_means(Data0, starttime=[], endtime=[]):
 			myup.append(Data0.dU[i]);	
 
 	return [np.nanmean(myeast), np.nanmean(mynorth), np.nanmean(myup)];
+
+
+
+def basic_defensive_programming(Data, starttime, endtime):
+	# Check for all sorts of nasty things. 
+	error_flag = 0;
+	starttime_proper=starttime;
+	endtime_proper=endtime;
+
+	if len(Data0.dtarray)==0:
+		print("Error: length of dtarray is 0 for station %s. Returning nan" % Data0.name);
+		error_flag=1;
+		return error_flag, starttime, endtime;
+
+	if starttime==[]:
+		starttime_proper=Data0.dtarray[0];
+	if endtime==[]:
+		endtime_proper=Data0.dtarray[-1];
+
+	if starttime<Data0.dtarray[0]:
+		starttime_proper=Data0.dtarray[0];
+	if endtime>Data0.dtarray[-1]:
+		endttime_proper=Data0.dtarray[-1];
+
+	if endtime<Data0.dtarray[0]:
+		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
+		error_flag=1;
+	if starttime>Data0.dtarray[-1]:
+		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
+		error_flag=1;
+
+	return error_flag, starttime_proper, endtime_proper; 
 
 
 
