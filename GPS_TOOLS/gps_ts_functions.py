@@ -25,7 +25,6 @@ def remove_outliers(Data0, outliers_def):
 	medfilt_e=signal.medfilt(Data0.dE, 35);
 	medfilt_n=signal.medfilt(Data0.dN, 35);
 	medfilt_u=signal.medfilt(Data0.dU, 35);
-
 	newdt=[]; newdN=[]; newdE=[]; newdU=[]; newSe=[]; newSn=[]; newSu=[]; 
 	for i in range(len(medfilt_e)):
 		if abs(Data0.dE[i]-medfilt_e[i])<outliers_def and abs(Data0.dN[i]-medfilt_n[i])<outliers_def and abs(Data0.dU[i]-medfilt_u[i])<outliers_def*2:
@@ -36,15 +35,6 @@ def remove_outliers(Data0, outliers_def):
 			newSe.append(Data0.Se[i]);
 			newSn.append(Data0.Sn[i]);
 			newSu.append(Data0.Su[i]);
-		# else:
-		# 	newdt.append(Data0.dtarray[i]);
-		# 	newdE.append(np.nan);
-		# 	newdN.append(np.nan);
-		# 	newdU.append(np.nan);
-		# 	newSe.append(Data0.Se[i]);
-		# 	newSn.append(Data0.Sn[i]);
-		# 	newSu.append(Data0.Su[i]);
-
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdt, dN=newdN, dE=newdE, dU=newdU, Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
 	return newData;
 
@@ -187,6 +177,27 @@ def get_referenced_data(roving_station_data, base_station_data):
 	gps_relative = Timeseries(name=roving_station_data.name, coords=roving_station_data.coords, dtarray=dtarray, dE=dE_gps, dN=dN_gps, dU=dU_gps, Se=Se_gps, Sn=Sn_gps, Su=Su_gps, EQtimes=roving_station_data.EQtimes);
 	return gps_relative; 
 
+def remove_constant(Data0, east_offset, north_offset, vert_offset):
+	# Subtract a constant number from each data array in a time series object
+	temp_dates=[];
+	temp_east=[];
+	temp_north=[];
+	temp_vert=[];
+	temp_Sn=[];
+	temp_Se=[];
+	temp_Su=[];
+	for i in range(len(Data0.dtarray)):
+		temp_dates.append(Data0.dtarray[i]);
+		temp_east.append(Data0.dE[i]-east_offset);
+		temp_north.append(Data0.dN[i]-north_offset);
+		temp_vert.append(Data0.dU[i]-vert_offset);
+		temp_Se.append(Data0.Se[i]);
+		temp_Sn.append(Data0.Sn[i]);
+		temp_Su.append(Data0.Su[i]);
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=temp_dates, dN=temp_north, dE=temp_east, dU=temp_vert, Sn=temp_Sn, Se=temp_Se, Su=temp_Su, EQtimes=Data0.EQtimes);
+	return newData;
+
+
 
 # FUTURE FEATURES: 
 def rotate_data():
@@ -205,6 +216,7 @@ def rotate_data():
 
 def get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6):
 	# Model the data with a best-fit y = mx + b. 
+	# Returns six numbers: e_slope, n_slope, v_slope, e_std, n_std, v_std
 	if starttime==[]:
 		starttime=Data0.dtarray[0];
 	if endtime==[]:
@@ -340,6 +352,39 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[],critical_len=36
 	vert_params=[vert_params_unordered[4], vert_params_unordered[0], vert_params_unordered[1], vert_params_unordered[2], vert_params_unordered[3]];
 
 	return [east_params, north_params, vert_params];
+
+
+
+def get_means(Data0, starttime=[], endtime=[]):
+	# Return the average value of the time series between starttime and endtime
+	# Can be used to set offsets for plotting, etc. 
+	if starttime==[]:
+		starttime=Data0.dtarray[0];
+	if endtime==[]:
+		endtime=Data0.dtarray[-1];	
+	# Defensive programming
+	if starttime<Data0.dtarray[0]:
+		starttime=Data0.dtarray[0];
+	if endtime>Data0.dtarray[-1]:
+		endttime=Data0.dtarray[-1];
+	if endtime<Data0.dtarray[0]:
+		print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
+		return [np.nan, np.nan, np.nan];
+	if starttime>Data0.dtarray[-1]:
+		print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
+		return [np.nan, np.nan, np.nan];
+
+	# Cut to desired window, and remove nans
+	mydtarray=[]; myeast=[]; mynorth=[]; myup=[];
+	for i in range(len(Data0.dtarray)):
+		if Data0.dtarray[i]>=starttime and Data0.dtarray[i]<=endtime and ~np.isnan(Data0.dE[i]) and ~np.isnan(Data0.dN[i]) and ~np.isnan(Data0.dU[i]):
+			mydtarray.append(Data0.dtarray[i]);
+			myeast.append(Data0.dE[i]);
+			mynorth.append(Data0.dN[i]);
+			myup.append(Data0.dU[i]);	
+
+	return [np.nanmean(myeast), np.nanmean(mynorth), np.nanmean(myup)];
+
 
 
 def invert_linear_annual_semiannual(decyear,data):

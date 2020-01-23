@@ -60,7 +60,7 @@ def get_station_data(station, datasource, refframe="NA"):
 	elif datasource=='lsdm':
 		[myData, offset_obj, eq_obj] = get_lsdm(station);  # LSDM model
 	elif datasource=='error':
-		return [ [], [], [] ];  # Error code. 
+		return [ [], [], [] ];  # Error code.
 	return [myData, offset_obj, eq_obj];
 
 

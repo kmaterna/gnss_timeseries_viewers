@@ -15,12 +15,13 @@ Parameters=collections.namedtuple("Parameters",['expname','proc_center','reffram
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 
 
-def movie_driver(ts_objects, myparams):
+def movie_driver(ts_objects, distances, myparams):
 	myparams = configure_movie(myparams);
 	movie_ts_objects = turn_into_movie_ts(ts_objects);
-	write_outputs(movie_ts_objects, myparams.outdir+"/data_out.txt", myparams.outdir+"/dates_out.txt");
-	outputs_gps_stacks.horizontal_full_ts(movie_ts_objects, sorted_distances, myparams, "");
-	outputs_gps_stacks.vertical_full_ts(movie_ts_objects, sorted_distances, myparams, "");
+	write_outputs(movie_ts_objects, myparams);
+	outputs_gps_stacks.horizontal_full_ts(movie_ts_objects, distances, myparams, "");
+	outputs_gps_stacks.vertical_full_ts(movie_ts_objects, distances, myparams, "");
+	print("Movie data printed");
 	return;
 
 def configure_movie(myparams):
@@ -69,9 +70,9 @@ def interval_downsample(dtarray, dE, dN, dU, dt_downsample):
 	dt_downsample_keep=[]; dE_downsample=[]; dN_downsample=[]; dU_downsample=[]; Se_downsample=[]; Sn_downsample=[]; Su_downsample=[];
 
 	# Filter if desired
-	edata=scipy.ndimage.median_filter(dE-np.nanmean(dE),size=60);
-	ndata=scipy.ndimage.median_filter(dN-np.nanmean(dN),size=60);
-	udata=scipy.ndimage.median_filter(dU-np.nanmean(dU),size=60);
+	edata=scipy.ndimage.median_filter(dE,size=60);
+	ndata=scipy.ndimage.median_filter(dN,size=60);
+	udata=scipy.ndimage.median_filter(dU,size=60);
 	
 	for date in dt_downsample:
 		myindex=np.where(dtarray==np.datetime64(date));
@@ -86,9 +87,14 @@ def interval_downsample(dtarray, dE, dN, dU, dt_downsample):
 			Su_downsample.append(0.1);
 	return [dt_downsample_keep, dE_downsample, dN_downsample, dU_downsample, Se_downsample, Sn_downsample, Su_downsample]; 
 
-def write_outputs(objects, outfile1, outfile2):
+def write_outputs(objects, myparams):
+
+	outfile0 = myparams.outdir+"/temp.txt";
+	outfile1 = myparams.outdir+"/data_out.txt";
+	outfile2 = myparams.outdir+"/dates_out.txt";
+
 	unique_dates=[];
-	ofile=open("temp.txt",'w');
+	ofile=open(outfile0,'w');  # write the displacement at each station at each day. 
 	for i in range(len(objects)):
 		for j in range(len(objects[i].dtarray)):
 			datestring = dt.datetime.strftime(objects[i].dtarray[j], "%Y-%m-%d");
@@ -98,10 +104,11 @@ def write_outputs(objects, outfile1, outfile2):
 	ofile.close();
 
 	# Make an average displacement value for each day
+	# format: station, lon, lat, date, e, n, u, e_avg, n_avg, u_avg
 	ofile=open(outfile2,'w');
 	edata_means=[]; ndata_means=[]; udata_means=[];
 	for item in unique_dates:
-		table = subprocess.check_output("grep "+item+" "+"temp.txt",shell=True);
+		table = subprocess.check_output("grep "+item+" "+outfile0,shell=True);
 		table=table.decode('utf-8');
 		table_rows=table.split('\n');
 		edata=[]; ndata=[]; udata=[]; 
@@ -120,7 +127,7 @@ def write_outputs(objects, outfile1, outfile2):
 
 	# Write the average displacement for each date
 	ofile=open(outfile1,'w');
-	ifile=open("temp.txt",'r');
+	ifile=open(outfile0,'r');
 	for line in ifile:
 		date_item = line.split()[3];
 		myindex=unique_dates.index(date_item);

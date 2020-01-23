@@ -33,15 +33,15 @@ def driver():
 	[detrend_objects, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances);
 	
 	# outputs_gps_stacks.horizontal_full_ts(no_offsets_no_trends, sorted_distances, myparams, "noeq");
-	# outputs_gps_stacks.horizontal_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams, "noeq_noseasons");
-	# outputs_gps_stacks.vertical_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
+	outputs_gps_stacks.horizontal_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams, "noeq_noseasons");
+	outputs_gps_stacks.vertical_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
 
 	# outputs_gps_stacks.horizontal_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
 	# outputs_gps_stacks.vertical_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
 	# outputs_gps_stacks.vertical_filtered_plots(no_offset_objects, sorted_distances, myparams, 'trendsin_');
 	# outputs_gps_stacks.pygmt_map(no_offsets_no_trends_no_seasons,myparams);
 
-	movie_tool.movie_driver(no_offsets_no_trends_no_seasons, myparams);  # make a movie (optional)
+	movie_tool.movie_driver(no_offsets_no_trends_no_seasons, sorted_distances, myparams);  # make a movie (optional)
 
 	return;
 
@@ -58,8 +58,8 @@ def configure():
 	# center=[-117.5, 35.5];     expname='ECSZ';  radius = 50; # km
 	# center=[-119.0, 37.7];     expname='LVC';  radius = 30; # km
 	# center=[-115.5, 32.85]; expname='SSGF'; radius = 20; 
-	# center=[-115.5, 33]; expname='SSGF'; radius = 15; 
-	center=[-115.5, 33]; expname='SSGF'; radius =40; 
+	center=[-115.5, 33]; expname='SSGF'; radius = 25; 
+	# center=[-115.5, 33]; expname='SSGF'; radius =40; 
 
 	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
 	refframe = 'NA';     # WHICH REFERENCE FRAME? 
