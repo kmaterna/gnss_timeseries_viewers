@@ -237,8 +237,8 @@ def get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6):
 		print("Error: no time array for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];	
 	time_duration=mydtarray[-1]-mydtarray[0];
-	if time_duration.days<365:
-		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
+	if time_duration.days<270:
+		print("Error: using much less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
 	if len(myeast)<time_duration.days*missing_fraction:
 		print("Error: Most of the data is missing to estimate parameters for station %s. Returning Nan" % Data0.name);
@@ -310,7 +310,8 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[],critical_len=36
 			mynorth.append(Data0.dN[i]);
 			myup.append(Data0.dU[i]);
 
-	if len(mydtarray)<critical_len:
+	duration = mydtarray[-1]-mydtarray[0];
+	if duration.days<critical_len:
 		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
 		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
 		return [east_params, north_params, up_params];
@@ -352,11 +353,9 @@ def get_means(Data0, starttime=[], endtime=[]):
 
 
 
-def basic_defensive_programming(Data, starttime, endtime):
+def basic_defensive_programming(Data0, starttime, endtime):
 	# Check for all sorts of nasty things. 
 	error_flag = 0;
-	starttime_proper=starttime;
-	endtime_proper=endtime;
 
 	if len(Data0.dtarray)==0:
 		print("Error: length of dtarray is 0 for station %s. Returning nan" % Data0.name);
@@ -364,9 +363,12 @@ def basic_defensive_programming(Data, starttime, endtime):
 		return error_flag, starttime, endtime;
 
 	if starttime==[]:
-		starttime_proper=Data0.dtarray[0];
+		starttime=Data0.dtarray[0];
 	if endtime==[]:
-		endtime_proper=Data0.dtarray[-1];
+		endtime=Data0.dtarray[-1];
+
+	starttime_proper=starttime;
+	endtime_proper=endtime;
 
 	if starttime<Data0.dtarray[0]:
 		starttime_proper=Data0.dtarray[0];
@@ -442,6 +444,16 @@ def float_to_dt(float_time):
 	myyear = str(int(np.floor(float_time)));  # something like 2014
 	my_date = dt.datetime.strptime(myyear+fractional_year,"%Y%j");
 	return my_date;
+
+def get_daily_dates(starttime, endtime):
+	# Return a datetime array that spans starttime to endtime with daily intervals
+	i=0;
+	dtarray=[];
+	dtarray.append(starttime);
+	while dtarray[-1]<endtime:
+		i=i+1;
+		dtarray.append(starttime+dt.timedelta(days=i));
+	return dtarray;	
 
 def add_two_unc_quadrature(unc1, unc2):
 	return np.sqrt(unc1*unc1 + unc2*unc2);

@@ -5,6 +5,7 @@ import collections
 import subprocess, sys, os
 import datetime as dt
 import gps_io_functions
+import gps_ts_functions
 import offsets
 
 Offsets = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
@@ -23,6 +24,8 @@ def multi_station_inputs(station_names, blacklist, proc_center, refframe, distan
 			continue;
 		else:
 			[myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, refframe);
+			if myData.name=="BRAW":  # an annoying data-cleaning step because of gaps at BRAW. 
+				myData = gps_ts_functions.impose_time_limits(myData, dt.datetime.strptime("2009-01-01","%Y-%m-%d"), dt.datetime.strptime("2020-06-01", "%Y-%m-%d"));
 			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
 			# kicking out the stations that end early or start late. 
 				dataobj_list.append(myData);
