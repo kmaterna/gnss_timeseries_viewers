@@ -159,10 +159,42 @@ def pair_gps_model(gps_data, model_data):
 	return [paired_gps, paired_model];
 
 
+def pair_gps_model_keeping_gps(gps_data, model_data):
+	# Takes two time series objects, and returns two time series objects. 
+	# It keeps all the data from the first one. 
+	# It generates a model_data with length that matches the GPS. 
+	dE_model=[]; dN_model=[]; dU_model=[]; Se_model=[]; Sn_model=[]; Su_model=[]; dtarray=[]; 
+	gps_data=remove_nans(gps_data);
+	model_data=remove_nans(model_data);
+	for i in range(len(gps_data.dtarray)):
+		if gps_data.dtarray[i] in model_data.dtarray:
+			idx = model_data.dtarray.index(gps_data.dtarray[i]);  # where is this datetime object in the model array? 
+			dtarray.append(gps_data.dtarray[i]);
+			dE_model.append(model_data.dE[idx]);
+			dN_model.append(model_data.dN[idx]);
+			dU_model.append(model_data.dU[idx]);
+			Se_model.append(model_data.Se[idx]);
+			Sn_model.append(model_data.Sn[idx]);
+			Su_model.append(model_data.Su[idx]);
+		else:
+			dtarray.append(gps_data.dtarray[i]);  # if we can't find it, then we put filler model. 
+			dE_model.append(0);
+			dN_model.append(0);
+			dU_model.append(0);
+			Se_model.append(0);
+			Sn_model.append(0);
+			Su_model.append(0);
+	paired_model = Timeseries(name=model_data.name, coords=model_data.coords, dtarray=dtarray, dE=dE_model, dN=dN_model, dU=dU_model, Se=Se_model, Sn=Sn_model, Su=Su_model, EQtimes=model_data.EQtimes);
+	return [gps_data, paired_model];
+
+
+
 def get_referenced_data(roving_station_data, base_station_data):
 	# Takes a time series object and removes the motion of a base station (another time series object)
+	# If there's a starttime, then we will solve for a best-fitting model offset at the starttime. 
+	# This is used when subtracting models
 	dtarray=[]; dE_gps=[]; dN_gps=[]; dU_gps=[]; Se_gps=[]; Sn_gps=[]; Su_gps=[];
-	roving_station_data=remove_nans(roving_station_data);
+	roving_station_data=remove_nans(roving_station_data);	
 	for i in range(len(roving_station_data.dtarray)):
 		if roving_station_data.dtarray[i] in base_station_data.dtarray:
 			idx = base_station_data.dtarray.index(roving_station_data.dtarray[i]);  # where is this datetime object in the model array? 
