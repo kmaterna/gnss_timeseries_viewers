@@ -97,7 +97,7 @@ def how_many_new_stations(intended_stations, tsObjList):
 	print("Need to compute for %d new stations " % len(new_stations));
 	return new_stations, new_lon, new_lat;
 
-def compute_for_new_station(new_stations, new_lon, new_lat, tsObjList):
+def compute_for_new_stations(new_stations, new_lon, new_lat, tsObjList):
 	# Perform a 2D interpolation for each day. 
 	print("Interpolating into new stations"); 
 	newTsObjList=[];
@@ -207,16 +207,39 @@ def interpolation_figure(tsObjList, newTsObjList):
 	return;
 
 
+def timeseries_figure(ObjList):
+	fig, axarr = plt.subplots(3,1, figsize=(6,12));
+
+	for x in ObjList:
+		axarr[0].plot(x.dtarray, x.dE);
+		axarr[1].plot(x.dtarray, x.dN);
+		axarr[2].plot(x.dtarray, x.dU);
+
+	# Formatting
+	axarr[0].set_ylabel('East (mm)');
+	axarr[0].set_title('Modeled Time Series from Hines et al., 2016');		
+	axarr[1].set_ylabel('North (mm)');
+	axarr[2].set_ylabel('Vertical (mm)');
+	axarr[2].set_xlabel('Time');
+
+
+	fig.savefig("Hines_modeled_timeseries.png");
+
+	return;
+
+
 if __name__=="__main__":
 	# Where are the new Salton Sea stations? 
 	intended_stations, model_file, starttime = configure();
 	tsObjList = read_hines_to_tsObj(model_file, starttime);
-	new_stations, new_lon, new_lat = how_many_new_stations(intended_stations, tsObjList);
-	newTsObjList = compute_for_new_station(new_stations, new_lon, new_lat, tsObjList);
-	interpolation_figure(tsObjList, newTsObjList);
+	timeseries_figure(tsObjList);
 
-	write_model_ts(tsObjList);
-	write_model_ts(newTsObjList);
+	# Can we interpolate into new stations? 
+	# new_stations, new_lon, new_lat = how_many_new_stations(intended_stations, tsObjList);
+	# newTsObjList = compute_for_new_stations(new_stations, new_lon, new_lat, tsObjList);
+	# interpolation_figure(tsObjList, newTsObjList);
+	# write_model_ts(tsObjList);
+	# write_model_ts(newTsObjList);
 
 
 

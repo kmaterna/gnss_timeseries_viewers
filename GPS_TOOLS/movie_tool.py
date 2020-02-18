@@ -59,8 +59,10 @@ def turn_into_movie_ts(myobjects):
 def get_downsample_dates():
 	# Make a subsampled array of dates between start and end times. 
 	day_interval = 90;   # days
-	start_time = dt.datetime.strptime("2006-01-05","%Y-%m-%d");
-	end_time = dt.datetime.strptime("2019-11-15","%Y-%m-%d");
+	# start_time = dt.datetime.strptime("2006-01-05","%Y-%m-%d");
+	# end_time = dt.datetime.strptime("2019-11-15","%Y-%m-%d");
+	start_time = dt.datetime.strptime("2010-04-05","%Y-%m-%d");
+	end_time = dt.datetime.strptime("2015-03-15","%Y-%m-%d");	
 	number_of_samples = int((end_time-start_time).days / day_interval) + 1;
 	dt_downsample = [start_time+dt.timedelta(days=n*day_interval) for n in range(number_of_samples)];	
 	return dt_downsample; 

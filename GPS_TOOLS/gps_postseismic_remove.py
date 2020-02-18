@@ -63,8 +63,8 @@ def remove_by_model(Data0):
 		return Data0;
 
 	# These will be the same size. 
-	Data0, model = gps_ts_functions.pair_gps_model_keeping_gps(Data0, model_data);  # leaves data outside of the model timespan
-	# Data0, model = gps_ts_functions.pair_gps_model(Data0, model_data);  # removes data outside of the model timespan. 
+	# Data0, model = gps_ts_functions.pair_gps_model_keeping_gps(Data0, model_data);  # leaves data outside of the model timespan
+	Data0, model = gps_ts_functions.pair_gps_model(Data0, model_data);  # removes data outside of the model timespan. 
 	
 	# Subtract the model from the data. 
 	dtarray=[]; dE_gps=[]; dN_gps=[]; dU_gps=[]; Se_gps=[]; Sn_gps=[]; Su_gps=[];
