@@ -2,7 +2,7 @@
 # This is a toolbox that operates on Timeseries objects. 
 # Contains functions to map, filter, and reduce generic GPS time series
 # 
-# FIRST TYPE OF FUNCTION: 
+# FIRST TYPE OF FUNCTION: RETURNS TSOBJECT
 # remove_outliers(Data0, outliers_def);
 # impose_time_limits(Data0, starttime, endtime)
 # remove_nans(Data0)
@@ -13,19 +13,20 @@
 # get_referenced_data(roving_station_data, base_station_data)
 # remove_constant(Data0, east_offset, north_offset, vert_offset)
 # 
-# SECOND TYPE OF FUNCTION: 
+# SECOND TYPE OF FUNCTION: RETURNS VALUES
 # get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6)
 # get_slope_unc(dataObj, starttime, endtime)
 # get_linear_annual_semiannual(Data0, starttime=[], endtime=[],critical_len=365)
 # get_means(Data0, starttime=[], endtime=[])
+# get_values_at_date(Data0, selected_date)
 
 import numpy as np 
 import subprocess, sys, collections
 import datetime as dt 
 from scipy import signal
 import gps_io_functions
-import lssq_model_errors
-import matplotlib.pyplot as plt 
+import lssq_model_errors 
+from scipy.optimize import curve_fit
 
 # A line for referencing the namedtuple definition. 
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
@@ -217,22 +218,14 @@ def get_referenced_data(roving_station_data, base_station_data):
 
 def remove_constant(Data0, east_offset, north_offset, vert_offset):
 	# Subtract a constant number from each data array in a time series object
-	temp_dates=[];
 	temp_east=[];
 	temp_north=[];
 	temp_vert=[];
-	temp_Sn=[];
-	temp_Se=[];
-	temp_Su=[];
 	for i in range(len(Data0.dtarray)):
-		temp_dates.append(Data0.dtarray[i]);
 		temp_east.append(Data0.dE[i]-east_offset);
 		temp_north.append(Data0.dN[i]-north_offset);
 		temp_vert.append(Data0.dU[i]-vert_offset);
-		temp_Se.append(Data0.Se[i]);
-		temp_Sn.append(Data0.Sn[i]);
-		temp_Su.append(Data0.Su[i]);
-	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=temp_dates, dN=temp_north, dE=temp_east, dU=temp_vert, Sn=temp_Sn, Se=temp_Se, Su=temp_Su, EQtimes=Data0.EQtimes);
+	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=temp_north, dE=temp_east, dU=temp_vert, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
 	return newData;
 
 
@@ -390,6 +383,39 @@ def get_means(Data0, starttime=[], endtime=[]):
 
 	return [np.nanmean(myeast), np.nanmean(mynorth), np.nanmean(myup)];
 
+
+def get_logfunction(Data0, eqtime, starttime=[], endtime=[]):
+	# y = B + Alog(1+t/tau);
+	# Useful for postseismic transients. 
+	# Should match the construct-function function. 
+	# The t is in decyear
+	def func(t, a, b, tau):
+		return b + a*np.log(1+t/tau);
+
+	float_times = get_relative_times(Data0.dtarray, dt.datetime.strptime("2010-04-04","%Y-%m-%d"));  # in days
+	e_params, ecov = curve_fit(func, float_times, Data0.dE);
+	n_params, ecov = curve_fit(func, float_times, Data0.dN);
+	u_params, ecov = curve_fit(func, float_times, Data0.dU);
+	return [e_params, n_params, u_params];
+
+
+def get_values_at_date(Data0, selected_date, num_days=10):
+	# At a selected date, pull out the east, north, and up values at that date. 
+	if selected_date in Data0.dtarray:
+		idx = Data0.dtarray.index(selected_date);
+		e_value=np.nanmean(Data0.dE[idx:idx+num_days]);
+		n_value=np.nanmean(Data0.dN[idx:idx+num_days]);
+		u_value=np.nanmean(Data0.dU[idx:idx+num_days]);
+	else:
+		print("Error: requested date %s not found in dtarray" % dt.datetime.strftime(selected_date, "%Y-%m-%d") );
+		[e_value, n_value, u_value] = [np.nan, np.nan, np.nan];
+	return e_value, n_value, u_value; 
+
+
+# -------------------------------------------- # 
+# MISCELLANEOUS FUNCTIONS
+# SUCH AS MATH AND TIME OPERATIONS
+# -------------------------------------------- # 
 
 
 def basic_defensive_programming(Data0, starttime, endtime):
@@ -553,7 +579,18 @@ def annual_only_function(decyear, fit_params):
 	return model_def;
 
 
-
+def construct_log_function(decday, fit_params):
+	# Function has functional form:
+	# y = b + a*np.log(1+t/tau);
+	# fit params = [a, b, tau];
+	# The x axis is the same as the get_log_function()
+	a=fit_params[0]; 
+	b=fit_params[1];
+	tau=fit_params[2];
+	model_def = [];
+	for i in range(len(decday)):
+		model_def.append(b + a*np.log(1+decday[i]/tau));
+	return model_def;
 
 
 

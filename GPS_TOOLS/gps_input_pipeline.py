@@ -418,7 +418,3 @@ def get_datetime_from_unrfile(input_string):
 	mydt = dt.datetime.strptime(year+input_string[2:],"%Y%b%d");
 	return mydt;
 
-#
-# TABLE COMPUTE --------------------------- 
-# 
-

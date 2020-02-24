@@ -57,7 +57,7 @@ def configure_beautiful_plots(expname, distances):
 	return EQtimes, labeltimes, labels, closest_station, farthest_station;
 
 
-def horizontal_full_ts(dataobj_list, distances, myparams, label=""):
+def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
 
 	fig = plt.figure(figsize=(20,15),dpi=160);
 	[f,axarr]=plt.subplots(1,2,sharex=True,sharey=True,figsize=(10,8))
@@ -67,7 +67,7 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label=""):
 
 
 	offset=0;
-	spacing=10;
+	spacing=12;
 	EQtimes, labeltimes, labels, closest_station, farthest_station=configure_beautiful_plots(myparams.expname, distances);
 
 	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
@@ -78,12 +78,14 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label=""):
 		offset=spacing*i;
 		edata=dataobj_list[i].dE;
 		emean=np.nanmean(dataobj_list[i].dE);
+		if removemean==0:
+			emean=0;  # leave the data un-meaned
 		edata=[x + offset - emean for x in edata];
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = axarr[0].plot_date(dataobj_list[i].dtarray,edata,marker='+',markersize=1.5,color=line_color);
 		axarr[0].text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
 	axarr[0].set_xlim(start_time_plot,end_time_plot);
-	axarr[0].set_ylim([-30,offset+20])
+	axarr[0].set_ylim([-20,offset+15])
 	bottom,top=axarr[0].get_ylim();
 	for i in range(len(EQtimes)):
 		axarr[0].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
@@ -98,11 +100,13 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label=""):
 		offset=spacing*i;
 		ndata=dataobj_list[i].dN;
 		nmean=np.nanmean(dataobj_list[i].dN);
+		if removemean==0:
+			nmean=0;  # leave the data un-meaned		
 		ndata=[x + offset - nmean for x in ndata];
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = axarr[1].plot_date(dataobj_list[i].dtarray,ndata,marker='+',markersize=1.5, color=line_color);
 	axarr[1].set_xlim(start_time_plot,end_time_plot);
-	axarr[1].set_ylim([-30,offset+20])
+	axarr[1].set_ylim([-20,offset+15])
 	bottom,top=axarr[1].get_ylim();
 	for i in range(len(EQtimes)):
 		axarr[1].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
@@ -122,7 +126,7 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label=""):
 	return;
 
 
-def vertical_full_ts(dataobj_list, distances, myparams, label=""):
+def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
 
 	plt.figure(figsize=(6,8),dpi=160);
 	label_date=dt.datetime.strptime("20200215","%Y%m%d");
@@ -140,6 +144,8 @@ def vertical_full_ts(dataobj_list, distances, myparams, label=""):
 		offset=spacing*i;
 		udata=dataobj_list[i].dU;
 		umean=np.nanmean(dataobj_list[i].dU)
+		if removemean==0:
+			umean=0;  # leave the data un-meaned
 		udata=[x + offset - umean for x in udata];
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = plt.gca().plot_date(dataobj_list[i].dtarray,udata,marker='+',markersize=1.5,color=line_color);

@@ -8,6 +8,7 @@ import os, sys
 import gps_io_functions
 import offsets
 import gps_ts_functions
+import matplotlib.pyplot as plt
 
 
 
@@ -25,8 +26,8 @@ def remove_by_model(Data0):
 	# Right now configured for the Hines data. 
 	starttime1=dt.datetime.strptime("20100403","%Y%m%d");
 	endtime1=dt.datetime.strptime("20100405","%Y%m%d");
-	starttime2=dt.datetime.strptime("20150328","%Y%m%d");
-	endtime2=dt.datetime.strptime("20150330","%Y%m%d");	
+	starttime2=dt.datetime.strptime("20200328","%Y%m%d");
+	endtime2=dt.datetime.strptime("20200330","%Y%m%d");	
 
 	# Input Hines data. 
 	model_data = get_station_hines(Data0.name);
@@ -35,9 +36,9 @@ def remove_by_model(Data0):
 		return Data0;
 
 	# These will be the same size. 
-	# Data0, model = gps_ts_functions.pair_gps_model_keeping_gps(Data0, model_data);  # leaves data outside of the model timespan
-	Data0, model = gps_ts_functions.pair_gps_model(Data0, model_data);  # removes data outside of the model timespan. 
-	
+	Data0, model = gps_ts_functions.pair_gps_model_keeping_gps(Data0, model_data);  # leaves data outside of the model timespan
+	# Data0, model = gps_ts_functions.pair_gps_model(Data0, model_data);  # removes data outside of the model timespan. 
+
 	# Subtract the model from the data. 
 	dtarray=[]; dE_gps=[]; dN_gps=[]; dU_gps=[]; Se_gps=[]; Sn_gps=[]; Su_gps=[];
 	for i in range(len(Data0.dtarray)):
