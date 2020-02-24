@@ -44,3 +44,54 @@ def remove_offsets(Data0, offsets_obj):
 	return newData;
 
 
+
+def fit_offset(dtarray, data, interval, offset_num_days):
+	# Loop through the array and find dates that are used for offset calculation. 
+	# This is done for one component, like east
+	before_indeces = [];
+	after_indeces = [];
+
+	# Find the indeces of nearby days
+	for i in range(len(dtarray)):
+		deltat_start=dtarray[i]-interval[0];  # the beginning of the interval
+		deltat_end = dtarray[i]-interval[1];  # the end of the interval
+		if deltat_start.days >= -offset_num_days and deltat_start.days<=0: 
+			before_indeces.append(i);
+		if deltat_end.days <= offset_num_days and deltat_end.days >= 0: 
+			after_indeces.append(i);
+
+	# Identify the value of the offset. 
+	if before_indeces==[] or after_indeces==[] or len(before_indeces)==1 or len(after_indeces)==1:
+		offset=0;
+		print("Warning: no data before or after offset. Returning 0");
+	else:
+		before_mean= np.nanmean( [data[x] for x in before_indeces] );
+		after_mean = np.nanmean( [data[x] for x in after_indeces] );
+		offset=after_mean-before_mean;
+		if offset==np.nan:
+			print("Warning: np.nan offset found. Returning 0");
+			offset=0;
+	return offset;
+
+
+def solve_for_offsets(ts_object, offset_times):
+	# Here we solve for all the offsets at a given time, which is necessary for UNR data.
+	# Offset_times is a list of datetime objects with unique dates. 
+	index_array=[];
+	e_offsets=[]; n_offsets=[]; u_offsets=[]; evdts_new=[];
+	number_of_days = 10;
+
+	for i in range(len(offset_times)):
+		e_offset = fit_offset(ts_object.dtarray, ts_object.dE, [offset_times[i], offset_times[i]], number_of_days);
+		n_offset = fit_offset(ts_object.dtarray, ts_object.dN, [offset_times[i], offset_times[i]], number_of_days);
+		u_offset = fit_offset(ts_object.dtarray, ts_object.dU, [offset_times[i], offset_times[i]], number_of_days);
+
+	Offset_obj = Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts_new);
+	return Offset_obj;
+
+
+def get_empty_offsets():
+	Offset = Offsets(e_offsets=[], n_offsets=[], u_offsets=[], evdts=[]);
+	return Offset;
+
+

@@ -20,34 +20,6 @@ def get_station_hines(station_name):
 		Data0 = [];
 	return Data0;
 
-def fit_offset(dtarray, data, interval, offset_num_days):
-	# Solves for offsets at a given time. 
-	before_indeces = [];
-	after_indeces = [];
-
-	# Find the indeces of nearby days
-	for i in range(len(dtarray)):
-		deltat_start=dtarray[i]-interval[0];  # the beginning of the interval
-		deltat_end = dtarray[i]-interval[1];  # the end of the interval
-		if deltat_start.days >= -offset_num_days and deltat_start.days<=0: 
-			before_indeces.append(i);
-		if deltat_end.days <= offset_num_days and deltat_end.days >= 0: 
-			after_indeces.append(i);
-
-	# Identify the value of the offset. 
-	if before_indeces==[] or after_indeces==[] or len(before_indeces)==1 or len(after_indeces)==1:
-		offset=0;
-		print("Warning: no data before or after offset. Returning 0");
-	else:
-		before_mean= np.nanmean( [data[x] for x in before_indeces] );
-		after_mean = np.nanmean( [data[x] for x in after_indeces] );
-		offset=after_mean-before_mean;
-		if offset==np.nan:
-			print("Warning: np.nan offset found. Returning 0");
-			offset=0;
-	return offset;
-
-
 
 def remove_by_model(Data0):
 	# Right now configured for the Hines data. 
@@ -79,13 +51,13 @@ def remove_by_model(Data0):
 
 	# In this method, we correct for offsets at the beginning and end of the modeled time series. 
 	interval1 = [starttime1, endtime1];
-	east_offset1 = fit_offset(dtarray, dE_gps, interval1, 20);
-	north_offset1 = fit_offset(dtarray, dN_gps, interval1, 20);
-	vert_offset1 = fit_offset(dtarray, dU_gps, interval1, 20);
+	east_offset1 = offsets.fit_offset(dtarray, dE_gps, interval1, 20);
+	north_offset1 = offsets.fit_offset(dtarray, dN_gps, interval1, 20);
+	vert_offset1 = offsets.fit_offset(dtarray, dU_gps, interval1, 20);
 	interval2 = [starttime2, endtime2];
-	east_offset2 = fit_offset(dtarray, dE_gps, interval2, 20);
-	north_offset2 = fit_offset(dtarray, dN_gps, interval2, 20);
-	vert_offset2 = fit_offset(dtarray, dU_gps, interval2, 20);
+	east_offset2 = offsets.fit_offset(dtarray, dE_gps, interval2, 20);
+	north_offset2 = offsets.fit_offset(dtarray, dN_gps, interval2, 20);
+	vert_offset2 = offsets.fit_offset(dtarray, dU_gps, interval2, 20);
 
 	offsets_obj = offsets.Offsets(e_offsets=[east_offset1, east_offset2], 
 		n_offsets=[north_offset1, north_offset2], u_offsets=[vert_offset1, vert_offset2], evdts=[starttime1, starttime2]);

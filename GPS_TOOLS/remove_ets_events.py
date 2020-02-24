@@ -15,7 +15,6 @@ import single_station_tsplot
 
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-Offsets    = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
 Parameters = collections.namedtuple("Parameters",['station','outliers_remove', 'outliers_def','offset_num_days', 
 	'earthquakes_remove','offsets_remove','seasonals_remove', 'seasonals_type','datasource','refframe']);
 
@@ -113,7 +112,7 @@ def remove_characteristic_ETS(ts_obj,ets_intervals):
 		evdts.append(ets_intervals[i][1]);
 	# for i in range(len(evdts)):  # A nice sanity check
 		# print(str(evdts[i])+" %f" % (n_offsets[i]) );
-	offset_obj = Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	offset_obj = offsets.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	ts_obj_fix = offsets.remove_offsets(ts_obj_gaps,offset_obj);
 	ts_obj_new=Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=ts_obj_fix.dtarray, dE=ts_obj_fix.dE, dN=ts_obj_fix.dN, dU=ts_obj_fix.dU, Se=ts_obj_fix.Se, Sn=ts_obj_fix.Sn, Su=ts_obj_fix.Su, EQtimes=ts_obj_fix.EQtimes);
 	return ts_obj_new;
@@ -145,16 +144,16 @@ def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
 	# Find the offsets associated with each ETS interval
 	e_offsets=[]; n_offsets=[]; u_offsets=[]; evdts=[]; 
 	for i in range(len(ets_intervals)):
-		e_offset=fit_offset(dtarray, dE, ets_intervals[i], offset_num_days);
-		n_offset=fit_offset(dtarray, dN, ets_intervals[i], offset_num_days);
-		u_offset=fit_offset(dtarray, dU, ets_intervals[i], offset_num_days);
+		e_offset=offsets.fit_offset(dtarray, dE, ets_intervals[i], offset_num_days);
+		n_offset=offsets.fit_offset(dtarray, dN, ets_intervals[i], offset_num_days);
+		u_offset=offsets.fit_offset(dtarray, dU, ets_intervals[i], offset_num_days);
 		e_offsets.append(e_offset);
 		n_offsets.append(n_offset);
 		u_offsets.append(u_offset);
 		evdts.append(ets_intervals[i][1]);
 	# for i in range(len(evdts)):  # A nice sanity check
 		# print(str(evdts[i])+" %f" % (n_offsets[i]) );
-	offset_obj = Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	offset_obj = offsets.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	# print("Mean east offset: %.3f mm" % (np.mean(e_offsets) ));
 	# print("Mean north offset: %.3f mm" % (np.mean(n_offsets) ));
 	# print("Mean vert offset: %.3f mm" % (np.mean(u_offsets) ));
@@ -167,31 +166,6 @@ def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
 	ts_obj_new=Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=ts_obj_fix.dtarray, dE=ts_obj_fix.dE, dN=ts_obj_fix.dN, dU=ts_obj_fix.dU, Se=ts_obj_fix.Se, Sn=ts_obj_fix.Sn, Su=ts_obj_fix.Su, EQtimes=ts_obj_fix.EQtimes);
 	return ts_obj_new;
 
-def fit_offset(dtarray, data, interval, offset_num_days):
-	before_indeces = [];
-	after_indeces = [];
-
-	# Find the indeces of nearby days
-	for i in range(len(dtarray)):
-		deltat_start=dtarray[i]-interval[0];  # the beginning of the interval
-		deltat_end = dtarray[i]-interval[1];  # the end of the interval
-		if deltat_start.days >= -offset_num_days and deltat_start.days<=0: 
-			before_indeces.append(i);
-		if deltat_end.days <= offset_num_days and deltat_end.days >= 0: 
-			after_indeces.append(i);
-
-	# Identify the value of the offset. 
-	if before_indeces==[] or after_indeces==[] or len(before_indeces)==1 or len(after_indeces)==1:
-		offset=0;
-		print("Warning: no data before or after offset. Returning 0");
-	else:
-		before_mean= np.nanmean( [data[x] for x in before_indeces] );
-		after_mean = np.nanmean( [data[x] for x in after_indeces] );
-		offset=after_mean-before_mean;
-		if offset==np.nan:
-			print("Warning: np.nan offset found. Returning 0");
-			offset=0;
-	return offset;
 
 
 # -------------- OUTPUTS ------------ # 

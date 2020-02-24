@@ -8,7 +8,6 @@ import gps_io_functions
 import gps_ts_functions
 import offsets
 
-Offsets = collections.namedtuple("Offsets",['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 
 # ----------------------------------------
@@ -134,37 +133,33 @@ def get_gldas(station):
 	station_name_lower=station.lower();
 	filename="../../GPS_POS_DATA/PBO_Hydro/GLDAS/"+station_name_lower+"_noah10_gldas2.hyd";
 	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
-	Offset = get_empty_offsets();
+	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];
 
 def get_nldas(station):
 	station_name_lower=station.lower();
 	filename="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"+station_name_lower+"_noah125_nldas2.hyd";
 	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
-	Offset = get_empty_offsets();
+	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];
 
 def get_noah025(station):
 	filename="../../GPS_POS_DATA/PBO_Hydro/NOAH025/"+station+"_NOAH025.hyd";
 	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
-	Offset = get_empty_offsets();
+	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];
 
 def get_grace(station):
 	filename="../../GPS_POS_DATA/GRACE_loading_model/scaled_"+station+"_PREM_model_ts.txt";
 	[myData] = gps_io_functions.read_grace(filename);
-	Offset = get_empty_offsets();
+	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];
 
 def get_lsdm(station):
 	filename="../../GPS_POS_DATA/PBO_Hydro/LSDM/"+station+"_LSDM_hydro.txt.txt";
 	[myData] = gps_io_functions.read_lsdm_file(filename);
-	Offset = get_empty_offsets();
+	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];	
-
-def get_empty_offsets():
-	Offset = Offsets(e_offsets=[], n_offsets=[], u_offsets=[], evdts=[]);
-	return Offset;
 
 
 # Based on whether a file exists in certain directories or not, 
@@ -275,8 +270,7 @@ def get_unr_offsets(Data0, station, offsets_dir):
 		table=[];
 	print(table);
 	evdts=parse_table_unr(table);
-	[e_offsets, n_offsets, u_offsets, evdts]=solve_for_offsets(Data0, evdts);
-	UNR_offsets=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	UNR_offsets=offsets.solve_for_offsets(Data0, evdts);
 	return UNR_offsets;
 
 
@@ -301,8 +295,7 @@ def get_unr_earthquakes(Data0, station, offsets_dir):
 	evdts2=parse_table_unr(table);
 
 	evdts=evdts1+evdts2;
-	[e_offsets, n_offsets, u_offsets, evdts]=solve_for_offsets(Data0, evdts); 
-	UNR_earthquakes=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	UNR_earthquakes=offsets.solve_for_offsets(Data0, evdts); 
 	return UNR_earthquakes;
 
 
@@ -317,7 +310,7 @@ def get_pbo_offsets(station, offsets_dir):
 		table=table.decode();  # needed when switching to python 3
 	print(table);
 	[e_offsets, n_offsets, u_offsets, evdts]=parse_antenna_table_pbo(table);
-	PBO_offsets=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	PBO_offsets=offsets.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	return PBO_offsets;
 
 def get_pbo_earthquakes(station, earthquakes_dir):
@@ -331,7 +324,7 @@ def get_pbo_earthquakes(station, earthquakes_dir):
 		table=table.decode(); # needed when switching to python 3
 	print(table);
 	[e_offsets, n_offsets, u_offsets, evdts]=parse_earthquake_table_pbo(table);
-	PBO_earthquakes=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	PBO_earthquakes=offsets.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	return PBO_earthquakes;
 
 def get_cwu_earthquakes(station, earthquakes_dir):
@@ -345,7 +338,7 @@ def get_cwu_earthquakes(station, earthquakes_dir):
 		table=table.decode(); # needed when switching to python 3
 	print(table);
 	[e_offsets, n_offsets, u_offsets, evdts]=parse_earthquake_table_pbo(table);
-	CWU_earthquakes=Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	CWU_earthquakes=offsets.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	return CWU_earthquakes;
 
 #
@@ -428,52 +421,4 @@ def get_datetime_from_unrfile(input_string):
 #
 # TABLE COMPUTE --------------------------- 
 # 
-
-def solve_for_offsets(ts_object, offset_times):
-	# Here we solve for all the offsets at a given time, which is necessary for UNR data.
-	# Offset_times is a list of datetime objects with unique dates. 
-
-	index_array=[];
-	e_offsets=[]; n_offsets=[]; u_offsets=[]; evdts_new=[];
-	number_of_days = 10;
-
-	for i in range(len(offset_times)):  # Find where the object exists in the array
-		myindex=np.where(ts_object.dtarray==np.datetime64(offset_times[i]));
-		if len(myindex[0])>0:  # if the object is in the array, then we will find the exact datetime index of the earthquake itself
-			# Find the datetime object that actually matches the time of the offset. 
-			index_array.append(myindex[0][0]);  # the i'th measurement is where the offset happens. 
-			evdts_new.append(ts_object.dtarray[myindex[0][0]]);
-		else:  # if the object isn't in the array, then we have some work to do. 
-		# Find the data gap where the earthquake is. 
-			if offset_times[i] > ts_object.dtarray[number_of_days] and offset_times[i] < ts_object.dtarray[-number_of_days]:
-				# If the offset is within a good range for this time series
-				for j in range(len(ts_object.dtarray)-1):
-					if ts_object.dtarray[j]<offset_times[i] and ts_object.dtarray[j+1]>offset_times[i]:
-						index_array.append(j);
-						evdts_new.append(offset_times[i]);
-
-
-	for i in index_array:
-		mean_e_before=np.nanmean(ts_object.dE[i-1-number_of_days:i-1]);
-		mean_e_after=np.nanmean(ts_object.dE[i+1:i+1+number_of_days]);
-		e_offset=mean_e_after-mean_e_before;
-		if np.isnan(e_offset):
-			e_offset=0;
-		e_offsets.append(e_offset);
-
-		mean_n_before=np.nanmean(ts_object.dN[i-1-number_of_days:i-1]);
-		mean_n_after=np.nanmean(ts_object.dN[i+1:i+1+number_of_days]);
-		n_offset=mean_n_after-mean_n_before;
-		if np.isnan(n_offset):
-			n_offset=0;		
-		n_offsets.append(n_offset);
-
-		mean_u_before=np.nanmean(ts_object.dU[i-1-number_of_days:i-1]);
-		mean_u_after=np.nanmean(ts_object.dU[i+1:i+1+number_of_days]);
-		u_offset=mean_u_after-mean_u_before;
-		if np.isnan(u_offset):
-			u_offset=0;		
-		u_offsets.append(u_offset);
-
-	return [e_offsets, n_offsets, u_offsets, evdts_new];
 
