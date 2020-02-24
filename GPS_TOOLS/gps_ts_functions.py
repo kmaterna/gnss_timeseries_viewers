@@ -1,7 +1,23 @@
 # May/June 2018
 # This is a toolbox that operates on Timeseries objects. 
 # Contains functions to map, filter, and reduce generic GPS time series
-
+# 
+# FIRST TYPE OF FUNCTION: 
+# remove_outliers(Data0, outliers_def);
+# impose_time_limits(Data0, starttime, endtime)
+# remove_nans(Data0)
+# detrend_data_by_value(Data0,east_params,north_params,vert_params)
+# remove_seasonal_by_value(Data0,east_params,north_params,vert_params)
+# pair_gps_model(gps_data, model_data)
+# pair_gps_model_keeping_gps(gps_data, model_data)
+# get_referenced_data(roving_station_data, base_station_data)
+# remove_constant(Data0, east_offset, north_offset, vert_offset)
+# 
+# SECOND TYPE OF FUNCTION: 
+# get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6)
+# get_slope_unc(dataObj, starttime, endtime)
+# get_linear_annual_semiannual(Data0, starttime=[], endtime=[],critical_len=365)
+# get_means(Data0, starttime=[], endtime=[])
 
 import numpy as np 
 import subprocess, sys, collections
@@ -77,15 +93,6 @@ def remove_nans(Data0):
 			temp_Su.append(Data0.Su[i]);
 	newData=Timeseries(name=Data0.name, coords=Data0.coords, dtarray=temp_dates, dN=temp_north, dE=temp_east, dU=temp_vert, Sn=temp_Sn, Se=temp_Se, Su=temp_Su, EQtimes=Data0.EQtimes);
 	return newData;
-
-
-def look_up_seasonal_coefs(name,table_file):
-	[E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2]=gps_io_functions.read_noel_file_station(table_file,name);
-	east_params=[E, Ea2, Ea1, Es2, Es1];
-	north_params=[N, Na2, Na1, Ns2, Na2];
-	up_params=[U, Ua2, Ua1, Us2, Us1];
-	return [east_params, north_params, up_params];
-
 
 def detrend_data_by_value(Data0,east_params,north_params,vert_params):
 	# Parameters Format: slope, a2(cos), a1(sin), s2, s1. 
@@ -477,7 +484,7 @@ def float_to_dt(float_time):
 	my_date = dt.datetime.strptime(myyear+fractional_year,"%Y%j");
 	return my_date;
 
-def get_daily_dates(starttime, endtime):
+def get_daily_dtarray(starttime, endtime):
 	# Return a datetime array that spans starttime to endtime with daily intervals
 	i=0;
 	dtarray=[];
@@ -485,6 +492,16 @@ def get_daily_dates(starttime, endtime):
 	while dtarray[-1]<endtime:
 		i=i+1;
 		dtarray.append(starttime+dt.timedelta(days=i));
+	return dtarray;	
+
+def yrnum2datetime(yearnums, starttime):
+	# This function will take a set of dates, in decimal years past a certain date, 
+	# and convert it into normal datetime objects. 
+	# The input and output vectors will be exactly the same length
+	dtarray = [];
+	for i in range(len(yearnums)):
+		myyr = yearnums[i];
+		dtarray.append(starttime+dt.timedelta(days=myyr*365.24));
 	return dtarray;	
 
 def add_two_unc_quadrature(unc1, unc2):

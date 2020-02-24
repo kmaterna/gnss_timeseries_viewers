@@ -48,7 +48,7 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, remove_trend=1,
 			trend_in = gps_ts_functions.remove_seasonal_by_value(Data, east_params, north_params, up_params);
 
 		elif seasonals_type=='noel':
-			[east_params, north_params, up_params] = gps_ts_functions.look_up_seasonal_coefs(Data.name, fit_table);
+			[east_params, north_params, up_params] = look_up_seasonal_coefs(Data.name, fit_table);
 			trend_out= gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);	
 			trend_in = Data; # Broken because I don't really use this option anymore. 
 		
@@ -460,6 +460,14 @@ def read_loading_ts(infile):
 	ifile.close();
 	loading_defo = Timeseries(name='', coords=[], dtarray=dtarray, dE=u, dN=v, dU=w, Sn=S, Se=S, Su=S, EQtimes=[]);
 	return loading_defo;
+
+
+def look_up_seasonal_coefs(name,table_file):
+	[E, N, U, Ea1, Na1, Ua1, Ea2, Na2, Ua2, Es1, Ns1, Us1, Es2, Ns2, Us2]=gps_io_functions.read_noel_file_station(table_file,name);
+	east_params=[E, Ea2, Ea1, Es2, Es1];
+	north_params=[N, Na2, Na1, Ns2, Na2];
+	up_params=[U, Ua2, Ua1, Us2, Us1];
+	return [east_params, north_params, up_params];
 
 
 # Note: 
