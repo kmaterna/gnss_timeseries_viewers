@@ -30,7 +30,7 @@ def configure():
 	EQtimes.append(dt.datetime.strptime("20161208", "%Y%m%d"));
 	
 	proc_center='gldas';   # WHICH DATASTREAM DO YOU WANT?
-	stations, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius);
+	stations, lons, lats, distances = stations_within_radius.get_stations_within_radius(EQcoords, radius);
 	return [stations, distances, EQtimes, proc_center, expname];
 
 

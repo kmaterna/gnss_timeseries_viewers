@@ -54,7 +54,7 @@ def configure(eqtime,starttime,endtime):
 	map_coords=[-125, -118, 36.0, 43.0];  # northern CA
 	# map_coords=[-125, -110, 32.5, 48.5]; # western US
 	# map_coords=[-125, -122, 40, 41]; # Small test
-	stations = stations_within_radius.get_stations_within_box(map_coords);
+	stations, _, _ = stations_within_radius.get_stations_within_box(map_coords);
 	stations = gps_input_pipeline.remove_blacklist(stations);
 
 	outfile_dir='Outputs_'+turning_point+'/'+str(eqtime);

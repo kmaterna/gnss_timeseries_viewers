@@ -38,8 +38,8 @@ def interpolate_over_time(dates, east, north, vert):
 
 def configure():
 	intended_box = [-116, -115, 32.5, 33.5];
-	intended_stations1 = stations_within_radius.get_stations_within_box(intended_box, network='unr');
-	intended_stations2 = stations_within_radius.get_stations_within_box(intended_box, network='pbo');
+	intended_stations1,_,_ = stations_within_radius.get_stations_within_box(intended_box, network='unr');
+	intended_stations2,_,_ = stations_within_radius.get_stations_within_box(intended_box, network='pbo');
 	intended_stations = list(set(intended_stations1+intended_stations2));
 	print("Returning %d intended stations " % (len(intended_stations)) );
 	model_file = "../../GPS_POS_DATA/Remove_postseismic/Hines/results.h5"

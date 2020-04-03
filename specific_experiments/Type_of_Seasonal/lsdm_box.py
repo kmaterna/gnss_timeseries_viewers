@@ -8,7 +8,7 @@ import datetime as dt
 # coord_box=[-125.5,-120,38,42];
 
 coord_box=[-125.5,-119,36,46.5];
-close_stations = stations_within_radius.get_stations_within_box(coord_box, network='pbo');
+close_stations, lons, lats = stations_within_radius.get_stations_within_box(coord_box, network='pbo');
 print(close_stations);
 
 # Write them into a file. 

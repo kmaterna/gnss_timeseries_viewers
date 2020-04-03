@@ -11,7 +11,7 @@ coord_box = [-125, -120, 42, 46.0];
 infile="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt"
 outfile="GPS_ll.txt";
 
-stations = stations_within_radius.get_stations_within_box(coord_box);
+stations,lons,lats = stations_within_radius.get_stations_within_box(coord_box);
 [velfield] = gps_io_functions.read_pbo_vel_file(infile);
 
 ofile=open(outfile,'w');

@@ -39,7 +39,7 @@ def configure():
 		map_coords=[-125.6, -110.0, 32.5, 48.5];
 	else:
 		map_coords=[-125.6, -121.0, 39.0, 41.5];
-	stations = stations_within_radius.get_stations_within_box(map_coords, network);
+	stations,_,_ = stations_within_radius.get_stations_within_box(map_coords, network);
 	print("Box is");
 	print(map_coords);
 	print("Returning %d stations and putting their velocities in %s " % (len(stations), outfile));

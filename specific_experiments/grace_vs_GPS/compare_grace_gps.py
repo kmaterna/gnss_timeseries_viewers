@@ -22,7 +22,7 @@ def configure():
 	nldas_dir = "../../GPS_POS_DATA/PBO_Hydro/NLDAS/"
 	gldas_dir = "../../GPS_POS_DATA/PBO_Hydro/GLDAS/"
 	coord_box = [-125, -118, 37, 44];
-	station_list = stations_within_radius.get_stations_within_box(coord_box, datasource);
+	station_list,_,_ = stations_within_radius.get_stations_within_box(coord_box, datasource);
 	station_list = gps_input_pipeline.remove_blacklist(station_list);
 	ampfile = hydro_type+"_vs_gps_amps_"+datasource+".txt";
 	return [station_list, datasource, hydro_type, refframe, grace_dir, nldas_dir, gldas_dir, ampfile];

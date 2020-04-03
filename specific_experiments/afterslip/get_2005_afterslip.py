@@ -16,7 +16,7 @@ import gps_input_pipeline
 
 def configure():
 	box = [-125, -120, 38, 42.1];
-	stations = stations_within_radius.get_stations_within_box(box);
+	stations,_,_ = stations_within_radius.get_stations_within_box(box);
 	proc_center='pbo';
 	early_date = dt.datetime.strptime("20050616","%Y%m%d");
 	later_date = dt.datetime.strptime("20070615","%Y%m%d");

@@ -60,9 +60,9 @@ def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=
 	else:
 		# Getting the stations of interest ('huge' means we just want within the box.)
 		if radius==-1:
-			stations = stations_within_radius.get_stations_within_box(map_coords, network);
+			stations,_,_ = stations_within_radius.get_stations_within_box(map_coords, network);
 		else:
-			stations,_ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords, network);
+			stations,_,_,_ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords, network);
 		stations=gps_input_pipeline.remove_blacklist(stations);
 
 	return [stations, outdir, time_after_start_date, critical_variance];

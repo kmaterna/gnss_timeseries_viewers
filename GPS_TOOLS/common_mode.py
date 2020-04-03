@@ -53,7 +53,7 @@ def configure():
 	proc_center='cwu';   # WHICH DATASTREAM DO YOU WANT?
 	refframe = 'NA';     # WHICH REFERENCE FRAME? 
 
-	stations, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
+	stations, lons, lats, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
 	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","BOMG","FSHB"];  # This is global, just keeps growing
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
