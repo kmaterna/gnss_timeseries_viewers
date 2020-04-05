@@ -19,12 +19,7 @@ Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN'
 # Make a detrended/modeled version of this time series. 
 def make_detrended_ts(Data, seasonals_remove, seasonals_type, remove_trend=1, 
 	fit_table="../../GPS_POS_DATA/Velocity_Files/Bartlow_interETSvels.txt",
-	grace_dir="../../GPS_POS_DATA/GRACE_loading_model/",
-	STL_dir="../../GPS_POS_DATA/STL_models/",
-	gldas_dir="../../GPS_POS_DATA/PBO_Hydro/GLDAS/",
-	nldas_dir="../../GPS_POS_DATA/PBO_Hydro/NLDAS/", 
-	lakes_dir="../../GPS_POS_DATA/Lake_loading/",
-	lsdm_dir="../../GPS_POS_DATA/PBO_Hydro/LSDM/"):
+	lakes_dir="../../GPS_POS_DATA/Lake_loading/"):
 	# Once we have removed earthquake steps... 
 	# The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed, 
 	# Where the seasonal fitting (if necessary) and detrending happen in the same function. 
@@ -32,6 +27,10 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, remove_trend=1,
 	# Fit params definition: slope, a2(cos), a1(sin), s2, s1. 
 
 	# Here we are asking to invert the data for linear and seasonal components
+
+	Params = gps_io_functions.read_config_file();
+	grace_dir=Params.grace_dir
+
 	if seasonals_remove==0:
 		print("Not removing seasonals.");
 		east_params=[0,0,0,0,0];  north_params=[0,0,0,0,0]; up_params=[0,0,0,0,0];
@@ -56,22 +55,22 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, remove_trend=1,
 			trend_out, trend_in = remove_seasonals_by_notch(Data);
 
 		elif seasonals_type=='grace':
-			trend_out, trend_in = remove_seasonals_by_GRACE(Data,grace_dir);
+			trend_out, trend_in = remove_seasonals_by_GRACE(Data,Params.grace_dir);
 
 		elif seasonals_type=='stl':
-			trend_out, trend_in = remove_seasonals_by_STL(Data, STL_dir);
+			trend_out, trend_in = remove_seasonals_by_STL(Data, Params.STL_dir);
 
 		elif seasonals_type=='nldas':
-			trend_out, trend_in = remove_seasonals_by_hydro(Data, nldas_dir);
+			trend_out, trend_in = remove_seasonals_by_hydro(Data, Params.nldas_dir);
 
 		elif seasonals_type=='nldas_scaled':
-			trend_out, trend_in = remove_seasonals_by_hydro(Data, nldas_dir, scaling=True);
+			trend_out, trend_in = remove_seasonals_by_hydro(Data, Params.nldas_dir, scaling=True);
 
 		elif seasonals_type=='gldas':
-			trend_out, trend_in = remove_seasonals_by_hydro(Data, gldas_dir);
+			trend_out, trend_in = remove_seasonals_by_hydro(Data, Params.gldas_dir);
 
 		elif seasonals_type=='lsdm':
-			trend_out, trend_in = remove_seasonals_by_german_load(Data, lsdm_dir);
+			trend_out, trend_in = remove_seasonals_by_german_load(Data, Params.lsdm_dir);
 
 		elif seasonals_type=='oroville':
 			trend_out, trend_in = remove_seasonals_by_lakes(Data, lakes_dir, 'oroville');

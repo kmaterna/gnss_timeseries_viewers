@@ -3,10 +3,49 @@ import numpy as np
 import collections
 import datetime as dt 
 import sys, os
+import configparser
 
 
-Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']);
-Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);
+Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']); 
+Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']); # in mm
+Params = collections.namedtuple("Params",['pbo_gps_dir','unr_gps_dir','pbo_earthquakes_dir','general_offsets_dir',
+	'unr_coords_file','velocity_dir','pbo_velocities','unr_velocities',
+	'gldas_dir','nldas_dir','noah_dir','grace_dir','lsdm_dir','stl_dir','blacklist']);
+
+
+
+def read_config_file():
+	# The all important config file. 
+	infile = "/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt";  # the one place we hard-code the values.
+
+	config=configparser.ConfigParser()
+	config.optionxform = str #make the config file case-sensitive
+	config.read(infile);
+
+	# Where you place all the directories
+	config_file_orig=infile;
+	pbo_gps_dir=config.get('py-config','pbo_gps_dir');
+	unr_gps_dir=config.get('py-config','unr_gps_dir');
+	pbo_earthquakes_dir=config.get('py-config','pbo_earthquakes_dir');
+	general_offsets_dir=config.get('py-config','general_offsets_dir');
+	unr_coords_file = config.get('py-config','unr_coords_file');
+	velocity_dir = config.get('py-config','velocity_dir');
+	pbo_velocities = config.get('py-config','pbo_velocities');
+	unr_velocities = config.get('py-config','unr_velocities');
+	blacklist = config.get('py-config','blacklist');
+	gldas_dir = config.get('py-config','gldas_dir');
+	nldas_dir = config.get('py-config','nldas_dir');
+	noah_dir = config.get('py-config','noah_dir');
+	grace_dir = config.get('py-config','grace_dir');
+	lsdm_dir = config.get('py-config','lsdm_dir');
+	stl_dir = config.get('py-config','stl_dir');
+
+	myParams = Params(pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir, pbo_earthquakes_dir=pbo_earthquakes_dir, 
+		general_offsets_dir=general_offsets_dir, unr_coords_file=unr_coords_file, 
+		velocity_dir=velocity_dir, pbo_velocities=pbo_velocities,
+		unr_velocities=unr_velocities, gldas_dir=gldas_dir, nldas_dir=nldas_dir, noah_dir=noah_dir, 
+		grace_dir=grace_dir, lsdm_dir=lsdm_dir, stl_dir=stl_dir, blacklist=blacklist);
+	return myParams;
 
 
 def read_pbo_vel_file(infile):
@@ -202,7 +241,7 @@ def read_pbo_hydro_file(filename):
 	dtarray=[];
 	station_name=filename.split('/')[-1][0:4];
 	station_name=station_name.upper();
-	[lon,lat] = get_coordinates_for_stations([station_name], "../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt");  # format [lat, lon]	
+	[lon,lat] = get_coordinates_for_stations([station_name]);  # format [lat, lon]	
 	[dts, dN, dE, dU] = np.loadtxt(filename,usecols=(0, 3, 4, 5),dtype={'names':('dts','dN','dE','dU'),'formats':('U10', np.float, np.float, np.float)}, skiprows=20, delimiter=',',unpack=True);
 	for i in range(len(dts)):
 		dtarray.append(dt.datetime.strptime(dts[i],"%Y-%m-%d"));
@@ -220,7 +259,7 @@ def read_lsdm_file(filename):
 	print("Reading %s" % filename);
 	dtarray=[];
 	station_name=filename.split('/')[-1][0:4];
-	[lon,lat] = get_coordinates_for_stations([station_name], "../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt");  # format [lat, lon]	
+	[lon,lat] = get_coordinates_for_stations([station_name]);  # format [lat, lon]	
 	[dts, dU, dN, dE] = np.loadtxt(filename,usecols=(0, 1, 2, 3),dtype={'names':('dts','dN','dE','dU'),'formats':('U10', np.float, np.float, np.float)}, skiprows=3, delimiter=',',unpack=True);
 	for i in range(len(dts)):
 		dtarray.append(dt.datetime.strptime(dts[i][0:10],"%Y-%m-%d"));
@@ -236,10 +275,13 @@ def read_lsdm_file(filename):
 
 
 
-def get_coordinates_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt"):
+def get_coordinates_for_stations(station_names):
 	lon=[];
 	lat=[];
 	reference_names=[]; reference_lons=[]; reference_lats=[];
+
+	myParams=read_config_file();  # read in the file where to find coordinate data
+	coordinates_file=myParams.unr_coords_file;
 
 	# Read the file
 	ifile=open(coordinates_file,'r');
@@ -269,11 +311,14 @@ def get_coordinates_for_stations(station_names,coordinates_file="../../GPS_POS_D
 	return [lon,lat];
 
 
-def get_start_times_for_stations(station_names,coordinates_file="../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt"):
+def get_start_times_for_stations(station_names):
 	# Meant for UNR stations
 	end_time=[];
 	start_time=[];
 	reference_names=[]; reference_start_time=[]; reference_end_time=[];
+
+	myParams=read_config_file();  # read in the file where to find coordinate data
+	coordinates_file=myParams.unr_coords_file;
 
 	# Read the file
 	ifile=open(coordinates_file,'r');

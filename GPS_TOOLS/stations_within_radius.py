@@ -2,33 +2,32 @@
 # determine which PBO stations are within a certain radius of that point. 
 # In another mode, it can also return the list of stations within a box. 
 
-
+import numpy as np
+import sys
 import haversine
 import read_kml
 import gps_io_functions
 import matplotlib.path as mpltPath
-import numpy as np
-
 
 # Reference: Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']);
 
 # DRIVER 1: STATIONS WITHIN RADIUS
-def get_stations_within_radius(center, radius, coord_box=[-126, -110, 30.0, 49], network='pbo', abs_path=False):  # default coord box is western US
-	[input_file, num_years, max_sigma] = general_config(network, abs_path);
+def get_stations_within_radius(center, radius, coord_box=[-126, -110, 30.0, 49], network='pbo'):  # default coord box is western US
+	[input_file, num_years, max_sigma] = general_config(network);
 	myVelfield = inputs(input_file, num_years, max_sigma, coord_box, network);
 	close_stations, lon, lat, rad_distance = compute_circle(myVelfield, center, radius);
 	return close_stations, lon, lat, rad_distance;
 
 # DRIVER 2: STATIONS WITHIN BOX
-def get_stations_within_box(coord_box, network='pbo', abs_path=False):
-	[input_file, num_years, max_sigma]=general_config(network, abs_path);
+def get_stations_within_box(coord_box, network='pbo'):
+	[input_file, num_years, max_sigma]=general_config(network);
 	myVelfield = inputs(input_file, num_years, max_sigma, coord_box, network);
 	within_stations, lon, lat = compute_box(myVelfield, coord_box);
 	return within_stations, lon, lat;
 
 # DRIVER 3: STATIONS WITHIN A USER-DEFINED KML BORDER
-def get_stations_within_polygon(polygon_file, coord_box=[-126, -110, 30.0, 49], network='pbo', abs_path=False):  
-	[input_file, num_years, max_sigma]=general_config(network, abs_path);
+def get_stations_within_polygon(polygon_file, coord_box=[-126, -110, 30.0, 49], network='pbo'):  
+	[input_file, num_years, max_sigma]=general_config(network);
 	[polygon_lon, polygon_lat] = read_kml.read_simple_kml(polygon_file);
 	myVelfield=inputs(input_file, num_years, max_sigma, coord_box, network);
 	within_stations, lon, lat = compute_within_polygon(myVelfield, polygon_lon, polygon_lat);
@@ -36,17 +35,13 @@ def get_stations_within_polygon(polygon_file, coord_box=[-126, -110, 30.0, 49], 
 
 
 # ----------- CONFIGURE OPTIONS ---------- # 
-def general_config(network, abs_path=False):
+def general_config(network):
+	myParams = gps_io_functions.read_config_file();
 	if network=='pbo' or network=='cwu' or network=='nmt':
-		if abs_path == False:
-			input_file="../../GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";  # if inside the directory
-		if abs_path == True:
-			input_file="/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt";
+		input_file=myParams.pbo_velocities;
 	elif network=='unr':
-		if abs_path == False:
-			input_file="../../GPS_POS_DATA/Velocity_Files/IGS14_MAGNET_dec2019.txt";
-		if abs_path == True:
-			input_file="/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/Velocity_Files/IGS14_MAGNET_dec2019.txt";
+		input_file=myParams.unr_velocities;
+		print(input_file);
 	else:
 		print("ERROR: Network %s not recognized" % network);
 	num_years=3.0;

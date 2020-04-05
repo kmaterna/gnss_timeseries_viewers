@@ -8,7 +8,7 @@ import gps_io_functions
 import gps_ts_functions
 import offsets
 
-Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
+# Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
 
 # ----------------------------------------
 #  MULTI STATION DRIVERS               ---
@@ -23,7 +23,7 @@ def multi_station_inputs(station_names, blacklist, proc_center, refframe, distan
 			continue;
 		else:
 			[myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, refframe);
-			if myData.name=="BRAW":  # an annoying data-cleaning step because of gaps at BRAW. 
+			if myData.name=="BRAW":  # an annoying data-cleaning step because of gaps at BRAW. Should be fixed later. 
 				myData = gps_ts_functions.impose_time_limits(myData, dt.datetime.strptime("2009-01-01","%Y-%m-%d"), dt.datetime.strptime("2020-06-01", "%Y-%m-%d"));
 			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
 			# kicking out the stations that end early or start late. 
@@ -74,9 +74,10 @@ def get_unr(station,refframe="NA"):
 		reflabel="IGS14";
 	else:
 		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");	
-	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+"."+reflabel+".tenv3"
-	unr_coords="../../GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt"
-	offsets_dir="../../GPS_POS_DATA/Offsets/"
+	Params = gps_io_functions.read_config_file();
+	unr_filename=Params.unr_gps_dir+station+"."+reflabel+".tenv3"
+	unr_coords=Params.unr_coords_file;
+	offsets_dir=Params.general_offsets_dir;
 	[myData]=gps_io_functions.read_UNR_magnet_file(unr_filename, unr_coords);  # UNR data format
 	Offsets = get_unr_offsets(myData, station, offsets_dir);
 	Earthquakes = get_unr_earthquakes(myData, station, offsets_dir);
@@ -90,9 +91,10 @@ def get_pbo(station, refframe="NA"):
 		reflabel="igs08";
 	else:
 		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");
-	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_"+reflabel+".pos"
-	pbo_earthquakes_dir="../../GPS_POS_DATA/PBO_Event_Files/"
-	offsets_dir="../../GPS_POS_DATA/Offsets/"
+	Params = gps_io_functions.read_config_file();
+	pbo_filename=Params.pbo_gps_dir+station+".pbo.final_"+reflabel+".pos"
+	pbo_earthquakes_dir=Params.pbo_earthquakes_dir;
+	offsets_dir=Params.general_offsets_dir;
 	[myData]=gps_io_functions.read_pbo_pos_file(pbo_filename);  # PBO data format
 	Offsets = get_pbo_offsets(station, offsets_dir);
 	Earthquakes = get_pbo_earthquakes(station, pbo_earthquakes_dir);
@@ -105,9 +107,10 @@ def get_cwu(station, refframe="NA"):
 		reflabel="igs14";
 	else:
 		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");
-	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".cwu.final_"+reflabel+".pos"
-	pbo_earthquakes_dir="../../GPS_POS_DATA/PBO_Event_Files/"
-	offsets_dir="../../GPS_POS_DATA/Offsets/"
+	Params = gps_io_functions.read_config_file();		
+	pbo_filename=Params.pbo_gps_dir+station+".cwu.final_"+reflabel+".pos"
+	pbo_earthquakes_dir=Params.pbo_earthquakes_dir;
+	offsets_dir=Params.general_offsets_dir;
 	[myData]=gps_io_functions.read_pbo_pos_file(pbo_filename);  # PBO data format
 	Offsets = get_pbo_offsets(station, offsets_dir);
 	Earthquakes = get_cwu_earthquakes(station, pbo_earthquakes_dir);
@@ -120,9 +123,10 @@ def get_nmt(station, refframe="NA"):
 		reflabel="igs08";
 	else:
 		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");
-	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".nmt.final_"+reflabel+".pos"
-	pbo_earthquakes_dir="../../GPS_POS_DATA/PBO_Event_Files/"
-	offsets_dir="../../GPS_POS_DATA/Offsets/"
+	Params = gps_io_functions.read_config_file();
+	pbo_filename=Params.pbo_gps_dir+station+".nmt.final_"+reflabel+".pos"
+	pbo_earthquakes_dir=Params.pbo_earthquakes_dir;
+	offsets_dir=Params.general_offsets_dir;
 	[myData]=gps_io_functions.read_pbo_pos_file(pbo_filename);  # PBO data format
 	Offsets = get_pbo_offsets(station, offsets_dir);
 	Earthquakes = get_pbo_earthquakes(station, pbo_earthquakes_dir);
@@ -130,33 +134,38 @@ def get_nmt(station, refframe="NA"):
 
 
 def get_gldas(station):
+	Params = gps_io_functions.read_config_file();
 	station_name_lower=station.lower();
-	filename="../../GPS_POS_DATA/PBO_Hydro/GLDAS/"+station_name_lower+"_noah10_gldas2.hyd";
+	filename=Params.gldas_dir+station_name_lower+"_noah10_gldas2.hyd";
 	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
 	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];
 
 def get_nldas(station):
+	Params = gps_io_functions.read_config_file();	
 	station_name_lower=station.lower();
-	filename="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"+station_name_lower+"_noah125_nldas2.hyd";
+	filename=Params.nldas_dir+station_name_lower+"_noah125_nldas2.hyd";
 	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
 	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];
 
 def get_noah025(station):
-	filename="../../GPS_POS_DATA/PBO_Hydro/NOAH025/"+station+"_NOAH025.hyd";
+	Params = gps_io_functions.read_config_file();	
+	filename=Params.noah_dir+station+"_NOAH025.hyd";
 	[myData] = gps_io_functions.read_pbo_hydro_file(filename);
 	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];
 
 def get_grace(station):
-	filename="../../GPS_POS_DATA/GRACE_loading_model/scaled_"+station+"_PREM_model_ts.txt";
+	Params = gps_io_functions.read_config_file();	
+	filename=Params.grace_dir+"scaled_"+station+"_PREM_model_ts.txt";
 	[myData] = gps_io_functions.read_grace(filename);
 	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];
 
 def get_lsdm(station):
-	filename="../../GPS_POS_DATA/PBO_Hydro/LSDM/"+station+"_LSDM_hydro.txt.txt";
+	Params = gps_io_functions.read_config_file();	
+	filename=Params.lsdm_dir+station+"_LSDM_hydro.txt.txt";
 	[myData] = gps_io_functions.read_lsdm_file(filename);
 	Offset = offsets.get_empty_offsets();
 	return [myData, Offset, Offset];	
@@ -165,6 +174,7 @@ def get_lsdm(station):
 # Based on whether a file exists in certain directories or not, 
 # Return the 'pbo' or 'unr' datasource that we should be using. 
 def determine_datasource(station, input_datasource='pbo',refframe="NA"):
+	Params = gps_io_functions.read_config_file();
 	if refframe=="NA":
 		unr_reflabel="NA"; pbo_reflabel="nam08"; cwu_reflabel="nam14";
 	elif refframe=="ITRF":
@@ -173,15 +183,15 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 		print("ERROR! Unrecognized reference frame (choices NA and ITRF)");	
 
 	# Path setting
-	unr_filename="../../GPS_POS_DATA/UNR_Data/"+station+"."+unr_reflabel+".tenv3";
-	pbo_filename="../../GPS_POS_DATA/PBO_Data/"+station+".pbo.final_"+pbo_reflabel+".pos";
-	cwu_filename="../../GPS_POS_DATA/PBO_Data/"+station+".cwu.final_"+cwu_reflabel+".pos";
-	nmt_filename="../../GPS_POS_DATA/PBO_Data/"+station+".nmt.final_"+pbo_reflabel+".pos";
-	gldas_filename="../../GPS_POS_DATA/PBO_Hydro/GLDAS/"+station.lower()+"_noah10_gldas2.hyd";
-	nldas_filename="../../GPS_POS_DATA/PBO_Hydro/NLDAS/"+station.lower()+"_noah125_nldas2.hyd";
-	noah025_filename="../../GPS_POS_DATA/PBO_Hydro/NOAH025/"+station+"_NOAH025.hyd";
-	grace_filename="../../GPS_POS_DATA/GRACE_loading_model/scaled_"+station+"_PREM_model_ts.txt";
-	lsdm_filename="../../GPS_POS_DATA/PBO_Hydro/LSDM/"+station+"_LSDM_hydro.txt.txt";
+	unr_filename=Params.unr_gps_dir+station+"."+unr_reflabel+".tenv3";
+	pbo_filename=Params.pbo_gps_dir+station+".pbo.final_"+pbo_reflabel+".pos";
+	cwu_filename=Params.pbo_gps_dir+station+".cwu.final_"+cwu_reflabel+".pos";
+	nmt_filename=Params.pbo_gps_dir+station+".nmt.final_"+pbo_reflabel+".pos";
+	gldas_filename=Params.gldas_dir+station.lower()+"_noah10_gldas2.hyd";
+	nldas_filename=Params.nldas_dir+station.lower()+"_noah125_nldas2.hyd";
+	noah025_filename=Params.noah_dir+station+"_NOAH025.hyd";
+	grace_filename=Params.grace_dir+"scaled_"+station+"_PREM_model_ts.txt";
+	lsdm_filename=Params.lsdm_dir+station+"_LSDM_hydro.txt.txt";
 
 	# Setting datasource label
 	# Getting ready to return an empty object if we don't find the right file. 
@@ -243,9 +253,10 @@ def determine_datasource(station, input_datasource='pbo',refframe="NA"):
 
 
 def remove_blacklist(stations):
+	Params = gps_io_functions.read_config_file();	
 	new_stations=[];
 	blacklisted_stations=[];
-	blacklist="../../GPS_POS_DATA/Blacklist/blacklist.txt"
+	blacklist=Params.blacklist;
 	ifile=open(blacklist,'r');
 	for line in ifile:
 		blacklisted_stations.append(line.split()[0]);
