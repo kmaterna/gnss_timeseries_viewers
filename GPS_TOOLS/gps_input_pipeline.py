@@ -14,24 +14,32 @@ import offsets
 #  MULTI STATION DRIVERS               ---
 # ----------------------------------------
 
-def multi_station_inputs(station_names, blacklist, proc_center, refframe, distances=[]):  # Returns a list of objects for time series data, offsets, and earthquakes
+def multi_station_inputs(station_names, blacklist_user, proc_center, refframe, distances=[]):  # Returns a list of objects for time series data, offsets, and earthquakes
 	# Also kicks out stations when necessary based on blacklist or timing criteria
 	# Keeps the distances object as metadata in case you pass it through. 
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[]; stations_surviving=[]; distances_surviving=[]; 
+	must_include = [dt.datetime.strptime("20100310","%Y%m%d"), dt.datetime.strptime("20140310","%Y%m%d")];
+	station_names = remove_blacklist(station_names);
 	for i in range(len(station_names)):
-		if station_names[i] in blacklist:
+		if station_names[i] in blacklist_user:
 			continue;
 		else:
 			[myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, refframe);
+			
+			# This should go into a separate function with a table containing these limits
 			if myData.name=="BRAW":  # an annoying data-cleaning step because of gaps at BRAW. Should be fixed later. 
-				myData = gps_ts_functions.impose_time_limits(myData, dt.datetime.strptime("2009-01-01","%Y-%m-%d"), dt.datetime.strptime("2020-06-01", "%Y-%m-%d"));
-			if myData != [] and myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  
-			# kicking out the stations that end early or start late. 
+				myData = gps_ts_functions.impose_time_limits(myData, dt.datetime.strptime("2008-05-05","%Y-%m-%d"), dt.datetime.strptime("2020-06-01", "%Y-%m-%d"));
+			
+			if myData.dtarray[-1]<must_include[0] or myData.dtarray[0]>must_include[1]:
+				# kicking out the stations that end early or start late. 
+				print("Excluding station %s due to not including data inside %s:%s" % (myData.name, dt.datetime.strftime(must_include[0],"%Y-%m-%d"), dt.datetime.strftime(must_include[1],"%Y-%m-%d")) );
+				continue;
+			if myData != []:
 				dataobj_list.append(myData);
 				offsetobj_list.append(offset_obj);
 				eqobj_list.append(eq_obj);
 				stations_surviving.append(station_names[i]);
-				if distances != []:
+				if distances != []:  # why is this here? 
 					distances_surviving.append(distances[i]);
 	return [dataobj_list, offsetobj_list, eqobj_list, distances_surviving];
 
@@ -174,6 +182,7 @@ def get_lsdm(station):
 # Based on whether a file exists in certain directories or not, 
 # Return the 'pbo' or 'unr' datasource that we should be using. 
 def determine_datasource(station, input_datasource='pbo',refframe="NA"):
+	print("\nStation %s: " % station);
 	Params = gps_io_functions.read_config_file();
 	if refframe=="NA":
 		unr_reflabel="NA"; pbo_reflabel="nam08"; cwu_reflabel="nam14";
@@ -264,6 +273,8 @@ def remove_blacklist(stations):
 	for station in stations:
 		if not (station in blacklisted_stations):
 			new_stations.append(station);
+		else:
+			print("Excluding station %s from blacklist_file %s" % (station, Params.blacklist) );
 	return new_stations;
 
 
@@ -282,6 +293,7 @@ def get_unr_offsets(Data0, station, offsets_dir):
 	print(table);
 	evdts=parse_table_unr(table);
 	UNR_offsets=offsets.solve_for_offsets(Data0, evdts);
+	offsets.print_offset_object(UNR_offsets);
 	return UNR_offsets;
 
 
@@ -306,7 +318,8 @@ def get_unr_earthquakes(Data0, station, offsets_dir):
 	evdts2=parse_table_unr(table);
 
 	evdts=evdts1+evdts2;
-	UNR_earthquakes=offsets.solve_for_offsets(Data0, evdts); 
+	UNR_earthquakes=offsets.solve_for_offsets(Data0, evdts);
+	offsets.print_offset_object(UNR_earthquakes); 
 	return UNR_earthquakes;
 
 

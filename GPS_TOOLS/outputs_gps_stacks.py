@@ -65,9 +65,8 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
 	end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d");
 
-
 	offset=0;
-	spacing=12;
+	spacing=15;
 	EQtimes, labeltimes, labels, closest_station, farthest_station=configure_beautiful_plots(myparams.expname, distances);
 
 	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
@@ -85,7 +84,7 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
 		l1 = axarr[0].plot_date(dataobj_list[i].dtarray,edata,marker='+',markersize=1.5,color=line_color);
 		axarr[0].text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
 	axarr[0].set_xlim(start_time_plot,end_time_plot);
-	axarr[0].set_ylim([-20,offset+15])
+	# axarr[0].set_ylim([-20,offset+15])
 	bottom,top=axarr[0].get_ylim();
 	for i in range(len(EQtimes)):
 		axarr[0].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
@@ -106,7 +105,7 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
 		line_color=custom_cmap.to_rgba(distances[i]);
 		l1 = axarr[1].plot_date(dataobj_list[i].dtarray,ndata,marker='+',markersize=1.5, color=line_color);
 	axarr[1].set_xlim(start_time_plot,end_time_plot);
-	axarr[1].set_ylim([-20,offset+15])
+	# axarr[1].set_ylim([-20,offset+15])
 	bottom,top=axarr[1].get_ylim();
 	for i in range(len(EQtimes)):
 		axarr[1].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
@@ -119,7 +118,7 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
 	cb = plt.colorbar(custom_cmap);
 	cb.set_label('Kilometers from center');
 
-	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+label+'.jpg')
+	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+label+'.png')
 	plt.close();
 	print("Horizontal plots created.");
 
@@ -151,7 +150,7 @@ def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
 		l1 = plt.gca().plot_date(dataobj_list[i].dtarray,udata,marker='+',markersize=1.5,color=line_color);
 		plt.gca().text(label_date,offset,dataobj_list[i].name,fontsize=9,color=line_color);
 	plt.gca().set_xlim(start_time_plot,end_time_plot);
-	plt.gca().set_ylim([-20,offset+20])
+	# plt.gca().set_ylim([-20,offset+20])
 	bottom,top=plt.gca().get_ylim();
 	for i in range(len(EQtimes)):
 		plt.gca().plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k'); 
@@ -178,7 +177,7 @@ def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
 	ax.text(0,0.37,myparams.center);
 	ax.text(0,0,str(myparams.radius)+" km radius");
 
-	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+label+'_vertical.jpg');
+	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+label+'_vertical.png');
 	plt.close();
 	print("Vertical plot created.");
 	return;
@@ -195,6 +194,7 @@ def horizontal_filtered_plots(dataobj_list, distances, myparams, label=""):
 	start_time_plot=dt.datetime.strptime("20050101","%Y%m%d");
 	end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d");
 	offset=-15;
+	spacing=2;
 
 	EQtimes, labeltimes, labels, closest_station, farthest_station=configure_beautiful_plots(myparams.expname, distances);
 	color_boundary_object=matplotlib.colors.Normalize(vmin=closest_station,vmax=farthest_station, clip=True);
@@ -202,7 +202,7 @@ def horizontal_filtered_plots(dataobj_list, distances, myparams, label=""):
 
 	# East and North
 	for i in range(len(dataobj_list)):
-		offset=offset+2;
+		offset=offset+spacing;
 		# umean=np.mean(dataobj_list[i].dE);  # start at the mean. 
 		umean=dataobj_list[i].dE[0];  # start at the beginning
 		line_color=custom_cmap.to_rgba(distances[i]);
@@ -231,7 +231,7 @@ def horizontal_filtered_plots(dataobj_list, distances, myparams, label=""):
 	axarr[1].set_ylabel("Filtered North (mm)");		
 	axarr[1].grid(True)
 
-	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+label+'_horiz_filt.jpg');
+	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+label+'_horiz_filt.png');
 	plt.close();
 	print("Horiz plot created.");
 	return;
@@ -291,7 +291,7 @@ def vertical_filtered_plots(dataobj_list, distances, myparams, label=""):
 	ax.text(0,0.37,myparams.center);
 	ax.text(0,0,str(myparams.radius)+" km radius");
 
-	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+label+'vert_filt.jpg');
+	plt.savefig(myparams.outdir+"/"+myparams.outname+'_TS_'+label+'vert_filt.png');
 	plt.close();
 	print("Vertical plot created.");
 	return;

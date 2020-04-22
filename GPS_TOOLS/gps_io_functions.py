@@ -200,6 +200,7 @@ def read_pbo_pos_file(filename):
 	specific_file=filename.split('/')[-1];
 	dtarray= [dt.datetime.strptime(str(int(i)),"%Y%m%d") for i in yyyymmdd];
 	myData=Timeseries(name=specific_file[0:4],coords=[Elong[0]-360, Nlat[0]], dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
+	print("Reading data for station %s in time range %s:%s" % (myData.name, dt.datetime.strftime(myData.dtarray[0],"%Y-%m-%d"), dt.datetime.strftime(myData.dtarray[-1],"%Y-%m-%d")) );
 	return [myData];
 
 
@@ -222,7 +223,7 @@ def read_UNR_magnet_file(filename, coordinates_file):
 	Se=[i*1000.0 for i in Se];
 	Su=[i*1000.0 for i in Su];
 
-	[lon,lat] = get_coordinates_for_stations([station_name], coordinates_file);  # format [lat, lon]
+	[lon,lat] = get_coordinates_for_stations([station_name]);  # format [lat, lon]
 	if lon[0]<-360:
 		coords = [lon[0]-360, lat[0]];
 	elif lon[0]>180:
@@ -230,8 +231,9 @@ def read_UNR_magnet_file(filename, coordinates_file):
 	else:
 		coords=[lon[0], lat[0]];
 
-	my_data_object=Timeseries(name=station_name,coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
-	return [my_data_object];
+	myData=Timeseries(name=station_name,coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
+	print("Reading data for station %s in time range %s:%s" % (myData.name, dt.datetime.strftime(myData.dtarray[0],"%Y-%m-%d"), dt.datetime.strftime(myData.dtarray[-1],"%Y-%m-%d")) );
+	return [myData];
 	
 
 def read_pbo_hydro_file(filename):

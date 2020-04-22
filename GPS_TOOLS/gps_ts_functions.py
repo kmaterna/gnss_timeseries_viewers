@@ -96,6 +96,10 @@ def remove_nans(Data0):
 	return newData;
 
 def detrend_data_by_value(Data0,east_params,north_params,vert_params):
+	if sum(np.isnan(east_params))>0 or sum(np.isnan(north_params))>0 or sum(np.isnan(vert_params))>0:
+		print("ERROR: Your input slope values contain nan!");
+		sys.exit(0);
+
 	# Parameters Format: slope, a2(cos), a1(sin), s2, s1. 
 	east_detrended=[]; north_detrended=[]; vert_detrended=[];
 	idx=np.isnan(Data0.dE);
@@ -266,14 +270,14 @@ def get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6):
 
 	# More defensive programming
 	if len(mydtarray)<=2:
-		print("Error: no time array for station %s. Returning Nan" % Data0.name);
+		print("ERROR: no time array for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];	
 	time_duration=mydtarray[-1]-mydtarray[0];
 	if time_duration.days<270:
-		print("Error: using much less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
+		print("ERROR: using much less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];
 	if len(myeast)<time_duration.days*missing_fraction:
-		print("Error: Most of the data is missing to estimate parameters for station %s. Returning Nan" % Data0.name);
+		print("ERROR: Most of the data is missing to estimate parameters for station %s. Returning Nan" % Data0.name);
 		return [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan];	
 
 
@@ -344,7 +348,7 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[],critical_len=36
 
 	duration = mydtarray[-1]-mydtarray[0];
 	if duration.days<critical_len:
-		print("Error: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
+		print("ERROR: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
 		east_params=[np.nan,0,0,0,0];  north_params=[np.nan,0,0,0,0]; up_params=[np.nan,0,0,0,0];
 		return [east_params, north_params, up_params];
 

@@ -11,6 +11,7 @@ import gps_ts_functions
 import gps_seasonal_removals
 import offsets
 import gps_input_pipeline
+import gps_postseismic_remove
 
 # For reference of how this gets returned from the read functions.
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
@@ -26,10 +27,11 @@ Parameters = collections.namedtuple("Parameters",['station','outliers_remove', '
 #    stl: uses a pre-computed look-up table for STL time series
 
 
-def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, seasonals_type='lssq',datasource='pbo',refframe='NA'):
+def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0, starttime="",endtime="",
+	seasonals_type='lssq',datasource='pbo',refframe='NA'):
 	MyParams = configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, seasonals_type, datasource, refframe);
 	[myData, offset_obj, eq_obj] = input_data(MyParams.station, MyParams.datasource, MyParams.refframe);
-	[updatedData, detrended] = compute(myData, offset_obj, eq_obj, MyParams);
+	[updatedData, detrended] = compute(myData, offset_obj, eq_obj, MyParams, starttime, endtime);
 	single_ts_plot(updatedData,detrended,MyParams);
 
 
@@ -51,16 +53,20 @@ def input_data(station_name, datasource, refframe):
 
 
 # -------------- COMPUTE ------------ # 
-def compute(myData, offset_obj, eq_obj, MyParams):
+def compute(myData, offset_obj, eq_obj, MyParams, starttime, endtime):
 	# First, embed the data with the eq object (useful no matter what)
 	newData=Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray, dN=myData.dN, dE=myData.dE, dU=myData.dU, Sn=myData.Sn, Se=myData.Se, Su=myData.Su, EQtimes=eq_obj.evdts);
+	if starttime=="":
+		starttime=myData.dtarray[0];
+	if endtime=="":
+		endtime=myData.dtarray[-1];
+	newData = gps_ts_functions.impose_time_limits(newData, starttime, endtime);
 	if MyParams.offsets_remove==1:  # Remove offsets and antenna changes
 		newData=offsets.remove_offsets(newData, offset_obj);
 	if MyParams.outliers_remove==1:  # Remove outliers
 		newData=gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
 	if MyParams.earthquakes_remove==1: # Remove earthquakes
 		newData=offsets.remove_offsets(newData, eq_obj);
-
 	trend_out=gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type);
 	return [newData, trend_out];
 
