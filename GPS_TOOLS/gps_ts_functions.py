@@ -98,7 +98,7 @@ def remove_nans(Data0):
 def detrend_data_by_value(Data0,east_params,north_params,vert_params):
 	if sum(np.isnan(east_params))>0 or sum(np.isnan(north_params))>0 or sum(np.isnan(vert_params))>0:
 		print("ERROR: Your input slope values contain nan!");
-		sys.exit(0);
+		return Data0;
 
 	# Parameters Format: slope, a2(cos), a1(sin), s2, s1. 
 	east_detrended=[]; north_detrended=[]; vert_detrended=[];

@@ -129,7 +129,7 @@ def make_vector(Data0, start_time):
 	inc=45;
 
 	for i in range(len(Data0.dtarray)):
-		if Data0.dtarray[i]>dt.datetime.strptime("20180101","%Y%m%d"):
+		if Data0.dtarray[i]>dt.datetime.strptime("20160101","%Y%m%d"):
 			break;
 		date_delta = Data0.dtarray[i]-start_time;
 		if date_delta.days % sampling_interval == 0 :
