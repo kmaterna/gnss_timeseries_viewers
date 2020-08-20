@@ -13,16 +13,17 @@ import matplotlib.pyplot as plt
 
 
 # HELPER FUNCTIONS # 
-def get_station_hines(station_name):
-	model_file = "../../GPS_POS_DATA/Remove_postseismic/Hines/Stations/"+station_name+"_psmodel.pos";
+def get_station_hines(station_name, data_dir = "../../GPS_POS_DATA"):
+	model_file = data_dir+"/Remove_postseismic/Hines/Stations/"+station_name+"_psmodel.pos";
 	if os.path.isfile(model_file):
 		[Data0] = gps_io_functions.read_pbo_pos_file(model_file);
 	else:
+		print("ERROR: Cannot remove postseismic because file does not exist; file %s" % (model_file) )
 		Data0 = [];
 	return Data0;
 
 
-def remove_by_model(Data0):
+def remove_by_model(Data0, data_dir = None):
 	# Right now configured for the Hines data. 
 	starttime1=dt.datetime.strptime("20100403","%Y%m%d");
 	endtime1=dt.datetime.strptime("20100405","%Y%m%d");
@@ -30,7 +31,7 @@ def remove_by_model(Data0):
 	endtime2=dt.datetime.strptime("20200330","%Y%m%d");	
 
 	# Input Hines data. 
-	model_data = get_station_hines(Data0.name);
+	model_data = get_station_hines(Data0.name, data_dir);
 
 	if model_data ==[]:
 		return Data0;
