@@ -187,6 +187,28 @@ def remove_duplicates(velfield):
 	return [myVelfield];
 
 
+def remove_farfield_domain(velfield, reflon, reflat, bounds):
+	# Expects the bounds here to be relative to the reference pixel (in degrees away)
+	new_name=[]; new_nlat=[]; new_elon=[]; new_n=[]; new_e=[]; new_u=[]; new_sn=[]; new_se=[]; new_su=[]; new_first_epoch=[]; new_last_epoch=[];
+	for i in range(len(velfield.name)):
+		if velfield.nlat[i]>reflat+bounds[2] and velfield.nlat[i]<reflat+bounds[3]:
+			if velfield.elon[i]>reflon+bounds[0] and velfield.elon[i]<reflon+bounds[1]:
+				# The station is within the box.
+				new_name.append(velfield.name[i]);
+				new_nlat.append(velfield.nlat[i]);
+				new_elon.append(velfield.elon[i]);
+				new_n.append(velfield.n[i]);
+				new_e.append(velfield.e[i]);
+				new_u.append(velfield.u[i]);
+				new_sn.append(velfield.sn[i]);
+				new_se.append(velfield.se[i]);
+				new_su.append(velfield.su[i]);
+				new_first_epoch.append(velfield.first_epoch[i]);
+				new_last_epoch.append(velfield.last_epoch[i]);
+	print("Restricting velfield of %d GPS points to only nearby %d points. " % (len(velfield.name), len(new_name)) );
+	myVelfield=Velfield(name=new_name, nlat=new_nlat, elon=new_elon, n=new_n, e=new_e, u=new_u, sn=new_sn, se=new_se, su=new_su, first_epoch=new_first_epoch, last_epoch=new_last_epoch);
+	return [myVelfield];
+
 
 def read_pbo_pos_file(filename):
 	print("Reading %s" % filename);
