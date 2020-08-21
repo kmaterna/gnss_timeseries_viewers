@@ -6,7 +6,7 @@ import sys, os
 import configparser
 
 
-Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']); 
+Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']);  # in mm/yr, with -180<lon<180
 Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']); # in mm
 Params = collections.namedtuple("Params",['pbo_gps_dir','unr_gps_dir','pbo_earthquakes_dir','general_offsets_dir',
 	'unr_coords_file','velocity_dir','pbo_velocities','unr_velocities',
@@ -128,19 +128,20 @@ def read_unr_vel_file(infile):
 
 
 
-def clean_velfield(velfield, num_years, max_sigma, coord_box):
+def clean_velfield(velfield, num_years=0, max_sigma=1000, coord_box=[-180, 180, -90, 90]):
 # Take the raw GPS velocities, and clean them up. 
 # Remove data that's less than num_years long, 
 # has formal uncertainties above max_sigma, 
 # or is outside our box of intersest. 
+# Default arguments are meant to be global. 
 	name=[]; nlat=[]; elon=[]; n=[]; e=[]; u=[]; sn=[]; se=[]; su=[]; first_epoch=[]; last_epoch=[];
 	for i in range(len(velfield.n)):
-		if velfield.sn[i] > max_sigma:  
+		if velfield.sn[i] > max_sigma:  # too high sigma, please exclude
 			continue;
 		if velfield.se[i] > max_sigma:
 			continue;
-		deltatime=velfield.last_epoch[i]-velfield.first_epoch[i];
-		if deltatime.days <= num_years*365.24:
+		deltatime=velfield.last_epoch[i]-velfield.first_epoch[i];  
+		if deltatime.days <= num_years*365.24:  # too short time interval, please exclude
 			continue;
 		if (velfield.elon[i]>coord_box[0] and velfield.elon[i]<coord_box[1] and velfield.nlat[i]>coord_box[2] and velfield.nlat[i]<coord_box[3]):
 			#The station is within the box of interest. 
@@ -184,29 +185,6 @@ def remove_duplicates(velfield):
 			last_epoch.append(velfield.last_epoch[i]);
 
 	myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch);	
-	return [myVelfield];
-
-
-def remove_farfield_domain(velfield, reflon, reflat, bounds):
-	# Expects the bounds here to be relative to the reference pixel (in degrees away)
-	new_name=[]; new_nlat=[]; new_elon=[]; new_n=[]; new_e=[]; new_u=[]; new_sn=[]; new_se=[]; new_su=[]; new_first_epoch=[]; new_last_epoch=[];
-	for i in range(len(velfield.name)):
-		if velfield.nlat[i]>reflat+bounds[2] and velfield.nlat[i]<reflat+bounds[3]:
-			if velfield.elon[i]>reflon+bounds[0] and velfield.elon[i]<reflon+bounds[1]:
-				# The station is within the box.
-				new_name.append(velfield.name[i]);
-				new_nlat.append(velfield.nlat[i]);
-				new_elon.append(velfield.elon[i]);
-				new_n.append(velfield.n[i]);
-				new_e.append(velfield.e[i]);
-				new_u.append(velfield.u[i]);
-				new_sn.append(velfield.sn[i]);
-				new_se.append(velfield.se[i]);
-				new_su.append(velfield.su[i]);
-				new_first_epoch.append(velfield.first_epoch[i]);
-				new_last_epoch.append(velfield.last_epoch[i]);
-	print("Restricting velfield of %d GPS points to only nearby %d points. " % (len(velfield.name), len(new_name)) );
-	myVelfield=Velfield(name=new_name, nlat=new_nlat, elon=new_elon, n=new_n, e=new_e, u=new_u, sn=new_sn, se=new_se, su=new_su, first_epoch=new_first_epoch, last_epoch=new_last_epoch);
 	return [myVelfield];
 
 
