@@ -1,4 +1,5 @@
 Reports/*
+specific_experiments/GPS_stacking/*
 specific_experiments/Coulomb_stresses/*
 specific_experiments/block_models/*
 specific_experiments/waveforms/general_map/*
@@ -43,3 +44,4 @@ specific_experiments/accelerations/notes
 *.norm
 *.hist
 *.grad
+.idea/*
