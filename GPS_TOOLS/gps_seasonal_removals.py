@@ -16,17 +16,15 @@ Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 
 
 
 # Make a detrended/modeled version of this time series. 
-def make_detrended_ts(Data, seasonals_remove, seasonals_type, remove_trend=1,
-                      lakes_dir="../../GPS_POS_DATA/Lake_loading/"):
+def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file,
+                      remove_trend=1, lakes_dir="../../GPS_POS_DATA/Lake_loading/"):
     # The purpose of this function is to generate a version of the time series that has been detrended and optionally seasonal-removed,
     # Where the seasonal fitting (if necessary) and detrending happen in the same function.
     # There are options for the seasonal removal (least squares, notch filter, grace, etc.)
     # Fit params definition: slope, a2(cos), a1(sin), s2, s1.
+    # Here we are asking to invert the data for linear and seasonal components simultaneously
 
-    # Here we are asking to invert the data for linear and seasonal components
-
-    Params = gps_io_functions.read_config_file();
-    grace_dir = Params.grace_dir
+    Params = gps_io_functions.read_config_file(data_config_file);
 
     if seasonals_remove == 0:
         print("Not removing seasonals.");

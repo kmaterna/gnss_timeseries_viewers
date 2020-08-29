@@ -7,7 +7,8 @@
 pbo_gps_dir = /Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/PBO_Data/
 unr_gps_dir = /Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/UNR_Data/
 pbo_earthquakes_dir = /Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/PBO_Event_Files/
-general_offsets_dir = /Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/Offsets/
+unr_offsets_dir = /Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/Offsets/
+pbo_offsets_dir = /Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/Offsets/
 unr_coords_file = /Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt
 velocity_dir = /Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/Velocity_Files/
 pbo_velocities = /Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt

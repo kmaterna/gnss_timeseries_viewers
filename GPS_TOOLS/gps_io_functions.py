@@ -5,7 +5,7 @@
 
 
 import numpy as np
-import collections
+import collections, sys, os
 import datetime as dt
 import configparser
 
@@ -13,13 +13,17 @@ Velfield = collections.namedtuple("Velfield", ['name', 'nlat', 'elon', 'n', 'e',
                                                'last_epoch']);  # in mm/yr, with -180<lon<180
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
-Params = collections.namedtuple("Params", ['pbo_gps_dir', 'unr_gps_dir', 'pbo_earthquakes_dir', 'general_offsets_dir',
-                                           'unr_coords_file', 'velocity_dir', 'pbo_velocities', 'unr_velocities',
-                                           'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir', 'lsdm_dir', 'stl_dir',
-                                           'blacklist']);
+Params = collections.namedtuple("Params", ['pbo_gps_dir', 'unr_gps_dir', 'pbo_earthquakes_dir', 'pbo_offsets_dir',
+                                           'unr_offsets_dir', 'unr_coords_file', 'velocity_dir', 'pbo_velocities',
+                                           'unr_velocities', 'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
+                                           'lsdm_dir', 'stl_dir', 'blacklist']);
 
 
-def read_config_file(infile="/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt"):
+def read_config_file(infile):
+    if not os.path.isfile(infile):
+        print("Error! Data Config file %s not found on your machine. Must fix!" % infile);
+        sys.exit(1);
+
     # Read the all important config file.
     config = configparser.ConfigParser()
     config.optionxform = str  # make the config file case-sensitive
@@ -29,7 +33,8 @@ def read_config_file(infile="/Users/kmaterna/Documents/B_Research/Mendocino_Geod
     pbo_gps_dir = config.get('py-config', 'pbo_gps_dir');
     unr_gps_dir = config.get('py-config', 'unr_gps_dir');
     pbo_earthquakes_dir = config.get('py-config', 'pbo_earthquakes_dir');
-    general_offsets_dir = config.get('py-config', 'general_offsets_dir');
+    unr_offsets_dir = config.get('py-config', 'unr_offsets_dir');
+    pbo_offsets_dir = config.get('py-config', 'pbo_offsets_dir');
     unr_coords_file = config.get('py-config', 'unr_coords_file');
     velocity_dir = config.get('py-config', 'velocity_dir');
     pbo_velocities = config.get('py-config', 'pbo_velocities');
@@ -43,7 +48,7 @@ def read_config_file(infile="/Users/kmaterna/Documents/B_Research/Mendocino_Geod
     stl_dir = config.get('py-config', 'stl_dir');
 
     myParams = Params(pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir, pbo_earthquakes_dir=pbo_earthquakes_dir,
-                      general_offsets_dir=general_offsets_dir, unr_coords_file=unr_coords_file,
+                      pbo_offsets_dir=pbo_offsets_dir, unr_offsets_dir=unr_offsets_dir, unr_coords_file=unr_coords_file,
                       velocity_dir=velocity_dir, pbo_velocities=pbo_velocities,
                       unr_velocities=unr_velocities, gldas_dir=gldas_dir, nldas_dir=nldas_dir, noah_dir=noah_dir,
                       grace_dir=grace_dir, lsdm_dir=lsdm_dir, stl_dir=stl_dir, blacklist=blacklist);
@@ -94,7 +99,7 @@ def read_pbo_vel_file(infile):
     return [myVelfield];
 
 
-def read_unr_vel_file(infile):
+def read_unr_vel_file(infile, coordinate_file):
     # Meant for reading velocity files from the MAGNET/MIDAS website.
     # Returns a Velfield object.
     print("Reading %s" % infile);
@@ -120,8 +125,8 @@ def read_unr_vel_file(infile):
             su.append(float(temp[13]) * 1000.0);
     ifile.close();
 
-    [elon, nlat] = get_coordinates_for_stations(name);
-    [first_epoch, last_epoch] = get_start_times_for_stations(name);
+    [elon, nlat] = get_coordinates_for_stations(name, coordinate_file);
+    [first_epoch, last_epoch] = get_start_times_for_stations(name, coordinate_file);
 
     myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch,
                           last_epoch=last_epoch);
@@ -230,7 +235,7 @@ def read_pbo_pos_file(filename):
     return [myData];
 
 
-def read_UNR_magnet_file(filename, coordinates_file):
+def read_UNR_magnet_ts_file(filename, coordinates_file):
     print("Reading %s" % filename);
     [_, dE, dN, dU, Se, Sn, Su] = np.loadtxt(filename, usecols=(2, 8, 10, 12, 14, 15, 16), skiprows=1,
                                              unpack=True);
@@ -251,7 +256,7 @@ def read_UNR_magnet_file(filename, coordinates_file):
     Se = [i * 1000.0 for i in Se];
     Su = [i * 1000.0 for i in Su];
 
-    [lon, lat] = get_coordinates_for_stations([station_name]);  # format [lat, lon]
+    [lon, lat] = get_coordinates_for_stations([station_name], coordinates_file);  # format [lat, lon]
     if lon[0] < -360:
         coords = [lon[0] - 360, lat[0]];
     elif lon[0] > 180:
@@ -267,14 +272,18 @@ def read_UNR_magnet_file(filename, coordinates_file):
     return [myData];
 
 
-def read_pbo_hydro_file(filename):
+def read_pbo_hydro_file(filename, coords_file=None):
     # Useful for reading hydrology files like NLDAS, GLDAS, etc.
     # In the normal pipeline for this function, it is guaranteed to be given a real file.
     print("Reading %s" % filename);
     dtarray = [];
     station_name = filename.split('/')[-1][0:4];
     station_name = station_name.upper();
-    [lon, lat] = get_coordinates_for_stations([station_name]);  # format [lat, lon]
+    if coords_file is not None:
+        [lon, lat] = get_coordinates_for_stations([station_name], coords_file);  # format [lat, lon]
+        coords = [lon[0], lat[0]];
+    else:
+        coords = [None, None];  # can return an object without meaningful coordinates if not asked for them.
     [dts, dN, dE, dU] = np.loadtxt(filename, usecols=(0, 3, 4, 5), dtype={'names': ('dts', 'dN', 'dE', 'dU'),
                                                                           'formats': (
                                                                               'U10', np.float, np.float, np.float)},
@@ -284,7 +293,7 @@ def read_pbo_hydro_file(filename):
     Sn = [0.2 for i in range(len(dN))];
     Se = [0.2 for i in range(len(dE))];
     Su = [0.2 for i in range(len(dU))];
-    coords = [lon[0], lat[0]];
+
     myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
                         EQtimes=[]);
     return [myData];
@@ -315,15 +324,13 @@ def read_lsdm_file(filename):
     return [myData];
 
 
-def get_coordinates_for_stations(station_names):
+def get_coordinates_for_stations(station_names, coordinates_file):
+    # station_names is an array
     lon = [];
     lat = [];
     reference_names = [];
     reference_lons = [];
     reference_lats = [];
-
-    myParams = read_config_file();  # read in the file where to find coordinate data
-    coordinates_file = myParams.unr_coords_file;
 
     # Read the file
     ifile = open(coordinates_file, 'r');
@@ -353,16 +360,13 @@ def get_coordinates_for_stations(station_names):
     return [lon, lat];
 
 
-def get_start_times_for_stations(station_names):
+def get_start_times_for_stations(station_names, coordinates_file):
     # Meant for UNR stations
     end_time = [];
     start_time = [];
     reference_names = [];
     reference_start_time = [];
     reference_end_time = [];
-
-    myParams = read_config_file();  # read in the file where to find coordinate data
-    coordinates_file = myParams.unr_coords_file;
 
     # Read the file
     ifile = open(coordinates_file, 'r');

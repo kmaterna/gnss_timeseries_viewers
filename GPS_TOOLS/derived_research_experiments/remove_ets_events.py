@@ -144,9 +144,9 @@ def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
 	# Find the offsets associated with each ETS interval
 	e_offsets=[]; n_offsets=[]; u_offsets=[]; evdts=[]; 
 	for i in range(len(ets_intervals)):
-		e_offset=offsets.fit_offset(dtarray, dE, ets_intervals[i], offset_num_days);
-		n_offset=offsets.fit_offset(dtarray, dN, ets_intervals[i], offset_num_days);
-		u_offset=offsets.fit_offset(dtarray, dU, ets_intervals[i], offset_num_days);
+		e_offset=offsets.fit_single_offset(dtarray, dE, ets_intervals[i], offset_num_days);
+		n_offset=offsets.fit_single_offset(dtarray, dN, ets_intervals[i], offset_num_days);
+		u_offset=offsets.fit_single_offset(dtarray, dU, ets_intervals[i], offset_num_days);
 		e_offsets.append(e_offset);
 		n_offsets.append(n_offset);
 		u_offsets.append(u_offset);

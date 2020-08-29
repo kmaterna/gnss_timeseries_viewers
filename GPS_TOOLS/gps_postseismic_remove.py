@@ -59,13 +59,13 @@ def remove_by_model(Data0, data_dir=None):
 
     # In this method, we correct for offsets at the beginning and end of the modeled time series.
     interval1 = [starttime1, endtime1];
-    east_offset1 = offsets.fit_offset(dtarray, dE_gps, interval1, 20);
-    north_offset1 = offsets.fit_offset(dtarray, dN_gps, interval1, 20);
-    vert_offset1 = offsets.fit_offset(dtarray, dU_gps, interval1, 20);
+    east_offset1 = offsets.fit_single_offset(dtarray, dE_gps, interval1, 20);
+    north_offset1 = offsets.fit_single_offset(dtarray, dN_gps, interval1, 20);
+    vert_offset1 = offsets.fit_single_offset(dtarray, dU_gps, interval1, 20);
     interval2 = [starttime2, endtime2];
-    east_offset2 = offsets.fit_offset(dtarray, dE_gps, interval2, 20);
-    north_offset2 = offsets.fit_offset(dtarray, dN_gps, interval2, 20);
-    vert_offset2 = offsets.fit_offset(dtarray, dU_gps, interval2, 20);
+    east_offset2 = offsets.fit_single_offset(dtarray, dE_gps, interval2, 20);
+    north_offset2 = offsets.fit_single_offset(dtarray, dN_gps, interval2, 20);
+    vert_offset2 = offsets.fit_single_offset(dtarray, dU_gps, interval2, 20);
 
     offsets_obj = offsets.Offsets(e_offsets=[east_offset1, east_offset2],
                                   n_offsets=[north_offset1, north_offset2], u_offsets=[vert_offset1, vert_offset2],

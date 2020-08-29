@@ -14,10 +14,10 @@
 # remove_constant(Data0, east_offset, north_offset, vert_offset)
 # 
 # SECOND TYPE OF FUNCTION: RETURNS VALUES
-# get_slope(Data0, starttime=[], endtime=[],missing_fraction=0.6)
+# get_slope(Data0, starttime=None, endtime=None,missing_fraction=0.6)
 # get_slope_unc(dataObj, starttime, endtime)
-# get_linear_annual_semiannual(Data0, starttime=[], endtime=[],critical_len=365)
-# get_means(Data0, starttime=[], endtime=[])
+# get_linear_annual_semiannual(Data0, starttime=None, endtime=None,critical_len=365)
+# get_means(Data0, starttime=None, endtime=None)
 # get_values_at_date(Data0, selected_date)
 
 import numpy as np
@@ -298,7 +298,7 @@ def rotate_data():
 # AND RETURN SCALARS OR VALUES # 
 # -------------------------------------------- # 
 
-def get_slope(Data0, starttime=[], endtime=[], missing_fraction=0.6):
+def get_slope(Data0, starttime=None, endtime=None, missing_fraction=0.6):
     # Model the data with a best-fit y = mx + b.
     # Returns six numbers: e_slope, n_slope, v_slope, e_std, n_std, v_std
 
@@ -371,7 +371,7 @@ def get_slope_unc(dataObj, starttime, endtime):
     return [Esigma, Nsigma, Usigma];
 
 
-def get_linear_annual_semiannual(Data0, starttime=[], endtime=[], critical_len=365):
+def get_linear_annual_semiannual(Data0, starttime=None, endtime=None, critical_len=365):
     # The critical_len parameter allows us to manually switch this function for both GPS and GRACE time series in GPS format
     # Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F;
 
@@ -421,7 +421,7 @@ def get_linear_annual_semiannual(Data0, starttime=[], endtime=[], critical_len=3
     return [east_params, north_params, vert_params];
 
 
-def get_means(Data0, starttime=[], endtime=[]):
+def get_means(Data0, starttime=None, endtime=None):
     # Return the average value of the time series between starttime and endtime
     # Can be used to set offsets for plotting, etc.
 
@@ -446,7 +446,7 @@ def get_means(Data0, starttime=[], endtime=[]):
     return [np.nanmean(myeast), np.nanmean(mynorth), np.nanmean(myup)];
 
 
-def get_logfunction(Data0, eqtime, starttime=[], endtime=[]):
+def get_logfunction(Data0, eqtime, starttime=None, endtime=None):
     # y = B + Alog(1+t/tau);
     # Useful for postseismic transients.
     # Should match the construct-function function.
@@ -489,9 +489,9 @@ def basic_defensive_programming(Data0, starttime, endtime):
         error_flag = 1;
         return error_flag, starttime, endtime;
 
-    if starttime == []:
+    if starttime is None:
         starttime = Data0.dtarray[0];
-    if endtime == []:
+    if endtime is None:
         endtime = Data0.dtarray[-1];
 
     starttime_proper = starttime;
@@ -500,7 +500,7 @@ def basic_defensive_programming(Data0, starttime, endtime):
     if starttime < Data0.dtarray[0]:
         starttime_proper = Data0.dtarray[0];
     if endtime > Data0.dtarray[-1]:
-        endttime_proper = Data0.dtarray[-1];
+        endtime_proper = Data0.dtarray[-1];
 
     if endtime < Data0.dtarray[0]:
         print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);

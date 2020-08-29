@@ -50,7 +50,7 @@ def remove_offsets(Data0, offsets_obj):
     return newData;
 
 
-def fit_offset(dtarray, data, interval, offset_num_days):
+def fit_single_offset(dtarray, data, interval, offset_num_days):
     # Loop through the array and find dates that are used for offset calculation.
     # This is done for one component, like east
     # The offset time can be a day or an interval (day is just repeated twice.)
@@ -84,16 +84,16 @@ def fit_offset(dtarray, data, interval, offset_num_days):
 def solve_for_offsets(ts_object, offset_times, number_of_days=10):
     # Here we solve for all the offsets at a given time, which is necessary for UNR data.
     # Offset_times is a list of datetime objects with unique dates.
-    index_array = [];
+    print("Solving empirically for offsets at ", offset_times);
     e_offsets = [];
     n_offsets = [];
     u_offsets = [];
     evdts_new = [];
 
     for i in range(len(offset_times)):
-        e_offset = fit_offset(ts_object.dtarray, ts_object.dE, [offset_times[i], offset_times[i]], number_of_days);
-        n_offset = fit_offset(ts_object.dtarray, ts_object.dN, [offset_times[i], offset_times[i]], number_of_days);
-        u_offset = fit_offset(ts_object.dtarray, ts_object.dU, [offset_times[i], offset_times[i]], number_of_days);
+        e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [offset_times[i], offset_times[i]], number_of_days);
+        n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [offset_times[i], offset_times[i]], number_of_days);
+        u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [offset_times[i], offset_times[i]], number_of_days);
         e_offsets.append(e_offset);
         n_offsets.append(n_offset);
         u_offsets.append(u_offset);
