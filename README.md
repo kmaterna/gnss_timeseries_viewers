@@ -72,6 +72,6 @@ This library requires basic Python packages such as numpy and matplotlib. For th
 Please download, clone, or fork this library and put the path to GPS_TOOLS/ on your $PYTHONPATH. The drivers in drivers_and_configs should provide some examples on how to access the major functions in this library.  I expect this library would work on Mac and Linux systems, but possibly not Windows. 
 
 
-## Acessing Prerequisite GNSS Data
+## Accessing Prerequisite GNSS Data
 This library requires a local copy of GNSS time series, velocities, steps, and hydrological loading models from various online repositories in their online-provided formats. The "drivers_and_configs/getting_gnss_data/data_instructions.txt" file tells you how to locate and download these files.  Following that, you must create a file called data_config.txt that tells the library code where all the data files are located.  An example data_config.txt is provided; please follow a similar template for your own. The path to the data_config.txt file will be passed into the library each time you use it.  
 
