@@ -59,8 +59,8 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, outl
 
 # ----------- INPUTS ---------------- # 
 def input_data(station_name, datasource, refframe, data_config_file):
-    [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, refframe,
-                                                                       data_config_file);
+    [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, data_config_file,
+                                                                       refframe);
     return [myData, offset_obj, eq_obj];
 
 

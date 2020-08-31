@@ -29,7 +29,7 @@ def configure():
 	return [station, network, refname, seasonal_types];
 
 def inputs(station_name, network, refframe):
-	[dataobj, offsetobj, eqobj] = gps_input_pipeline.get_station_data(station_name, network, refframe);
+	[dataobj, offsetobj, eqobj] = gps_input_pipeline.get_station_data(station_name, network,, refframe;
 	return [dataobj, offsetobj, eqobj];
 
 def compute(dataobj, offsetobj, eqobj, seasonal_types):

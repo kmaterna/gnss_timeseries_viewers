@@ -1,7 +1,7 @@
 # GNSS Time Series Viewers
 
 ## Code Description: 
-This library in GPS_TOOLS/ contains a set of tools to read GNSS time series and velocities, remove earthquake/antenna offsets, solve for slopes, remove seasonal terms using several algorithms, and plot time series, stacks, and maps.  It can read data from both the University of Nevada Reno (.tenv3) and the Plate Boundary Observatory / Network Of The Americas (.pos) formats. The tools here are meant to be modular, useful for stringing together into more complex experiments (custom offsets, custom stacks, etc.).  
+The small library in GPS_TOOLS/ contains a set of Python tools to read GNSS time series and velocities, remove earthquake/antenna offsets, solve for slopes, remove seasonal terms using several algorithms, and plot time series, stacks, and maps.  It can read data from both the University of Nevada Reno (.tenv3) and the Plate Boundary Observatory / Network Of The Americas (.pos) formats. The tools here are meant to be modular, useful for stringing together into more complex experiments (custom offsets, custom stacks, etc.).  
 
 
 ## Features
@@ -16,13 +16,14 @@ This library in GPS_TOOLS/ contains a set of tools to read GNSS time series and 
 	* LSDM, a high-resolution surface water and hydrological loading model globally provided by GFZ
 * Plot stacks of time series
 * Manually exclude bad stations from stacks if they are on the user-defined blacklist
+* Calculate the formal velocity uncertainty and an empirical uncertainty on velocity esimates using the Allen Variance of the Rate (Hackl et al., 2011)
 * Write out processed time series as text files in .pos format
 
 
 ## Examples
 
 ### How many stations within a region? 
-Using one function, we can figure out which stations are within a certain radius or region. In this example, we read the PBO stations and return any within 100 km of a chosen coordinate. 
+Using one function, we can figure out which stations in the PBO newtwork are within a certain radius or region. In this example, we read the PBO stations and return any within 100 km of a chosen coordinate. 
 ```bash
 (base) Kathryns-MacBook-Pro-2:example kmaterna$ driver_find_within_radius.py 
 Reading /Users/kmaterna/Documents/GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt
@@ -32,7 +33,7 @@ Returning 26 stations that are within 100.000 km of center -122.0000, 40.0000
 
 
 ### Single GNSS Time Series
-As one example, we plot the time series of P511, a station in Southern California with seasonal terms and antenna changes removed but earthquakes still left in. One possible usage of one driver is illustrated and its command-line outputs are shown. 
+As another example, we plot the PBO time series of P511, a station in Southern California with seasonal terms and antenna changes removed but earthquakes still left in. One possible usage of one driver is illustrated and its command-line outputs are shown. 
 ```bash
 (base) Kathryns-MacBook-Pro-2:example kmaterna$ driver_single_plot.py P511
 ------- P511 --------
@@ -54,9 +55,11 @@ Saving figure as P511_noseasons_lssq_cwu_NA_ts.jpg
 ![GNSS_TS](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/drivers_and_configs/example_pngs/P511_noseasons_lssq_cwu_NA_ts.jpg)
 
 ### GNSS Stacks
-We can also plot a list of GNSS time series as a stack.  An example is shown below for stations in the northern San Francisco Bay Area. The parameters can be set in the 'driver_stack.py' file. 
-![GNSS_TS](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/drivers_and_configs/example_pngs/Nbay_-124.0_38.0_125_TS_noeq.jpg)
+We can also plot a list of GNSS time series as a stack.  An example is shown below for stations in the northern San Francisco Bay Area. The parameters can be set in the 'driver_stack.py' file.  In the gps_stack.py driver, you can select which kinds of plots you want, whether it's vertical, horizontal, filtered, earthquakes removed, etc.
+![GNSS_TS](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/drivers_and_configs/example_pngs/NBay_-122.0_38.0_40_TS_noeq.png)
 
+If you have the pygmt library installed, you can make a simple map of the stations in your region: 
+![map](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/drivers_and_configs/example_pngs/NBay_-122.0_38.0_40_map.png)
 
 
 ## Contributing
@@ -64,11 +67,11 @@ If you use this library, please contribute back any features you'd like to write
 
 
 ## Dependencies and Installation
-This library requires basic Python packages such as numpy and matplotlib. For the "stations_within_radius" function, it also requires a file called 'haversine' that is located in my Utilities library (https://github.com/kmaterna/Utility_Code), so please download or clone that as well. 
+This library requires basic Python packages such as numpy and matplotlib. For the "stations_within_radius" function, it also requires a file called 'haversine' that is located in my Utilities library (https://github.com/kmaterna/Utility_Code), so please download or clone that as well. For a single mapping utility, I use the pygmt library based on GMT-6 (https://github.com/GenericMappingTools/pygmt). It's highly optional, but you can make an automatic map if you have it.  
 
 Please download, clone, or fork this library and put the path to GPS_TOOLS/ on your $PYTHONPATH. The drivers in drivers_and_configs should provide some examples on how to access the major functions in this library.  I expect this library would work on Mac and Linux systems, but possibly not Windows. 
 
 
 ## Acessing Prerequisite GNSS Data
-This library requires a local copy of GNSS time series, velocities, steps, and hydrological loading models from various online repositories in their online-provided formats. The "Data Instructions" file tells you how to locate and download these files.  Following that, you must create a file called data_config.txt that tells the code in this library where all of those files are located.  An example data_config.txt is provided; please follow a similar template. The path to the data_config.txt file will be passed into the library each time you use it.  
+This library requires a local copy of GNSS time series, velocities, steps, and hydrological loading models from various online repositories in their online-provided formats. The "drivers_and_configs/getting_gnss_data/data_instructions.txt" file tells you how to locate and download these files.  Following that, you must create a file called data_config.txt that tells the library code where all the data files are located.  An example data_config.txt is provided; please follow a similar template for your own. The path to the data_config.txt file will be passed into the library each time you use it.  
 

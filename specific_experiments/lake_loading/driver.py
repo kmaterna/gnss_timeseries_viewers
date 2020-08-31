@@ -25,7 +25,7 @@ def configure():
 def inputs(stations, lakes):
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in stations:
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, 'pbo');
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, 'pbo', );
 		dataobj_list.append(myData);
 		offsetobj_list.append(offset_obj);
 		eqobj_list.append(eq_obj);

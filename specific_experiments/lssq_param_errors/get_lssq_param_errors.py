@@ -31,7 +31,7 @@ def read_real_gps_data():
 	endtime=dt.datetime.strptime("20161207","%Y%m%d");
 	# starttime=dt.datetime.strptime("20161210","%Y%m%d");
 	# endtime=dt.datetime.strptime("20180915","%Y%m%d");	
-	[newData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data('P157', 'pbo', 'NA');
+	[newData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data('P157', 'pbo',, 'NA';
 	newData=offsets.remove_offsets(newData, offset_obj);
 	newData=gps_ts_functions.remove_outliers(newData, 10);  # 10 mm outlier
 	newData=offsets.remove_offsets(newData, eq_obj);

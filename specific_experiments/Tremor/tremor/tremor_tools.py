@@ -184,7 +184,7 @@ def get_rates(tremor):
 
 def get_detrended_gps_station(station_name):
 	datasource='pbo';
-	[newData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource);
+	[newData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, );
 	newData=offsets.remove_offsets(newData, offset_obj);
 	newData=gps_ts_functions.remove_outliers(newData, 5);  # mm for outliers
 	newData=offsets.remove_offsets(newData, eq_obj);

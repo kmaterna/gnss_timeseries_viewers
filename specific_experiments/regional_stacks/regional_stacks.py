@@ -37,7 +37,7 @@ def configure():
 def inputs(station_names, proc_center):  # Returns a list of objects for time series data, offsets, and earthquakes
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in station_names:
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, proc_center, "NA");
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, proc_center,, "NA";
 		if myData==[]:
 			continue;
 		if myData.dtarray[-1]>dt.datetime.strptime("20140310","%Y%m%d") and myData.dtarray[0]<dt.datetime.strptime("20100310","%Y%m%d"):  

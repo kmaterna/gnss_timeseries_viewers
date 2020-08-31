@@ -10,7 +10,7 @@ import gps_ts_functions
 import gps_seasonal_removals
 
 def read_real_gps_data(station, starttime, endtime):
-	[newData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station, 'pbo', 'NA');
+	[newData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station, 'pbo',, 'NA';
 	newData=offsets.remove_offsets(newData, offset_obj);
 	newData=gps_ts_functions.remove_outliers(newData, 10);  # 10 mm outlier
 	newData=offsets.remove_offsets(newData, eq_obj);

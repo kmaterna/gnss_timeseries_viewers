@@ -38,11 +38,11 @@ def configure_times():
 	return Time_periods, EQs;
 
 def inputs(station):
-	[gldas,_,_] = gps_input_pipeline.get_station_data(station, 'gldas');
-	[nldas,_,_] = gps_input_pipeline.get_station_data(station, 'nldas');
-	[grace,_,_] = gps_input_pipeline.get_station_data(station, 'grace');
-	[lsdm,_,_] = gps_input_pipeline.get_station_data(station, 'lsdm');
-	[gps,offset_obj,EQtimes] = gps_input_pipeline.get_station_data(station, 'pbo');
+	[gldas,_,_] = gps_input_pipeline.get_station_data(station, 'gldas', );
+	[nldas,_,_] = gps_input_pipeline.get_station_data(station, 'nldas', );
+	[grace,_,_] = gps_input_pipeline.get_station_data(station, 'grace', );
+	[lsdm,_,_] = gps_input_pipeline.get_station_data(station, 'lsdm', );
+	[gps,offset_obj,EQtimes] = gps_input_pipeline.get_station_data(station, 'pbo', );
 	gps=offsets.remove_offsets(gps, offset_obj);
 	gps=offsets.remove_offsets(gps, EQtimes);
 	gps=gps_seasonal_removals.make_detrended_ts(gps,0,'lssq');  # removing trend only

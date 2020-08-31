@@ -47,7 +47,7 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove):
 
 # ----------- INPUTS ---------------- # 
 def input_data(station_name, datasource):
-	[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource);
+	[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, );
 	return [myData, offset_obj, eq_obj];
 
 

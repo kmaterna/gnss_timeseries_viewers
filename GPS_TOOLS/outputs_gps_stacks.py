@@ -15,46 +15,6 @@ import matplotlib
 import matplotlib.cm as cm
 import datetime as dt
 import scipy.ndimage
-import pygmt
-
-
-def configure_beautiful_plots(expname, distances):
-    EQtimes = [];
-    labeltimes = [];
-    labels = [];
-
-    if expname == 'Mend' or expname == "Humboldt":
-        # What black lines do you want added to the figure? This is good for Mendocino
-        EQtimes.append(dt.datetime.strptime("20140310", "%Y%m%d"));  # starts with the most important one
-        EQtimes.append(dt.datetime.strptime("20050615", "%Y%m%d"));  # other earthquakes added to the figure
-        EQtimes.append(dt.datetime.strptime("20100110", "%Y%m%d"));
-        EQtimes.append(dt.datetime.strptime("20161208", "%Y%m%d"));
-
-    elif expname == "SSGF":
-        # # This is good for SoCal
-        EQtimes.append(dt.datetime.strptime("20100403", "%Y%m%d"));  # starts with the most important one
-        EQtimes.append(dt.datetime.strptime("20050615", "%Y%m%d"));  # other earthquakes added to the figure
-        EQtimes.append(dt.datetime.strptime("20120808", "%Y%m%d"));
-
-    if expname == "Mend":
-        closest_station = 70;
-        farthest_station = 120;
-    else:
-        closest_station = min(distances);  # km from event
-        farthest_station = max(distances);  # km from event
-
-    # Labels
-    if expname == "Mend" or expname == "Humboldt":
-        labeltimes.append(dt.datetime.strptime('20070701', "%Y%m%d"));
-        labeltimes.append(dt.datetime.strptime('20120101', "%Y%m%d"));
-        labeltimes.append(dt.datetime.strptime('20150501', "%Y%m%d"));
-        labeltimes.append(dt.datetime.strptime('20171201', "%Y%m%d"));
-        labels.append("T1");
-        labels.append("T2");
-        labels.append("T3");
-        labels.append("T4");
-
-    return EQtimes, labeltimes, labels, closest_station, farthest_station;
 
 
 def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
@@ -64,7 +24,6 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
     start_time_plot = dt.datetime.strptime("20050101", "%Y%m%d");
     end_time_plot = dt.datetime.strptime("20200116", "%Y%m%d");
 
-    offset = 0;
     spacing = 15;
     EQtimes, labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname,
                                                                                                distances);
@@ -131,7 +90,6 @@ def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
     start_time_plot = dt.datetime.strptime("20050101", "%Y%m%d");
     end_time_plot = dt.datetime.strptime("20200116", "%Y%m%d");
 
-    offset = 0;
     spacing = 40;
     EQtimes, labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname,
                                                                                                distances);
@@ -162,12 +120,12 @@ def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
     cb = plt.colorbar(custom_cmap);
     cb.set_label('Kilometers from center');
 
-    # new axis for plotting the map of california
-    ax = plt.axes(position=[0.8, 0.1, 0.2, 0.2], xticklabels=[], yticklabels=[]);
-    [ca_lons, ca_lats] = np.loadtxt('../california_bdr', unpack=True);
-    ax.plot(ca_lons, ca_lats, 'k');
-    for i in range(len(dataobj_list)):
-        ax.plot(dataobj_list[i].coords[0], dataobj_list[i].coords[1], '.g', markersize=0.6);
+    # # new axis for plotting the map of california
+    # ax = plt.axes(position=[0.8, 0.1, 0.2, 0.2], xticklabels=[], yticklabels=[]);
+    # [ca_lons, ca_lats] = np.loadtxt('../california_bdr', unpack=True);
+    # ax.plot(ca_lons, ca_lats, 'k');
+    # for i in range(len(dataobj_list)):
+    #     ax.plot(dataobj_list[i].coords[0], dataobj_list[i].coords[1], '.g', markersize=0.6);
 
     # new axis for extra labels
     ax = plt.axes(position=[0.8, 0.4, 0.2, 0.2], xticklabels=[], yticklabels=[]);
@@ -184,11 +142,7 @@ def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
 
 
 def horizontal_filtered_plots(dataobj_list, distances, myparams, label=""):
-    # plt.figure(figsize=(15,8),dpi=160);
     [f, axarr] = plt.subplots(2, 1, sharex=True, figsize=(15, 8), dpi=160);
-    print(axarr[0])
-    print(axarr[1])
-    print(np.shape(axarr))
     label_date = dt.datetime.strptime("20200215", "%Y%m%d");
     start_time_plot = dt.datetime.strptime("20050101", "%Y%m%d");
     end_time_plot = dt.datetime.strptime("20200116", "%Y%m%d");
@@ -276,12 +230,12 @@ def vertical_filtered_plots(dataobj_list, distances, myparams, label=""):
     cb = plt.colorbar(custom_cmap);
     cb.set_label('Kilometers from center');
 
-    # new axis for plotting the map of california
-    ax = plt.axes(position=[0.8, 0.1, 0.1, 0.2], xticklabels=[], yticklabels=[]);
-    [ca_lons, ca_lats] = np.loadtxt('../california_bdr', unpack=True);
-    ax.plot(ca_lons, ca_lats, 'k');
-    for i in range(len(dataobj_list)):
-        ax.plot(dataobj_list[i].coords[0], dataobj_list[i].coords[1], '.g', markersize=0.6);
+    # # new axis for plotting the map of california
+    # ax = plt.axes(position=[0.8, 0.1, 0.1, 0.2], xticklabels=[], yticklabels=[]);
+    # [ca_lons, ca_lats] = np.loadtxt('../california_bdr', unpack=True);
+    # ax.plot(ca_lons, ca_lats, 'k');
+    # for i in range(len(dataobj_list)):
+    #     ax.plot(dataobj_list[i].coords[0], dataobj_list[i].coords[1], '.g', markersize=0.6);
 
     # new axis for extra labels
     ax = plt.axes(position=[0.8, 0.4, 0.1, 0.2], xticklabels=[], yticklabels=[]);
@@ -297,7 +251,49 @@ def vertical_filtered_plots(dataobj_list, distances, myparams, label=""):
     return;
 
 
+def configure_beautiful_plots(expname, distances):
+    # Some hard coded information to make beautiful plots for specific experiments
+    EQtimes = [];
+    labeltimes = [];
+    labels = [];
+
+    if expname == 'Mend' or expname == "Humboldt":
+        # What black lines do you want added to the figure? This is good for Mendocino
+        EQtimes.append(dt.datetime.strptime("20140310", "%Y%m%d"));  # starts with the most important one
+        EQtimes.append(dt.datetime.strptime("20050615", "%Y%m%d"));  # other earthquakes added to the figure
+        EQtimes.append(dt.datetime.strptime("20100110", "%Y%m%d"));
+        EQtimes.append(dt.datetime.strptime("20161208", "%Y%m%d"));
+
+    elif expname == "SSGF":
+        # # This is good for SoCal
+        EQtimes.append(dt.datetime.strptime("20100403", "%Y%m%d"));  # starts with the most important one
+        EQtimes.append(dt.datetime.strptime("20050615", "%Y%m%d"));  # other earthquakes added to the figure
+        EQtimes.append(dt.datetime.strptime("20120808", "%Y%m%d"));
+
+    if expname == "Mend":
+        closest_station = 70;
+        farthest_station = 120;
+    else:
+        closest_station = min(distances);  # km from event
+        farthest_station = max(distances);  # km from event
+
+    # Labels
+    if expname == "Mend" or expname == "Humboldt":
+        labeltimes.append(dt.datetime.strptime('20070701', "%Y%m%d"));
+        labeltimes.append(dt.datetime.strptime('20120101', "%Y%m%d"));
+        labeltimes.append(dt.datetime.strptime('20150501', "%Y%m%d"));
+        labeltimes.append(dt.datetime.strptime('20171201', "%Y%m%d"));
+        labels.append("T1");
+        labels.append("T2");
+        labels.append("T3");
+        labels.append("T4");
+
+    return EQtimes, labeltimes, labels, closest_station, farthest_station;
+
+
 def pygmt_map(dataobj_list, myparams):
+    # Optionally, use the pygmt library to make a plot of the stations themselves.
+    import pygmt
     offset = 0.2;
 
     lons = [];
@@ -315,7 +311,7 @@ def pygmt_map(dataobj_list, myparams):
     fig.coast(shorelines="0.5p,black", G='peachpuff2', S='skyblue', D="h");
     fig.coast(N='1', W='1.0p,black');
     fig.coast(N='2', W='0.5p,black');
-    fig.text(x=[i + 0.035 for i in lons], y=lats, text=names, font='15p,Helvetica-Bold,black');
+    fig.text(x=[i + 0.06 for i in lons], y=lats, text=names, font='15p,Helvetica-Bold,black');
     fig.plot(x=lons, y=lats, S='c0.1i', G='black', W='0.5p,black')
     fig.plot(x=myparams.center[0], y=myparams.center[1], S='a0.1i', G='red', W='0.5p,red')
     fig.savefig(myparams.outdir + "/" + myparams.outname + '_map.png');

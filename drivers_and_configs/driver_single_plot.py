@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Driver for individual time series viewing. 
+Example driver for individual time series viewing. 
 """
 
 import sys

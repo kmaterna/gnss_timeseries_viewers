@@ -40,7 +40,7 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seas
 
 # ----------- INPUTS ---------------- # 
 def input_data(station_name, datasource, refframe):
-	[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, refframe);
+	[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource,, refframe;
 	ets_intervals=input_tremor_days();
 	return [myData, offset_obj, eq_obj, ets_intervals];
 

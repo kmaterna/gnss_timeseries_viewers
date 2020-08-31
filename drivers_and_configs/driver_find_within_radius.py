@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Driver for the 'find within radius' functions
+Example driver for the 'find within radius' functions
 """
 
 import stations_within_radius

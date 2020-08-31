@@ -72,7 +72,7 @@ def inputs(station_names, network, refframe):
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in station_names:
 
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, network, refframe);
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, network,, refframe;
 		if myData==[]:
 			continue;
 

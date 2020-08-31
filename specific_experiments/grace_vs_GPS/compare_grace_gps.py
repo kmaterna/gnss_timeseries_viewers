@@ -30,9 +30,9 @@ def configure():
 def inputs(station_list, datasource, hydro_type, refframe, grace_dir, nldas_dir, gldas_dir):
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[]; hydroobj_list=[]; 
 	for station_name in station_list:
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, refframe);
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource,, refframe;
 		print("Opening "+hydro_type+" for station %s" % station_name);
-		[hydro_obj,_,_]= gps_input_pipeline.get_station_data(station_name, hydro_type);  # this is a very generic function for GPS, GRACE, and Hydro
+		[hydro_obj,_,_]= gps_input_pipeline.get_station_data(station_name, hydro_type, );  # this is a very generic function for GPS, GRACE, and Hydro
 		if myData==[]:
 			continue;
 		else:

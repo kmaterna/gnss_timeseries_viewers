@@ -41,9 +41,7 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file,
     else:  # Going into different forms of seasonal removal.
         print("Removing seasonals by %s method." % seasonals_type);
         if seasonals_type == 'lssq':
-            [east_params, north_params, up_params] = gps_ts_functions.get_linear_annual_semiannual(Data);
-            trend_out = gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);
-            trend_in = gps_ts_functions.remove_seasonal_by_value(Data, east_params, north_params, up_params);
+            trend_out, trend_in = remove_seasonals_by_lssq(Data);
 
         elif seasonals_type == 'notch':
             trend_out, trend_in = remove_seasonals_by_notch(Data);
@@ -82,6 +80,13 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file,
         return trend_in;
     else:
         return trend_out;
+
+
+def remove_seasonals_by_lssq(Data):
+    [east_params, north_params, up_params] = gps_ts_functions.get_linear_annual_semiannual(Data);
+    trend_out = gps_ts_functions.detrend_data_by_value(Data, east_params, north_params, up_params);
+    trend_in = gps_ts_functions.remove_seasonal_by_value(Data, east_params, north_params, up_params);
+    return trend_out, trend_in;
 
 
 # This function is the function that actually gets called by other programs.

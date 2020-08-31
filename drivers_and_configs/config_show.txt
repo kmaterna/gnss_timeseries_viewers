@@ -1,0 +1,26 @@
+# Config file for GPS Time Series Analysis stream
+#############################################
+# 
+[py-config]
+
+# PBO GPS Velocities, time series, and offsets
+pbo_gps_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Data/
+pbo_velocities = /Users/kmaterna/Documents/GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt
+pbo_earthquakes_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Event_Files/
+pbo_offsets_dir = /Users/kmaterna/Documents/GPS_POS_DATA/Offsets/
+
+# UNR GPS Velocities, time series, offsets
+unr_gps_dir = /Users/kmaterna/Documents/GPS_POS_DATA/UNR_Data/
+unr_coords_file = /Users/kmaterna/Documents/GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt
+unr_offsets_dir = /Users/kmaterna/Documents/GPS_POS_DATA/Offsets/
+unr_velocities = /Users/kmaterna/Documents/GPS_POS_DATA/Velocity_Files/IGS14_MAGNET_dec2019.txt
+
+blacklist = /Users/kmaterna/Documents/GPS_POS_DATA/Blacklist/blacklist.txt
+
+# Hydrological Loading models
+gldas_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/GLDAS/
+nldas_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/NLDAS/
+noah_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/NOAH025/
+grace_dir = /Users/kmaterna/Documents/GPS_POS_DATA/GRACE_loading_model/
+lsdm_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/LSDM/
+stl_dir = /Users/kmaterna/Documents/GPS_POS_DATA/STL_models/

@@ -27,7 +27,7 @@ def configure():
 def inputs(station_names, proc_center):  # Returns a list of objects for time series data, offsets, and earthquakes
 	dataobj_list=[]; offsetobj_list=[]; eqobj_list=[];
 	for station_name in station_names:
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, proc_center, "NA");
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, proc_center,, "NA";
 		if myData.dtarray[0]<=dt.datetime.strptime("20050615","%Y%m%d"):
 		# kicking out the stations that end early or start late. 
 			dataobj_list.append(myData);

@@ -3,7 +3,6 @@
 import subprocess, sys, os
 import datetime as dt
 import gps_io_functions
-import gps_ts_functions
 import offsets
 
 
@@ -13,35 +12,32 @@ import offsets
 #  MULTI STATION DRIVERS               ---
 # ----------------------------------------
 
-def multi_station_inputs(station_names, blacklist_user, proc_center, refframe,
-                         distances=None, data_config_file="/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt"):
+def multi_station_inputs(station_names, blacklist_user, proc_center, refframe, data_config_file, distances=None,
+                         must_include=(None, None)):
     # Returns a list of objects for time series data, offsets, and earthquakes
-    # Also kicks out stations when necessary based on blacklist or timing criteria
+    # Also kicks out stations when necessary based on blacklist or timing criteria (through must_include parameter)
     # Keeps the distances object as metadata in case you pass it through.
+    # must_include is a 2-vector of datetime objects that present a window that must be included in the time series.
+    # default is not to impose the must_include criterion.
     dataobj_list = [];
     offsetobj_list = [];
     eqobj_list = [];
     stations_surviving = [];
     distances_surviving = [];
-    must_include = [dt.datetime.strptime("20100310", "%Y%m%d"), dt.datetime.strptime("20140310", "%Y%m%d")];
-    station_names = remove_blacklist(data_config_file,station_names);
+    station_names = remove_blacklist(data_config_file, station_names);
     for i in range(len(station_names)):
         if station_names[i] in blacklist_user:
-            continue;
+            continue;  # a second type of optional blacklist
         else:
-            [myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, refframe, data_config_file);
+            [myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, data_config_file, refframe);
 
-            # This should go into a separate function with a table containing these limits
-            if myData.name == "BRAW":  # an annoying data-cleaning step because of gaps at BRAW. Should be fixed later.
-                myData = gps_ts_functions.impose_time_limits(myData, dt.datetime.strptime("2008-05-05", "%Y-%m-%d"),
-                                                             dt.datetime.strptime("2020-06-01", "%Y-%m-%d"));
-
-            if myData.dtarray[-1] < must_include[0] or myData.dtarray[0] > must_include[1]:
-                # kicking out the stations that end early or start late.
-                print("Excluding station %s due to not including data inside %s:%s" % (
-                    myData.name, dt.datetime.strftime(must_include[0], "%Y-%m-%d"),
-                    dt.datetime.strftime(must_include[1], "%Y-%m-%d")));
-                continue;
+            if must_include[0] is not None:
+                if myData.dtarray[-1] < must_include[0] or myData.dtarray[0] > must_include[1]:
+                    # kicking out the stations that end early or start late.
+                    print("Excluding station %s due to not including data inside %s:%s" % (
+                        myData.name, dt.datetime.strftime(must_include[0], "%Y-%m-%d"),
+                        dt.datetime.strftime(must_include[1], "%Y-%m-%d")));
+                    continue;
             if myData != []:
                 dataobj_list.append(myData);
                 offsetobj_list.append(offset_obj);
@@ -56,8 +52,7 @@ def multi_station_inputs(station_names, blacklist_user, proc_center, refframe,
 # DRIVERS, CONFIGURE, AND FILE MASHING ---
 # ----------------------------------------
 
-def get_station_data(station, datasource, refframe="NA",
-                     data_config_file="/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt"):
+def get_station_data(station, datasource, data_config_file, refframe="NA"):
     # A function that you can use to access the reading library.
     # refframe choices are NA and ITRF
     datasource = determine_datasource(data_config_file, station, datasource, refframe);
@@ -292,7 +287,7 @@ def remove_blacklist(data_config_file, stations):
         if not (station in blacklisted_stations):
             new_stations.append(station);
         else:
-            print("Excluding station %s from blacklist_file %s" % (station, Params.blacklist));
+            print("Excluding station %s due to blacklist_file %s" % (station, Params.blacklist));
     return new_stations;
 
 

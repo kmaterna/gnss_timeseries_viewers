@@ -86,7 +86,7 @@ def compute(gps_data, amplitude, EQ1, EQ2, EQ3, EQ4):
 
 if __name__=="__main__":
 	amplitude, EQ1, EQ2, EQ3, EQ4 = configure();
-	[gps_ts,_,_] = gps_input_pipeline.get_station_data("P160", 'pbo');
+	[gps_ts,_,_] = gps_input_pipeline.get_station_data("P160", 'pbo', );
 	A_coef, dv_2014, dv_2016 = compute(gps_ts, amplitude, EQ1, EQ2, EQ3, EQ4);
 
 
