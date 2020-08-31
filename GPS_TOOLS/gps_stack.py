@@ -5,9 +5,6 @@
 # Step 3: Compute: Remove outliers, earthquakes, and eventually trend from the data. 
 # Step 4: Plot in order of increasing latitude, colored by how close they are to the central point
 
-# Reference: 
-# Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-
 import numpy as np 
 import matplotlib.pyplot as plt 
 import collections
@@ -19,7 +16,6 @@ import gps_ts_functions
 import gps_seasonal_removals
 import stations_within_radius
 import offsets
-import remove_ets_events
 import outputs_gps_stacks
 import movie_tool
 
@@ -65,7 +61,7 @@ def configure():
 	refframe = 'NA';     # WHICH REFERENCE FRAME? 
 
 	stations, lons, lats, distances = stations_within_radius.get_stations_within_radius(center, radius, network=proc_center);
-	blacklist=["P316","P170","P158","TRND","P203","BBDM","KBRC","RYAN","BEAT","CAEC","MEXI","BOMG","FSHB"];  # This is global, just keeps growing
+	blacklist=[];  # This is global, just keeps growing
 	outdir=expname+"_"+proc_center
 	subprocess.call(["mkdir","-p",outdir],shell=False);
 	outname=expname+"_"+str(center[0])+"_"+str(center[1])+"_"+str(radius)
