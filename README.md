@@ -56,10 +56,10 @@ Saving figure as P511_noseasons_lssq_cwu_NA_ts.jpg
 
 ### GNSS Stacks
 We can also plot a list of GNSS time series as a stack.  An example is shown below for stations in the northern San Francisco Bay Area. The parameters can be set in the 'driver_stack.py' file.  In the gps_stack.py driver, you can select which kinds of plots you want, whether it's vertical, horizontal, filtered, earthquakes removed, etc.
-![GNSS_TS](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/drivers_and_configs/example_pngs/NBay_-122.0_38.0_40_TS_noeq.jpg)
+![GNSS_TS](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/drivers_and_configs/example_pngs/NBay_-122.0_38.0_40_TS_noeq.png)
 
 If you have the pygmt library installed, you can make a simple map of the stations in your region: 
-![map](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/drivers_and_configs/example_pngs/NBay_-122.0_38.0_40_map.jpg)
+![map](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/drivers_and_configs/example_pngs/NBay_-122.0_38.0_40_map.png)
 
 
 ## Contributing
