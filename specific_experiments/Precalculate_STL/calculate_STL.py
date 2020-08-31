@@ -32,7 +32,7 @@ def inputs(infile):
 	for line in ifile:
 		temp=line.split();
 		station_name=temp[0];
-		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name,'pbo');
+		[myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, 'pbo');
 		DataAll.append(myData);
 		OffsetAll.append(offset_obj);
 		EQAll.append(eq_obj);

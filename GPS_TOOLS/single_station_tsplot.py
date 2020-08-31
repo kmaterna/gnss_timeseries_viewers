@@ -2,10 +2,8 @@
 # Takes in a namedTuple with the data. 
 # Makes a basic plot. 
 
-import numpy as np
 import matplotlib.pyplot as plt
 import collections
-import datetime as dt
 import gps_ts_functions
 import gps_seasonal_removals
 import offsets
@@ -29,14 +27,14 @@ Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove',
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0,
                         starttime=None, endtime=None, outliers_def=15,
                         seasonals_type='lssq', datasource='pbo', refframe='NA',
-                        data_config_file="data_config.txt"):
+                        data_config_file="data_config.txt", outdir="single_plots/"):
     MyParams = configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, outliers_def,
                          seasonals_remove,
                          seasonals_type, datasource, refframe, data_config_file);
     [myData, offset_obj, eq_obj] = input_data(MyParams.station, MyParams.datasource, MyParams.refframe,
                                               MyParams.data_config_file);
     [updatedData, detrended] = compute(myData, offset_obj, eq_obj, MyParams, starttime, endtime);
-    single_ts_plot(updatedData, detrended, MyParams);
+    single_ts_plot(updatedData, detrended, MyParams, outdir);
 
 
 # -------------- CONFIGURE ------------ # 
@@ -87,7 +85,7 @@ def compute(myData, offset_obj, eq_obj, MyParams, starttime, endtime):
 
 
 # -------------- OUTPUTS ------------ # 
-def single_ts_plot(ts_obj, detrended, MyParams):
+def single_ts_plot(ts_obj, detrended, MyParams, outdir):
     label_fontsize = 18;
 
     # The major figure
@@ -102,9 +100,8 @@ def single_ts_plot(ts_obj, detrended, MyParams):
     ax1 = axarr[0].twinx();
     ax1.plot_date(detrended.dtarray, detrended.dE, marker='D', markersize=1.0, color='red');
     ax1.set_ylabel('detrended (mm)', fontsize=label_fontsize - 2, color='red');
-    plt.setp(axarr[0].get_xticklabels(), fontsize=label_fontsize);
-    plt.setp(axarr[0].get_yticklabels(), fontsize=label_fontsize);
-    plt.setp(ax1.get_yticklabels(), fontsize=label_fontsize);
+    ax1.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
+    axarr[0].tick_params(labelsize=label_fontsize);
 
     axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN, color='blue', markeredgecolor='black', markersize=1.5);
     axarr[1].grid(linestyle='--', linewidth=0.5);
@@ -115,9 +112,8 @@ def single_ts_plot(ts_obj, detrended, MyParams):
     ax2 = axarr[1].twinx();
     ax2.plot_date(detrended.dtarray, detrended.dN, marker='D', markersize=1.0, color='red');
     ax2.set_ylabel('detrended (mm)', fontsize=label_fontsize - 2, color='red');
-    plt.setp(axarr[1].get_xticklabels(), fontsize=label_fontsize);
-    plt.setp(axarr[1].get_yticklabels(), fontsize=label_fontsize);
-    plt.setp(ax2.get_yticklabels(), fontsize=label_fontsize);
+    ax2.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
+    axarr[1].tick_params(labelsize=label_fontsize);
 
     axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU, color='blue', markeredgecolor='black', markersize=1.5);
     axarr[2].grid(linestyle='--', linewidth=0.5);
@@ -129,18 +125,17 @@ def single_ts_plot(ts_obj, detrended, MyParams):
     ax3.plot_date(detrended.dtarray, detrended.dU, marker='D', markersize=1.0, color='red');
     ax3.set_ylabel('detrended (mm)', fontsize=label_fontsize - 2, color='red');
     axarr[2].set_xlim([min(ts_obj.dtarray), max(ts_obj.dtarray)]);
-    plt.setp(axarr[2].get_xticklabels(), fontsize=label_fontsize);
-    plt.setp(axarr[2].get_yticklabels(), fontsize=label_fontsize);
-    plt.setp(ax3.get_yticklabels(), fontsize=label_fontsize);
+    ax3.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
+    axarr[2].tick_params(labelsize=label_fontsize);
 
-    title, savename = get_figure_name(MyParams);
+    title, savename = get_figure_name(MyParams, outdir);
     axarr[0].set_title(title, fontsize=label_fontsize + 2);
     plt.savefig(savename, dpi=dpival);
     print("Saving figure as %s " % savename)
     return;
 
 
-def get_figure_name(MyParams):
+def get_figure_name(MyParams, outdir):
     # Things that might go into the name:
     # 1. Station
     # 2. Earthquakes removed
@@ -149,7 +144,7 @@ def get_figure_name(MyParams):
     # 5. Datasource
     # 6. Refframe
 
-    savename = "single_plots/" + MyParams.station;
+    savename = outdir + MyParams.station;
     title = MyParams.station;
 
     title = title + ', ' + MyParams.datasource + ' ' + MyParams.refframe

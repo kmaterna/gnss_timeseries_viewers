@@ -4,6 +4,7 @@ specific_experiments/Coulomb_stresses/*
 specific_experiments/block_models/*
 specific_experiments/waveforms/general_map/*
 specific_experiments/waveforms/Amplitude_maps/*.eps
+specific_experiments_code_and_mapping/Mapping_Resources/*
 Literature_Review/*
 INSAR_Results/*
 GPS_POS_DATA/*

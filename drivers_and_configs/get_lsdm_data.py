@@ -4,6 +4,7 @@
 # And downloads the loading products for each station from the German loading website
 # http://rz-vm115.gfz-potsdam.de:8080/repository/entry/show?entryid=362f8705-4b87-48d1-9d86-2cfd1a2b6ac9
 # I use the Center of Figure HYDL products. 
+# Put your desired stations into a text file with row format [name longitude latitude startdate enddate]
 
 import sys, os
 import subprocess

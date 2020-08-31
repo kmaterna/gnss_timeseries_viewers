@@ -14,7 +14,7 @@ Velfield = collections.namedtuple("Velfield", ['name', 'nlat', 'elon', 'n', 'e',
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
 Params = collections.namedtuple("Params", ['pbo_gps_dir', 'unr_gps_dir', 'pbo_earthquakes_dir', 'pbo_offsets_dir',
-                                           'unr_offsets_dir', 'unr_coords_file', 'velocity_dir', 'pbo_velocities',
+                                           'unr_offsets_dir', 'unr_coords_file', 'pbo_velocities',
                                            'unr_velocities', 'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
                                            'lsdm_dir', 'stl_dir', 'blacklist']);
 
@@ -36,7 +36,6 @@ def read_config_file(infile):
     unr_offsets_dir = config.get('py-config', 'unr_offsets_dir');
     pbo_offsets_dir = config.get('py-config', 'pbo_offsets_dir');
     unr_coords_file = config.get('py-config', 'unr_coords_file');
-    velocity_dir = config.get('py-config', 'velocity_dir');
     pbo_velocities = config.get('py-config', 'pbo_velocities');
     unr_velocities = config.get('py-config', 'unr_velocities');
     blacklist = config.get('py-config', 'blacklist');
@@ -49,7 +48,7 @@ def read_config_file(infile):
 
     myParams = Params(pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir, pbo_earthquakes_dir=pbo_earthquakes_dir,
                       pbo_offsets_dir=pbo_offsets_dir, unr_offsets_dir=unr_offsets_dir, unr_coords_file=unr_coords_file,
-                      velocity_dir=velocity_dir, pbo_velocities=pbo_velocities,
+                      pbo_velocities=pbo_velocities,
                       unr_velocities=unr_velocities, gldas_dir=gldas_dir, nldas_dir=nldas_dir, noah_dir=noah_dir,
                       grace_dir=grace_dir, lsdm_dir=lsdm_dir, stl_dir=stl_dir, blacklist=blacklist);
     return myParams;

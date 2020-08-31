@@ -114,12 +114,3 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances):
 	return [detrended_objects, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons, sorted_distances];
 
 
-		# # NOTE: WRITTEN IN JUNE 2019
-		# # An experiment for removing ETS events
-		# # stage2obj=stage1obj;
-		# ets_intervals=remove_ets_events.input_tremor_days();
-		# stage2obj=gps_ts_functions.remove_outliers(stage1obj,3.0);  # 3 mm outlier def. 
-		# stage2obj=remove_ets_events.remove_ETS_times(stage2obj,ets_intervals, offset_num_days=15);  # 30 days on either end of the offsets
-		# stage2obj=gps_seasonal_removals.make_detrended_ts(stage2obj,0,'lssq');
-
-

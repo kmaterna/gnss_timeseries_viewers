@@ -1,5 +1,7 @@
 # Python functions to take an input coordinate, and 
 # determine which GNSS stations are within a certain radius of that point or a given box.
+# num_years is the minimum duration of the time series
+# max_sigma is the formal uncertainty on the velocity in mm
 
 import numpy as np
 import haversine
@@ -11,25 +13,25 @@ import matplotlib.path as mpltPath
 # Reference: Velfield = collections.namedtuple("Velfield",['name','nlat','elon','n','e','u','sn','se','su','first_epoch','last_epoch']);
 
 # DRIVER 1: STATIONS WITHIN RADIUS
-def get_stations_within_radius(data_config_file, center, radius, coord_box=(-126, -110, 30.0, 49), network='pbo'):
+def get_stations_within_radius(data_config_file, center, radius, coord_box=(-126, -110, 30.0, 49), network='pbo', num_years=3.0, max_sigma=2):
     # default coord box is western US, but it can be reduced
-    [input_file, coords_file, num_years, max_sigma] = general_config(network, data_config_file);
+    [input_file, coords_file] = general_config(network, data_config_file);
     myVelfield = inputs(input_file, coords_file, num_years, max_sigma, coord_box, network);
     close_stations, lon, lat, rad_distance = compute_circle(myVelfield, center, radius);
     return close_stations, lon, lat, rad_distance;
 
 
 # DRIVER 2: STATIONS WITHIN BOX
-def get_stations_within_box(data_config_file, coord_box, network='pbo'):
-    [input_file, coords_file, num_years, max_sigma] = general_config(network, data_config_file);
+def get_stations_within_box(data_config_file, coord_box, network='pbo', num_years=3.0, max_sigma=2):
+    [input_file, coords_file] = general_config(network, data_config_file);
     myVelfield = inputs(input_file, coords_file, num_years, max_sigma, coord_box, network);
     within_stations, lon, lat = compute_box(myVelfield, coord_box);
     return within_stations, lon, lat;
 
 
 # DRIVER 3: STATIONS WITHIN A USER-DEFINED KML BORDER
-def get_stations_within_polygon(data_config_file, polygon_file, coord_box=(-126, -110, 30.0, 49), network='pbo'):
-    [input_file, coords_file, num_years, max_sigma] = general_config(network, data_config_file);
+def get_stations_within_polygon(data_config_file, polygon_file, coord_box=(-126, -110, 30.0, 49), network='pbo', num_years=3.0, max_sigma=2):
+    [input_file, coords_file] = general_config(network, data_config_file);
     [polygon_lon, polygon_lat] = read_kml.read_simple_kml(polygon_file);
     myVelfield = inputs(input_file, coords_file, num_years, max_sigma, coord_box, network);
     within_stations, lon, lat = compute_within_polygon(myVelfield, polygon_lon, polygon_lat);
@@ -47,9 +49,7 @@ def general_config(network, data_config_file):
     else:
         print("ERROR: Network %s not recognized (try pbo/cwu/nmt/unr)" % network);
         input_file = None;
-    num_years = 3.0;
-    max_sigma = 2.0;
-    return [input_file, coordinates_file, num_years, max_sigma];
+    return [input_file, coordinates_file];
 
 
 # ------------ INPUTS ------------------ #
@@ -77,7 +77,7 @@ def compute_circle(myVelfield, center, radius):
             lon.append(myVelfield.elon[i]);
             lat.append(myVelfield.nlat[i]);
             close_stations.append(myVelfield.name[i]);
-    print("Returning %d stations that are within %f km of center %f, %f" % (len(close_stations), radius, center[0], center[1]))
+    print("Returning %d stations that are within %.3f km of center %.4f, %.4f" % (len(close_stations), radius, center[0], center[1]))
     return close_stations, lon, lat, rad_distance;
 
 
@@ -88,8 +88,8 @@ def compute_box(myVelfield, coord_box):
     lon = [];
     lat = [];
     for i in range(len(myVelfield.name)):
-        if myVelfield.elon[i] >= coord_box[0] and myVelfield.elon[i] <= coord_box[1]:
-            if myVelfield.nlat[i] >= coord_box[2] and myVelfield.elon[i] <= coord_box[3]:
+        if coord_box[0] <= myVelfield.elon[i] <= coord_box[1]:
+            if coord_box[2] <= myVelfield.nlat[i] <= coord_box[3]:
                 close_stations.append(myVelfield.name[i]);
                 lon.append(myVelfield.elon[i]);
                 lat.append(myVelfield.nlat[i]);
