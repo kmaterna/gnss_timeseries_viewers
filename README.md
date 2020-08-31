@@ -1,7 +1,7 @@
 # GNSS Time Series Viewers
 
 ## Code Description: 
-This library contains a set of tools to read GNSS time series and velocities, remove earthquake/antenna offsets, solve for slopes, remove seasonal terms using several algorithms, and plot time series, stacks, and maps.  It can read data from both the University of Nevada Reno (.tenv3) and the Plate Boundary Observatory / Network Of The Americas (.pos) formats. The tools here are meant to modular, useful for stringing together into more complex experiments (custom offsets, custom stacks, etc.). 
+This library in GPS_TOOLS/ contains a set of tools to read GNSS time series and velocities, remove earthquake/antenna offsets, solve for slopes, remove seasonal terms using several algorithms, and plot time series, stacks, and maps.  It can read data from both the University of Nevada Reno (.tenv3) and the Plate Boundary Observatory / Network Of The Americas (.pos) formats. The tools here are meant to be modular, useful for stringing together into more complex experiments (custom offsets, custom stacks, etc.).  
 
 
 ## Features
