@@ -323,9 +323,9 @@ def get_unr_earthquakes(Data0, station, offsets_dir):
     print(table);
     evdts1 = parse_table_unr(table);
 
-    try:
+    try:   # This is an example of a user-defined offset table
         table = subprocess.check_output(
-            "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  2' " + offsets_dir + "UNR_small_offsets.txt",
+            "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  2' " + offsets_dir + "UNR_userdefined_offsets.txt",
             shell=True);
         table = table.decode();  # needed when switching to python 3
     except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files...

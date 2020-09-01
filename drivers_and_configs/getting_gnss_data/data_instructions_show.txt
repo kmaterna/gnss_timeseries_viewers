@@ -39,6 +39,7 @@ unr_coords_file:
 unr_offsets_dir: Directory for UNR offsets
 	Download steps file and place it into this directory
 	source: http://geodesy.unr.edu/NGLStationPages/steps.txt
+	I also save their website text as a readme. 	
 
 
 HYDROLOGICAL MODELS DOWNLOAD:
