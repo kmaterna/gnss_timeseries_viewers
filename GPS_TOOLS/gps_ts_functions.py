@@ -59,8 +59,8 @@ def remove_outliers(Data0, outliers_def):
             newSe.append(Data0.Se[i]);
             newSn.append(Data0.Sn[i]);
             newSu.append(Data0.Su[i]);
-    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdt, dN=newdN, dE=newdE, dU=newdU, Sn=newSn,
-                         Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
+    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdt, dN=np.array(newdN), 
+                         dE=np.array(newdE), dU=np.array(newdU), Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
     return newData;
 
 
@@ -82,8 +82,8 @@ def impose_time_limits(Data0, starttime, endtime):
             newSe.append(Data0.Se[i]);
             newSn.append(Data0.Sn[i]);
             newSu.append(Data0.Su[i]);
-    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU,
-                         Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
+    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=np.array(newdN), dE=np.array(newdE), 
+                dU=np.array(newdU), Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
     return newData;
 
 
@@ -107,8 +107,9 @@ def remove_nans(Data0):
             temp_Se.append(Data0.Se[i]);
             temp_Sn.append(Data0.Sn[i]);
             temp_Su.append(Data0.Su[i]);
-    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=temp_dates, dN=temp_north, dE=temp_east,
-                         dU=temp_vert, Sn=temp_Sn, Se=temp_Se, Su=temp_Su, EQtimes=Data0.EQtimes);
+    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=temp_dates, dN=np.array(temp_north), 
+                         dE=np.array(temp_east),dU=np.array(temp_vert), 
+                         Sn=temp_Sn, Se=temp_Se, Su=temp_Su, EQtimes=Data0.EQtimes);
     return newData;
 
 
@@ -269,8 +270,8 @@ def get_referenced_data(roving_station_data, base_station_data):
             Sn_gps.append(roving_station_data.Sn[i]);
             Su_gps.append(roving_station_data.Su[i]);
     gps_relative = Timeseries(name=roving_station_data.name, coords=roving_station_data.coords, dtarray=dtarray,
-                              dE=dE_gps, dN=dN_gps, dU=dU_gps, Se=Se_gps, Sn=Sn_gps, Su=Su_gps,
-                              EQtimes=roving_station_data.EQtimes);
+                              dE=np.array(dE_gps), dN=np.array(dN_gps), dU=np.array(dU_gps), Se=np.array(Se_gps), 
+                              Sn=np.array(Sn_gps), Su=np.array(Su_gps), EQtimes=roving_station_data.EQtimes);
     return gps_relative;
 
 
@@ -283,8 +284,9 @@ def remove_constant(Data0, east_offset, north_offset, vert_offset):
         temp_east.append(Data0.dE[i] - east_offset);
         temp_north.append(Data0.dN[i] - north_offset);
         temp_vert.append(Data0.dU[i] - vert_offset);
-    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=temp_north, dE=temp_east,
-                         dU=temp_vert, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, 
+                         dN=np.array(temp_north), dE=np.array(temp_east), dU=np.array(temp_vert), 
+                         Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
     return newData;
 
 
