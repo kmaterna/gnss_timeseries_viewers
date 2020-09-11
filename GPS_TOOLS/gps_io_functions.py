@@ -131,6 +131,47 @@ def read_unr_vel_file(infile, coordinate_file):
                           last_epoch=last_epoch);
     return [myVelfield];
 
+def read_gamit_velfile(infile):
+    # Meant for reading a velocity file for example from GAMIT processing
+    # Doesn't have starttime and stoptime information.
+    print("Reading %s" % infile);
+    ifile = open(infile, 'r');
+    name = [];
+    nlat = [];
+    elon = [];
+    n = [];
+    e = [];
+    u = [];
+    sn = [];
+    se = [];
+    su = [];
+    first_epoch = [];
+    last_epoch = [];
+
+    for line in ifile:
+        temp = line.split();
+        if temp[0] == "#" or temp[0][0] == "#":
+            continue;
+        else:
+            elon_temp = float(temp[0]);
+            if elon_temp > 180:
+                elon_temp = elon_temp - 360.0;
+            elon.append(elon_temp);
+            nlat.append(float(temp[1]));
+            e.append(float(temp[2]));
+            n.append(float(temp[3]));
+            se.append(float(temp[6]));
+            sn.append(float(temp[7]));
+            u.append(float(temp[9]));
+            su.append(float(temp[11]));
+            name.append(temp[12][0:4]);
+            first_epoch.append(dt.datetime.strptime("19900101","%Y%m%d"));   # placeholders
+            last_epoch.append(dt.datetime.strptime("20300101","%Y%m%d"));    # placeholders
+
+    myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch);
+
+    return [myVelfield];
+
 
 def clean_velfield(velfield, num_years=0, max_sigma=1000, coord_box=(-180, 180, -90, 90)):
     # Take the raw GPS velocities, and clean them up.
