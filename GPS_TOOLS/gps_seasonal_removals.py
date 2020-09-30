@@ -307,7 +307,6 @@ def preprocess_stl(dtarray, data_column, uncertainties):
 def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
     station = Data.name;
     files = glob.glob(hydro_dir + station.lower() + '*.hyd');
-    # filename=hydro_dir+station.lower()+'_noah10_gldas2.hyd';
     if len(files) > 0:
         filename = files[0];
     else:

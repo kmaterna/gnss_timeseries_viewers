@@ -59,7 +59,8 @@ def inputs(input_file, coords_file, num_years, max_sigma, coord_box, network):
         [myVelfield] = gps_io_functions.read_pbo_vel_file(input_file);
     else:  # network = unr
         [myVelfield] = gps_io_functions.read_unr_vel_file(input_file, coords_file);
-    [myVelfield] = gps_io_functions.clean_velfield(myVelfield, num_years, max_sigma, coord_box);
+    [myVelfield] = gps_io_functions.clean_velfield(myVelfield, num_years=num_years, max_sigma=max_sigma,
+                                                   max_vert_sigma=max_sigma*3, coord_box=coord_box);
     [myVelfield] = gps_io_functions.remove_duplicates(myVelfield);
     return myVelfield;
 

@@ -173,7 +173,7 @@ def read_gamit_velfile(infile):
     return [myVelfield];
 
 
-def clean_velfield(velfield, num_years=0, max_sigma=1000, coord_box=(-180, 180, -90, 90)):
+def clean_velfield(velfield, num_years=0, max_sigma=1000, max_vert_sigma=1000, coord_box=(-180, 180, -90, 90)):
     # Take the raw GPS velocities, and clean them up.
     # Remove data that's less than num_years long,
     # has formal uncertainties above max_sigma,
@@ -194,6 +194,8 @@ def clean_velfield(velfield, num_years=0, max_sigma=1000, coord_box=(-180, 180, 
         if velfield.sn[i] > max_sigma:  # too high sigma, please exclude
             continue;
         if velfield.se[i] > max_sigma:
+            continue;
+        if velfield.su[i] > max_vert_sigma:
             continue;
         deltatime = velfield.last_epoch[i] - velfield.first_epoch[i];
         if deltatime.days <= num_years * 365.24:  # too short time interval, please exclude
