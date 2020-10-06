@@ -1,5 +1,6 @@
 May 31, 2018
 Instructions for periodically updating the GPS files on your local machine
+For doing this update in 2020, I created a script (update_data_holdings.sh)
 
 PBO DOWNLOAD: Velocities, Offsets, and Data
 pbo_gps_dir: 

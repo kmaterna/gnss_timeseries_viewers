@@ -342,7 +342,7 @@ def get_unr_earthquakes(Data0, station, offsets_dir):
 def get_pbo_offsets(station, offsets_dir):
     print("Offset table for station %s:" % (station));
     try:
-        table = subprocess.check_output("grep " + station + " " + offsets_dir + "*.off", shell=True);
+        table = subprocess.check_output("grep " + station + " " + offsets_dir + "cwu*.off", shell=True);
     except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files...
         table = [];
     if len(table) > 0:
