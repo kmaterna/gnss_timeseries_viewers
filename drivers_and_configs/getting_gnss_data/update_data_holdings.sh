@@ -1,6 +1,8 @@
 #!/bin/bash
 # Updating my data holdings as of October 6, 2020
 
+cd ../../GPS_POS_DATA/
+
 # UPDATE CWU POS DATA
 cd PBO_Data/
 wget -N --recursive --no-parent --no-directories --accept "*.cwu.final_igs14.pos, *.cwu.final_nam14.pos" ftp://data-out.unavco.org/pub/products/position

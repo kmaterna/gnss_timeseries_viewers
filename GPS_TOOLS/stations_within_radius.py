@@ -7,6 +7,7 @@ import numpy as np
 import haversine
 import read_kml
 import gps_io_functions
+import gps_vel_functions
 import matplotlib.path as mpltPath
 
 
@@ -59,9 +60,9 @@ def inputs(input_file, coords_file, num_years, max_sigma, coord_box, network):
         [myVelfield] = gps_io_functions.read_pbo_vel_file(input_file);
     else:  # network = unr
         [myVelfield] = gps_io_functions.read_unr_vel_file(input_file, coords_file);
-    [myVelfield] = gps_io_functions.clean_velfield(myVelfield, num_years=num_years, max_sigma=max_sigma,
-                                                   max_vert_sigma=max_sigma*3, coord_box=coord_box);
-    [myVelfield] = gps_io_functions.remove_duplicates(myVelfield);
+    [myVelfield] = gps_vel_functions.clean_velfield(myVelfield, num_years=num_years, max_horiz_sigma=max_sigma,
+                                                    max_vert_sigma=max_sigma * 3, coord_box=coord_box);
+    [myVelfield] = gps_vel_functions.remove_duplicates(myVelfield);
     return myVelfield;
 
 

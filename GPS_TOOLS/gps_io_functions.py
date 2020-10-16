@@ -131,6 +131,7 @@ def read_unr_vel_file(infile, coordinate_file):
                           last_epoch=last_epoch);
     return [myVelfield];
 
+
 def read_gamit_velfile(infile):
     # Meant for reading a velocity file for example from GAMIT processing
     # Doesn't have starttime and stoptime information.
@@ -165,94 +166,26 @@ def read_gamit_velfile(infile):
             u.append(float(temp[9]));
             su.append(float(temp[11]));
             name.append(temp[12][0:4]);
-            first_epoch.append(dt.datetime.strptime("19900101","%Y%m%d"));   # placeholders
-            last_epoch.append(dt.datetime.strptime("20300101","%Y%m%d"));    # placeholders
+            first_epoch.append(dt.datetime.strptime("19900101", "%Y%m%d"));  # placeholders
+            last_epoch.append(dt.datetime.strptime("20300101", "%Y%m%d"));  # placeholders
 
-    myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch);
-
-    return [myVelfield];
-
-
-def clean_velfield(velfield, num_years=0, max_sigma=1000, max_vert_sigma=1000, coord_box=(-180, 180, -90, 90)):
-    # Take the raw GPS velocities, and clean them up.
-    # Remove data that's less than num_years long,
-    # has formal uncertainties above max_sigma,
-    # or is outside our box of interest.
-    # Default arguments are meant to be global.
-    name = [];
-    nlat = [];
-    elon = [];
-    n = [];
-    e = [];
-    u = [];
-    sn = [];
-    se = [];
-    su = [];
-    first_epoch = [];
-    last_epoch = [];
-    for i in range(len(velfield.n)):
-        if velfield.sn[i] > max_sigma:  # too high sigma, please exclude
-            continue;
-        if velfield.se[i] > max_sigma:
-            continue;
-        if velfield.su[i] > max_vert_sigma:
-            continue;
-        deltatime = velfield.last_epoch[i] - velfield.first_epoch[i];
-        if deltatime.days <= num_years * 365.24:  # too short time interval, please exclude
-            continue;
-        if coord_box[0] < velfield.elon[i] < coord_box[1] and coord_box[2] < velfield.nlat[i] < coord_box[3]:
-            # The station is within the box of interest.
-            name.append(velfield.name[i]);
-            nlat.append(velfield.nlat[i]);
-            elon.append(velfield.elon[i]);
-            n.append(velfield.n[i]);
-            sn.append(velfield.sn[i]);
-            e.append(velfield.e[i]);
-            se.append(velfield.se[i]);
-            u.append(velfield.u[i]);
-            su.append(velfield.su[i]);
-            first_epoch.append(velfield.first_epoch[i]);
-            last_epoch.append(velfield.last_epoch[i]);
     myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch,
                           last_epoch=last_epoch);
+
     return [myVelfield];
 
 
-def remove_duplicates(velfield):
-    name = [];
-    nlat = [];
-    elon = [];
-    n = [];
-    e = [];
-    u = [];
-    sn = [];
-    se = [];
-    su = [];
-    first_epoch = [];
-    last_epoch = [];
+def read_usgs_velfile(filename):
+    [name, lon, lat, e, n, se, sn, u, su] = np.loadtxt(filename, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
+                                                       unpack=True, dtype={'names': (
+                                                       'name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
+                                                              'formats': (
+                                                              'U4', np.float, np.float, np.float, np.float, np.float,
+                                                              np.float, np.float, np.float)})
 
-    for i in range(len(velfield.n)):
-        is_duplicate = 0;
-        for j in range(len(name)):
-            if abs(nlat[j] - velfield.nlat[i]) < 0.0005 and abs(elon[j] - velfield.elon[i]) < 0.0005:
-                # we found a duplicate measurement.
-                is_duplicate = 1;
-            # Right now assuming all entries at the same lat/lon have the same velocity values.
-
-        if is_duplicate == 0:
-            name.append(velfield.name[i]);
-            nlat.append(velfield.nlat[i]);
-            elon.append(velfield.elon[i]);
-            n.append(velfield.n[i]);
-            sn.append(velfield.sn[i]);
-            e.append(velfield.e[i]);
-            se.append(velfield.se[i]);
-            u.append(velfield.u[i]);
-            su.append(velfield.su[i]);
-            first_epoch.append(velfield.first_epoch[i]);
-            last_epoch.append(velfield.last_epoch[i]);
-
-    myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch,
+    first_epoch = [dt.datetime.strptime("19900101", "%Y%m%d") for x in name];  # placeholders
+    last_epoch = [dt.datetime.strptime("20300101", "%Y%m%d") for x in name];  # placeholders
+    myVelfield = Velfield(name=name, nlat=lat, elon=lon, n=n, e=e, u=u, sn=sn, se=se, su=su, first_epoch=first_epoch,
                           last_epoch=last_epoch);
     return [myVelfield];
 
