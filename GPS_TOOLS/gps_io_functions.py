@@ -13,9 +13,11 @@ Velfield = collections.namedtuple("Velfield", ['name', 'nlat', 'elon', 'n', 'e',
                                                'last_epoch']);  # in mm/yr, with -180<lon<180
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
-Params = collections.namedtuple("Params", ['pbo_gps_dir', 'unr_gps_dir', 'pbo_earthquakes_dir', 'pbo_offsets_dir',
+Params = collections.namedtuple("Params", ['pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir', 'pbo_earthquakes_dir',
+                                           'pbo_offsets_dir',
                                            'unr_offsets_dir', 'unr_coords_file', 'pbo_velocities',
-                                           'unr_velocities', 'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
+                                           'unr_velocities', 'usgs_velocities', 'usgs_networks',
+                                           'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
                                            'lsdm_dir', 'stl_dir', 'blacklist']);
 
 
@@ -32,12 +34,15 @@ def read_config_file(infile):
     # Where you place all the directories
     pbo_gps_dir = config.get('py-config', 'pbo_gps_dir');
     unr_gps_dir = config.get('py-config', 'unr_gps_dir');
+    usgs_gps_dir = config.get('py-config', 'usgs_gps_dir');
     pbo_earthquakes_dir = config.get('py-config', 'pbo_earthquakes_dir');
     unr_offsets_dir = config.get('py-config', 'unr_offsets_dir');
     pbo_offsets_dir = config.get('py-config', 'pbo_offsets_dir');
     unr_coords_file = config.get('py-config', 'unr_coords_file');
     pbo_velocities = config.get('py-config', 'pbo_velocities');
     unr_velocities = config.get('py-config', 'unr_velocities');
+    usgs_velocities = config.get('py-config', 'usgs_vel_dir');
+    usgs_networks = config.get('py-config', 'usgs_network_list');
     blacklist = config.get('py-config', 'blacklist');
     gldas_dir = config.get('py-config', 'gldas_dir');
     nldas_dir = config.get('py-config', 'nldas_dir');
@@ -46,10 +51,12 @@ def read_config_file(infile):
     lsdm_dir = config.get('py-config', 'lsdm_dir');
     stl_dir = config.get('py-config', 'stl_dir');
 
-    myParams = Params(pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir, pbo_earthquakes_dir=pbo_earthquakes_dir,
+    myParams = Params(pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir, usgs_gps_dir=usgs_gps_dir,
+                      pbo_earthquakes_dir=pbo_earthquakes_dir,
                       pbo_offsets_dir=pbo_offsets_dir, unr_offsets_dir=unr_offsets_dir, unr_coords_file=unr_coords_file,
-                      pbo_velocities=pbo_velocities,
-                      unr_velocities=unr_velocities, gldas_dir=gldas_dir, nldas_dir=nldas_dir, noah_dir=noah_dir,
+                      pbo_velocities=pbo_velocities, unr_velocities=unr_velocities, usgs_velocities=usgs_velocities,
+                      usgs_networks=usgs_networks,
+                      gldas_dir=gldas_dir, nldas_dir=nldas_dir, noah_dir=noah_dir,
                       grace_dir=grace_dir, lsdm_dir=lsdm_dir, stl_dir=stl_dir, blacklist=blacklist);
     return myParams;
 
@@ -61,14 +68,9 @@ def read_pbo_vel_file(infile):
     start = 0;
     ifile = open(infile, 'r');
     name = [];
-    nlat = [];
-    elon = [];
-    n = [];
-    e = [];
-    u = [];
-    sn = [];
-    se = [];
-    su = [];
+    nlat, elon = [], [];
+    n, e, u = [], [], [];
+    sn, se, su = [], [], [];
     first_epoch = [];
     last_epoch = [];
     for line in ifile:
@@ -103,12 +105,8 @@ def read_unr_vel_file(infile, coordinate_file):
     # Returns a Velfield object.
     print("Reading %s" % infile);
     name = [];
-    n = [];
-    e = [];
-    u = [];
-    sn = [];
-    se = [];
-    su = [];
+    n, e, u = [], [], [];
+    sn, se, su = [], [], [];
     ifile = open(infile, 'r');
     for line in ifile:
         temp = line.split();
@@ -125,7 +123,7 @@ def read_unr_vel_file(infile, coordinate_file):
     ifile.close();
 
     [elon, nlat] = get_coordinates_for_stations(name, coordinate_file);
-    [first_epoch, last_epoch] = get_start_times_for_stations(name, coordinate_file);
+    [first_epoch, last_epoch] = get_start_times_for_unr_stations(name, coordinate_file);
 
     myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch,
                           last_epoch=last_epoch);
@@ -138,14 +136,9 @@ def read_gamit_velfile(infile):
     print("Reading %s" % infile);
     ifile = open(infile, 'r');
     name = [];
-    nlat = [];
-    elon = [];
-    n = [];
-    e = [];
-    u = [];
-    sn = [];
-    se = [];
-    su = [];
+    nlat, elon = [], [];
+    n, e, u = [], [], [];
+    sn, se, su = [], [], [];
     first_epoch = [];
     last_epoch = [];
 
@@ -175,18 +168,36 @@ def read_gamit_velfile(infile):
     return [myVelfield];
 
 
-def read_usgs_velfile(filename):
-    [name, lon, lat, e, n, se, sn, u, su] = np.loadtxt(filename, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
+def read_usgs_velfile(infile, ts_directory=None):
+    # Reading a USGS velocity file.
+    # If we provide a ts_directory, we can get first_epoch and last_epoch for each station.
+    # Otherwise, we have to put placeholders.
+    print("Reading %s" % infile);
+    [name, lon, lat, e, n, se, sn, u, su] = np.loadtxt(infile, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
                                                        unpack=True, dtype={'names': (
-                                                       'name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
-                                                              'formats': (
-                                                              'U4', np.float, np.float, np.float, np.float, np.float,
-                                                              np.float, np.float, np.float)})
-
-    first_epoch = [dt.datetime.strptime("19900101", "%Y%m%d") for x in name];  # placeholders
-    last_epoch = [dt.datetime.strptime("20300101", "%Y%m%d") for x in name];  # placeholders
-    myVelfield = Velfield(name=name, nlat=lat, elon=lon, n=n, e=e, u=u, sn=sn, se=se, su=su, first_epoch=first_epoch,
-                          last_epoch=last_epoch);
+            'name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
+            'formats': (
+                'U4', np.float, np.float, np.float, np.float, np.float,
+                np.float, np.float, np.float)})
+    # Populating the first_epoch and last_epoch with information from the associated time series directory.
+    first_epoch = [];
+    last_epoch = [];
+    if ts_directory is not None:
+        for station in name:
+            ts_filename = ts_directory + '/' + station + '_NAfixed.rneu';
+            [dates, _] = np.loadtxt(ts_filename, unpack=True, usecols=(0, 1),
+                                    dtype={'names': ('dtstrs', 'datenums'), 'formats': ('U8', np.float)});
+            if np.size(dates) == 1:  # if the campaign station only had one day of data...
+                first_epoch = [dt.datetime.strptime(str(dates), "%Y%m%d") for x in name];
+                last_epoch = [dt.datetime.strptime(str(dates), "%Y%m%d") for x in name];
+            else:
+                first_epoch.append(dt.datetime.strptime(dates[0], "%Y%m%d"));
+                last_epoch.append(dt.datetime.strptime(dates[-1], "%Y%m%d"));
+    else:
+        first_epoch = [dt.datetime.strptime("19900101", "%Y%m%d") for x in name];  # placeholders
+        last_epoch = [dt.datetime.strptime("20300101", "%Y%m%d") for x in name];  # placeholders
+    myVelfield = Velfield(name=name, nlat=lat, elon=lon, n=n, e=e, u=u, sn=sn, se=se, su=su,
+                          first_epoch=first_epoch, last_epoch=last_epoch);
     return [myVelfield];
 
 
@@ -335,7 +346,7 @@ def get_coordinates_for_stations(station_names, coordinates_file):
     return [lon, lat];
 
 
-def get_start_times_for_stations(station_names, coordinates_file):
+def get_start_times_for_unr_stations(station_names, coordinates_file):
     # Meant for UNR stations
     end_time = [];
     start_time = [];

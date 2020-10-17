@@ -15,6 +15,11 @@ unr_coords_file = /Users/kmaterna/Documents/GPS_POS_DATA/UNR_DATA/UNR_coords_dec
 unr_offsets_dir = /Users/kmaterna/Documents/GPS_POS_DATA/Offsets/
 unr_velocities = /Users/kmaterna/Documents/GPS_POS_DATA/Velocity_Files/IGS14_MAGNET_dec2019.txt
 
+# USGS GPS Velocities, time series
+usgs_gps_dir = /Users/kmaterna/Documents/GPS_POS_DATA/USGS_Data/Time_Series
+usgs_vel_dir = /Users/kmaterna/Documents/GPS_POS_DATA/USGS_Data/Velocities
+usgs_network_list = /Users/kmaterna/Documents/GPS_POS_DATA/USGS_Data/network_list.txt
+
 blacklist = /Users/kmaterna/Documents/GPS_POS_DATA/Blacklist/blacklist.txt
 
 # Hydrological Loading models

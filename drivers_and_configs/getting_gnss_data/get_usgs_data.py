@@ -1,7 +1,11 @@
 import requests
 import pandas as pd
 import datetime as dt
+import os
+import subprocess
+import gps_io_functions
 
+# GLOBAL VARIABLES
 base_url = 'https://earthquake.usgs.gov/monitoring/gps/'
 networks = ['Alaska',
             'Alaska_SGPS',
@@ -33,12 +37,16 @@ networks = ['Alaska',
             'WindKetchFlat_SGPS',
             'YellowstoneContin',
             'Yellowstone_SPGPS'];
+vel_base_directory = "../../GPS_POS_DATA/USGS_Data/Velocities/"
+ts_base_directory = "../../GPS_POS_DATA/USGS_DATA/Time_Series/"
 
 
 def download_usgs_velocity_tables(network, base_directory, outfile):
+    # Go online and grab USGS velocity tables, in NA, ITRF2008, and Filtered
+    # One table for each network, as organized in the USGS database.
     url = base_url + network + '/velocities';
     df_list = pd.read_html(requests.get(url).content)
-    print("Writing %d tables on website %s " % (len(df_list), url) );
+    print("Reading %d tables on website %s " % (len(df_list), url) );
     if len(df_list) == 3:
         print("Assuming they follow the pattern NAM, ITRF2008, Filtered");
 
@@ -61,23 +69,33 @@ def download_usgs_velocity_tables(network, base_directory, outfile):
         one_outfile.close();
         df_list[1].to_csv(itrf_outfile, index=False, sep=' ', mode='a');
         print("Writing %s " % itrf_outfile);
+        print("Skipping filtered velocity field for convenience.")
+    else:
+        print("Skipping network %s because of unexpected number of reference frames." % network)
+    return;
 
-        # Filtered
-        filt_outfile = base_directory + "FILT_" + outfile;
-        one_outfile = open(filt_outfile, 'w');
-        one_outfile.write("# USGS Velocity File, Filtered\n")
-        one_outfile.write("# Downloaded from %s on %s\n" % (url, dt.datetime.now()));
-        one_outfile.write("# ");
-        one_outfile.close();
-        df_list[2].to_csv(filt_outfile, index=False, sep=' ', mode='a');
-        print("Writing %s " % filt_outfile);
+
+def download_usgs_time_series(station, network, ts_base_directory):
+    # Download some time series files from USGS in NA and ITRF2008
+    # They will be organized by network, as they are in the USGS database
+    directory_name = ts_base_directory + network + '/';
+    subprocess.call(['mkdir', '-p', directory_name], shell=False);
+    url_name = base_url + 'data/networks/' + network + '/' + station.lower() + '/nafixed/' + station.lower() + '.rneu'
+    subprocess.call(["wget", url_name,'-O',directory_name+station.lower()+'_NAfixed.rneu'],shell=False);
+    url_name = base_url + 'data/networks/' + network + '/' + station.lower() + '/itrf2008/' + station.lower() + '.rneu'
+    subprocess.call(["wget", url_name,'-O',directory_name+station.lower()+'_ITRF2008.rneu'],shell=False);
     return;
 
 
 if __name__ == "__main__":
-    base_directory = "../../GPS_POS_DATA/USGS_Data/Velocities/"
-    download_usgs_velocity_tables("NCalifornia_SGPS", base_directory, "NCalifornia_SGPS_vels.txt");
-    download_usgs_velocity_tables("Pacific_Northwest", base_directory, "Pacific_Northwest_vels.txt");
-    download_usgs_velocity_tables("SFBayArea", base_directory, "SFBayArea_vels.txt");
-    download_usgs_velocity_tables("SFBayArea_SGPS", base_directory, "SFBayArea_SGPS_vels.txt");
-
+    # Go get all the USGS GPS files!
+    # This gets most of them (anything with 3 tables: NA, ITRF, Filtered)
+    # Velocity tables AND time series in ITRF2008/NA
+    for network in networks:
+        download_usgs_velocity_tables(network, vel_base_directory, outfile=network+"_vels.txt");
+        velfile = vel_base_directory+'ITRF_'+network+'_vels.txt';
+        ts_directory = ts_base_directory+network+'/';
+        if os.path.isfile(velfile):
+            [myVelfield] = gps_io_functions.read_usgs_velfile(velfile, ts_directory=ts_directory);
+            for station in myVelfield.name:
+                download_usgs_time_series(station, network, ts_base_directory)

@@ -2,8 +2,8 @@
 
 import gps_io_functions
 
-# Velfield = collections.namedtuple("Velfield", ['name', 'nlat', 'elon', 'n', 'e', 'u', 'sn', 'se', 'su', 'first_epoch',
-#                                                'last_epoch']);  # in mm/yr, with -180<lon<180
+# For reference: Velfield = collections.namedtuple("Velfield", ['name', 'nlat', 'elon', 'n', 'e', 'u', 'sn', 'se', 'su',
+#                                                   'first_epoch', 'last_epoch']);  # in mm/yr, with -180<lon<180
 
 
 def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1000, coord_box=(-180, 180, -90, 90)):
@@ -13,14 +13,9 @@ def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1
     # or is outside our box of interest.
     # Default arguments are meant to be global.
     name = [];
-    nlat = [];
-    elon = [];
-    n = [];
-    e = [];
-    u = [];
-    sn = [];
-    se = [];
-    su = [];
+    nlat, elon = [], [];
+    n, e, u = [], [], [];
+    sn, se, su = [], [], [];
     first_epoch = [];
     last_epoch = [];
     for i in range(len(velfield.n)):
@@ -53,14 +48,9 @@ def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1
 
 def remove_duplicates(velfield):
     name = [];
-    nlat = [];
-    elon = [];
-    n = [];
-    e = [];
-    u = [];
-    sn = [];
-    se = [];
-    su = [];
+    nlat, elon = [], [];
+    n, e, u = [], [], [];
+    sn, se, su = [], [], [];
     first_epoch = [];
     last_epoch = [];
 

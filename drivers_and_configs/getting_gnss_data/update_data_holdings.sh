@@ -1,6 +1,6 @@
 #!/bin/bash
 # Updating my data holdings as of October 6, 2020
-
+# First, get into the major directory for GNSS Data.
 cd ../../GPS_POS_DATA/
 
 # UPDATE CWU POS DATA
@@ -25,7 +25,7 @@ wget -N --recursive --no-parent --no-directories --accept "*.hyd" ftp://data-out
 cd ../../
 
 
-# UPDATE UNR DATA
+# UPDATE UNR DATA: OFFSETS AND COORDINATES
 cd Offsets/
 wget http://geodesy.unr.edu/NGLStationPages/steps.txt -O UNR_steps.txt
 cd ../
