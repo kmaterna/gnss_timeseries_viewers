@@ -95,7 +95,8 @@ if __name__ == "__main__":
         download_usgs_velocity_tables(network, vel_base_directory, outfile=network+"_vels.txt");
         velfile = vel_base_directory+'ITRF_'+network+'_vels.txt';
         ts_directory = ts_base_directory+network+'/';
-        if os.path.isfile(velfile):
-            [myVelfield] = gps_io_functions.read_usgs_velfile(velfile, ts_directory=ts_directory);
-            for station in myVelfield.name:
-                download_usgs_time_series(station, network, ts_base_directory)
+        if network in ['Southern_California', 'WindKetchFlat_SGPS', 'YellowstoneContin','Yellowstone_SPGPS']:
+            if os.path.isfile(velfile):
+                [myVelfield] = gps_io_functions.read_usgs_velfile(velfile);
+                for station in myVelfield.name:
+                    download_usgs_time_series(station, network, ts_base_directory)
