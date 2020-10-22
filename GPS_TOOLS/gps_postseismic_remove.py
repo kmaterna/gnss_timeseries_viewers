@@ -12,8 +12,10 @@ import matplotlib.pyplot as plt
 
 
 # HELPER FUNCTIONS #
-def get_station_hines(station_name, data_dir="../../GPS_POS_DATA"):
-    model_file = data_dir + "/Remove_postseismic/Hines/Stations/" + station_name + "_psmodel.pos";
+def get_station_hines(station_name, data_config_file):
+    system_params = gps_io_functions.read_config_file(data_config_file);
+    model_file = system_params.general_gps_dir + "/Remove_postseismic/Hines/Stations/" + station_name + "_psmodel.pos";
+    # This is stored in general_gps_dir because it's on my system, but may not be on general systems. 
     if os.path.isfile(model_file):
         [Data0] = gps_io_functions.read_pbo_pos_file(model_file);
     else:
@@ -22,7 +24,7 @@ def get_station_hines(station_name, data_dir="../../GPS_POS_DATA"):
     return Data0;
 
 
-def remove_by_model(Data0, data_dir=None):
+def remove_by_model(Data0, data_config_file):
     # Right now configured for the Hines data.
     starttime1 = dt.datetime.strptime("20100403", "%Y%m%d");
     endtime1 = dt.datetime.strptime("20100405", "%Y%m%d");
@@ -30,10 +32,14 @@ def remove_by_model(Data0, data_dir=None):
     endtime2 = dt.datetime.strptime("20200330", "%Y%m%d");
 
     # Input Hines data.
-    model_data = get_station_hines(Data0.name, data_dir);
+    model_data = get_station_hines(Data0.name, data_config_file);
 
     if model_data == []:
         return Data0;
+
+    if model_data.dtarray[-1]<Data0.dtarray[-1]:
+        print("\nWARNING! Trying to use a short postseismic model to fix a long GNSS time series.");
+        print("PROBLEMS MAY OCCUR- tread carefully!!\n\n");
 
     # These will be the same size.
     Data0, model = gps_ts_functions.pair_gps_model_keeping_gps(Data0,
@@ -75,5 +81,4 @@ def remove_by_model(Data0, data_dir=None):
                                                  dN=dN_gps, dU=dU_gps, Se=Se_gps, Sn=Sn_gps, Su=Su_gps,
                                                  EQtimes=Data0.EQtimes);
     corrected_data = offsets.remove_offsets(corrected_data, offsets_obj);
-    # corrected_data = Data0;
     return corrected_data;

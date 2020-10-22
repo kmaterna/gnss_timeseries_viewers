@@ -3,6 +3,8 @@
 # 
 [py-config]
 
+gps_data_dir = /Users/kmaterna/Documents/GPS_POS_Data/
+
 # PBO GPS Velocities, time series, and offsets
 pbo_gps_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Data/
 pbo_velocities = /Users/kmaterna/Documents/GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt

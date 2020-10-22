@@ -13,8 +13,8 @@ Velfield = collections.namedtuple("Velfield", ['name', 'nlat', 'elon', 'n', 'e',
                                                'last_epoch']);  # in mm/yr, with -180<lon<180
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
-Params = collections.namedtuple("Params", ['pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir', 'pbo_earthquakes_dir',
-                                           'pbo_offsets_dir',
+Params = collections.namedtuple("Params", ['general_gps_dir','pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir', 
+                                           'pbo_earthquakes_dir', 'pbo_offsets_dir',
                                            'unr_offsets_dir', 'unr_coords_file', 'pbo_velocities',
                                            'unr_velocities', 'usgs_velocities', 'usgs_networks',
                                            'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
@@ -32,6 +32,7 @@ def read_config_file(infile):
     config.read(infile);
 
     # Where you place all the directories
+    general_gps_dir = config.get('py-config', 'gps_data_dir');
     pbo_gps_dir = config.get('py-config', 'pbo_gps_dir');
     unr_gps_dir = config.get('py-config', 'unr_gps_dir');
     usgs_gps_dir = config.get('py-config', 'usgs_gps_dir');
@@ -51,8 +52,8 @@ def read_config_file(infile):
     lsdm_dir = config.get('py-config', 'lsdm_dir');
     stl_dir = config.get('py-config', 'stl_dir');
 
-    myParams = Params(pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir, usgs_gps_dir=usgs_gps_dir,
-                      pbo_earthquakes_dir=pbo_earthquakes_dir,
+    myParams = Params(general_gps_dir=general_gps_dir, pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir, 
+                      usgs_gps_dir=usgs_gps_dir, pbo_earthquakes_dir=pbo_earthquakes_dir,
                       pbo_offsets_dir=pbo_offsets_dir, unr_offsets_dir=unr_offsets_dir, unr_coords_file=unr_coords_file,
                       pbo_velocities=pbo_velocities, unr_velocities=unr_velocities, usgs_velocities=usgs_velocities,
                       usgs_networks=usgs_networks,

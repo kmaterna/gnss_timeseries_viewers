@@ -37,15 +37,17 @@ def interpolate_over_time(dates, east, north, vert):
 # --------------- THE PROGRAM --------------- # 
 
 def configure():
+	data_config_file = "../../GPS_POS_DATA/config.txt"
+	config_params = gps_io_functions.read_config_file(data_config_file);
 	intended_box = [-116, -115, 32.5, 33.5];
-	intended_stations1,_,_ = stations_within_radius.get_stations_within_box(intended_box, network='unr');
-	intended_stations2,_,_ = stations_within_radius.get_stations_within_box(intended_box, network='pbo');
+	intended_stations1,_,_ = stations_within_radius.get_stations_within_box(data_config_file, intended_box, network='unr');
+	intended_stations2,_,_ = stations_within_radius.get_stations_within_box(data_config_file, intended_box, network='pbo');
 	intended_stations = list(set(intended_stations1+intended_stations2));
 	print("Returning %d intended stations " % (len(intended_stations)) );
 	model_file = "../../GPS_POS_DATA/Remove_postseismic/Hines/results.h5"
 	starttime = dt.datetime.strptime("2010-04-04","%Y-%m-%d");  # earthquake time
-	endtime = dt.datetime.strptime("2020-04-04","%Y-%m-%d");  # the end of the time series we're writing
-	return intended_stations, model_file, starttime, endtime;
+	endtime = dt.datetime.strptime("2025-04-04","%Y-%m-%d");  # the end of the time series we're writing
+	return intended_stations, config_params.unr_coords_file, model_file, starttime, endtime;
 
 # --------------- INPUTS --------------- # 
 
@@ -80,7 +82,7 @@ def read_hines_to_tsObjList(filename, starttime):
 
 	return tsObjList;
 
-def how_many_new_stations(intended_stations, tsObjList):
+def how_many_new_stations(intended_stations, coord_file, tsObjList):
 	given_stations = [tsObjList[i].name for i in range(len(tsObjList))];
 	new_stations = []; existing_stations=[]; 
 	for i in range(len(intended_stations)):
@@ -88,7 +90,7 @@ def how_many_new_stations(intended_stations, tsObjList):
 			new_stations.append(intended_stations[i]);
 		else:
 			existing_stations.append(intended_stations[i]);
-	[new_lon, new_lat] = gps_io_functions.get_coordinates_for_stations(new_stations);
+	[new_lon, new_lat] = gps_io_functions.get_coordinates_for_stations(new_stations, coord_file);
 	print("We have modeled timeseries for %d desired stations " % (len(existing_stations)) )
 	print("Need to compute for %d new stations " % len(new_stations));
 	return new_stations, new_lon, new_lat;
@@ -297,7 +299,7 @@ def view_log_model(tsObjList, modeled_tsObjList):
 
 if __name__=="__main__":
 	# Where are the new Salton Sea stations? Configure and Input
-	intended_stations, model_file, starttime, endtime = configure();
+	intended_stations, coord_file, model_file, starttime, endtime = configure();
 	tsObjList = read_hines_to_tsObjList(model_file, starttime);
 
 	# # Outputs directly from the Hines model. 
@@ -306,7 +308,7 @@ if __name__=="__main__":
 	# timeseries_figure(tsObjList);
 
 	# Can we interpolate into new stations? 
-	new_stations, new_lon, new_lat = how_many_new_stations(intended_stations, tsObjList);
+	new_stations, new_lon, new_lat = how_many_new_stations(intended_stations, coord_file, tsObjList);
 	newTsObjList = compute_for_new_stations(new_stations, new_lon, new_lat, tsObjList);
 	# interpolation_map_figure(tsObjList, newTsObjList);
 	
