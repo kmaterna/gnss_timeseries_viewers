@@ -4,8 +4,9 @@
 The small library in GPS_TOOLS/ contains a set of Python tools to read GNSS time series and velocities, remove earthquake/antenna offsets, solve for slopes, remove seasonal terms using several algorithms, and plot time series, stacks, and maps.  It can read data from both the University of Nevada Reno (.tenv3) and the Plate Boundary Observatory / Network Of The Americas (.pos) formats. The tools here are meant to be modular, useful for stringing together into more complex experiments (custom offsets, custom stacks, etc.).  
 
 
-## Features
-* Plot single time teries (3-component)
+## Library Features:
+* Download local copies of GNSS velocities, time series, and offsets from the UNR, GAGE, and USGS databases. 
+* Plot single GNSS time series (3-component)
 * Read time series and velocities from UNR, PBO, CWU, and NMT formats
 * Extract offsets at the times of earthquakes and antenna changes
 * Remove seasonal terms using: 
@@ -18,6 +19,7 @@ The small library in GPS_TOOLS/ contains a set of Python tools to read GNSS time
 * Manually exclude bad stations from stacks if they are on the user-defined blacklist
 * Calculate the formal velocity uncertainty and an empirical uncertainty on velocity esimates using the Allen Variance of the Rate (Hackl et al., 2011)
 * Write out processed time series as text files in .pos format
+* Specify the configuration of your system and the location of the local GNSS data with a plain-text config file, passed into the library each time it is used. 
 
 
 ## Examples
@@ -25,7 +27,7 @@ The small library in GPS_TOOLS/ contains a set of Python tools to read GNSS time
 ### How many stations within a region? 
 Using one function, we can figure out which stations in the PBO newtwork are within a certain radius or region. In this example, we read the PBO stations and return any within 100 km of a chosen coordinate. 
 ```bash
-(base) Kathryns-MacBook-Pro-2:example kmaterna$ driver_find_within_radius.py 
+(base) Kathryns-MacBook-Pro-2:example kmaterna$ example_driver_find_within_radius.py 
 Reading /Users/kmaterna/Documents/GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt
 Returning 26 stations that are within 100.000 km of center -122.0000, 40.0000
 ['ORVB', 'P270', 'P272', 'P333', 'P334', 'P335', 'P336', 'P337', 'P339', 'P341', 'P344', 'P345', 'P346', 'P349', 'P664', 'P665', 'P666', 'P667', 'P668', 'P669', 'P670', 'P671', 'P794', 'QUIN', 'SUTB', 'WDCB']
@@ -35,7 +37,7 @@ Returning 26 stations that are within 100.000 km of center -122.0000, 40.0000
 ### Single GNSS Time Series
 As another example, we plot the PBO time series of P511, a station in Southern California with seasonal terms and antenna changes removed but earthquakes still left in. One possible usage of one driver is illustrated and its command-line outputs are shown. 
 ```bash
-(base) Kathryns-MacBook-Pro-2:example kmaterna$ driver_single_plot.py P511
+(base) Kathryns-MacBook-Pro-2:example kmaterna$ example_driver_single_plot.py P511
 ------- P511 --------
 Viewing station P511, earthquakes_remove=0, outliers_remove=1, seasonals_remove=1, datasource=cwu, refframe=NA
 
