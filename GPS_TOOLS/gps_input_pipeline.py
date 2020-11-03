@@ -56,7 +56,7 @@ def multi_station_inputs(station_names, blacklist_user, proc_center, refframe, d
 def get_station_data(station, datasource, data_config_file, refframe="NA", sub_network=''):
     # A function that you can use to access the reading library.
     # refframe choices are NA and ITRF
-    pre_screen_datasource(data_config_file, station, datasource, refframe, sub_network);
+    datasource, sub_network = pre_screen_datasource(data_config_file, station, datasource, refframe, sub_network);
 
     if datasource == 'pbo':
         [myData, offset_obj, eq_obj] = get_pbo(data_config_file, station, refframe);  # PBO data format
@@ -220,8 +220,12 @@ def pre_screen_datasource(data_config_file, station, input_datasource='pbo', ref
         sys.exit(1);
 
     if input_datasource == 'usgs' and sub_network == '':
-        print("ERROR! User must provide a sub-network for USGS time series. Exiting. ");
-        sys.exit(1);
+        network_list = query_usgs_network_name(station, Params.usgs_gps_dir);
+        if len(network_list) == 1:
+            sub_network = network_list[0].split('/')[-1];
+        else:
+            print("ERROR! User must select one sub-network for USGS time series. Exiting. ");
+            sys.exit(1);
 
     # Path setting
     if input_datasource == 'unr':
@@ -253,24 +257,27 @@ def pre_screen_datasource(data_config_file, station, input_datasource='pbo', ref
         print("Found file %s from datasource %s %s " % (filename, input_datasource, sub_network));
     # If the file is not found on the computer:
     else:
-        print("Error!  Cannot find %s in %s %s database" % (filename, input_datasource, sub_network) );
+        print("Error!  Cannot find %s in %s %s database." % (filename, input_datasource, sub_network) );
         if input_datasource == 'usgs':
-            print("For USGS data, station %s may instead be found in the following sub-networks:" % station);
+            print("The station %s could be found in the following sub_networks instead: " % station);
             query_usgs_network_name(station, Params.usgs_gps_dir);
         print("Exiting immediately...");
         sys.exit(1);
-    return;
+    return input_datasource, sub_network;
 
 
 def query_usgs_network_name(station, gps_ts_dir):
     # Given that USGS puts stations into networks, which network is a given station a member of?
     # This function may print more than one.
+    network_list = [];
     directories = glob.glob(gps_ts_dir+"/*");
+    print("Querying for station %s in USGS sub-networks... " % station);
     for item in directories:
         if os.path.isfile(item+'/'+station.lower()+'_NAfixed.rneu'):
             print("Found %s in %s" % (station, item) );
+            network_list.append(item);
     print("")
-    return;
+    return network_list;
 
 
 def remove_blacklist(data_config_file, stations):

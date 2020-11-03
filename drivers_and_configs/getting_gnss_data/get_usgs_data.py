@@ -88,15 +88,13 @@ def download_usgs_time_series(station, network, ts_base_directory):
 
 
 if __name__ == "__main__":
-    # Go get all the USGS GPS files!
-    # This gets most of them (anything with 3 tables: NA, ITRF, Filtered)
-    # Velocity tables AND time series in ITRF2008/NA
+    # Go get all the USGS GPS files from the internet!
+    # This gets velocity tables from website, AND time series in ITRF2008/NA
     for network in networks:
         download_usgs_velocity_tables(network, vel_base_directory, outfile=network+"_vels.txt");
         velfile = vel_base_directory+'ITRF_'+network+'_vels.txt';
         ts_directory = ts_base_directory+network+'/';
-        if network in ['Southern_California', 'WindKetchFlat_SGPS', 'YellowstoneContin','Yellowstone_SPGPS']:
-            if os.path.isfile(velfile):
-                [myVelfield] = gps_io_functions.read_usgs_velfile(velfile);
-                for station in myVelfield.name:
-                    download_usgs_time_series(station, network, ts_base_directory)
+        if os.path.isfile(velfile):
+            [myVelfield] = gps_io_functions.read_usgs_velfile(velfile);
+            for station in myVelfield.name:
+                download_usgs_time_series(station, network, ts_base_directory)
