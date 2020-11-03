@@ -1,4 +1,4 @@
-# Read the inputs for PBO and UNR files
+# Read the inputs for various time series and velocity files
 
 import subprocess, sys, os, glob
 import datetime as dt
@@ -56,8 +56,7 @@ def multi_station_inputs(station_names, blacklist_user, proc_center, refframe, d
 def get_station_data(station, datasource, data_config_file, refframe="NA", sub_network=''):
     # A function that you can use to access the reading library.
     # refframe choices are NA and ITRF
-    datasource = determine_datasource(data_config_file, station, datasource, refframe, sub_network);
-    # tell us which directory to use.
+    pre_screen_datasource(data_config_file, station, datasource, refframe, sub_network);
 
     if datasource == 'pbo':
         [myData, offset_obj, eq_obj] = get_pbo(data_config_file, station, refframe);  # PBO data format
@@ -80,7 +79,7 @@ def get_station_data(station, datasource, data_config_file, refframe="NA", sub_n
     elif datasource == 'lsdm':
         [myData, offset_obj, eq_obj] = get_lsdm(data_config_file, station);  # LSDM model
     else:
-        print('error! data source "%s" not recognized.' % datasource);
+        print('Error! data source "%s" not recognized. Returning empty object. ' % datasource);
         return [[], [], []];  # Error code.
     return [myData, offset_obj, eq_obj];
 
@@ -202,10 +201,8 @@ def get_lsdm(data_config_file, station):
     return [myData, Offset, Offset];
 
 
-# Based on whether a file exists in certain directories or not, 
-# Return the 'pbo' or 'unr' datasource that we should be using. 
-def determine_datasource(data_config_file, station, input_datasource='pbo', refframe="NA", sub_network=''):
-    # A sorting and defensive programming function.
+def pre_screen_datasource(data_config_file, station, input_datasource='pbo', refframe="NA", sub_network=''):
+    # A defensive programming function that quits if it doesn't find the right file.
     print("\nStation %s: " % station);
     Params = gps_io_functions.read_config_file(data_config_file);
     if refframe == "NA":
@@ -221,83 +218,48 @@ def determine_datasource(data_config_file, station, input_datasource='pbo', reff
     else:
         print("ERROR! Unrecognized reference frame (choices NA and ITRF)");
         sys.exit(1);
+
     if input_datasource == 'usgs' and sub_network == '':
         print("ERROR! User must provide a sub-network for USGS time series. Exiting. ");
         sys.exit(1);
 
     # Path setting
-    unr_filename = Params.unr_gps_dir + station + "." + unr_reflabel + ".tenv3";
-    pbo_filename = Params.pbo_gps_dir + station + ".pbo.final_" + pbo_reflabel + ".pos";
-    cwu_filename = Params.pbo_gps_dir + station + ".cwu.final_" + cwu_reflabel + ".pos";
-    nmt_filename = Params.pbo_gps_dir + station + ".nmt.final_" + pbo_reflabel + ".pos";
-    usgs_filename = Params.usgs_gps_dir + '/' + sub_network + '/' + station.lower() + "_" + usgs_reflabel + ".rneu";
-    gldas_filename = Params.gldas_dir + station.lower() + "_noah10_gldas2.hyd";
-    nldas_filename = Params.nldas_dir + station.lower() + "_noah125_nldas2.hyd";
-    noah025_filename = Params.noah_dir + station + "_NOAH025.hyd";
-    grace_filename = Params.grace_dir + "scaled_" + station + "_PREM_model_ts.txt";
-    lsdm_filename = Params.lsdm_dir + station + "_LSDM_hydro.txt.txt";
-
-    # Setting datasource label
-    # Getting ready to return an empty object if we don't find the right file.
-    if input_datasource == 'pbo' and os.path.isfile(pbo_filename):
-        print("Using PBO file as input data. ");
-        datasource = 'pbo';
-    elif input_datasource == 'pbo' and os.path.isfile(unr_filename):
-        print("Using UNR as input data because PBO data file doesn't exist");  # this is a default behavior
-        datasource = 'unr';
-    elif input_datasource == 'unr' and os.path.isfile(unr_filename):
-        print("Using UNR as input data (selected by user).");
-        datasource = 'unr';
-    elif input_datasource == 'unr' and not os.path.isfile(unr_filename):
-        print("Error! Cannot find " + station + " in UNR database. Returning empty object.");
-        datasource = 'error';
-    elif input_datasource == 'usgs' and os.path.isfile(usgs_filename):
-        print("Using USGS from %s sub-network as input data (selected by user)." % sub_network);
-        datasource = 'usgs';
-    elif input_datasource == 'usgs' and not os.path.isfile(usgs_filename):
-        print("Error! Cannot find " + station + " in USGS sub-network %s. Returning empty object." % sub_network);
-    elif input_datasource == 'cwu' and os.path.isfile(cwu_filename):
-        datasource = 'cwu';
-    elif input_datasource == 'cwu' and not os.path.isfile(cwu_filename):
-        print("Error! Cannot find " + station + " in CWU database. Returning empty object.");
-        datasource = 'error';
-    elif input_datasource == 'nmt' and os.path.isfile(nmt_filename):
-        datasource = 'nmt';
-    elif input_datasource == 'nmt' and not os.path.isfile(nmt_filename):
-        print("Error! Cannot find " + station + " in NMT database. Returning empty object.");
-        datasource = 'error';
-    elif input_datasource == 'gldas' and os.path.isfile(gldas_filename):
-        datasource = 'gldas';
-    elif input_datasource == 'gldas' and not os.path.isfile(gldas_filename):
-        print("Error! Cannot find " + station + " in GLDAS database. Returning empty object.");
-        datasource = 'error';
-    elif input_datasource == 'nldas' and os.path.isfile(nldas_filename):
-        datasource = 'nldas';
-    elif input_datasource == 'nldas' and not os.path.isfile(nldas_filename):
-        print("Error! Cannot find " + station + " in NLDAS database. Returning empty object.");
-        datasource = 'error';
-    elif input_datasource == 'noah025' and os.path.isfile(noah025_filename):
-        datasource = 'noah025';
-    elif input_datasource == 'noah025' and not os.path.isfile(noah025_filename):
-        print("Error! Cannot find " + station + " in NOAH025 database. Returning empty object.");
-        datasource = 'error';
-    elif input_datasource == 'lsdm' and os.path.isfile(lsdm_filename):
-        datasource = 'lsdm';
-    elif input_datasource == 'lsdm' and not os.path.isfile(lsdm_filename):
-        print("Error! Cannot find " + station + " in LSDM database. Returning empty object.");
-        datasource = 'error';
-    elif input_datasource == 'grace' and os.path.isfile(grace_filename):
-        datasource = 'grace';
-    elif input_datasource == 'grace' and not os.path.isfile(grace_filename):
-        print("Error! Cannot find " + station + " in GRACE database. Returning empty object.");
-        datasource = 'error';
-    elif input_datasource not in ['unr', 'pbo', 'cwu', 'nmt', 'gldas', 'nldas', 'noah025', 'grace', 'lsdm']:
-        print("Error! Invalid input datasource");
-        sys.exit(1);
+    if input_datasource == 'unr':
+        filename = Params.unr_gps_dir + station + "." + unr_reflabel + ".tenv3";
+    elif input_datasource == 'pbo':
+        filename = Params.pbo_gps_dir + station + ".pbo.final_" + pbo_reflabel + ".pos";
+    elif input_datasource == 'cwu':
+        filename = Params.pbo_gps_dir + station + ".cwu.final_" + cwu_reflabel + ".pos";
+    elif input_datasource == 'nmt':
+        filename = Params.pbo_gps_dir + station + ".nmt.final_" + pbo_reflabel + ".pos";
+    elif input_datasource == 'usgs':
+        filename = Params.usgs_gps_dir + '/' + sub_network + '/' + station.lower() + "_" + usgs_reflabel + ".rneu";
+    elif input_datasource == 'gldas':
+        filename = Params.gldas_dir + station.lower() + "_noah10_gldas2.hyd";
+    elif input_datasource == 'nldas':
+        filename = Params.nldas_dir + station.lower() + "_noah125_nldas2.hyd";
+    elif input_datasource == 'noah025':
+        filename = Params.noah_dir + station + "_NOAH025.hyd";
+    elif input_datasource == 'grace':
+        filename = Params.grace_dir + "scaled_" + station + "_PREM_model_ts.txt";
+    elif input_datasource == 'lsdm':
+        filename = Params.lsdm_dir + station + "_LSDM_hydro.txt.txt";
     else:
-        print("Error! Cannot find input file for station %s ; exiting..." % station);
+        print("Error! Invalid input datasource %s" % input_datasource);
         sys.exit(1);
-    return datasource;
+
+    # Determine if the file is found on the computer or not. Provide helpful suggestions if not.
+    if os.path.isfile(filename):
+        print("Found file %s from datasource %s %s " % (filename, input_datasource, sub_network));
+    # If the file is not found on the computer:
+    else:
+        print("Error!  Cannot find %s in %s %s database" % (filename, input_datasource, sub_network) );
+        if input_datasource == 'usgs':
+            print("For USGS data, station %s may instead be found in the following sub-networks:" % station);
+            query_usgs_network_name(station, Params.usgs_gps_dir);
+        print("Exiting immediately...");
+        sys.exit(1);
+    return;
 
 
 def query_usgs_network_name(station, gps_ts_dir):
@@ -307,6 +269,7 @@ def query_usgs_network_name(station, gps_ts_dir):
     for item in directories:
         if os.path.isfile(item+'/'+station.lower()+'_NAfixed.rneu'):
             print("Found %s in %s" % (station, item) );
+    print("")
     return;
 
 
