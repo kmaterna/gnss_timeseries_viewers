@@ -90,7 +90,7 @@ def how_many_new_stations(intended_stations, coord_file, tsObjList):
 			new_stations.append(intended_stations[i]);
 		else:
 			existing_stations.append(intended_stations[i]);
-	[new_lon, new_lat] = gps_io_functions.get_coordinates_for_stations(new_stations, coord_file);
+	[new_lon, new_lat] = gps_io_functions.get_coordinates_for_unr_stations(new_stations, coord_file);
 	print("We have modeled timeseries for %d desired stations " % (len(existing_stations)) )
 	print("Need to compute for %d new stations " % len(new_stations));
 	return new_stations, new_lon, new_lat;

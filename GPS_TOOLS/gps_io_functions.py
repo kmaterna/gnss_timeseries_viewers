@@ -13,7 +13,7 @@ Velfield = collections.namedtuple("Velfield", ['name', 'nlat', 'elon', 'n', 'e',
                                                'last_epoch']);  # in mm/yr, with -180<lon<180
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
-Params = collections.namedtuple("Params", ['general_gps_dir','pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir', 
+Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir',
                                            'pbo_earthquakes_dir', 'pbo_offsets_dir',
                                            'unr_offsets_dir', 'unr_coords_file', 'pbo_velocities',
                                            'unr_velocities', 'usgs_velocities', 'usgs_networks',
@@ -52,7 +52,7 @@ def read_config_file(infile):
     lsdm_dir = config.get('py-config', 'lsdm_dir');
     stl_dir = config.get('py-config', 'stl_dir');
 
-    myParams = Params(general_gps_dir=general_gps_dir, pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir, 
+    myParams = Params(general_gps_dir=general_gps_dir, pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir,
                       usgs_gps_dir=usgs_gps_dir, pbo_earthquakes_dir=pbo_earthquakes_dir,
                       pbo_offsets_dir=pbo_offsets_dir, unr_offsets_dir=unr_offsets_dir, unr_coords_file=unr_coords_file,
                       pbo_velocities=pbo_velocities, unr_velocities=unr_velocities, usgs_velocities=usgs_velocities,
@@ -123,7 +123,7 @@ def read_unr_vel_file(infile, coordinate_file):
             su.append(float(temp[13]) * 1000.0);
     ifile.close();
 
-    [elon, nlat] = get_coordinates_for_stations(name, coordinate_file);
+    [elon, nlat] = get_coordinates_for_unr_stations(name, coordinate_file);
     [first_epoch, last_epoch] = get_start_times_for_unr_stations(name, coordinate_file);
 
     myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch,
@@ -169,13 +169,47 @@ def read_gamit_velfile(infile):
     return [myVelfield];
 
 
-def read_usgs_velfile(infile, ts_directory=None):
+def usgs_network_directory_from_velfile(infile):
+    # Network parsing and plumbing
+    # We assume a parallel directory above the Velocity directory with a bunch of TS files
+    # From which we can derive startdate and enddate
+    usgs_network = infile.split('/')[-1].strip('_vels.txt');
+    if usgs_network[0:4] == 'NAM_':
+        usgs_network = usgs_network[4:];
+    if usgs_network[0:5] == 'ITRF_':
+        usgs_network = usgs_network[5:];
+    usgs_directory = '';
+    for i in range(len(infile.split('/')) - 2):
+        usgs_directory = usgs_directory + infile.split('/')[i];
+        usgs_directory = usgs_directory + '/';
+    network_ts_directory = usgs_directory + 'Time_Series/' + usgs_network + '/'
+    total_vel_directory = usgs_directory + 'Velocities/'
+    return network_ts_directory, total_vel_directory;
+
+
+def usgs_vel_file_from_tsfile(infile):
+    # Network parsing and plumbing
+    # We assume a parallel directory above the TS directory with a bunch of Velocity files
+    # From which we can derive startdate and enddate
+    usgs_network = infile.split('/')[-2];
+    usgs_directory = '';
+    for i in range(len(infile.split('/')) - 3):
+        usgs_directory = usgs_directory + infile.split('/')[i];
+        usgs_directory = usgs_directory + '/';
+    network_vel_file = usgs_directory + 'Velocities/NAM_' + usgs_network + '_vels.txt';
+    return network_vel_file;
+
+
+def read_usgs_velfile(infile):
     # Reading a USGS velocity file.
-    # If we provide a ts_directory, we can get first_epoch and last_epoch for each station.
-    # Otherwise, we have to put placeholders.
+    # We assume a parallel directory above the Velocity directory with a bunch of TS files
+    # From which we can derive startdate and enddate
     print("Reading %s" % infile);
-    [name, lon, lat, e, n, se, sn, u, su] = np.loadtxt(infile, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
-                                                       unpack=True, dtype={'names': (
+
+    network_ts_directory, _ = usgs_network_directory_from_velfile(infile);
+
+    [names, lon, lat, e, n, se, sn, u, su] = np.loadtxt(infile, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
+                                                        unpack=True, dtype={'names': (
             'name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
             'formats': (
                 'U4', np.float, np.float, np.float, np.float, np.float,
@@ -183,21 +217,17 @@ def read_usgs_velfile(infile, ts_directory=None):
     # Populating the first_epoch and last_epoch with information from the associated time series directory.
     first_epoch = [];
     last_epoch = [];
-    if ts_directory is not None:
-        for station in name:
-            ts_filename = ts_directory + '/' + station + '_NAfixed.rneu';
-            [dates, _] = np.loadtxt(ts_filename, unpack=True, usecols=(0, 1),
-                                    dtype={'names': ('dtstrs', 'datenums'), 'formats': ('U8', np.float)});
-            if np.size(dates) == 1:  # if the campaign station only had one day of data...
-                first_epoch = [dt.datetime.strptime(str(dates), "%Y%m%d") for x in name];
-                last_epoch = [dt.datetime.strptime(str(dates), "%Y%m%d") for x in name];
-            else:
-                first_epoch.append(dt.datetime.strptime(dates[0], "%Y%m%d"));
-                last_epoch.append(dt.datetime.strptime(dates[-1], "%Y%m%d"));
-    else:
-        first_epoch = [dt.datetime.strptime("19900101", "%Y%m%d") for x in name];  # placeholders
-        last_epoch = [dt.datetime.strptime("20300101", "%Y%m%d") for x in name];  # placeholders
-    myVelfield = Velfield(name=name, nlat=lat, elon=lon, n=n, e=e, u=u, sn=sn, se=se, su=su,
+    for station in names:  # this step takes a little while for a long velocity field.
+        ts_filename = network_ts_directory + '/' + station + '_NAfixed.rneu';
+        [dates, _] = np.loadtxt(ts_filename, unpack=True, usecols=(0, 1),
+                                dtype={'names': ('dtstrs', 'datenums'), 'formats': ('U8', np.float)});
+        if np.size(dates) == 1:  # if the campaign station only had one day of data...
+            first_epoch = [dt.datetime.strptime(str(dates), "%Y%m%d")];
+            last_epoch = [dt.datetime.strptime(str(dates), "%Y%m%d")];
+        else:
+            first_epoch.append(dt.datetime.strptime(dates[0], "%Y%m%d"));
+            last_epoch.append(dt.datetime.strptime(dates[-1], "%Y%m%d"));
+    myVelfield = Velfield(name=names, nlat=lat, elon=lon, n=n, e=e, u=u, sn=sn, se=se, su=su,
                           first_epoch=first_epoch, last_epoch=last_epoch);
     return [myVelfield];
 
@@ -224,18 +254,14 @@ def read_pbo_pos_file(filename):
 
 def read_UNR_magnet_ts_file(filename, coordinates_file):
     print("Reading %s" % filename);
-    [_, dE, dN, dU, Se, Sn, Su] = np.loadtxt(filename, usecols=(2, 8, 10, 12, 14, 15, 16), skiprows=1,
-                                             unpack=True);
+    [datestrs, dE, dN, dU, Se, Sn, Su] = np.loadtxt(filename, usecols=(1, 8, 10, 12, 14, 15, 16), skiprows=1,
+                                                    unpack=True,
+                                                    dtype={'names': ('datestrs', 'dE', 'dN', 'dU', 'Se', 'Sn', 'Su'),
+                                                           'formats': ('U7', np.float, np.float, np.float,
+                                                                       np.float, np.float, np.float)});
 
-    dtarray = [];
-    ifile = open(filename);
-    ifile.readline();
-    for line in ifile:
-        station_name = line.split()[0];
-        yyMMMdd = line.split()[1];  # has format 07SEP19
-        mydateobject = dt.datetime.strptime(yyMMMdd, "%y%b%d");
-        dtarray.append(mydateobject);
-    ifile.close();
+    station_name = filename.split('/')[-1][0:4];  # the first four characters of the filename
+    dtarray = [dt.datetime.strptime(x, '%y%b%d') for x in datestrs];  # has format 07SEP19
     dN = [i * 1000.0 for i in dN];
     dE = [i * 1000.0 for i in dE];
     dU = [i * 1000.0 for i in dU];
@@ -243,7 +269,7 @@ def read_UNR_magnet_ts_file(filename, coordinates_file):
     Se = [i * 1000.0 for i in Se];
     Su = [i * 1000.0 for i in Su];
 
-    [lon, lat] = get_coordinates_for_stations([station_name], coordinates_file);  # format [lat, lon]
+    [lon, lat] = get_coordinates_for_unr_stations([station_name], coordinates_file);  # format [lat, lon]
     if lon[0] < -360:
         coords = [lon[0] - 360, lat[0]];
     elif lon[0] > 180:
@@ -259,6 +285,28 @@ def read_UNR_magnet_ts_file(filename, coordinates_file):
     return [myData];
 
 
+def read_USGS_ts_file(filename):
+    print("Reading %s" % filename);
+    station_name = filename.split('/')[-1][0:4].upper();  # the first four characters of the filename
+    [datestrs, dN, dE, dU, Sn, Se, Su] = np.loadtxt(filename, unpack=True, usecols=(0, 2, 3, 4, 6, 7, 8),
+                                                    dtype={'names': ('datestrs', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su'),
+                                                           'formats': (
+                                                               'U8', np.float, np.float, np.float, np.float, np.float,
+                                                               np.float)})
+    dtarray = [dt.datetime.strptime(x, "%Y%m%d") for x in datestrs];
+    vel_file = usgs_vel_file_from_tsfile(filename);
+    [names, lon, lat] = np.loadtxt(vel_file, skiprows=3, usecols=(0, 1, 2),
+                                                        unpack=True, dtype={'names': (
+            'name', 'lon', 'lat'), 'formats': ('U4', np.float, np.float)})
+    coords = None;
+    for i in range(len(names)):
+        if names[i] == station_name:
+            coords = [lon[i], lat[i]];
+    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
+                        EQtimes=[]);
+    return [myData];
+
+
 def read_pbo_hydro_file(filename, coords_file=None):
     # Useful for reading hydrology files like NLDAS, GLDAS, etc.
     # In the normal pipeline for this function, it is guaranteed to be given a real file.
@@ -267,7 +315,7 @@ def read_pbo_hydro_file(filename, coords_file=None):
     station_name = filename.split('/')[-1][0:4];
     station_name = station_name.upper();
     if coords_file is not None:
-        [lon, lat] = get_coordinates_for_stations([station_name], coords_file);  # format [lat, lon]
+        [lon, lat] = get_coordinates_for_unr_stations([station_name], coords_file);  # format [lat, lon]
         coords = [lon[0], lat[0]];
     else:
         coords = [None, None];  # can return an object without meaningful coordinates if not asked for them.
@@ -277,22 +325,26 @@ def read_pbo_hydro_file(filename, coords_file=None):
                                    skiprows=20, delimiter=',', unpack=True);
     for i in range(len(dts)):
         dtarray.append(dt.datetime.strptime(dts[i], "%Y-%m-%d"));
-    Sn = [0.2 for i in range(len(dN))];
-    Se = [0.2 for i in range(len(dE))];
-    Su = [0.2 for i in range(len(dU))];
+    Se = 0.2 * np.ones(np.shape(dE));
+    Sn = 0.2 * np.ones(np.shape(dN));
+    Su = 0.2 * np.ones(np.shape(dU));
 
     myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
                         EQtimes=[]);
     return [myData];
 
 
-def read_lsdm_file(filename):
+def read_lsdm_file(filename, coords_file=None):
     # Useful for reading hydrology files from LSDM German loading product
     # In the normal pipeline for this function, it is guaranteed to be given a real file.
     print("Reading %s" % filename);
     dtarray = [];
     station_name = filename.split('/')[-1][0:4];
-    [lon, lat] = get_coordinates_for_stations([station_name]);  # format [lat, lon]
+    if coords_file is not None:
+        [lon, lat] = get_coordinates_for_unr_stations([station_name], coords_file);  # format [lat, lon]
+        coords = [lon[0], lat[0]];
+    else:
+        coords = [None, None];  # can return an object without meaningful coordinates if not asked for them.
     [dts, dU, dN, dE] = np.loadtxt(filename, usecols=(0, 1, 2, 3), dtype={'names': ('dts', 'dN', 'dE', 'dU'),
                                                                           'formats': (
                                                                               'U10', np.float, np.float, np.float)},
@@ -302,16 +354,15 @@ def read_lsdm_file(filename):
     dN = [i * 1000.0 for i in dN];
     dE = [i * 1000.0 for i in dE];
     dU = [i * 1000.0 for i in dU];
-    Sn = [0.2 for i in range(len(dN))];
-    Se = [0.2 for i in range(len(dE))];
-    Su = [0.2 for i in range(len(dU))];
-    coords = [lon[0], lat[0]];
+    Se = 0.2 * np.ones(np.shape(dE));
+    Sn = 0.2 * np.ones(np.shape(dN));
+    Su = 0.2 * np.ones(np.shape(dU));
     myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
                         EQtimes=[]);
     return [myData];
 
 
-def get_coordinates_for_stations(station_names, coordinates_file):
+def get_coordinates_for_unr_stations(station_names, coordinates_file):
     # station_names is an array
     lon = [];
     lat = [];
@@ -339,7 +390,7 @@ def get_coordinates_for_stations(station_names, coordinates_file):
         lon.append(reference_lons[myindex]);
         lat.append(reference_lats[myindex]);
         if myindex == []:
-            print("Error! Could not find coordinates for station %s " % station_names[i]);
+            print("Error! Could not find UNR coordinates for station %s " % station_names[i]);
             print("Returning [0,0]. ");
             lon.append(0.0);
             lat.append(0.0);
@@ -348,7 +399,7 @@ def get_coordinates_for_stations(station_names, coordinates_file):
 
 
 def get_start_times_for_unr_stations(station_names, coordinates_file):
-    # Meant for UNR stations
+    # station_names is an array
     end_time = [];
     start_time = [];
     reference_names = [];
@@ -393,6 +444,7 @@ def read_grace(filename):
                                                             np.float)}, unpack=True);
     except FileNotFoundError:
         print("ERROR! Cannot find GRACE model for file %s" % filename);
+        return None;
     grace_t = [];
     for i in range(len(dts)):
         grace_t.append(dt.datetime.strptime(dts[i], "%d-%b-%Y"));

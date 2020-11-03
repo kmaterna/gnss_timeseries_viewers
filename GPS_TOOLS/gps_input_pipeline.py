@@ -1,12 +1,13 @@
 # Read the inputs for PBO and UNR files
 
-import subprocess, sys, os
+import subprocess, sys, os, glob
 import datetime as dt
 import gps_io_functions
 import offsets
 
 
-# Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
+# Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su',
+# 'EQtimes']);  # in mm
 
 # ----------------------------------------
 #  MULTI STATION DRIVERS               ---
@@ -52,10 +53,10 @@ def multi_station_inputs(station_names, blacklist_user, proc_center, refframe, d
 # DRIVERS, CONFIGURE, AND FILE MASHING ---
 # ----------------------------------------
 
-def get_station_data(station, datasource, data_config_file, refframe="NA"):
+def get_station_data(station, datasource, data_config_file, refframe="NA", sub_network=''):
     # A function that you can use to access the reading library.
     # refframe choices are NA and ITRF
-    datasource = determine_datasource(data_config_file, station, datasource, refframe);
+    datasource = determine_datasource(data_config_file, station, datasource, refframe, sub_network);
     # tell us which directory to use.
 
     if datasource == 'pbo':
@@ -66,6 +67,8 @@ def get_station_data(station, datasource, data_config_file, refframe="NA"):
         [myData, offset_obj, eq_obj] = get_cwu(data_config_file, station, refframe);  # CWU data
     elif datasource == 'nmt':
         [myData, offset_obj, eq_obj] = get_nmt(data_config_file, station, refframe);  # NMT data
+    elif datasource == 'usgs':
+        [myData, offset_obj, eq_obj] = get_usgs(data_config_file, station, sub_network, refframe);  # USGS data
     elif datasource == 'gldas':
         [myData, offset_obj, eq_obj] = get_gldas(data_config_file, station);  # GLDAS hydro
     elif datasource == 'nldas':
@@ -142,6 +145,18 @@ def get_nmt(data_config_file, station, refframe="NA"):
     return [myData, Offsets, Earthquakes];
 
 
+def get_usgs(data_config_file, station, sub_network, refframe="NA"):
+    Params = gps_io_functions.read_config_file(data_config_file);
+    if refframe == 'ITRF':
+        reflabel = 'ITRF2008';
+    else:
+        reflabel = 'NAfixed';
+    usgs_filename = Params.usgs_gps_dir + '/' + sub_network + '/' + station.lower() + "_" + reflabel + ".rneu"
+    [myData] = gps_io_functions.read_USGS_ts_file(usgs_filename);
+    Offsets = offsets.get_empty_offsets();
+    return [myData, Offsets, Offsets];
+
+
 def get_gldas(data_config_file, station):
     Params = gps_io_functions.read_config_file(data_config_file);
     coords_file = Params.unr_coords_file;
@@ -189,7 +204,7 @@ def get_lsdm(data_config_file, station):
 
 # Based on whether a file exists in certain directories or not, 
 # Return the 'pbo' or 'unr' datasource that we should be using. 
-def determine_datasource(data_config_file, station, input_datasource='pbo', refframe="NA"):
+def determine_datasource(data_config_file, station, input_datasource='pbo', refframe="NA", sub_network=''):
     # A sorting and defensive programming function.
     print("\nStation %s: " % station);
     Params = gps_io_functions.read_config_file(data_config_file);
@@ -197,12 +212,17 @@ def determine_datasource(data_config_file, station, input_datasource='pbo', reff
         unr_reflabel = "NA";
         pbo_reflabel = "nam08";
         cwu_reflabel = "nam14";
+        usgs_reflabel = "NAfixed";
     elif refframe == "ITRF":
         unr_reflabel = "IGS14";
         pbo_reflabel = "igs08";
         cwu_reflabel = "igs14";
+        usgs_reflabel = "ITRF2008";
     else:
         print("ERROR! Unrecognized reference frame (choices NA and ITRF)");
+        sys.exit(1);
+    if input_datasource == 'usgs' and sub_network == '':
+        print("ERROR! User must provide a sub-network for USGS time series. Exiting. ");
         sys.exit(1);
 
     # Path setting
@@ -210,6 +230,7 @@ def determine_datasource(data_config_file, station, input_datasource='pbo', reff
     pbo_filename = Params.pbo_gps_dir + station + ".pbo.final_" + pbo_reflabel + ".pos";
     cwu_filename = Params.pbo_gps_dir + station + ".cwu.final_" + cwu_reflabel + ".pos";
     nmt_filename = Params.pbo_gps_dir + station + ".nmt.final_" + pbo_reflabel + ".pos";
+    usgs_filename = Params.usgs_gps_dir + '/' + sub_network + '/' + station.lower() + "_" + usgs_reflabel + ".rneu";
     gldas_filename = Params.gldas_dir + station.lower() + "_noah10_gldas2.hyd";
     nldas_filename = Params.nldas_dir + station.lower() + "_noah125_nldas2.hyd";
     noah025_filename = Params.noah_dir + station + "_NOAH025.hyd";
@@ -230,6 +251,11 @@ def determine_datasource(data_config_file, station, input_datasource='pbo', reff
     elif input_datasource == 'unr' and not os.path.isfile(unr_filename):
         print("Error! Cannot find " + station + " in UNR database. Returning empty object.");
         datasource = 'error';
+    elif input_datasource == 'usgs' and os.path.isfile(usgs_filename):
+        print("Using USGS from %s sub-network as input data (selected by user)." % sub_network);
+        datasource = 'usgs';
+    elif input_datasource == 'usgs' and not os.path.isfile(usgs_filename):
+        print("Error! Cannot find " + station + " in USGS sub-network %s. Returning empty object." % sub_network);
     elif input_datasource == 'cwu' and os.path.isfile(cwu_filename):
         datasource = 'cwu';
     elif input_datasource == 'cwu' and not os.path.isfile(cwu_filename):
@@ -274,6 +300,16 @@ def determine_datasource(data_config_file, station, input_datasource='pbo', reff
     return datasource;
 
 
+def query_usgs_network_name(station, gps_ts_dir):
+    # Given that USGS puts stations into networks, which network is a given station a member of?
+    # This function may print more than one.
+    directories = glob.glob(gps_ts_dir+"/*");
+    for item in directories:
+        if os.path.isfile(item+'/'+station.lower()+'_NAfixed.rneu'):
+            print("Found %s in %s" % (station, item) );
+    return;
+
+
 def remove_blacklist(data_config_file, stations):
     Params = gps_io_functions.read_config_file(data_config_file);
     new_stations = [];
@@ -297,7 +333,7 @@ def remove_blacklist(data_config_file, stations):
 
 def get_unr_offsets(Data0, station, offsets_dir):
     # The grep -1 is the code for antenna and reference frame offsets
-    print("Offset table for station %s:" % (station));
+    print("Offset table for station %s:" % station);
     try:
         table = subprocess.check_output(
             "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  1' " + offsets_dir + "UNR_steps.txt", shell=True);
@@ -313,7 +349,7 @@ def get_unr_offsets(Data0, station, offsets_dir):
 
 def get_unr_earthquakes(Data0, station, offsets_dir):
     # The grep -2 is the code for earthquake offsets
-    print("Earthquakes table for station %s:" % (station));
+    print("Earthquakes table for station %s:" % station);
     try:
         table = subprocess.check_output(
             "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  2' " + offsets_dir + "UNR_steps.txt", shell=True);
