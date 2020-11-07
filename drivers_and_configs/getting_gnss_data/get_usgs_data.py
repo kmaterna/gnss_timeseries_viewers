@@ -1,18 +1,15 @@
 import requests
+import numpy as np
 import pandas as pd
 import datetime as dt
 import os
 import subprocess
-import gps_io_functions
 
 # GLOBAL VARIABLES
 base_url = 'https://earthquake.usgs.gov/monitoring/gps/'
-networks = ['Alaska',
-            'Alaska_SGPS',
-            'BasinAndRange',
+networks = ['BasinAndRange',
             'BasinAndRange_SGPS',
             'CentralCalifornia',
-            'CentralCalifornia_ITRF2014',
             'CentralCalifornia_SGPS',
             'CentralUS',
             'DiabloCanyon_SPGPS',
@@ -20,15 +17,12 @@ networks = ['Alaska',
             'ECSZ_SGPS',
             'ElCentro',
             'Helens',
-            'JuanDeFuca',
-            'LKY2',
             'LongValley',
             'Mammoth_SGPS',
             'MtBaker',
             'NCalifornia_SGPS',
             'NorthEasternCal_SGPS',
             'Northridge',
-            'Pacific',
             'Pacific_Northwest',
             'SFBayArea',
             'SFBayArea_SGPS',
@@ -37,8 +31,15 @@ networks = ['Alaska',
             'WindKetchFlat_SGPS',
             'YellowstoneContin',
             'Yellowstone_SPGPS'];
+Networks_ignored = ['Alaska',
+                    'Alaska_SGPS',
+                    'CentralCalifornia_ITRF2014',
+                    'JuanDeFuca',
+                    'LKY2',
+                    'Pacific']
 vel_base_directory = "../../GPS_POS_DATA/USGS_Data/Velocities/"
 ts_base_directory = "../../GPS_POS_DATA/USGS_DATA/Time_Series/"
+usgs_cache_file = "../../GPS_POS_DATA/USGS_DATA/usgs_station_cache.txt"
 
 
 def download_usgs_velocity_tables(network, base_directory, outfile):
@@ -81,20 +82,67 @@ def download_usgs_time_series(station, network, ts_base_directory):
     directory_name = ts_base_directory + network + '/';
     subprocess.call(['mkdir', '-p', directory_name], shell=False);
     url_name = base_url + 'data/networks/' + network + '/' + station.lower() + '/nafixed/' + station.lower() + '.rneu'
-    subprocess.call(["wget", url_name,'-O',directory_name+station.lower()+'_NAfixed.rneu'],shell=False);
+    subprocess.call(["wget", url_name, '-O', directory_name+station.lower()+'_NAfixed.rneu'], shell=False);
     url_name = base_url + 'data/networks/' + network + '/' + station.lower() + '/itrf2008/' + station.lower() + '.rneu'
-    subprocess.call(["wget", url_name,'-O',directory_name+station.lower()+'_ITRF2008.rneu'],shell=False);
+    subprocess.call(["wget", url_name, '-O', directory_name+station.lower()+'_ITRF2008.rneu'], shell=False);
+    return;
+
+
+def download_usgs_vels_and_ts():
+    for network in networks:
+        download_usgs_velocity_tables(network, vel_base_directory, outfile=network+"_vels.txt");
+        velfile = vel_base_directory+'ITRF_'+network+'_vels.txt';
+        if os.path.isfile(velfile):
+            name = np.loadtxt(velfile, skiprows=3, usecols=(0,), unpack=True, dtype={'names': ('name',), 'formats': ('U4',)})
+            for station in name:
+                download_usgs_time_series(station[0], network, ts_base_directory)
+    return;
+
+
+def usgs_network_directory_from_velfile(infile):
+    # Network parsing and plumbing
+    # We assume a parallel directory above the Velocity directory with a bunch of TS files
+    # From which we can derive startdate and enddate
+    usgs_network = infile.split('/')[-1][0:-9];
+    print(usgs_network);
+    if usgs_network[0:4] == 'NAM_':
+        usgs_network = usgs_network[4:];
+    if usgs_network[0:5] == 'ITRF_':
+        usgs_network = usgs_network[5:];
+    usgs_directory = '';
+    for i in range(len(infile.split('/')) - 2):
+        usgs_directory = usgs_directory + infile.split('/')[i];
+        usgs_directory = usgs_directory + '/';
+    network_ts_directory = usgs_directory + 'Time_Series/' + usgs_network + '/'
+    total_vel_directory = usgs_directory + 'Velocities/'
+    return network_ts_directory, total_vel_directory;
+
+
+def cache_usgs_vels_and_ts():
+    print("Writing network cache %s " % (usgs_cache_file) );
+    ofile = open(usgs_cache_file, 'w');
+    for network in networks:
+        velfile = vel_base_directory + 'ITRF_' + network + '_vels.txt';
+        network_ts_directory, _ = usgs_network_directory_from_velfile(velfile);
+
+        [names, lon, lat] = np.loadtxt(velfile, skiprows=3, usecols=(0, 1, 2), unpack=True, dtype={'names': (
+                'name', 'lon', 'lat'), 'formats': ('U4', np.float, np.float)});
+        # Populating the first_epoch and last_epoch with information from the associated time series directory.
+        for i in range(len(names)):
+            ts_filename = network_ts_directory + '/' + names[i] + '_NAfixed.rneu';
+            dates = np.loadtxt(ts_filename, unpack=True, usecols=(0,),
+                               dtype={'names': ('dtstrs',), 'formats': ('U8',)}, ndmin=1);
+            first_epoch=dates[0][0];
+            last_epoch=dates[-1][0];
+            ofile.write("%s %.5f %.5f %s %s %s\n" % (names[i], lon[i], lat[i], first_epoch, last_epoch, network) );
+
+    ofile.close();
     return;
 
 
 if __name__ == "__main__":
     # Go get all the USGS GPS files from the internet!
     # This gets velocity tables from website, AND time series in ITRF2008/NA
-    for network in networks:
-        download_usgs_velocity_tables(network, vel_base_directory, outfile=network+"_vels.txt");
-        velfile = vel_base_directory+'ITRF_'+network+'_vels.txt';
-        ts_directory = ts_base_directory+network+'/';
-        if os.path.isfile(velfile):
-            [myVelfield] = gps_io_functions.read_usgs_velfile(velfile);
-            for station in myVelfield.name:
-                download_usgs_time_series(station, network, ts_base_directory)
+    # When you're done downloading, you must run the cache function
+    download_usgs_vels_and_ts();
+    cache_usgs_vels_and_ts();

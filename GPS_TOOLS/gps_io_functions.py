@@ -15,8 +15,9 @@ Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 
                                                    'EQtimes']);  # in mm
 Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir',
                                            'pbo_earthquakes_dir', 'pbo_offsets_dir',
-                                           'unr_offsets_dir', 'unr_coords_file', 'pbo_velocities',
-                                           'unr_velocities', 'usgs_velocities', 'usgs_networks',
+                                           'unr_offsets_dir', 'unr_coords_file',
+                                           'pbo_velocities',
+                                           'unr_velocities', 'usgs_vel_dir', 'usgs_networks','usgs_cache_file',
                                            'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
                                            'lsdm_dir', 'stl_dir', 'blacklist']);
 
@@ -42,8 +43,9 @@ def read_config_file(infile):
     unr_coords_file = config.get('py-config', 'unr_coords_file');
     pbo_velocities = config.get('py-config', 'pbo_velocities');
     unr_velocities = config.get('py-config', 'unr_velocities');
-    usgs_velocities = config.get('py-config', 'usgs_vel_dir');
+    usgs_vel_dir = config.get('py-config', 'usgs_vel_dir');
     usgs_networks = config.get('py-config', 'usgs_network_list');
+    usgs_cache_file = config.get('py-config', 'usgs_cache_file');
     blacklist = config.get('py-config', 'blacklist');
     gldas_dir = config.get('py-config', 'gldas_dir');
     nldas_dir = config.get('py-config', 'nldas_dir');
@@ -55,8 +57,8 @@ def read_config_file(infile):
     myParams = Params(general_gps_dir=general_gps_dir, pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir,
                       usgs_gps_dir=usgs_gps_dir, pbo_earthquakes_dir=pbo_earthquakes_dir,
                       pbo_offsets_dir=pbo_offsets_dir, unr_offsets_dir=unr_offsets_dir, unr_coords_file=unr_coords_file,
-                      pbo_velocities=pbo_velocities, unr_velocities=unr_velocities, usgs_velocities=usgs_velocities,
-                      usgs_networks=usgs_networks,
+                      pbo_velocities=pbo_velocities, unr_velocities=unr_velocities, usgs_vel_dir=usgs_vel_dir,
+                      usgs_networks=usgs_networks, usgs_cache_file=usgs_cache_file,
                       gldas_dir=gldas_dir, nldas_dir=nldas_dir, noah_dir=noah_dir,
                       grace_dir=grace_dir, lsdm_dir=lsdm_dir, stl_dir=stl_dir, blacklist=blacklist);
     return myParams;
@@ -169,28 +171,10 @@ def read_gamit_velfile(infile):
     return [myVelfield];
 
 
-def usgs_network_directory_from_velfile(infile):
-    # Network parsing and plumbing
-    # We assume a parallel directory above the Velocity directory with a bunch of TS files
-    # From which we can derive startdate and enddate
-    usgs_network = infile.split('/')[-1].strip('_vels.txt');
-    if usgs_network[0:4] == 'NAM_':
-        usgs_network = usgs_network[4:];
-    if usgs_network[0:5] == 'ITRF_':
-        usgs_network = usgs_network[5:];
-    usgs_directory = '';
-    for i in range(len(infile.split('/')) - 2):
-        usgs_directory = usgs_directory + infile.split('/')[i];
-        usgs_directory = usgs_directory + '/';
-    network_ts_directory = usgs_directory + 'Time_Series/' + usgs_network + '/'
-    total_vel_directory = usgs_directory + 'Velocities/'
-    return network_ts_directory, total_vel_directory;
-
-
 def usgs_vel_file_from_tsfile(infile):
     # Network parsing and plumbing
     # We assume a parallel directory above the TS directory with a bunch of Velocity files
-    # From which we can derive startdate and enddate
+    # From which we can derive coordinates
     usgs_network = infile.split('/')[-2];
     usgs_directory = '';
     for i in range(len(infile.split('/')) - 3):
@@ -200,33 +184,43 @@ def usgs_vel_file_from_tsfile(infile):
     return network_vel_file;
 
 
-def read_usgs_velfile(infile):
+def usgs_network_from_velfile(velfile):
+    usgs_network = velfile.split('/')[-1][0:-9];
+    if usgs_network[0:4] == 'NAM_':
+        usgs_network = usgs_network[4:];
+    if usgs_network[0:5] == 'ITRF_':
+        usgs_network = usgs_network[5:];
+    return usgs_network;
+
+
+def read_usgs_velfile(infile, cache_file):
     # Reading a USGS velocity file.
-    # We assume a parallel directory above the Velocity directory with a bunch of TS files
-    # From which we can derive startdate and enddate
+    # Requires a cache of start and end dates
     print("Reading %s" % infile);
-
-    network_ts_directory, _ = usgs_network_directory_from_velfile(infile);
-
+    usgs_network = usgs_network_from_velfile(infile);
     [names, lon, lat, e, n, se, sn, u, su] = np.loadtxt(infile, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
                                                         unpack=True, dtype={'names': (
             'name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
-            'formats': (
-                'U4', np.float, np.float, np.float, np.float, np.float,
+            'formats': ('U4', np.float, np.float, np.float, np.float, np.float,
                 np.float, np.float, np.float)})
-    # Populating the first_epoch and last_epoch with information from the associated time series directory.
-    first_epoch = [];
-    last_epoch = [];
-    for station in names:  # this step takes a little while for a long velocity field.
-        ts_filename = network_ts_directory + '/' + station + '_NAfixed.rneu';
-        [dates, _] = np.loadtxt(ts_filename, unpack=True, usecols=(0, 1),
-                                dtype={'names': ('dtstrs', 'datenums'), 'formats': ('U8', np.float)});
-        if np.size(dates) == 1:  # if the campaign station only had one day of data...
-            first_epoch = [dt.datetime.strptime(str(dates), "%Y%m%d")];
-            last_epoch = [dt.datetime.strptime(str(dates), "%Y%m%d")];
-        else:
-            first_epoch.append(dt.datetime.strptime(dates[0], "%Y%m%d"));
-            last_epoch.append(dt.datetime.strptime(dates[-1], "%Y%m%d"));
+    # Populating the first_epoch and last_epoch with information from the associated cache.
+    first_epoch, last_epoch = [], [];
+    [cache_names, startdate, enddate, subnetwork] = np.loadtxt(cache_file, unpack=True, usecols=(0, 3, 4, 5),
+                                                               dtype={'names': (
+            'name', 'startdate', 'enddate','subnetwork'),
+            'formats': ('U4', 'U8', 'U8', 'U25')});
+    for station in names:
+        idx = np.where(cache_names==station);
+        num_networks = len(idx[0]);
+        for i in range(num_networks):
+            single_network = subnetwork[idx[0][i]]
+            if single_network == usgs_network:
+                first_epoch.append(dt.datetime.strptime(startdate[idx[0][i]], "%Y%m%d"));
+                last_epoch.append(dt.datetime.strptime(enddate[idx[0][i]], "%Y%m%d"));
+    if len(first_epoch) != len(names):
+        print("ERROR! Not every station has a first_epoch! Stopping." ); sys.exit(0);
+    if len(last_epoch) != len(names):
+        print("ERROR! Not every station has a last_epoch! Stopping." ); sys.exit(0);
     myVelfield = Velfield(name=names, nlat=lat, elon=lon, n=n, e=e, u=u, sn=sn, se=se, su=su,
                           first_epoch=first_epoch, last_epoch=last_epoch);
     return [myVelfield];
@@ -294,11 +288,11 @@ def read_USGS_ts_file(filename):
                                                                'U8', np.float, np.float, np.float, np.float, np.float,
                                                                np.float)})
     dtarray = [dt.datetime.strptime(x, "%Y%m%d") for x in datestrs];
-    vel_file = usgs_vel_file_from_tsfile(filename);
+    vel_file = usgs_vel_file_from_tsfile(filename);  # get the associated velocity file for that USGS sub-network
     [names, lon, lat] = np.loadtxt(vel_file, skiprows=3, usecols=(0, 1, 2),
                                                         unpack=True, dtype={'names': (
             'name', 'lon', 'lat'), 'formats': ('U4', np.float, np.float)})
-    coords = None;
+    coords = None;   # default value in case station wasn't found
     for i in range(len(names)):
         if names[i] == station_name:
             coords = [lon[i], lat[i]];
@@ -364,8 +358,7 @@ def read_lsdm_file(filename, coords_file=None):
 
 def get_coordinates_for_unr_stations(station_names, coordinates_file):
     # station_names is an array
-    lon = [];
-    lat = [];
+    lon, lat = [], [];
     reference_names = [];
     reference_lons = [];
     reference_lats = [];
@@ -400,8 +393,7 @@ def get_coordinates_for_unr_stations(station_names, coordinates_file):
 
 def get_start_times_for_unr_stations(station_names, coordinates_file):
     # station_names is an array
-    end_time = [];
-    start_time = [];
+    start_time, end_time = [], [];
     reference_names = [];
     reference_start_time = [];
     reference_end_time = [];
@@ -482,7 +474,7 @@ def write_pbo_pos_file(ts_object, filename, comment=""):
 def write_humanread_vel_file(myVelfield, outfile):
     ofile = open(outfile, 'w');
     ofile.write(
-        "Format: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_date(yyyymmdd) last_date(yyyymmdd) name\n");
+        "Format: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
     for i in range(len(myVelfield.name)):
         first_epoch = dt.datetime.strftime(myVelfield.first_epoch[i], '%Y%m%d');
         last_epoch = dt.datetime.strftime(myVelfield.last_epoch[i], '%Y%m%d');
