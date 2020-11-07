@@ -9,15 +9,16 @@ import collections, sys, os
 import datetime as dt
 import configparser
 
-Velfield = collections.namedtuple("Velfield", ['name', 'nlat', 'elon', 'n', 'e', 'u', 'sn', 'se', 'su', 'first_epoch',
-                                               'last_epoch']);  # in mm/yr, with -180<lon<180
+Station_Vel = collections.namedtuple("Station_Vel", ['name', 'nlat', 'elon', 'n', 'e', 'u', 'sn', 'se', 'su',
+                                                    'first_epoch',
+                                                    'last_epoch', 'refframe', 'proccenter', 'subnetwork', 'survey']);  # in mm/yr, with -180<lon<180, used for velfields
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
 Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir',
                                            'pbo_earthquakes_dir', 'pbo_offsets_dir',
                                            'unr_offsets_dir', 'unr_coords_file',
                                            'pbo_velocities',
-                                           'unr_velocities', 'usgs_vel_dir', 'usgs_networks','usgs_cache_file',
+                                           'unr_velocities', 'usgs_vel_dir', 'usgs_networks', 'usgs_cache_file',
                                            'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
                                            'lsdm_dir', 'stl_dir', 'blacklist']);
 
@@ -66,108 +67,115 @@ def read_config_file(infile):
 
 def read_pbo_vel_file(infile):
     # Meant for reading velocity files from the PBO/UNAVCO website.
-    # Returns a Velfield object.
+    # Returns a list of station_vel objects.
+    myVelfield = [];
     print("Reading %s" % infile);
     start = 0;
     ifile = open(infile, 'r');
-    name = [];
-    nlat, elon = [], [];
-    n, e, u = [], [], [];
-    sn, se, su = [], [], [];
-    first_epoch = [];
-    last_epoch = [];
     for line in ifile:
         if start == 1:
             temp = line.split();
-            name.append(temp[0]);
-            nlat.append(float(temp[7]));
-            elon_temp = float(temp[8]);
-            if elon_temp > 180:
-                elon_temp = elon_temp - 360.0;
-            elon.append(elon_temp);
-            n.append(float(temp[19]) * 1000.0);
-            e.append(float(temp[20]) * 1000.0);
-            u.append(float(temp[21]) * 1000.0);
-            sn.append(float(temp[22]) * 1000.0);
-            se.append(float(temp[23]) * 1000.0);
-            su.append(float(temp[24]) * 1000.0);
+            name = temp[0];
+            nlat = float(temp[7]);
+            elon = float(temp[8]);
+            if elon > 180:
+                elon = elon - 360.0;
+            n = float(temp[19]) * 1000.0;
+            e = float(temp[20]) * 1000.0;
+            u = float(temp[21]) * 1000.0;
+            sn = float(temp[22]) * 1000.0;
+            se = float(temp[23]) * 1000.0;
+            su = float(temp[24]) * 1000.0;
             t1 = temp[-2];
             t2 = temp[-1];
-            first_epoch.append(dt.datetime.strptime(t1[0:8], '%Y%m%d'));
-            last_epoch.append(dt.datetime.strptime(t2[0:8], '%Y%m%d'));
+            first_epoch = dt.datetime.strptime(t1[0:8], '%Y%m%d');
+            last_epoch = dt.datetime.strptime(t2[0:8], '%Y%m%d');
+            myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
+                                       se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
+                                       proccenter='pbo', subnetwork='', refframe='ITRF', survey=0);
+            myVelfield.append(myStationVel);
         if "*" in line:
             start = 1;
+
     ifile.close();
-    myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch,
-                          last_epoch=last_epoch);
     return [myVelfield];
 
 
 def read_unr_vel_file(infile, coordinate_file):
     # Meant for reading velocity files from the MAGNET/MIDAS website.
-    # Returns a Velfield object.
+    # Returns a list of station_vel objects.
+    myVelfield = []
+    # open cache of coordinates and start-dates
+    [cache_names, cache_lat, cache_lon, dtbeg, dtend] = np.loadtxt(coordinate_file, unpack=True, skiprows=2,
+                                                                   usecols=(0, 1, 2, 7, 8),
+                                                dtype={'names': ('name', 'lat', 'lon', 'dtbeg', 'dtend'),
+                                                       'formats': ('U4', np.float, np.float, 'U10', 'U10')});
+
     print("Reading %s" % infile);
-    name = [];
-    n, e, u = [], [], [];
-    sn, se, su = [], [], [];
     ifile = open(infile, 'r');
     for line in ifile:
         temp = line.split();
         if temp[0] == "#":
             continue;
         else:
-            name.append(temp[0]);
-            e.append(float(temp[8]) * 1000.0);
-            n.append(float(temp[9]) * 1000.0);
-            u.append(float(temp[10]) * 1000.0);
-            se.append(float(temp[11]) * 1000.0);
-            sn.append(float(temp[12]) * 1000.0);
-            su.append(float(temp[13]) * 1000.0);
+            name = temp[0];
+            e = float(temp[8]) * 1000.0;
+            n = float(temp[9]) * 1000.0;
+            u = float(temp[10]) * 1000.0;
+            se = float(temp[11]) * 1000.0;
+            sn = float(temp[12]) * 1000.0;
+            su = float(temp[13]) * 1000.0;
+
+            myindex = np.where(cache_names == name);
+            if myindex[0] == []:
+                print("Error! Could not find cache record for station %s in %s " % (name, coordinate_file));
+                sys.exit(0);
+            else:
+                first_epoch = dt.datetime.strptime(dtbeg[myindex[0][0]], '%Y-%m-%d');
+                last_epoch = dt.datetime.strptime(dtend[myindex[0][0]], '%Y-%m-%d');
+                elon = cache_lon[myindex[0][0]];
+                if elon > 180:
+                    elon = elon - 360;
+                nlat = cache_lat[myindex[0][0]];
+
+            myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
+                                       se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
+                                       proccenter='unr', subnetwork='', refframe='ITRF', survey=0);
+            myVelfield.append(myStationVel);
     ifile.close();
-
-    [elon, nlat] = get_coordinates_for_unr_stations(name, coordinate_file);
-    [first_epoch, last_epoch] = get_start_times_for_unr_stations(name, coordinate_file);
-
-    myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch,
-                          last_epoch=last_epoch);
     return [myVelfield];
 
 
 def read_gamit_velfile(infile):
     # Meant for reading a velocity file for example from GAMIT processing
     # Doesn't have starttime and stoptime information.
+    myVelfield = [];
     print("Reading %s" % infile);
     ifile = open(infile, 'r');
-    name = [];
-    nlat, elon = [], [];
-    n, e, u = [], [], [];
-    sn, se, su = [], [], [];
-    first_epoch = [];
-    last_epoch = [];
-
     for line in ifile:
         temp = line.split();
         if temp[0] == "#" or temp[0][0] == "#":
             continue;
         else:
-            elon_temp = float(temp[0]);
-            if elon_temp > 180:
-                elon_temp = elon_temp - 360.0;
-            elon.append(elon_temp);
-            nlat.append(float(temp[1]));
-            e.append(float(temp[2]));
-            n.append(float(temp[3]));
-            se.append(float(temp[6]));
-            sn.append(float(temp[7]));
-            u.append(float(temp[9]));
-            su.append(float(temp[11]));
-            name.append(temp[12][0:4]);
-            first_epoch.append(dt.datetime.strptime("19900101", "%Y%m%d"));  # placeholders
-            last_epoch.append(dt.datetime.strptime("20300101", "%Y%m%d"));  # placeholders
+            elon = float(temp[0]);
+            if elon > 180:
+                elon = elon - 360.0;
+            nlat = float(temp[1]);
+            e = float(temp[2]);
+            n = float(temp[3]);
+            se = float(temp[6]);
+            sn = float(temp[7]);
+            u = float(temp[9]);
+            su = float(temp[11]);
+            name = temp[12][0:4];
+            first_epoch = dt.datetime.strptime("19900101", "%Y%m%d");  # placeholders
+            last_epoch = dt.datetime.strptime("20300101", "%Y%m%d");  # placeholders
 
-    myVelfield = Velfield(name=name, nlat=nlat, elon=elon, n=n, e=e, u=u, sn=sn, se=sn, su=su, first_epoch=first_epoch,
-                          last_epoch=last_epoch);
-
+            myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
+                               se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
+                               proccenter='gamit', subnetwork='', refframe='ITRF', survey=0);
+            myVelfield.append(myStationVel);
+    ifile.close();
     return [myVelfield];
 
 
@@ -185,45 +193,55 @@ def usgs_vel_file_from_tsfile(infile):
 
 
 def usgs_network_from_velfile(velfile):
+    # velfile is something like 'ITRF_Pacific_Northwest_vels.txt'
     usgs_network = velfile.split('/')[-1][0:-9];
     if usgs_network[0:4] == 'NAM_':
         usgs_network = usgs_network[4:];
-    if usgs_network[0:5] == 'ITRF_':
+        usgs_refframe = 'NAM';
+    elif usgs_network[0:5] == 'ITRF_':
         usgs_network = usgs_network[5:];
-    return usgs_network;
+        usgs_refframe = 'ITRF';
+    else:
+        usgs_network, usgs_refframe = '', '';
+    return usgs_network, usgs_refframe;
 
 
 def read_usgs_velfile(infile, cache_file):
     # Reading a USGS velocity file.
     # Requires a cache of start and end dates
     print("Reading %s" % infile);
-    usgs_network = usgs_network_from_velfile(infile);
+    usgs_sub_network, usgs_refframe = usgs_network_from_velfile(infile);
     [names, lon, lat, e, n, se, sn, u, su] = np.loadtxt(infile, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
                                                         unpack=True, dtype={'names': (
             'name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
             'formats': ('U4', np.float, np.float, np.float, np.float, np.float,
                 np.float, np.float, np.float)})
     # Populating the first_epoch and last_epoch with information from the associated cache.
-    first_epoch, last_epoch = [], [];
     [cache_names, startdate, enddate, subnetwork] = np.loadtxt(cache_file, unpack=True, usecols=(0, 3, 4, 5),
                                                                dtype={'names': (
-            'name', 'startdate', 'enddate','subnetwork'),
+            'name', 'startdate', 'enddate', 'subnetwork'),
             'formats': ('U4', 'U8', 'U8', 'U25')});
-    for station in names:
-        idx = np.where(cache_names==station);
+    myVelField = [];
+    for i in range(len(names)):
+        station_name = names[i];
+        first_epoch, last_epoch = [None, None];
+        idx = np.where(cache_names == station_name);
         num_networks = len(idx[0]);
-        for i in range(num_networks):
-            single_network = subnetwork[idx[0][i]]
-            if single_network == usgs_network:
-                first_epoch.append(dt.datetime.strptime(startdate[idx[0][i]], "%Y%m%d"));
-                last_epoch.append(dt.datetime.strptime(enddate[idx[0][i]], "%Y%m%d"));
-    if len(first_epoch) != len(names):
-        print("ERROR! Not every station has a first_epoch! Stopping." ); sys.exit(0);
-    if len(last_epoch) != len(names):
-        print("ERROR! Not every station has a last_epoch! Stopping." ); sys.exit(0);
-    myVelfield = Velfield(name=names, nlat=lat, elon=lon, n=n, e=e, u=u, sn=sn, se=se, su=su,
-                          first_epoch=first_epoch, last_epoch=last_epoch);
-    return [myVelfield];
+        for j in range(num_networks):
+            single_network = subnetwork[idx[0][j]]
+            if single_network == usgs_sub_network:
+                first_epoch = dt.datetime.strptime(startdate[idx[0][j]], "%Y%m%d");
+                last_epoch = dt.datetime.strptime(enddate[idx[0][j]], "%Y%m%d");
+                if first_epoch is None:
+                    print("ERROR! Station %s has no first_epoch! Stopping." % station_name ); sys.exit(0);
+                if last_epoch is None:
+                    print("ERROR! Station %s has no last_epoch! Stopping." % station_name ); sys.exit(0);
+
+        myStationVel = Station_Vel(name=names[i], elon=lon[i], nlat=lat[i], e=e[i], n=n[i], u=u[i],
+                                   se=se[i], sn=sn[i], su=su[i], first_epoch=first_epoch, last_epoch=last_epoch,
+                                   proccenter='usgs', subnetwork=usgs_sub_network, refframe=usgs_refframe, survey=0);
+        myVelField.append(myStationVel);
+    return [myVelField];
 
 
 def read_pbo_pos_file(filename):
@@ -358,68 +376,27 @@ def read_lsdm_file(filename, coords_file=None):
 
 def get_coordinates_for_unr_stations(station_names, coordinates_file):
     # station_names is an array
+    # open cache of coordinates and start-dates
+    [cache_names, cache_lat, cache_lon] = np.loadtxt(coordinates_file, unpack=True, skiprows=2,
+                                                                   usecols=(0, 1, 2),
+                                                dtype={'names': ('name', 'lat', 'lon'),
+                                                       'formats': ('U4', np.float, np.float)});
     lon, lat = [], [];
-    reference_names = [];
-    reference_lons = [];
-    reference_lats = [];
-
-    # Read the file
-    ifile = open(coordinates_file, 'r');
-    for line in ifile:
-        temp = line.split();
-        if temp[0] == "#":
-            continue;
-        reference_names.append(temp[0]);
-        reference_lats.append(float(temp[1]));
-        testlon = float(temp[2]);
-        if testlon > 180:
-            testlon = testlon - 360;
-        reference_lons.append(testlon);
-    ifile.close();
-
     # find the stations
     for i in range(len(station_names)):
-        myindex = reference_names.index(station_names[i]);
-        lon.append(reference_lons[myindex]);
-        lat.append(reference_lats[myindex]);
+        myindex = cache_names.index(station_names[i]);
         if myindex == []:
             print("Error! Could not find UNR coordinates for station %s " % station_names[i]);
             print("Returning [0,0]. ");
             lon.append(0.0);
             lat.append(0.0);
-
+        else:
+            elon = cache_lon[myindex];
+            if elon > 180:
+                elon = elon - 360;
+            lon.append(elon);
+            lat.append(cache_lat[myindex]);
     return [lon, lat];
-
-
-def get_start_times_for_unr_stations(station_names, coordinates_file):
-    # station_names is an array
-    start_time, end_time = [], [];
-    reference_names = [];
-    reference_start_time = [];
-    reference_end_time = [];
-
-    # Read the file
-    ifile = open(coordinates_file, 'r');
-    for line in ifile:
-        temp = line.split();
-        if temp[0] == "#":
-            continue;
-        reference_names.append(temp[0]);
-        reference_start_time.append(temp[7]);
-        reference_end_time.append(temp[8]);
-    ifile.close();
-
-    # find the stations
-    for i in range(len(station_names)):
-        myindex = reference_names.index(station_names[i]);
-        start_time.append(dt.datetime.strptime(reference_start_time[myindex], '%Y-%m-%d'));
-        end_time.append(dt.datetime.strptime(reference_end_time[myindex], '%Y-%m-%d'));
-        if myindex == []:
-            print("Error! Could not find startdate for station %s " % station_names[i]);
-            print("Returning [0,0]. ");
-            start_time.append(dt.datetime.strptime('2000-01-01', '%Y-%m-%d'));
-            end_time.append(dt.datetime.strptime('2000-01-01', '%Y-%m-%d'));
-    return [start_time, end_time];
 
 
 def read_grace(filename):
@@ -475,12 +452,12 @@ def write_humanread_vel_file(myVelfield, outfile):
     ofile = open(outfile, 'w');
     ofile.write(
         "Format: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
-    for i in range(len(myVelfield.name)):
-        first_epoch = dt.datetime.strftime(myVelfield.first_epoch[i], '%Y%m%d');
-        last_epoch = dt.datetime.strftime(myVelfield.last_epoch[i], '%Y%m%d');
+    for station_vel in myVelfield:
+        first_epoch = dt.datetime.strftime(station_vel.first_epoch, '%Y%m%d');
+        last_epoch = dt.datetime.strftime(station_vel.last_epoch, '%Y%m%d');
         ofile.write("%f %f %f %f %f %f %f %f %s %s %s\n" % (
-            myVelfield.elon[i], myVelfield.nlat[i], myVelfield.e[i], myVelfield.n[i], myVelfield.u[i], myVelfield.se[i],
-            myVelfield.sn[i], myVelfield.su[i], first_epoch, last_epoch, myVelfield.name[i]));
+            station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.u, station_vel.se,
+            station_vel.sn, station_vel.su, first_epoch, last_epoch, station_vel.name));
     ofile.close();
     return;
 
@@ -488,10 +465,10 @@ def write_humanread_vel_file(myVelfield, outfile):
 def write_gmt_velfile(myVelfield, outfile):
     ofile = open(outfile, 'w');
     ofile.write("# Format: lon(deg) lat(deg) e(mm) n(mm) Se(mm) Sn(mm) 0 0 1 name\n");
-    for i in range(len(myVelfield.name)):
-        if myVelfield.sn[i] < 0.2:  # trying to make a clean dataset
+    for station_vel in myVelfield:
+        if station_vel.sn < 0.2:  # trying to make a clean dataset
             ofile.write("%f %f %f %f %f %f 0 0 1 %s\n" % (
-                myVelfield.elon[i], myVelfield.nlat[i], myVelfield.e[i], myVelfield.n[i], myVelfield.se[i],
-                myVelfield.sn[i], myVelfield.name[i]));
+                station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.se,
+                station_vel.sn, station_vel.name));
     ofile.close();
     return;
