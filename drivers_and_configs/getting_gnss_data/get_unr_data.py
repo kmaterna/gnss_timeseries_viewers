@@ -11,7 +11,7 @@ import sys
 from subprocess import call
 
 def configure():
-	coordfile = "UNR_coords_oct2020.txt";  # the data holding file (for getting our region of interest)
+	coordfile = "UNR_coords_nov2020.txt";  # the data holding file (for getting our region of interest)
 	ref_frame1 = "NA";
 	ref_frame2 = "IGS14";
 	latlon_box = [-125.0, -110, 32.0, 49.0];  # A LARGE BOX INCLUDING ALL OF WUS

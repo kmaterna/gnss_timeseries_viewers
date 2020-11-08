@@ -34,6 +34,7 @@ unr_gps_dir: Time series data from UNR
 unr_velocities:
 	Download velocity file and place it into this file
 	source: http://geodesy.unr.edu/velocities/midas.IGS14.txt
+	source: http://geodesy.unr.edu/velocities/midas.NA.txt
 unr_coords_file: 
 	Download coords file and place it into this file
 	source: http://geodesy.unr.edu/NGLStationPages/DataHoldings.txt

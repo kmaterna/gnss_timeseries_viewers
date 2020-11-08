@@ -3,7 +3,7 @@
 # First, get into the major directory for GNSS Data.
 cd ../../GPS_POS_DATA/
 
-# UPDATE CWU POS DATA
+# UPDATE CWU/PBO POS DATA
 cd PBO_Data/
 wget -N --recursive --no-parent --no-directories --accept "*.cwu.final_igs14.pos, *.cwu.final_nam14.pos" ftp://data-out.unavco.org/pub/products/position
 cd ../
@@ -16,9 +16,9 @@ cd Offsets/
 wget -N --recursive --no-parent --no-directories --accept "cwu*nam14.off, pbo*nam08.off" ftp://data-out.unavco.org/pub/products/offset/
 cd ../
 
-cd Velocity_Files/
-wget -N --recursive --no-parent --no-directories --accept "cwu.snips_nam14.vel, cwu.snaps_nam14.vel" ftp://data-out.unavco.org/pub/products/velocity/
-cd ../
+cd PBO_Data/Velocity_Files/
+wget -N --recursive --no-parent --no-directories --accept "cwu.final_nam14.vel, cwu.final_igs14.vel" ftp://data-out.unavco.org/pub/products/velocity/
+cd ../../
 
 cd PBO_Hydro/NLDAS/
 wget -N --recursive --no-parent --no-directories --accept "*.hyd" ftp://data-out.unavco.org/pub/products/hydro/nldas2/

@@ -11,7 +11,8 @@ import configparser
 
 Station_Vel = collections.namedtuple("Station_Vel", ['name', 'nlat', 'elon', 'n', 'e', 'u', 'sn', 'se', 'su',
                                                     'first_epoch',
-                                                    'last_epoch', 'refframe', 'proccenter', 'subnetwork', 'survey']);  # in mm/yr, with -180<lon<180, used for velfields
+                                                    'last_epoch', 'refframe', 'proccenter', 'subnetwork', 'survey']);
+                                                    # in mm/yr, with -180<lon<180, used for velfields
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
 Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir',
@@ -101,6 +102,43 @@ def read_pbo_vel_file(infile):
     return [myVelfield];
 
 
+def read_pbo_vel_file_fortran(infile):
+    # Meant for reading velocity files from the PBO/UNAVCO website.
+    # Returns a list of station_vel objects.
+    # Splits the lines by character, like Fortran style
+    myVelfield = [];
+    print("Reading %s" % infile);
+    start = 0;
+    ifile = open(infile, 'r');
+    for line in ifile:
+        if start == 1:
+            name = line[1:5];
+            nlat = float(line[97:111]);
+            elon = float(line[112:127]);
+            if elon > 180:
+                elon = elon - 360.0;
+
+            n = float(line[214:223]) * 1000.0;
+            e = float(line[223:231]) * 1000.0;
+            u = float(line[232:241]) * 1000.0;
+            sn = float(line[241:249]) * 1000.0;
+            se = float(line[249:257]) * 1000.0;
+            su = float(line[257:265]) * 1000.0;
+            t1 = line.split()[-2];
+            t2 = line.split()[-1];
+            first_epoch = dt.datetime.strptime(t1[0:8], '%Y%m%d');
+            last_epoch = dt.datetime.strptime(t2[0:8], '%Y%m%d');
+            myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
+                                       se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
+                                       proccenter='pbo', subnetwork='', refframe='ITRF', survey=0);
+            myVelfield.append(myStationVel);
+        if "*" in line:
+            start = 1;
+
+    ifile.close();
+    return [myVelfield];
+
+
 def read_unr_vel_file(infile, coordinate_file):
     # Meant for reading velocity files from the MAGNET/MIDAS website.
     # Returns a list of station_vel objects.
@@ -110,6 +148,10 @@ def read_unr_vel_file(infile, coordinate_file):
                                                                    usecols=(0, 1, 2, 7, 8),
                                                 dtype={'names': ('name', 'lat', 'lon', 'dtbeg', 'dtend'),
                                                        'formats': ('U4', np.float, np.float, 'U10', 'U10')});
+    if 'IGS14_' in infile:
+        refframe = 'ITRF';
+    else:
+        refframe = 'NA';
 
     print("Reading %s" % infile);
     ifile = open(infile, 'r');
@@ -140,7 +182,7 @@ def read_unr_vel_file(infile, coordinate_file):
 
             myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
                                        se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
-                                       proccenter='unr', subnetwork='', refframe='ITRF', survey=0);
+                                       proccenter='unr', subnetwork='', refframe=refframe, survey=0);
             myVelfield.append(myStationVel);
     ifile.close();
     return [myVelfield];
@@ -203,14 +245,15 @@ def usgs_network_from_velfile(velfile):
         usgs_refframe = 'ITRF';
     else:
         usgs_network, usgs_refframe = '', '';
-    return usgs_network, usgs_refframe;
+    survey_flag = '_SGPS' in velfile;
+    return usgs_network, usgs_refframe, survey_flag;
 
 
 def read_usgs_velfile(infile, cache_file):
     # Reading a USGS velocity file.
     # Requires a cache of start and end dates
     print("Reading %s" % infile);
-    usgs_sub_network, usgs_refframe = usgs_network_from_velfile(infile);
+    usgs_sub_network, usgs_refframe, survey_flag = usgs_network_from_velfile(infile);
     [names, lon, lat, e, n, se, sn, u, su] = np.loadtxt(infile, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
                                                         unpack=True, dtype={'names': (
             'name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
@@ -239,7 +282,8 @@ def read_usgs_velfile(infile, cache_file):
 
         myStationVel = Station_Vel(name=names[i], elon=lon[i], nlat=lat[i], e=e[i], n=n[i], u=u[i],
                                    se=se[i], sn=sn[i], su=su[i], first_epoch=first_epoch, last_epoch=last_epoch,
-                                   proccenter='usgs', subnetwork=usgs_sub_network, refframe=usgs_refframe, survey=0);
+                                   proccenter='usgs', subnetwork=usgs_sub_network, refframe=usgs_refframe,
+                                   survey=survey_flag);
         myVelField.append(myStationVel);
     return [myVelField];
 
