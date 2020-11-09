@@ -428,18 +428,17 @@ def get_coordinates_for_unr_stations(station_names, coordinates_file):
     lon, lat = [], [];
     # find the stations
     for i in range(len(station_names)):
-        myindex = cache_names.index(station_names[i]);
-        if myindex == []:
-            print("Error! Could not find UNR coordinates for station %s " % station_names[i]);
-            print("Returning [0,0]. ");
-            lon.append(0.0);
-            lat.append(0.0);
+        myindex = np.where(cache_names == station_names[i]);
+        if myindex[0] == []:
+            print("Error! No UNR cache record for station %s in %s " % (station_names[i], coordinates_file));
+            sys.exit(0);
         else:
-            elon = cache_lon[myindex];
+            elon = cache_lon[myindex[0][0]];
             if elon > 180:
                 elon = elon - 360;
+            nlat = cache_lat[myindex[0][0]];
             lon.append(elon);
-            lat.append(cache_lat[myindex]);
+            lat.append(nlat);
     return [lon, lat];
 
 
@@ -510,9 +509,8 @@ def write_gmt_velfile(myVelfield, outfile):
     ofile = open(outfile, 'w');
     ofile.write("# Format: lon(deg) lat(deg) e(mm) n(mm) Se(mm) Sn(mm) 0 0 1 name\n");
     for station_vel in myVelfield:
-        if station_vel.sn < 0.2:  # trying to make a clean dataset
-            ofile.write("%f %f %f %f %f %f 0 0 1 %s\n" % (
-                station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.se,
-                station_vel.sn, station_vel.name));
+        ofile.write("%f %f %f %f %f %f 0 0 1 %s\n" % (
+            station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.se,
+            station_vel.sn, station_vel.name));
     ofile.close();
     return;
