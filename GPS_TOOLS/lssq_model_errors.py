@@ -1,7 +1,8 @@
 # A toolbox for fitting by least squares and getting uncertainties on velocity parameters. 
 # TOOLS:
 # Linear_fitting_menke  : the formal uncertainties from the textbook
-# fit_curvefit          : a python function that does practically the same thing, but with more sophisticated handling of individual errors
+# fit_curvefit          : a python function that does practically the same thing, but with
+# more sophisticated handling of individual errors
 # colored_noise         : Allan Variance
 
 import numpy as np
@@ -117,7 +118,7 @@ def AVR(x, y, sig, verbose=1, overlapping=True):
     for i in range(len(slopes) - 1):
         consec_differences.append(slopes[i] - slopes[i + 1]);
     AVR = 0.5 * np.var(consec_differences);
-    uncertainty = np.sqrt(AVR);
+    # note: uncertainty = np.sqrt(AVR);
     covm = [[AVR, 0], [0, 0]];
     perr = [np.sqrt(AVR), 0];
     if verbose:

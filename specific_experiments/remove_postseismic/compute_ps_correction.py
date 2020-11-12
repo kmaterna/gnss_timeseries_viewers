@@ -147,7 +147,8 @@ def lengthen_timeseries(tsObjList, starttime, endtime):
 	for i in range(len(tsObjList)):
 
 		Data0 = tsObjList[i];
-		[eparams, nparams, uparams] = gps_ts_functions.get_logfunction(Data0, starttime);
+		eqtime = starttime;
+		[eparams, nparams, uparams] = gps_ts_functions.get_logfunction(Data0, eqtime);
 
 		longer_ts = gps_ts_functions.get_daily_dtarray(starttime, endtime);
 		longer_float_time = gps_ts_functions.get_relative_times(longer_ts, starttime);

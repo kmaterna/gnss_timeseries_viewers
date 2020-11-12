@@ -10,9 +10,9 @@ import datetime as dt
 import configparser
 
 Station_Vel = collections.namedtuple("Station_Vel", ['name', 'nlat', 'elon', 'n', 'e', 'u', 'sn', 'se', 'su',
-                                                    'first_epoch',
-                                                    'last_epoch', 'refframe', 'proccenter', 'subnetwork', 'survey']);
-                                                    # in mm/yr, with -180<lon<180, used for velfields
+                                                     'first_epoch',
+                                                     'last_epoch', 'refframe', 'proccenter', 'subnetwork', 'survey']);
+# Station_Vel are in mm/yr, with -180<lon<180, used for velfields
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
 Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir',
@@ -144,10 +144,10 @@ def read_unr_vel_file(infile, coordinate_file):
     # Returns a list of station_vel objects.
     myVelfield = []
     # open cache of coordinates and start-dates
-    [cache_names, cache_lat, cache_lon, dtbeg, dtend] = np.loadtxt(coordinate_file, unpack=True, skiprows=2,
-                                                                   usecols=(0, 1, 2, 7, 8),
-                                                dtype={'names': ('name', 'lat', 'lon', 'dtbeg', 'dtend'),
-                                                       'formats': ('U4', np.float, np.float, 'U10', 'U10')});
+    [cache_name, cache_lat, cache_lon, dtbeg, dtend] = np.loadtxt(coordinate_file, unpack=True, skiprows=2,
+                                                                  usecols=(0, 1, 2, 7, 8), dtype={
+            'names': ('name', 'lat', 'lon', 'dtbeg', 'dtend'),
+            'formats': ('U4', np.float, np.float, 'U10', 'U10')});
     if 'IGS14_' in infile:
         refframe = 'ITRF';
     else:
@@ -168,8 +168,8 @@ def read_unr_vel_file(infile, coordinate_file):
             sn = float(temp[12]) * 1000.0;
             su = float(temp[13]) * 1000.0;
 
-            myindex = np.where(cache_names == name);
-            if myindex[0] == []:
+            myindex = np.where(cache_name == name);
+            if not myindex[0]:
                 print("Error! Could not find cache record for station %s in %s " % (name, coordinate_file));
                 sys.exit(0);
             else:
@@ -214,8 +214,8 @@ def read_gamit_velfile(infile):
             last_epoch = dt.datetime.strptime("20300101", "%Y%m%d");  # placeholders
 
             myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
-                               se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
-                               proccenter='gamit', subnetwork='', refframe='ITRF', survey=0);
+                                       se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
+                                       proccenter='gamit', subnetwork='', refframe='ITRF', survey=0);
             myVelfield.append(myStationVel);
     ifile.close();
     return [myVelfield];
@@ -255,15 +255,14 @@ def read_usgs_velfile(infile, cache_file):
     print("Reading %s" % infile);
     usgs_sub_network, usgs_refframe, survey_flag = usgs_network_from_velfile(infile);
     [names, lon, lat, e, n, se, sn, u, su] = np.loadtxt(infile, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
-                                                        unpack=True, dtype={'names': (
-            'name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
-            'formats': ('U4', np.float, np.float, np.float, np.float, np.float,
-                np.float, np.float, np.float)})
+                                                        unpack=True, dtype={
+            'names': ('name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
+            'formats': ('U4', np.float, np.float, np.float, np.float, np.float, np.float, np.float, np.float)})
     # Populating the first_epoch and last_epoch with information from the associated cache.
     [cache_names, startdate, enddate, subnetwork] = np.loadtxt(cache_file, unpack=True, usecols=(0, 3, 4, 5),
-                                                               dtype={'names': (
-            'name', 'startdate', 'enddate', 'subnetwork'),
-            'formats': ('U4', 'U8', 'U8', 'U25')});
+                                                               dtype={
+                                                                   'names': ('name', 'startdate', 'enddate', 'subnet'),
+                                                                   'formats': ('U4', 'U8', 'U8', 'U25')});
     myVelField = [];
     for i in range(len(names)):
         station_name = names[i];
@@ -276,9 +275,11 @@ def read_usgs_velfile(infile, cache_file):
                 first_epoch = dt.datetime.strptime(startdate[idx[0][j]], "%Y%m%d");
                 last_epoch = dt.datetime.strptime(enddate[idx[0][j]], "%Y%m%d");
                 if first_epoch is None:
-                    print("ERROR! Station %s has no first_epoch! Stopping." % station_name ); sys.exit(0);
+                    print("ERROR! Station %s has no first_epoch! Stopping." % station_name);
+                    sys.exit(0);
                 if last_epoch is None:
-                    print("ERROR! Station %s has no last_epoch! Stopping." % station_name ); sys.exit(0);
+                    print("ERROR! Station %s has no last_epoch! Stopping." % station_name);
+                    sys.exit(0);
 
         myStationVel = Station_Vel(name=names[i], elon=lon[i], nlat=lat[i], e=e[i], n=n[i], u=u[i],
                                    se=se[i], sn=sn[i], su=su[i], first_epoch=first_epoch, last_epoch=last_epoch,
@@ -352,9 +353,9 @@ def read_USGS_ts_file(filename):
     dtarray = [dt.datetime.strptime(x, "%Y%m%d") for x in datestrs];
     vel_file = usgs_vel_file_from_tsfile(filename);  # get the associated velocity file for that USGS sub-network
     [names, lon, lat] = np.loadtxt(vel_file, skiprows=3, usecols=(0, 1, 2),
-                                                        unpack=True, dtype={'names': (
-            'name', 'lon', 'lat'), 'formats': ('U4', np.float, np.float)})
-    coords = None;   # default value in case station wasn't found
+                                   unpack=True,
+                                   dtype={'names': ('name', 'lon', 'lat'), 'formats': ('U4', np.float, np.float)})
+    coords = None;  # default value in case station wasn't found
     for i in range(len(names)):
         if names[i] == station_name:
             coords = [lon[i], lat[i]];
@@ -422,14 +423,13 @@ def get_coordinates_for_unr_stations(station_names, coordinates_file):
     # station_names is an array
     # open cache of coordinates and start-dates
     [cache_names, cache_lat, cache_lon] = np.loadtxt(coordinates_file, unpack=True, skiprows=2,
-                                                                   usecols=(0, 1, 2),
-                                                dtype={'names': ('name', 'lat', 'lon'),
-                                                       'formats': ('U4', np.float, np.float)});
+                                                     usecols=(0, 1, 2), dtype={'names': ('name', 'lat', 'lon'),
+                                                                               'formats': ('U4', np.float, np.float)});
     lon, lat = [], [];
     # find the stations
     for i in range(len(station_names)):
         myindex = np.where(cache_names == station_names[i]);
-        if myindex[0] == []:
+        if not myindex[0]:
             print("Error! No UNR cache record for station %s in %s " % (station_names[i], coordinates_file));
             sys.exit(0);
         else:
@@ -448,23 +448,16 @@ def read_grace(filename):
     print("Reading %s" % filename);
     station_name = filename.split('/')[-1];  # this is the local name of the file
     station_name = station_name.split('_')[1];  # this is the four-character name
-    try:
-        [dts, lon, lat, _, u, v, w] = np.loadtxt(filename, usecols=range(0, 7),
-                                                 dtype={'names': ('dts', 'lon', 'lat', 'temp', 'u', 'v', 'w'),
-                                                        'formats': (
-                                                            'U11', np.float, np.float, np.float, np.float, np.float,
-                                                            np.float)}, unpack=True);
-    except FileNotFoundError:
-        print("ERROR! Cannot find GRACE model for file %s" % filename);
-        return None;
-    grace_t = [];
-    for i in range(len(dts)):
-        grace_t.append(dt.datetime.strptime(dts[i], "%d-%b-%Y"));
-    grace_t = [i + dt.timedelta(days=15) for i in
-               grace_t];  # we add 15 days to plot the GRACE data at the center of the bin.
-    u = np.array(u);
-    v = np.array(v);
-    w = np.array(w);
+    [dts, lon, lat, _, u, v, w] = np.loadtxt(filename, usecols=range(0, 7),
+                                             dtype={'names': ('dts', 'lon', 'lat', 'elev', 'u', 'v', 'w'),
+                                                    'formats': (
+                                                        'U11', np.float, np.float, np.float, np.float, np.float,
+                                                        np.float)}, unpack=True);
+    # In the file, the datetime is in the format 01-Jan-2012_31-Jan-2012.
+    # We take the start date and add 15 days to put the GRACE at the center of the bin.
+    # There will be only one point per month, generally speaking
+    grace_t = [dt.datetime.strptime(x, "%d-%b-%Y") for x in dts];
+    grace_t = [i + dt.timedelta(days=15) for i in grace_t];
     S = np.zeros(np.shape(u));
     GRACE_TS = Timeseries(name=station_name, coords=[lon[0], lat[0]], dtarray=grace_t, dE=u, dN=v, dU=w, Se=S, Sn=S,
                           Su=S, EQtimes=[]);

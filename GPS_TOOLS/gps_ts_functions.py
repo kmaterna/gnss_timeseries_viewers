@@ -43,12 +43,8 @@ def remove_outliers(Data0, outliers_def):
     medfilt_n = signal.medfilt(Data0.dN, 35);
     medfilt_u = signal.medfilt(Data0.dU, 35);
     newdt = [];
-    newdN = [];
-    newdE = [];
-    newdU = [];
-    newSe = [];
-    newSn = [];
-    newSu = [];
+    newdN, newdE, newdU = [], [], [];
+    newSe, newSn, newSu = [], [], [];
     for i in range(len(medfilt_e)):
         if abs(Data0.dE[i] - medfilt_e[i]) < outliers_def and abs(Data0.dN[i] - medfilt_n[i]) < outliers_def and abs(
                 Data0.dU[i] - medfilt_u[i]) < outliers_def * 2:
@@ -67,12 +63,8 @@ def remove_outliers(Data0, outliers_def):
 def impose_time_limits(Data0, starttime, endtime):
     # Starttime and endtime are datetime objects
     newdtarray = [];
-    newdN = [];
-    newdE = [];
-    newdU = [];
-    newSn = [];
-    newSe = [];
-    newSu = [];
+    newdN, newdE, newdU = [], [], [];
+    newSe, newSn, newSu = [], [], [];
     for i in range(len(Data0.dN)):
         if starttime <= Data0.dtarray[i] <= endtime:
             newdtarray.append(Data0.dtarray[i]);
@@ -82,8 +74,8 @@ def impose_time_limits(Data0, starttime, endtime):
             newSe.append(Data0.Se[i]);
             newSn.append(Data0.Sn[i]);
             newSu.append(Data0.Su[i]);
-    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=np.array(newdN), dE=np.array(newdE), 
-                dU=np.array(newdU), Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
+    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=np.array(newdN),
+                         dE=np.array(newdE), dU=np.array(newdU), Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
     return newData;
 
 
@@ -92,12 +84,8 @@ def remove_nans(Data0):
     idxN = np.isnan(Data0.dN);
     idxU = np.isnan(Data0.dU);
     temp_dates = [];
-    temp_east = [];
-    temp_north = [];
-    temp_vert = [];
-    temp_Sn = [];
-    temp_Se = [];
-    temp_Su = [];
+    temp_east, temp_north, temp_vert = [], [], [];
+    temp_Sn, temp_Se, temp_Su = [], [], [];
     for i in range(len(Data0.dtarray)):
         if idxE[i] == 0 and idxN[i] == 0 and idxU[i] == 0:
             temp_dates.append(Data0.dtarray[i]);
@@ -108,7 +96,7 @@ def remove_nans(Data0):
             temp_Sn.append(Data0.Sn[i]);
             temp_Su.append(Data0.Su[i]);
     newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=temp_dates, dN=np.array(temp_north), 
-                         dE=np.array(temp_east),dU=np.array(temp_vert), 
+                         dE=np.array(temp_east), dU=np.array(temp_vert),
                          Sn=temp_Sn, Se=temp_Se, Su=temp_Su, EQtimes=Data0.EQtimes);
     return newData;
 
@@ -135,9 +123,9 @@ def detrend_data_by_value(Data0, east_params, north_params, vert_params):
         east_detrended.append(Data0.dE[i] - (east_model[i]));
         north_detrended.append(Data0.dN[i] - (north_model[i]));
         vert_detrended.append(Data0.dU[i] - (vert_model[i]));
-    east_detrended = east_detrended - east_detrended[0];
-    north_detrended = north_detrended - north_detrended[0];
-    vert_detrended = vert_detrended - vert_detrended[0];
+    east_detrended = [x - east_detrended[0] for x in east_detrended];
+    north_detrended = [x - north_detrended[0] for x in north_detrended];
+    vert_detrended = [x - vert_detrended[0] for x in vert_detrended];
     newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=north_detrended,
                          dE=east_detrended, dU=vert_detrended, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su,
                          EQtimes=Data0.EQtimes);
@@ -173,18 +161,10 @@ def pair_gps_model(gps_data, model_data):
     # Takes two time series objects, and returns two paired time series objects.
     # It could be that GPS has days that model doesn't, or the other way around.
     dtarray = [];
-    dE_gps = [];
-    dN_gps = [];
-    dU_gps = [];
-    Se_gps = [];
-    Sn_gps = [];
-    Su_gps = [];
-    dE_model = [];
-    dN_model = [];
-    dU_model = [];
-    Se_model = [];
-    Sn_model = [];
-    Su_model = [];
+    dE_gps, dN_gps, dU_gps = [], [], [];
+    Se_gps, Sn_gps, Su_gps = [], [], [];
+    dE_model, dN_model, dU_model = [], [], [];
+    Se_model, Sn_model, Su_model = [], [], [];
     gps_data = remove_nans(gps_data);
     model_data = remove_nans(model_data);
     for i in range(len(gps_data.dtarray)):
@@ -214,13 +194,9 @@ def pair_gps_model_keeping_gps(gps_data, model_data):
     # Takes two time series objects, and returns two time series objects.
     # It keeps all the data from the first one.
     # It generates a model_data with length that matches the GPS.
-    dE_model = [];
-    dN_model = [];
-    dU_model = [];
-    Se_model = [];
-    Sn_model = [];
-    Su_model = [];
     dtarray = [];
+    dE_model, dN_model, dU_model = [], [], [];
+    Se_model, Sn_model, Su_model = [], [], [];
     gps_data = remove_nans(gps_data);
     model_data = remove_nans(model_data);
     for i in range(len(gps_data.dtarray)):
@@ -251,12 +227,8 @@ def get_referenced_data(roving_station_data, base_station_data):
     # If there's a starttime, then we will solve for a best-fitting model offset at the starttime.
     # This is used when subtracting models
     dtarray = [];
-    dE_gps = [];
-    dN_gps = [];
-    dU_gps = [];
-    Se_gps = [];
-    Sn_gps = [];
-    Su_gps = [];
+    dE_gps, dN_gps, dU_gps = [], [], [];
+    Se_gps, Sn_gps, Su_gps = [], [], [];
     roving_station_data = remove_nans(roving_station_data);
     for i in range(len(roving_station_data.dtarray)):
         if roving_station_data.dtarray[i] in base_station_data.dtarray:
@@ -330,7 +302,7 @@ def get_slope(Data0, starttime=None, endtime=None, missing_fraction=0.6):
     time_duration = mydtarray[-1] - mydtarray[0];
     if time_duration.days < 270:
         print(
-            "ERROR: using much less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
+            "ERROR: using <<<1 year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
         return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
     if len(myeast) < time_duration.days * missing_fraction:
         print("ERROR: Most of the data is missing to estimate parameters for station %s. Returning Nan" % Data0.name);
@@ -374,7 +346,7 @@ def get_slope_unc(dataObj, starttime, endtime):
 
 
 def get_linear_annual_semiannual(Data0, starttime=None, endtime=None, critical_len=365):
-    # The critical_len parameter allows us to manually switch this function for both GPS and GRACE time series in GPS format
+    # The critical_len parameter allows us to switch this function for both GPS and GRACE time series in GPS format
     # Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F;
 
     # Defensive programming
@@ -400,7 +372,7 @@ def get_linear_annual_semiannual(Data0, starttime=None, endtime=None, critical_l
     duration = mydtarray[-1] - mydtarray[0];
     if duration.days < critical_len:
         print(
-            "ERROR: using less than one year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
+            "ERROR: using less than 1 year of data to estimate parameters for station %s. Returning Nan" % Data0.name);
         east_params = [np.nan, 0, 0, 0, 0];
         north_params = [np.nan, 0, 0, 0, 0];
         up_params = [np.nan, 0, 0, 0, 0];
@@ -448,7 +420,7 @@ def get_means(Data0, starttime=None, endtime=None):
     return [np.nanmean(myeast), np.nanmean(mynorth), np.nanmean(myup)];
 
 
-def get_logfunction(Data0, eqtime, starttime=None, endtime=None):
+def get_logfunction(Data0, eqtime):
     # y = B + Alog(1+t/tau);
     # Useful for postseismic transients.
     # Should match the construct-function function.
@@ -456,7 +428,7 @@ def get_logfunction(Data0, eqtime, starttime=None, endtime=None):
     def func(t, a, b, tau):
         return b + a * np.log(1 + t / tau);
 
-    float_times = get_relative_times(Data0.dtarray, dt.datetime.strptime("2010-04-04", "%Y-%m-%d"));  # in days
+    float_times = get_relative_times(Data0.dtarray, eqtime);  # in days
     e_params, ecov = curve_fit(func, float_times, Data0.dE);
     n_params, ecov = curve_fit(func, float_times, Data0.dN);
     u_params, ecov = curve_fit(func, float_times, Data0.dU);

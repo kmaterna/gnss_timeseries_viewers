@@ -39,7 +39,7 @@ def multi_station_inputs(station_names, blacklist_user, proc_center, refframe, d
                         myData.name, dt.datetime.strftime(must_include[0], "%Y-%m-%d"),
                         dt.datetime.strftime(must_include[1], "%Y-%m-%d")));
                     continue;
-            if myData != []:
+            if myData:
                 dataobj_list.append(myData);
                 offsetobj_list.append(offset_obj);
                 eqobj_list.append(eq_obj);
@@ -308,7 +308,7 @@ def get_unr_offsets(Data0, station, offsets_dir):
         table = subprocess.check_output(
             "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  1' " + offsets_dir + "UNR_steps.txt", shell=True);
         table = table.decode();  # needed when switching to python 3
-    except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files...
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
         table = [];
     print(table);
     evdts = parse_table_unr(table);
@@ -324,7 +324,7 @@ def get_unr_earthquakes(Data0, station, offsets_dir):
         table = subprocess.check_output(
             "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  2' " + offsets_dir + "UNR_steps.txt", shell=True);
         table = table.decode();  # needed when switching to python 3
-    except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files...
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
         table = [];
     print(table);
     evdts1 = parse_table_unr(table);
@@ -334,7 +334,7 @@ def get_unr_earthquakes(Data0, station, offsets_dir):
             "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  2' " + offsets_dir + "UNR_userdefined_offsets.txt",
             shell=True);
         table = table.decode();  # needed when switching to python 3
-    except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files...
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
         table = [];
     print(table);
     evdts2 = parse_table_unr(table);
@@ -346,10 +346,10 @@ def get_unr_earthquakes(Data0, station, offsets_dir):
 
 
 def get_pbo_offsets(station, offsets_dir):
-    print("Offset table for station %s:" % (station));
+    print("Offset table for station %s:" % station);
     try:
         table = subprocess.check_output("grep " + station + " " + offsets_dir + "cwu*.off", shell=True);
-    except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files...
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
         table = [];
     if len(table) > 0:
         table = table.decode();  # needed when switching to python 3
@@ -360,11 +360,11 @@ def get_pbo_offsets(station, offsets_dir):
 
 
 def get_pbo_earthquakes(station, earthquakes_dir):
-    print("Earthquake table for station %s:" % (station));
+    print("Earthquake table for station %s:" % station);
     # Read the offset table
     try:
         table = subprocess.check_output("grep " + station + " " + earthquakes_dir + "pbo*kalts.evt", shell=True);
-    except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files...
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
         table = [];
     if len(table) > 0:
         table = table.decode();  # needed when switching to python 3
@@ -375,11 +375,11 @@ def get_pbo_earthquakes(station, earthquakes_dir):
 
 
 def get_cwu_earthquakes(station, earthquakes_dir):
-    print("Earthquake table for station %s:" % (station));
+    print("Earthquake table for station %s:" % station);
     # Read the offset table
     try:
         table = subprocess.check_output("grep " + station + " " + earthquakes_dir + "cwu*kalts.evt", shell=True);
-    except subprocess.CalledProcessError as grepexc:  # if we have no earthquakes in the event files...
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
         table = [];
     if len(table) > 0:
         table = table.decode();  # needed when switching to python 3
@@ -409,7 +409,6 @@ def parse_antenna_table_pbo(table):
         if len(line) == 0:
             continue;  # if we're at the end, move on.
         words = line.split();
-        site = words[0];
         yyyy = words[1];
         mm = words[2];
         dd = words[3];
@@ -458,7 +457,8 @@ def parse_table_unr(table):
         words = item.split();
         datestring = words[1];
         mydt = get_datetime_from_unrfile(datestring);
-        if mydt not in evdts:  # we don't need redundant entries on the same date. What if it happens within a week of each other?  Haven't figured this out yet.
+        if mydt not in evdts:  # we don't need redundant entries on the same date.
+            # What if it happens within a week of each other?  Haven't figured this out yet.
             evdts.append(mydt);
     return evdts;
 

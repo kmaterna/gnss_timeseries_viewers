@@ -42,7 +42,7 @@ def inputs_velfield(data_config_file, network, num_years, max_sigma, coord_box):
     print("Searching for GNSS stations in the %s network " % network);
     myVelfield = gps_input_vel_pipeline.import_velfield(data_config_file, network);
     myVelfield = gps_vel_functions.clean_velfield(myVelfield, num_years=num_years, max_horiz_sigma=max_sigma,
-                                                    max_vert_sigma=max_sigma * 3, coord_box=coord_box);
+                                                  max_vert_sigma=max_sigma * 3, coord_box=coord_box);
     myVelfield = gps_vel_functions.remove_duplicates(myVelfield);
     return myVelfield;
 
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     center = [-124, 40];
     radius = 80;
     data_config_file = "/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt"
-    # close_stations, lons, lats, rad_distance = get_stations_within_radius(data_config_file, center, radius,
-                                                                          # network='usgs-Pacific_Northwest');
-    close_stations, lons, lats, rad_distance = get_stations_within_radius(data_config_file, center, radius, network='pbo');
+    # close_stations, lons, lats, rad_dist = get_stations_within_radius(data_config_file, center, radius,
+    # network='usgs-Pacific_Northwest');
+    close_stations, lons, lats, rad_dist = get_stations_within_radius(data_config_file, center, radius, network='pbo');
     print(close_stations);

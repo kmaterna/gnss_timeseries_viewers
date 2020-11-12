@@ -1,7 +1,6 @@
 # A library of functions that operate on velocity-field objects (lists of station-vels)
 
 
-
 def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1000, coord_box=(-180, 180, -90, 90)):
     # Filter into cleaner GPS velocities:
     # Remove data that's less than num_years long, has formal uncertainties above max_sigma,
@@ -27,14 +26,14 @@ def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1
 def remove_duplicates(velfield):
     # Right now assuming all entries at the same lat/lon are the same station
     cleaned_velfield = []
-    for station_vel in velfield:
+    for vel in velfield:
         is_duplicate = 0;
         for comp_station_vel in cleaned_velfield:
-            if abs(comp_station_vel.elon - station_vel.elon) < 0.0005 and abs(comp_station_vel.nlat - station_vel.nlat) < 0.0005:
+            if abs(comp_station_vel.elon - vel.elon) < 0.0005 and abs(comp_station_vel.nlat - vel.nlat) < 0.0005:
                 # we found a duplicate measurement.
                 is_duplicate = 1;
         if is_duplicate == 0:
-            cleaned_velfield.append(station_vel);
+            cleaned_velfield.append(vel);
     return cleaned_velfield;
 
 

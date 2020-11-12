@@ -7,11 +7,10 @@ import collections
 import gps_ts_functions
 import gps_seasonal_removals
 import offsets
+import gps_io_functions
 import gps_input_pipeline
 
-# For reference of how this gets returned from the read functions.
-Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
-                                                   'EQtimes']);  # in mm
+# Parameters for controlling plotting
 Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove', 'outliers_def',
                                                    'earthquakes_remove', 'offsets_remove', 'seasonals_remove',
                                                    'seasonals_type', 'datasource', 'refframe', 'data_config_file']);
@@ -20,7 +19,8 @@ Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove',
 # Types of seasonal options: 
 #   lssq: fits seasonals and linear trend by least squares inversion.
 #  notch: removes the 1-year and 6-month components by notch filter.
-#  grace: uses GRACE loading model interpolated between monthly points where available, and linear inversion where not available.
+#  grace: uses GRACE loading model interpolated between monthly points where available,
+#  and linear inversion where not available.
 #    stl: uses a pre-computed look-up table for STL time series
 
 
@@ -43,44 +43,45 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, outl
     # outliers_def : mm away from median filter.
     # refframe : itrf or nam
     # offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove : booleans
-    # seasonals type : lssq, nldas, gldas, grace
-    # datasource : unr, cwu, pbo, nmt
+    # seasonals type : lssq, nldas, gldas, grace, lsdm, shasta, stl, notch
+    # datasource : unr, cwu, pbo, nmt, usgs
     MyParams = Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def,
                           earthquakes_remove=earthquakes_remove,
                           offsets_remove=offsets_remove, seasonals_remove=seasonals_remove,
                           seasonals_type=seasonals_type,
                           datasource=datasource, refframe=refframe, data_config_file=data_config_file);
-    print("------- %s --------" % (station));
+    print("------- %s --------" % station);
     print(
-        "Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d, datasource=%s, refframe=%s" % (
-            station, earthquakes_remove, outliers_remove, seasonals_remove, datasource, refframe));
+        "Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d, datasource=%s, refframe=%s"
+        % (station, earthquakes_remove, outliers_remove, seasonals_remove, datasource, refframe));
     return MyParams;
 
 
 # ----------- INPUTS ---------------- # 
-def input_data(station_name, datasource, refframe, data_config_file):
-    [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, data_config_file,
-                                                                       refframe);
+def input_data(st_name, datasource, refframe, data_config_file):
+    [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(st_name, datasource, data_config_file, refframe);
+    # First, we embed the data with the eq object (always useful)
+    myData = gps_io_functions.Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray, dN=myData.dN,
+                                         dE=myData.dE, dU=myData.dU, Sn=myData.Sn, Se=myData.Se, Su=myData.Su,
+                                         EQtimes=eq_obj.evdts);
     return [myData, offset_obj, eq_obj];
 
 
 # -------------- COMPUTE ------------ # 
 def compute(myData, offset_obj, eq_obj, MyParams, starttime, endtime):
-    # First, embed the data with the eq object (useful no matter what)
-    newData = Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray, dN=myData.dN, dE=myData.dE,
-                         dU=myData.dU, Sn=myData.Sn, Se=myData.Se, Su=myData.Su, EQtimes=eq_obj.evdts);
     if starttime is None:
         starttime = myData.dtarray[0];
     if endtime is None:
         endtime = myData.dtarray[-1];
-    newData = gps_ts_functions.impose_time_limits(newData, starttime, endtime);
+    newData = gps_ts_functions.impose_time_limits(myData, starttime, endtime);
     if MyParams.offsets_remove == 1:  # Remove offsets and antenna changes
         newData = offsets.remove_offsets(newData, offset_obj);
     if MyParams.outliers_remove == 1:  # Remove outliers
         newData = gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
     if MyParams.earthquakes_remove == 1:  # Remove earthquakes
         newData = offsets.remove_offsets(newData, eq_obj);
-    trend_out = gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type, MyParams.data_config_file);
+    trend_out = gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type,
+                                                        MyParams.data_config_file);
     return [newData, trend_out];
 
 
@@ -90,7 +91,7 @@ def single_ts_plot(ts_obj, detrended, MyParams, outdir):
 
     # The major figure
     dpival = 500;
-    [f, axarr] = plt.subplots(3, 1, sharex=True, figsize=(10, 7), dpi=dpival);
+    [_, axarr] = plt.subplots(3, 1, sharex=True, figsize=(10, 7), dpi=dpival);
     axarr[0].plot_date(ts_obj.dtarray, ts_obj.dE, color='blue', markeredgecolor='black', markersize=1.5);
     axarr[0].grid(linestyle='--', linewidth=0.5);
     axarr[0].set_ylabel('east (mm)', fontsize=label_fontsize);

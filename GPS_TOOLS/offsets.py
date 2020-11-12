@@ -2,27 +2,23 @@
 # This is a toolbox that operates on Timeseries objects. 
 # Its purpose is to deal with antenna offsets and earthquake offsets
 
-
 import numpy as np
 import collections
 import datetime as dt
+import gps_io_functions
 
-# A line for referencing the namedtuple definition. 
-Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
-                                                   'EQtimes']);  # in mm
+# The namedtuple definition.
 Offsets = collections.namedtuple("Offsets", ['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
 
 
 def remove_offsets(Data0, offsets_obj):
     # the actual subtraction of offsets.
-    if offsets_obj == []:
+    if not offsets_obj:
         return Data0;
     if len(offsets_obj.e_offsets) == 0:
         return Data0;
     newdtarray = [];
-    newdN = [];
-    newdE = [];
-    newdU = [];
+    newdN, newdE, newdU = [], [], [];
 
     # Removing offsets
     for i in range(len(Data0.dtarray)):
@@ -45,8 +41,8 @@ def remove_offsets(Data0, offsets_obj):
         newdN.append(tempN);
         newdU.append(tempU);
 
-    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE, dU=newdU,
-                         Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+    newData = gps_io_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE,
+                                          dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
     return newData;
 
 
@@ -81,19 +77,17 @@ def fit_single_offset(dtarray, data, interval, offset_num_days):
     return offset;
 
 
-def solve_for_offsets(ts_object, offset_times, number_of_days=10):
+def solve_for_offsets(ts_object, offset_times, num_days=10):
     # Here we solve for all the offsets at a given time, which is necessary for UNR data.
     # Offset_times is a list of datetime objects with unique dates.
     print("Solving empirically for offsets at ", offset_times);
-    e_offsets = [];
-    n_offsets = [];
-    u_offsets = [];
+    e_offsets, n_offsets, u_offsets = [], [], [];
     evdts_new = [];
 
     for i in range(len(offset_times)):
-        e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [offset_times[i], offset_times[i]], number_of_days);
-        n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [offset_times[i], offset_times[i]], number_of_days);
-        u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [offset_times[i], offset_times[i]], number_of_days);
+        e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [offset_times[i], offset_times[i]], num_days);
+        n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [offset_times[i], offset_times[i]], num_days);
+        u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [offset_times[i], offset_times[i]], num_days);
         e_offsets.append(e_offset);
         n_offsets.append(n_offset);
         u_offsets.append(u_offset);
@@ -112,5 +106,6 @@ def print_offset_object(Offset_obj):
     print("Total offset object:");
     for i in range(len(Offset_obj.e_offsets)):
         print("%s: %.4f mmE, %.4f mmN, %.4f mmU" % (dt.datetime.strftime(Offset_obj.evdts[i], "%Y-%m-%d"),
-                                                    Offset_obj.e_offsets[i], Offset_obj.n_offsets[i], Offset_obj.u_offsets[i]));
+                                                    Offset_obj.e_offsets[i], Offset_obj.n_offsets[i],
+                                                    Offset_obj.u_offsets[i]));
     return;

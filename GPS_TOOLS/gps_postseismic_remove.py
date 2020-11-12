@@ -2,26 +2,25 @@
 # February 17, 2020
 # The first model is from Hines et al., JGR, 2016
 
-import numpy as np
 import datetime as dt
-import os, sys
+import os
 import gps_io_functions
 import offsets
 import gps_ts_functions
-import matplotlib.pyplot as plt
 
 
 # HELPER FUNCTIONS #
 def get_station_hines(station_name, data_config_file):
     system_params = gps_io_functions.read_config_file(data_config_file);
-    model_file = system_params.general_gps_dir + "/Remove_postseismic/Hines/Stations/" + station_name + "_psmodel.pos";
+    model_dir = "/Contrib_Data/Remove_postseismic/Hines/Stations/"
+    model_file = system_params.general_gps_dir + model_dir + station_name + "_psmodel.pos";
     # This is stored in general_gps_dir because it's on my system, but may not be on general systems. 
     if os.path.isfile(model_file):
         [Data0] = gps_io_functions.read_pbo_pos_file(model_file);
+        return Data0;
     else:
-        print("ERROR: Cannot remove postseismic because file does not exist; file %s" % (model_file))
-        Data0 = [];
-    return Data0;
+        print("ERROR: Cannot remove postseismic because file does not exist; file %s" % model_file);
+        return None;
 
 
 def remove_by_model(Data0, data_config_file):
@@ -34,26 +33,21 @@ def remove_by_model(Data0, data_config_file):
     # Input Hines data.
     model_data = get_station_hines(Data0.name, data_config_file);
 
-    if model_data == []:
+    if not model_data:  # if None
         return Data0;
 
-    if model_data.dtarray[-1]<Data0.dtarray[-1]:
+    if model_data.dtarray[-1] < Data0.dtarray[-1]:
         print("\nWARNING! Trying to use a short postseismic model to fix a long GNSS time series.");
         print("PROBLEMS MAY OCCUR- tread carefully!!\n\n");
 
     # These will be the same size.
-    Data0, model = gps_ts_functions.pair_gps_model_keeping_gps(Data0,
-                                                               model_data);  # leaves data outside of the model timespan
+    Data0, model = gps_ts_functions.pair_gps_model_keeping_gps(Data0, model_data);
+    # pair_gps_model_keeping_gps leaves data outside of the model timespan
     # Data0, model = gps_ts_functions.pair_gps_model(Data0, model_data);  # removes data outside of the model timespan.
 
     # Subtract the model from the data.
-    dtarray = [];
-    dE_gps = [];
-    dN_gps = [];
-    dU_gps = [];
-    Se_gps = [];
-    Sn_gps = [];
-    Su_gps = [];
+    dtarray, dE_gps, dN_gps, dU_gps = [], [], [], [];
+    Se_gps, Sn_gps, Su_gps = [], [], [];
     for i in range(len(Data0.dtarray)):
         dtarray.append(Data0.dtarray[i]);
         dE_gps.append(Data0.dE[i] - model.dE[i]);

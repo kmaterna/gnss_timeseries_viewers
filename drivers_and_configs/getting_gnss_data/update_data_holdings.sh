@@ -46,15 +46,15 @@ cd ../
 
 
 # UPDATE PBO HYDROLOGICAL MODELS
-cd PBO_Hydro/NLDAS/
+cd Hydro/NLDAS/
 wget -N --recursive --no-parent --no-directories --accept "*.hyd" ftp://data-out.unavco.org/pub/products/hydro/nldas2/
 cd ../../
 
-cd PBO_Hydro/GLDAS/
+cd Hydro/GLDAS/
 wget --recursive --no-parent --no-directories --accept "*.hyd" ftp://data-out.unavco.org/pub/products/hydro/gldas2
 cd ../../
 
-cd PBO_Hydro/NOAH025/
+cd Hydro/NOAH025/
 wget --recursive --no-parent --no-directories --accept "*.hyd" ftp://data-out.unavco.org/pub/products/hydro/noah025
 cd ../../
 
