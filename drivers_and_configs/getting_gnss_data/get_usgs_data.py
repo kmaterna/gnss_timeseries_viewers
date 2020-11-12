@@ -1,3 +1,8 @@
+# A python script to download USGS time series and velocities from the USGS GPS website
+# One sub-network at a time.
+# Call this from the main USGS_Data directory on your local machine. 
+# October 2020
+
 import requests
 import numpy as np
 import pandas as pd
@@ -37,9 +42,9 @@ Networks_ignored = ['Alaska',
                     'JuanDeFuca',
                     'LKY2',
                     'Pacific']
-vel_base_directory = "../../GPS_POS_DATA/USGS_Data/Velocities/"
-ts_base_directory = "../../GPS_POS_DATA/USGS_DATA/Time_Series/"
-usgs_cache_file = "../../GPS_POS_DATA/USGS_DATA/usgs_station_cache.txt"
+vel_base_directory = "Velocities/"   # where will velocity files live on the local machine? 
+ts_base_directory = "Time_Series/"   # where will time series files live on the local machine? 
+usgs_cache_file = "usgs_station_cache.txt"  # this cache file is necessary for storing coordinates and start/end times
 
 
 def download_usgs_velocity_tables(network, base_directory, outfile):

@@ -150,7 +150,7 @@ def get_usgs(data_config_file, station, sub_network, refframe="NA"):
         reflabel = 'ITRF2008';
     else:
         reflabel = 'NAfixed';
-    usgs_filename = Params.usgs_gps_dir + '/' + sub_network + '/' + station.lower() + "_" + reflabel + ".rneu"
+    usgs_filename = Params.usgs_gps_dir + sub_network + '/' + station.lower() + "_" + reflabel + ".rneu"
     [myData] = gps_io_functions.read_USGS_ts_file(usgs_filename);
     Offsets = offsets.get_empty_offsets();
     return [myData, Offsets, Offsets];

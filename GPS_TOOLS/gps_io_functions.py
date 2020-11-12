@@ -229,7 +229,7 @@ def usgs_vel_file_from_tsfile(infile):
     usgs_directory = '';
     for i in range(len(infile.split('/')) - 3):
         usgs_directory = usgs_directory + infile.split('/')[i];
-        usgs_directory = usgs_directory + '/';
+        usgs_directory = usgs_directory + '/'
     network_vel_file = usgs_directory + 'Velocities/NAM_' + usgs_network + '_vels.txt';
     return network_vel_file;
 

@@ -5,6 +5,7 @@
 # For most of California, it's about 1200 stations and about 500Mb. It takes ~10 minutes. 
 # For the western US, it's about 2600 stations and ~20 minutes. 
 # One hour if the data transfer is slow. 
+# Call this from the directory where time series will live. 
 
 import numpy as np 
 import sys
@@ -50,4 +51,4 @@ if __name__=="__main__":
 	coordfile, ref_frame1, ref_frame2, latlon_box = configure();
 	stations = get_stations(coordfile, latlon_box);
 	# download_stations(stations, ref_frame1);  # NA first
-	download_stations(stations, ref_frame2);  # IGS14 next
+	# download_stations(stations, ref_frame2);  # IGS14 next
