@@ -6,7 +6,7 @@ Example driver for stacked time series viewing.
 import datetime as dt
 import gps_stack
 
-data_config_file="/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt"
+data_config_file="/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"
 expname='NBay'; 
 center = [-122.0, 38.0];  # lon, lat
 radius = 40;  # km

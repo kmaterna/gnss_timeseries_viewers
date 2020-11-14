@@ -7,7 +7,7 @@ import sys
 import single_station_tsplot
 
 station="P325"
-data_config_file="/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt"
+data_config_file="/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"
 
 if len(sys.argv) >=2:
 	station=sys.argv[1];  # you can type in the name of a station in the run string (if you want)

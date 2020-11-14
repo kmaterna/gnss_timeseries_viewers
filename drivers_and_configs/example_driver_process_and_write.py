@@ -9,7 +9,7 @@ import offsets
 import gps_io_functions
 
 station="P325"
-data_config_file="/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt"
+data_config_file="/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"
 outfile=station+"_noearthquake.pos"
 
 [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station, 'unr', data_config_file, refframe='ITRF')
