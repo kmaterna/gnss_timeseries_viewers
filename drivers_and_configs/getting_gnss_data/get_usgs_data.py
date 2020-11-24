@@ -75,7 +75,17 @@ def download_usgs_velocity_tables(network, base_directory, outfile):
         one_outfile.close();
         df_list[1].to_csv(itrf_outfile, index=False, sep=' ', mode='a');
         print("Writing %s " % itrf_outfile);
-        print("Skipping filtered velocity field for convenience.")
+
+        # REGIONALLY FILTERED
+        filt_outfile = base_directory + "FILT_" + outfile;
+        one_outfile = open(filt_outfile, 'w');
+        one_outfile.write("# USGS Velocity File Regionally Filtered\n")
+        one_outfile.write("# Downloaded from %s on %s\n" % (url, dt.datetime.now()));
+        one_outfile.write("# ");
+        one_outfile.close();
+        df_list[2].to_csv(filt_outfile, index=False, sep=' ', mode='a');
+        print("Writing %s " % filt_outfile);
+
     else:
         print("Skipping network %s because of unexpected number of reference frames." % network)
     return;

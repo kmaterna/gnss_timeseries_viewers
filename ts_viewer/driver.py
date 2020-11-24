@@ -13,7 +13,7 @@ if len(sys.argv) >=2:
 single_station_tsplot.view_single_station(station, 
 	offsets_remove=1, earthquakes_remove=1, 
 	outliers_remove=1, seasonals_remove=1, outliers_def=15, seasonals_type='grace', datasource='unr', refframe='NA', 
-	data_config_file="/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt");
+	data_config_file="/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt");
 
 
 # 9/27/2018: NOTES
