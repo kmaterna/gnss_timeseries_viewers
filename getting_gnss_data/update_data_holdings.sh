@@ -1,7 +1,7 @@
 #!/bin/bash
 # Updating my data holdings as of October 6, 2020
 # First, get into the major directory for GNSS Data.
-cd ../../GPS_POS_DATA/
+cd ../../../GEOPHYS_DATA/GPS_POS_DATA/
 
 # UPDATE CWU/PBO POS DATA
 cd PBO_Data/Time_Series/
@@ -33,14 +33,14 @@ cd ../
 
 # Check this script for parameter values and location on file system
 cd UNR_Data/Time_Series/
-python ../../../drivers_and_configs/getting_gnss_data/get_unr_time_series.py 
+python get_unr_time_series.py 
 cd ../../
 
 
 
 # UPDATE USGS DATA: TIME SERIES AND VELOCITIES
 cd USGS_Data/
-python ../../drivers_and_configs/getting_gnss_data/get_usgs_data.py
+python get_usgs_data.py
 cd ../
 
 

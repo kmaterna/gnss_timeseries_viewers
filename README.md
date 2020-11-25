@@ -27,7 +27,7 @@ The small library in GPS_TOOLS/ contains a set of Python tools to read GNSS time
 ### How many stations within a region? 
 Using one function, we can figure out which stations in the PBO newtwork are within a certain radius or region. In this example, we read the PBO stations and return any within 100 km of a chosen coordinate. 
 ```bash
-(base) Kathryns-MacBook-Pro-2:example kmaterna$ example_driver_find_within_radius.py 
+(base) MacBook-Pro-2:example kmaterna$ example_driver_find_within_radius.py 
 Reading /Users/kmaterna/Documents/GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt
 Returning 26 stations that are within 100.000 km of center -122.0000, 40.0000
 ['ORVB', 'P270', 'P272', 'P333', 'P334', 'P335', 'P336', 'P337', 'P339', 'P341', 'P344', 'P345', 'P346', 'P349', 'P664', 'P665', 'P666', 'P667', 'P668', 'P669', 'P670', 'P671', 'P794', 'QUIN', 'SUTB', 'WDCB']
@@ -37,7 +37,7 @@ Returning 26 stations that are within 100.000 km of center -122.0000, 40.0000
 ### Single GNSS Time Series
 As another example, we plot the PBO time series of P511, a station in Southern California with seasonal terms and antenna changes removed but earthquakes still left in. One possible usage of one driver is illustrated and its command-line outputs are shown. 
 ```bash
-(base) Kathryns-MacBook-Pro-2:example kmaterna$ example_driver_single_plot.py P511
+(base) MacBook-Pro-2:example kmaterna$ example_driver_single_plot.py P511
 ------- P511 --------
 Viewing station P511, earthquakes_remove=0, outliers_remove=1, seasonals_remove=1, datasource=cwu, refframe=NA
 
@@ -69,7 +69,7 @@ If you use this library, please contribute back any features you'd like to write
 
 
 ## Dependencies and Installation
-This library requires basic Python packages such as numpy and matplotlib. For the "stations_within_radius" function, it also requires a file called 'haversine' that is located in my Utilities library (https://github.com/kmaterna/Utility_Code), so please download or clone that as well. For a single mapping utility, I use the pygmt library based on GMT-6 (https://github.com/GenericMappingTools/pygmt). It's highly optional, but you can make an automatic map if you have it.  
+This library requires basic Python packages such as numpy and matplotlib. For full downloading functions, it requires a few pip Python dependencies: pandas, html5lib, beautifulsoup4. For the "stations_within_radius" function, it also requires a file called 'haversine' that is located in my Utilities library (https://github.com/kmaterna/Utility_Code), so please download or clone that as well. For a single mapping utility, I use the pygmt library based on GMT-6 (https://github.com/GenericMappingTools/pygmt). It's highly optional, but you can make an automatic map if you have it.  
 
 Please download, clone, or fork this library and put the path to GPS_TOOLS/ on your $PYTHONPATH. The drivers in drivers_and_configs should provide some examples on how to access the major functions in this library.  I expect this library would work on Mac and Linux systems, but possibly not Windows. 
 
