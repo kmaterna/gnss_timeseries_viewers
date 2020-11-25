@@ -8,6 +8,7 @@ import datetime as dt
 import gps_io_functions
 
 # The namedtuple definition.
+# The offests should be in mm
 Offsets = collections.namedtuple("Offsets", ['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
 
 
@@ -103,9 +104,9 @@ def get_empty_offsets():
 
 
 def print_offset_object(Offset_obj):
-    print("Total offset object:");
     for i in range(len(Offset_obj.e_offsets)):
         print("%s: %.4f mmE, %.4f mmN, %.4f mmU" % (dt.datetime.strftime(Offset_obj.evdts[i], "%Y-%m-%d"),
                                                     Offset_obj.e_offsets[i], Offset_obj.n_offsets[i],
                                                     Offset_obj.u_offsets[i]));
+    print("");
     return;

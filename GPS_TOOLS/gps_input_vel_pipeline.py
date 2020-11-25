@@ -58,7 +58,7 @@ def get_usgs_velfile(velocities_dir, refframe, sub_network):
         print("Error! Must provide sub-network for USGS velocity field");
         sys.exit(0);
     if refframe == 'NA':
-        velfile = velocities_dir + 'NAM_' + sub_network + '_vels.txt';
+        velfile = velocities_dir + sub_network + '/NAM_' + sub_network + '_vels.txt';
     else:
-        velfile = velocities_dir + 'ITRF_' + sub_network + '_vels.txt';
+        velfile = velocities_dir + sub_network + '/ITRF_' + sub_network + '_vels.txt';
     return velfile;

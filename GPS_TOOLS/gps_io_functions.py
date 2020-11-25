@@ -19,7 +19,8 @@ Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'un
                                            'pbo_earthquakes_dir', 'pbo_offsets_dir',
                                            'unr_offsets_dir', 'unr_coords_file',
                                            'pbo_velocities',
-                                           'unr_velocities', 'usgs_vel_dir', 'usgs_networks', 'usgs_cache_file',
+                                           'unr_velocities', 'usgs_vel_dir', 'usgs_networks', 'usgs_offsets_dir',
+                                           'usgs_cache_file',
                                            'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
                                            'lsdm_dir', 'stl_dir', 'blacklist']);
 
@@ -42,6 +43,7 @@ def read_config_file(infile):
     pbo_earthquakes_dir = config.get('py-config', 'pbo_earthquakes_dir');
     unr_offsets_dir = config.get('py-config', 'unr_offsets_dir');
     pbo_offsets_dir = config.get('py-config', 'pbo_offsets_dir');
+    usgs_offsets_dir = config.get('py-config', 'usgs_offsets_dir');
     unr_coords_file = config.get('py-config', 'unr_coords_file');
     pbo_velocities = config.get('py-config', 'pbo_velocities');
     unr_velocities = config.get('py-config', 'unr_velocities');
@@ -60,7 +62,7 @@ def read_config_file(infile):
                       usgs_gps_dir=usgs_gps_dir, pbo_earthquakes_dir=pbo_earthquakes_dir,
                       pbo_offsets_dir=pbo_offsets_dir, unr_offsets_dir=unr_offsets_dir, unr_coords_file=unr_coords_file,
                       pbo_velocities=pbo_velocities, unr_velocities=unr_velocities, usgs_vel_dir=usgs_vel_dir,
-                      usgs_networks=usgs_networks, usgs_cache_file=usgs_cache_file,
+                      usgs_networks=usgs_networks, usgs_cache_file=usgs_cache_file, usgs_offsets_dir=usgs_offsets_dir,
                       gldas_dir=gldas_dir, nldas_dir=nldas_dir, noah_dir=noah_dir,
                       grace_dir=grace_dir, lsdm_dir=lsdm_dir, stl_dir=stl_dir, blacklist=blacklist);
     return myParams;
@@ -230,7 +232,7 @@ def usgs_vel_file_from_tsfile(infile):
     for i in range(len(infile.split('/')) - 3):
         usgs_directory = usgs_directory + infile.split('/')[i];
         usgs_directory = usgs_directory + '/'
-    network_vel_file = usgs_directory + 'Velocities/NAM_' + usgs_network + '_vels.txt';
+    network_vel_file = usgs_directory + 'Velocities/' + usgs_network + '/NAM_' + usgs_network + '_vels.txt';
     return network_vel_file;
 
 

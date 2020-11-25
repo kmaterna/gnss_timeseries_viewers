@@ -554,8 +554,7 @@ def float_to_dt(float_time):
 def get_daily_dtarray(starttime, endtime):
     # Return a datetime array that spans starttime to endtime with daily intervals
     i = 0;
-    dtarray = [];
-    dtarray.append(starttime);
+    dtarray = [starttime];
     while dtarray[-1] < endtime:
         i = i + 1;
         dtarray.append(starttime + dt.timedelta(days=i));

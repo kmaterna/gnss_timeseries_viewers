@@ -148,12 +148,15 @@ def get_usgs(data_config_file, station, sub_network, refframe="NA"):
     Params = gps_io_functions.read_config_file(data_config_file);
     if refframe == 'ITRF':
         reflabel = 'ITRF2008';
+        reflabel_offsets = 'ITRF';
     else:
         reflabel = 'NAfixed';
+        reflabel_offsets = 'NAM';
     usgs_filename = Params.usgs_gps_dir + sub_network + '/' + station.lower() + "_" + reflabel + ".rneu"
     [myData] = gps_io_functions.read_USGS_ts_file(usgs_filename);
-    Offsets = offsets.get_empty_offsets();
-    return [myData, Offsets, Offsets];
+    Offsets = get_usgs_offsets(station, Params.usgs_offsets_dir, sub_network, reflabel_offsets);
+    Earthquakes = get_usgs_earthquakes(station, Params.usgs_offsets_dir, sub_network, reflabel_offsets);
+    return [myData, Offsets, Earthquakes];
 
 
 def get_gldas(data_config_file, station):
@@ -389,14 +392,46 @@ def get_cwu_earthquakes(station, earthquakes_dir):
     return CWU_earthquakes;
 
 
+def get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe):
+    # For antenna changes and other offsets
+    print("Offset table for station %s in %s :" % (station, refframe));
+    offset_file = usgs_offsets_dir + sub_network + '/' + refframe + '_' + sub_network + '_offsets.txt';
+    # Read the offset table
+    try:
+        table = subprocess.check_output("grep " + station + " " + offset_file, shell=True);
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
+        table = [];
+    if len(table) > 0:
+        table = table.decode();  # needed when switching to python 3
+    [e_offsets, n_offsets, u_offsets, evdts] = parse_table_usgs(table, 'antenna/other');
+    USGS_offsets = offsets.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+    offsets.print_offset_object(USGS_offsets);
+    return USGS_offsets;
+
+
+def get_usgs_earthquakes(station, usgs_offsets_dir, sub_network, refframe):
+    # For earthquake offsets
+    print("Earthquake table for station %s in %s :" % (station, refframe));
+    offset_file = usgs_offsets_dir + sub_network + '/' + refframe + '_' + sub_network + '_offsets.txt';
+    # Read the offset table
+    try:
+        table = subprocess.check_output("grep " + station + " " + offset_file, shell=True);
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
+        table = [];
+    if len(table) > 0:
+        table = table.decode();  # needed when switching to python 3
+    [e_offsets, n_offsets, u_offsets, evdts] = parse_table_usgs(table, 'earthquake');
+    USGS_earthquakes = offsets.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+    offsets.print_offset_object(USGS_earthquakes);
+    return USGS_earthquakes;
+
+
 #
 # TABLE INPUTS --------------------------- 
 # 
 
 def parse_antenna_table_pbo(table):
-    e_offsets = [];
-    n_offsets = [];
-    u_offsets = [];
+    e_offsets, n_offsets, u_offsets = [], [], [];
     evdts = [];
     if len(table) == 0:
         return [e_offsets, n_offsets, u_offsets, evdts];
@@ -412,7 +447,7 @@ def parse_antenna_table_pbo(table):
         yyyy = words[1];
         mm = words[2];
         dd = words[3];
-        e_offsets.append(float(words[8]));  # in m
+        e_offsets.append(float(words[8]));  # in mm
         n_offsets.append(float(words[6]));
         u_offsets.append(float(words[10]));
         evdts.append(dt.datetime.strptime(yyyy + mm + dd, "%Y%m%d"));
@@ -420,9 +455,7 @@ def parse_antenna_table_pbo(table):
 
 
 def parse_earthquake_table_pbo(table):
-    e_offsets = [];
-    n_offsets = [];
-    u_offsets = [];
+    e_offsets, n_offsets, u_offsets = [], [], [];
     evdts = [];
     if len(table) == 0:
         return [e_offsets, n_offsets, u_offsets, evdts];
@@ -432,7 +465,7 @@ def parse_earthquake_table_pbo(table):
             continue;  # if we're at the end, move on.
         words = item.split();
         filename = words[0];
-        e_offsets.append(float(words[3]));  # in m
+        e_offsets.append(float(words[3]));  # in mm
         n_offsets.append(float(words[4]));
         u_offsets.append(float(words[8]));
         evdate = filename.split('/')[-1];
@@ -442,6 +475,35 @@ def parse_earthquake_table_pbo(table):
         day = evdate[4:6];
         year = "20" + year;
         evdts.append(dt.datetime.strptime(year + month + day, "%Y%m%d"));
+    return [e_offsets, n_offsets, u_offsets, evdts];
+
+
+def parse_table_usgs(table, offset_type):
+    e_offsets, n_offsets, u_offsets = [], [], [];
+    evdts = [];
+    if len(table) == 0:
+        return [e_offsets, n_offsets, u_offsets, evdts];
+    tablesplit = table.split('\n');
+    for item in tablesplit:  # for each earthquake
+        if offset_type == 'earthquake':
+            if 'earthquake' in item:
+                words = item.split();
+                if len(words) < 8:
+                    continue;
+                evdts.append(dt.datetime.strptime(words[1], "%Y-%m-%d"));
+                n_offsets.append(float(words[3]))
+                e_offsets.append(float(words[5]))
+                u_offsets.append(float(words[7]))
+        else:
+            if 'earthquake' not in item:
+                words = item.split();
+                if len(words) < 8:
+                    continue;
+                evdts.append(dt.datetime.strptime(words[1], "%Y-%m-%d"));
+                n_offsets.append(float(words[3]))
+                e_offsets.append(float(words[5]))
+                u_offsets.append(float(words[7]))
+
     return [e_offsets, n_offsets, u_offsets, evdts];
 
 
