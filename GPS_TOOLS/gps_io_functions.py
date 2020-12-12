@@ -35,36 +35,33 @@ def read_config_file(infile):
     config.optionxform = str  # make the config file case-sensitive
     config.read(infile);
 
-    # Where you place all the directories
-    general_gps_dir = config.get('py-config', 'gps_data_dir');
-    pbo_gps_dir = config.get('py-config', 'pbo_gps_dir');
-    unr_gps_dir = config.get('py-config', 'unr_gps_dir');
-    usgs_gps_dir = config.get('py-config', 'usgs_gps_dir');
-    pbo_earthquakes_dir = config.get('py-config', 'pbo_earthquakes_dir');
-    unr_offsets_dir = config.get('py-config', 'unr_offsets_dir');
-    pbo_offsets_dir = config.get('py-config', 'pbo_offsets_dir');
-    usgs_offsets_dir = config.get('py-config', 'usgs_offsets_dir');
-    unr_coords_file = config.get('py-config', 'unr_coords_file');
-    pbo_velocities = config.get('py-config', 'pbo_velocities');
-    unr_velocities = config.get('py-config', 'unr_velocities');
-    usgs_vel_dir = config.get('py-config', 'usgs_vel_dir');
-    usgs_networks = config.get('py-config', 'usgs_network_list');
-    usgs_cache_file = config.get('py-config', 'usgs_cache_file');
-    blacklist = config.get('py-config', 'blacklist');
-    gldas_dir = config.get('py-config', 'gldas_dir');
-    nldas_dir = config.get('py-config', 'nldas_dir');
-    noah_dir = config.get('py-config', 'noah_dir');
-    grace_dir = config.get('py-config', 'grace_dir');
-    lsdm_dir = config.get('py-config', 'lsdm_dir');
-    stl_dir = config.get('py-config', 'stl_dir');
+    # Create a default dictionary so we can tolerate a config file with less-complete fields
+    config_dictionary = config["py-config"];
+    param_dict = collections.defaultdict(lambda: "Key Not Present In Config");
+    for key in config_dictionary.keys():
+        param_dict[key] = config_dictionary[key];
 
-    myParams = Params(general_gps_dir=general_gps_dir, pbo_gps_dir=pbo_gps_dir, unr_gps_dir=unr_gps_dir,
-                      usgs_gps_dir=usgs_gps_dir, pbo_earthquakes_dir=pbo_earthquakes_dir,
-                      pbo_offsets_dir=pbo_offsets_dir, unr_offsets_dir=unr_offsets_dir, unr_coords_file=unr_coords_file,
-                      pbo_velocities=pbo_velocities, unr_velocities=unr_velocities, usgs_vel_dir=usgs_vel_dir,
-                      usgs_networks=usgs_networks, usgs_cache_file=usgs_cache_file, usgs_offsets_dir=usgs_offsets_dir,
-                      gldas_dir=gldas_dir, nldas_dir=nldas_dir, noah_dir=noah_dir,
-                      grace_dir=grace_dir, lsdm_dir=lsdm_dir, stl_dir=stl_dir, blacklist=blacklist);
+    myParams = Params(general_gps_dir=param_dict["gps_data_dir"], 
+                      pbo_gps_dir=param_dict["pbo_gps_dir"], 
+                      unr_gps_dir=param_dict["unr_gps_dir"], 
+                      usgs_gps_dir=param_dict["usgs_gps_dir"],
+                      pbo_earthquakes_dir=param_dict["pbo_earthquakes_dir"], 
+                      pbo_offsets_dir=param_dict["pbo_offsets_dir"], 
+                      unr_offsets_dir=param_dict["unr_offsets_dir"], 
+                      unr_coords_file=param_dict["unr_coords_file"],
+                      pbo_velocities=param_dict["pbo_velocities"], 
+                      unr_velocities=param_dict["unr_velocities"], 
+                      usgs_vel_dir=param_dict["usgs_vel_dir"],
+                      usgs_networks=param_dict["usgs_network_list"], 
+                      usgs_cache_file=param_dict["usgs_cache_file"], 
+                      usgs_offsets_dir=param_dict["usgs_offsets_dir"],
+                      gldas_dir=param_dict["gldas_dir"], 
+                      nldas_dir=param_dict["nldas_dir"], 
+                      noah_dir=param_dict["noah_dir"],
+                      grace_dir=param_dict["grace_dir"], 
+                      lsdm_dir=param_dict["lsdm_dir"], 
+                      stl_dir=param_dict["stl_dir"], 
+                      blacklist=param_dict["blacklist"]);
     return myParams;
 
 

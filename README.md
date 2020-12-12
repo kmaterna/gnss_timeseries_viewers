@@ -1,7 +1,7 @@
 # GNSS Time Series Viewers
 
 ## Code Description: 
-The small library in GPS_TOOLS/ contains a set of Python tools to read GNSS time series and velocities, remove earthquake/antenna offsets, solve for slopes, remove seasonal terms using several algorithms, and plot time series, stacks, and maps.  It can read data from both the University of Nevada Reno (.tenv3) and the Plate Boundary Observatory / Network Of The Americas (.pos) formats. The tools here are meant to be modular, useful for stringing together into more complex experiments (custom offsets, custom stacks, etc.).  
+The small library in GPS_TOOLS/ contains a set of Python tools to read GNSS time series and velocities, remove earthquake/antenna offsets, solve for slopes, remove seasonal terms using several algorithms, and plot time series, stacks, and maps.  It can read data from the University of Nevada Reno (.tenv3) format, the Plate Boundary Observatory / Network Of The Americas (.pos) format, and the USGS format. The tools here are meant to be modular, useful for stringing together into more complex experiments (custom offsets, custom stacks, etc.).  
 
 
 ## Library Features:
@@ -71,9 +71,9 @@ If you use this library, please contribute back any features you'd like to write
 ## Dependencies and Installation
 This library requires basic Python packages such as numpy and matplotlib. For full downloading functions, it requires a few pip Python dependencies: pandas, html5lib, beautifulsoup4. For the "stations_within_radius" function, it also requires a file called 'haversine' that is located in my Utilities library (https://github.com/kmaterna/Utility_Code), so please download or clone that as well. For a single mapping utility, I use the pygmt library based on GMT-6 (https://github.com/GenericMappingTools/pygmt). It's highly optional, but you can make an automatic map if you have it.  
 
-Please download, clone, or fork this library and put the path to GPS_TOOLS/ on your $PYTHONPATH. The drivers in drivers_and_configs should provide some examples on how to access the major functions in this library.  I expect this library would work on Mac and Linux systems, but possibly not Windows. 
+Please download, clone, or fork this library and put the path to GPS_TOOLS/ on your $PYTHONPATH. The drivers in examples_and_configs should provide some examples on how to access the major functions in this library.  I expect this library would work on Mac and Linux systems, but possibly not Windows. 
 
 
 ## Accessing Prerequisite GNSS Data
-This library requires a local copy of GNSS time series, velocities, steps, and hydrological loading models from various online repositories in their online-provided formats. The "drivers_and_configs/getting_gnss_data/data_instructions.txt" file tells you how to locate and download these files.  Following that, you must create a file called data_config.txt that tells the library code where all the data files are located.  An example data_config.txt is provided; please follow a similar template for your own. The path to the data_config.txt file will be passed into the library each time you use it.  
+This library requires a local copy of GNSS time series, velocities, steps, and hydrological loading models from various online repositories in their online-provided formats. The "getting_gnss_data/metadata.txt" file describes some of how to locate and download these files. The 'update_data_holdings.sh' has now automated the download of all of the repositories locally, which might take a few hours if you're downloading every time series. Following that, you must create a file called data_config.txt that tells the library code where all the data files are located on your system.  An example data_config.txt is provided in the "examples_and_configs"; please follow a similar template for your own. The path to the data_config.txt file will be passed into the library each time you use it.  
 
