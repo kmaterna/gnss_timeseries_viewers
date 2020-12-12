@@ -12,15 +12,7 @@ GPS_TOOLS/_stl_simple.m
 *.grd
 *.kml
 *.xyz
-*.cpt
-*.history
-*.conf
-*.pptx
-*.ppt
 *.docx
 *.doc
-*.mat
-*.norm
-*.hist
-*.grad
 .idea/*
+ts_viewer/*

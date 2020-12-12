@@ -1,3 +1,4 @@
+"""
 # Python script
 # April 21, 2019
 # This script takes a file of stations (GRACE computation compatible)
@@ -5,6 +6,8 @@
 # http://rz-vm115.gfz-potsdam.de:8080/repository/entry/show?entryid=362f8705-4b87-48d1-9d86-2cfd1a2b6ac9
 # I use the Center of Figure HYDL products. 
 # Put your desired stations into a text file with row format [name longitude latitude startdate enddate]
+Script by K. Materna
+"""
 
 import sys, os
 import subprocess

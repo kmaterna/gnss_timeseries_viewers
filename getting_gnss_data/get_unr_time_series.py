@@ -1,18 +1,24 @@
-# Python script to download a bunch of UNR Data
-# Data source: http://geodesy.unr.edu/PlugNPlayPortal.php
-# Before 2018: ref_frame is either ISG08 or NA12
-# After 2018: ref_frame is either IGS14 or NA 
-# For most of California, it's about 1200 stations and about 500Mb. It takes ~10 minutes. 
-# For the western US, it's about 2600 stations and ~20 minutes. 
-# One hour if the data transfer is slow. 
-# Call this from the directory where time series will live. 
+"""
+Download GNSS time series from the University of Nevada Reno (http://geodesy.unr.edu/PlugNPlayPortal.php).
+Inputs are based on a cache file (for coordinates) and a geographic region.
+Call this script from the directory where time series will live.
+Script by K. Materna, 2020
+"""
 
 import numpy as np 
 import sys
 from subprocess import call
 
-def configure():
-	coordfile = "UNR_coords_nov2020.txt";  # the data holding file (for getting our region of interest)
+def configure(argv):
+	# Before 2018: ref_frame is either ISG08 or NA12
+	# After 2018: ref_frame is either IGS14 or NA 
+	# For most of California, it's about 1200 stations and about 500Mb. It takes ~10 minutes. 
+	# For the western US, it's about 2600 stations and ~1 hour. 
+	if len(argv) != 2:
+		print("Error! Please provide get_unr_time_series.py with the name of the coordinate cache file. Exiting...")
+		sys.exit(0);
+	else:
+		coordfile = argv[1];
 	ref_frame1 = "NA";
 	ref_frame2 = "IGS14";
 	latlon_box = [-125.0, -110, 32.0, 49.0];  # A LARGE BOX INCLUDING ALL OF WUS
@@ -48,7 +54,7 @@ def download_stations(stations, ref_frame):
 
 
 if __name__=="__main__":
-	coordfile, ref_frame1, ref_frame2, latlon_box = configure();
+	coordfile, ref_frame1, ref_frame2, latlon_box = configure(sys.argv);
 	stations = get_stations(coordfile, latlon_box);
-	# download_stations(stations, ref_frame1);  # NA first
-	# download_stations(stations, ref_frame2);  # IGS14 next
+	download_stations(stations, ref_frame1);  # NA first
+	download_stations(stations, ref_frame2);  # IGS14 next

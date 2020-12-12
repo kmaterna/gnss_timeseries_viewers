@@ -1,7 +1,10 @@
-# A python script to download USGS time series and velocities from the USGS GPS website
-# One sub-network at a time.
-# Call this from the main USGS_Data directory on your local machine. 
-# October 2020
+"""
+Download GNSS time series, velocities, and offsets from the USGS (https://earthquake.usgs.gov/monitoring/gps/)
+One sub-network at a time
+Call this script from the main USGS_Data directory on your local machine. 
+Script by K. Materna, 2020
+"""
+
 
 import requests
 import numpy as np
@@ -89,7 +92,7 @@ def download_usgs_velocity_tables(network, base_directory, outfile):
         print("Writing %s " % filt_outfile);
 
     else:
-        print("Skipping network %s because of unexpected number of reference frames." % network)
+        print("Skipping network %s because of unexpected number of reference frames (%d)." % (network, len(df_list)) )
     return;
 
 
