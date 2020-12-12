@@ -1,0 +1,58 @@
+May 31, 2018
+Instructions for periodically updating the GPS files on your local machine
+For doing this update in 2020, I created a script (update_data_holdings.sh)
+
+PBO DOWNLOAD: Velocities, Offsets, and Data
+pbo_gps_dir: 
+	source: ftp://data-out.unavco.org/pub/products/position/
+	The command to download into PBO_stations is 
+		wget --recursive --no-parent --no-directories --accept "*.pbo.final_igs08.pos, *.pbo.final_nam08.pos, *.cwu.final_nam08.pos, *.nmt.final_nam08.pos" ftp://data-out.unavco.org/pub/products/position
+	Takes about 2 hours, about 5 GB. 
+	NOTE: On October 1 2018, the GAGE processing center stopped funding both CWU and NMT.  They are only supporting 
+	CWU from this point forward. As a result, NMT will only go until September 15, 2018. 
+	All further downloads should only focus on the CWU data, since the others are effectively static. 
+
+pbo_velocities: monthly-updated velocity fields
+	source: ftp://data-out.unavco.org/pub/products/velocity/
+	Download your preferred velocity field
+
+pbo_earthquakes_dir: Event files for PBO earthquakes
+	source: ftp://data-out.unavco.org/pub/products/event/
+	Download all *coseis_kalts.evt and put them into this directory
+	
+pbo_offsets_dir: PBO offsets from antenna changes, etc.
+	source: ftp://data-out.unavco.org/pub/products/offset/
+	Download single file and put it into this directory
+	"wget ftp://data-out.unavco.org/pub/products/offset/*nam14.off"
+
+
+
+UNR DOWNLOAD: Velocities, Offsets, Data Holdings, and Data
+unr_gps_dir: Time series data from UNR
+	download all .tenv3 files in your region of interest and put them into this directory. 
+	source: http://geodesy.unr.edu/index.php
+unr_velocities:
+	Download velocity file and place it into this file
+	source: http://geodesy.unr.edu/velocities/midas.IGS14.txt
+	source: http://geodesy.unr.edu/velocities/midas.NA.txt
+unr_coords_file: 
+	Download coords file and place it into this file
+	source: http://geodesy.unr.edu/NGLStationPages/DataHoldings.txt
+unr_offsets_dir: Directory for UNR offsets
+	Download steps file and place it into this directory
+	source: http://geodesy.unr.edu/NGLStationPages/steps.txt
+	I also save their website text as a readme. 	
+
+
+HYDROLOGICAL MODELS DOWNLOAD:
+Takes about 15 minutes for each product
+gldas_dir: Put GLDAS models in this directory
+	"wget --recursive --no-parent --no-directories --accept *.hyd ftp://data-out.unavco.org/pub/products/hydro/gldas2"
+nldas_dir: Put NLDAS models in this directory
+	"wget --recursive --no-parent --no-directories --accept *.hyd ftp://data-out.unavco.org/pub/products/hydro/nldas2"
+noah_dir: Put NOAH models in this directory
+	"wget --recursive --no-parent --no-directories --accept *.hyd ftp://data-out.unavco.org/pub/products/hydro/noah025"
+lsdm_dir: 
+	There's a nice extractor script located at http://rz-vm115.gfz-potsdam.de:8080/repository/entry/show?entryid=362f8705-4b87-48d1-9d86-2cfd1a2b6ac9
+	Download that script and then use my utility get_lsdm.py to extract all your stations. Takes a while. 
+
