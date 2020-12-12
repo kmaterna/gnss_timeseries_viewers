@@ -1,0 +1,36 @@
+# Config file for GPS Time Series Analysis stream
+# This file should be passed into the library each time it is used
+#############################################
+# 
+[py-config]
+
+gps_data_dir = /Users/kmaterna/Documents/GPS_POS_Data/
+
+# PBO GPS Velocities, time series, and offsets
+pbo_gps_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Data/Time_Series/
+pbo_offsets_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Data/Offsets/
+pbo_earthquakes_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Data/PBO_Event_Files/
+pbo_velocities = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Data/Velocities/
+
+# UNR GPS Velocities, time series, offsets
+unr_gps_dir = /Users/kmaterna/Documents/GPS_POS_DATA/UNR_Data/Time_Series/
+unr_offsets_dir = /Users/kmaterna/Documents/GPS_POS_DATA/UNR_Data/Offsets/
+unr_velocities = /Users/kmaterna/Documents/GPS_POS_DATA/UNR_Data/Velocities/
+unr_coords_file = /Users/kmaterna/Documents/GPS_POS_DATA/UNR_DATA/UNR_coords_dec2019.txt
+
+# USGS GPS Velocities, time series
+usgs_gps_dir = /Users/kmaterna/Documents/GPS_POS_DATA/USGS_Data/Time_Series/
+usgs_vel_dir = /Users/kmaterna/Documents/GPS_POS_DATA/USGS_Data/Velocities/
+usgs_offsets_dir = /Users/kmaterna/Documents/GPS_POS_DATA/USGS_Data/Offsets/
+usgs_network_list = /Users/kmaterna/Documents/GPS_POS_DATA/USGS_Data/network_list.txt
+usgs_cache_file = /Users/kmaterna/Documents/GPS_POS_DATA/USGS_Data/usgs_station_cache.txt
+
+blacklist = /Users/kmaterna/Documents/GPS_POS_DATA/Blacklist/blacklist.txt
+
+# Hydrological Loading models
+gldas_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/GLDAS/
+nldas_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/NLDAS/
+noah_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/NOAH025/
+grace_dir = /Users/kmaterna/Documents/GPS_POS_DATA/GRACE_loading_model/
+lsdm_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/LSDM/
+stl_dir = /Users/kmaterna/Documents/GPS_POS_DATA/STL_models/
