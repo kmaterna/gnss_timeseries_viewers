@@ -35,6 +35,8 @@ def remove_by_model(Data0, data_config_file):
 
     if not model_data:  # if None
         return Data0;
+    if len(Data0.dtarray) == 0:  # if empty
+        return Data0;
 
     if model_data.dtarray[-1] < Data0.dtarray[-1]:
         print("\nWARNING! Trying to use a short postseismic model to fix a long GNSS time series.");
