@@ -286,12 +286,7 @@ def query_usgs_network_name(station, gps_ts_dir):
 def remove_blacklist(data_config_file, stations):
     Params = gps_io_functions.read_config_file(data_config_file);
     new_stations = [];
-    blacklisted_stations = [];
-    blacklist = Params.blacklist;
-    ifile = open(blacklist, 'r');
-    for line in ifile:
-        blacklisted_stations.append(line.split()[0]);
-    ifile.close();
+    blacklisted_stations = gps_io_functions.read_blacklist(Params.blacklist);
     for station in stations:
         if not (station in blacklisted_stations):
             new_stations.append(station);

@@ -12,7 +12,7 @@ def import_velfield(gps_config_file, network='pbo', refframe='ITRF', sub_network
         [myVelocities] = gps_io_functions.read_pbo_vel_file(pbo_velfile);
     elif network == 'cwu':
         cwu_velfile = get_cwu_velfile(myParams.pbo_velocities, refframe);
-        [myVelocities] = gps_io_functions.read_pbo_vel_file_fortran(cwu_velfile);
+        [myVelocities] = gps_io_functions.read_pbo_vel_file_format(cwu_velfile);
     elif network == 'unr':
         unr_velfile = get_unr_velfile(myParams.unr_velocities, refframe);
         [myVelocities] = gps_io_functions.read_unr_vel_file(unr_velfile, myParams.unr_coords_file);

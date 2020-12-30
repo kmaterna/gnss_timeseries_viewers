@@ -4,8 +4,8 @@
 # max_sigma is the formal uncertainty on the velocity in mm
 
 import numpy as np
-import haversine
-import read_kml
+from Tectonic_Utils.geodesy import haversine
+from Tectonic_Utils.read_write import read_kml
 import gps_vel_functions
 import matplotlib.path as mpltPath
 import gps_input_vel_pipeline

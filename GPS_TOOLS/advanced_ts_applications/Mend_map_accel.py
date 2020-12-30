@@ -23,7 +23,7 @@ import gps_seasonal_removals
 import gps_input_pipeline
 import offsets
 import stations_within_radius
-import haversine
+from Tectonic_Utils.geodesy import haversine
 import remove_ets_events
 
 

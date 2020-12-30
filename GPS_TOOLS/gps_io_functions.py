@@ -101,7 +101,7 @@ def read_pbo_vel_file(infile):
     return [myVelfield];
 
 
-def read_pbo_vel_file_fortran(infile):
+def read_pbo_vel_file_format(infile):
     # Meant for reading velocity files from the PBO/UNAVCO website.
     # Returns a list of station_vel objects.
     # Splits the lines by character, like Fortran style
@@ -189,6 +189,7 @@ def read_unr_vel_file(infile, coordinate_file):
 
 def read_gamit_velfile(infile):
     # Meant for reading a velocity file for example from GAMIT processing
+    # A simpler format than the PBO (only 13 fields)
     # Doesn't have starttime and stoptime information.
     myVelfield = [];
     print("Reading %s" % infile);
@@ -463,6 +464,15 @@ def read_grace(filename):
     return [GRACE_TS];
 
 
+def read_blacklist(blacklist_file):
+    with open(blacklist_file, "r") as f:
+        blacklist = []
+        blacklist_all = f.readlines()
+        for line in blacklist_all:
+            blacklist.append(line.split()[0])
+    return blacklist;
+
+
 # ---------- WRITING FUNCTIONS ----------- # 
 def write_pbo_pos_file(ts_object, filename, comment=""):
     # Useful for writing common mode objects, etc.
@@ -504,5 +514,28 @@ def write_gmt_velfile(myVelfield, outfile):
         ofile.write("%f %f %f %f %f %f 0 0 1 %s\n" % (
             station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.se,
             station_vel.sn, station_vel.name));
+    ofile.close();
+    return;
+
+
+def restrict_pbo_vel_file(infile, outfile, coord_box):
+    # Copying the format of pbo velocities, let's make a restricted dataset
+    ifile = open(infile, 'r');
+    ofile = open(outfile, 'w');
+    start = 0;
+    for line in ifile:
+        if start == 1:
+            nlat = float(line[97:111]);
+            elon = float(line[112:127]);
+            if elon > 180:
+                elon = elon - 360.0;
+            if coord_box[0] <= elon <= coord_box[1] and coord_box[2] <= nlat <= coord_box[3]:
+                ofile.write(line);
+        if start == 0:
+            ofile.write(line);
+        if line.split()[0][0] == '*':
+            start = 1;
+            continue;
+    ifile.close();
     ofile.close();
     return;

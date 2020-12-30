@@ -37,6 +37,14 @@ def remove_duplicates(velfield):
     return cleaned_velfield;
 
 
+def remove_blacklist_vels(velfield, blacklist):
+    cleaned_velfield = []
+    for vel in velfield:
+        if vel.name not in blacklist:
+            cleaned_velfield.append(vel);
+    return cleaned_velfield;
+
+
 def pair_velocity_fields():
     return;
 
