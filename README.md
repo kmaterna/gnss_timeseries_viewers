@@ -5,7 +5,7 @@ This library contains a set of tools to read GNSS time series and velocities, re
 
 
 ## Dependencies and Installation
-This library requires basic Python packages such as numpy and matplotlib. For full downloading functions, it requires a few other pip Python dependencies: pandas, html5lib, beautifulsoup4. For the "stations_within_radius" function, it also requires a file called 'haversine' that is located in my Utilities library (https://github.com/kmaterna/Utility_Code), so please download or clone that as well. For the mapping utility, I use the pygmt library based on GMT-6 (https://github.com/GenericMappingTools/pygmt). It's highly optional, but you can make an automatic map if you have it.  
+This library requires basic Python packages such as numpy and matplotlib. For full downloading functions, it requires a few other pip Python dependencies: pandas, html5lib, beautifulsoup4. For the "stations_within_radius" function, it also requires a file called 'haversine' that is located in my Utilities library (https://github.com/kmaterna/Tectonic_Utils), so please install that as welll (can be done through pip). For the mapping utility, I use the pygmt library based on GMT-6 (https://github.com/GenericMappingTools/pygmt). It's highly optional, but you can make an automatic map if you have it.  
 
 Please download, clone, or fork this library and put the path to GPS_TOOLS/ on your $PYTHONPATH. The drivers in examples_and_configs provide some examples on how to access the major functions in this library.  I expect this library will work on Mac and Linux systems, but it hasn't been tested on Windows. 
 
