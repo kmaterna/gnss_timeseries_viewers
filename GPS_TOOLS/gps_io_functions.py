@@ -473,11 +473,30 @@ def read_blacklist(blacklist_file):
     return blacklist;
 
 
+def read_humanread_vel_file(infile):
+    # Reading velfield file with format:
+    # lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
+    myVelfield = [];
+    print("Reading %s" % infile);
+    ifile = open(infile, 'r');
+    for line in ifile:
+        if line.split()[0] == '#':
+            continue;
+        temp = line.split();
+        new_station = Station_Vel(name=temp[10], elon=float(temp[0]), nlat=float(temp[1]), e=float(temp[2]),
+                                  n=float(temp[3]), u=float(temp[4]), se=float(temp[5]), sn=float(temp[6]),
+                                  su=float(temp[7]), first_epoch=dt.datetime.strptime(temp[8],"%Y%m%d"),
+                                  last_epoch=dt.datetime.strptime(temp[9],"%Y%m%d"), refframe='',
+                                  proccenter='', subnetwork='', survey=False);
+        myVelfield.append(new_station);
+    return [myVelfield];
+
+
 # ---------- WRITING FUNCTIONS ----------- # 
 def write_pbo_pos_file(ts_object, filename, comment=""):
     # Useful for writing common mode objects, etc.
     # Opposite of read_pbo_pos_file(filename)
-    print("Writing %s" % filename);
+    print("Writing pbo-posfile %s" % filename);
     ofile = open(filename, 'w');
     ofile.write("%s\n" % comment);
     for i in range(36):
@@ -494,9 +513,10 @@ def write_pbo_pos_file(ts_object, filename, comment=""):
 
 
 def write_humanread_vel_file(myVelfield, outfile):
+    print("writing human-readable velfile %s" % outfile);
     ofile = open(outfile, 'w');
     ofile.write(
-        "Format: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
+        "# Format: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
     for station_vel in myVelfield:
         first_epoch = dt.datetime.strftime(station_vel.first_epoch, '%Y%m%d');
         last_epoch = dt.datetime.strftime(station_vel.last_epoch, '%Y%m%d');
@@ -508,6 +528,7 @@ def write_humanread_vel_file(myVelfield, outfile):
 
 
 def write_gmt_velfile(myVelfield, outfile):
+    print("Writing gmt velfile %s" % outfile);
     ofile = open(outfile, 'w');
     ofile.write("# Format: lon(deg) lat(deg) e(mm) n(mm) Se(mm) Sn(mm) 0 0 1 name\n");
     for station_vel in myVelfield:
