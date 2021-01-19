@@ -527,6 +527,19 @@ def write_humanread_vel_file(myVelfield, outfile):
     return;
 
 
+def write_stationvel_file(myVelfield, outfile):
+    print("writing human-readable velfile in station-vel format, %s" % outfile);
+    ofile = open(outfile, 'w');
+    ofile.write(
+        "# Format: lon(deg) lat(deg) VE(mm) VN(mm) VU(mm) SE(mm) SN(mm) SU(mm) name(optional)\n");
+    for station_vel in myVelfield:
+        ofile.write("%f %f %f %f %f %f %f %f %s\n" % (
+            station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.u, station_vel.se,
+            station_vel.sn, station_vel.su, station_vel.name));
+    ofile.close();
+    return;
+
+
 def write_gmt_velfile(myVelfield, outfile):
     print("Writing gmt velfile %s" % outfile);
     ofile = open(outfile, 'w');
