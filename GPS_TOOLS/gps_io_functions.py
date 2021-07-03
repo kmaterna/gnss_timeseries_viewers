@@ -146,7 +146,7 @@ def read_unr_vel_file(infile, coordinate_file):
     [cache_name, cache_lat, cache_lon, dtbeg, dtend] = np.loadtxt(coordinate_file, unpack=True, skiprows=2,
                                                                   usecols=(0, 1, 2, 7, 8), dtype={
             'names': ('name', 'lat', 'lon', 'dtbeg', 'dtend'),
-            'formats': ('U4', np.float, np.float, 'U10', 'U10')});
+            'formats': ('U4', float, float, 'U10', 'U10')});
     if 'IGS14_' in infile:
         refframe = 'ITRF';
     else:
@@ -257,7 +257,7 @@ def read_usgs_velfile(infile, cache_file):
     [names, lon, lat, e, n, se, sn, u, su] = np.loadtxt(infile, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
                                                         unpack=True, dtype={
             'names': ('name', 'lon', 'lat', 'evel', 'nvel', 'se', 'sn', 'u', 'su'),
-            'formats': ('U4', np.float, np.float, np.float, np.float, np.float, np.float, np.float, np.float)})
+            'formats': ('U4', float, float, float, float, float, float, float, float)})
     # Populating the first_epoch and last_epoch with information from the associated cache.
     [cache_names, startdate, enddate, subnetwork] = np.loadtxt(cache_file, unpack=True, usecols=(0, 3, 4, 5),
                                                                dtype={
@@ -314,8 +314,8 @@ def read_UNR_magnet_ts_file(filename, coordinates_file):
     [datestrs, dE, dN, dU, Se, Sn, Su] = np.loadtxt(filename, usecols=(1, 8, 10, 12, 14, 15, 16), skiprows=1,
                                                     unpack=True,
                                                     dtype={'names': ('datestrs', 'dE', 'dN', 'dU', 'Se', 'Sn', 'Su'),
-                                                           'formats': ('U7', np.float, np.float, np.float,
-                                                                       np.float, np.float, np.float)});
+                                                           'formats': ('U7', float, float, float,
+                                                                       float, float, float)});
 
     station_name = filename.split('/')[-1][0:4];  # the first four characters of the filename
     dtarray = [dt.datetime.strptime(x, '%y%b%d') for x in datestrs];  # has format 07SEP19
@@ -347,14 +347,13 @@ def read_USGS_ts_file(filename):
     station_name = filename.split('/')[-1][0:4].upper();  # the first four characters of the filename
     [datestrs, dN, dE, dU, Sn, Se, Su] = np.loadtxt(filename, unpack=True, usecols=(0, 2, 3, 4, 6, 7, 8),
                                                     dtype={'names': ('datestrs', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su'),
-                                                           'formats': (
-                                                               'U8', np.float, np.float, np.float, np.float, np.float,
-                                                               np.float)})
+                                                           'formats': ('U8',
+                                                                       float, float, float, float, float, float)})
     dtarray = [dt.datetime.strptime(x, "%Y%m%d") for x in datestrs];
     vel_file = usgs_vel_file_from_tsfile(filename);  # get the associated velocity file for that USGS sub-network
     [names, lon, lat] = np.loadtxt(vel_file, skiprows=3, usecols=(0, 1, 2),
                                    unpack=True,
-                                   dtype={'names': ('name', 'lon', 'lat'), 'formats': ('U4', np.float, np.float)})
+                                   dtype={'names': ('name', 'lon', 'lat'), 'formats': ('U4', float, float)})
     coords = None;  # default value in case station wasn't found
     for i in range(len(names)):
         if names[i] == station_name:
@@ -377,8 +376,7 @@ def read_pbo_hydro_file(filename, coords_file=None):
     else:
         coords = [None, None];  # can return an object without meaningful coordinates if not asked for them.
     [dts, dN, dE, dU] = np.loadtxt(filename, usecols=(0, 3, 4, 5), dtype={'names': ('dts', 'dN', 'dE', 'dU'),
-                                                                          'formats': (
-                                                                              'U10', np.float, np.float, np.float)},
+                                                                          'formats': ('U10', float, float, float)},
                                    skiprows=20, delimiter=',', unpack=True);
     for i in range(len(dts)):
         dtarray.append(dt.datetime.strptime(dts[i], "%Y-%m-%d"));
@@ -404,7 +402,7 @@ def read_lsdm_file(filename, coords_file=None):
         coords = [None, None];  # can return an object without meaningful coordinates if not asked for them.
     [dts, dU, dN, dE] = np.loadtxt(filename, usecols=(0, 1, 2, 3), dtype={'names': ('dts', 'dN', 'dE', 'dU'),
                                                                           'formats': (
-                                                                              'U10', np.float, np.float, np.float)},
+                                                                              'U10', float, float, float)},
                                    skiprows=3, delimiter=',', unpack=True);
     for i in range(len(dts)):
         dtarray.append(dt.datetime.strptime(dts[i][0:10], "%Y-%m-%d"));
@@ -424,7 +422,7 @@ def get_coordinates_for_unr_stations(station_names, coordinates_file):
     # open cache of coordinates and start-dates
     [cache_names, cache_lat, cache_lon] = np.loadtxt(coordinates_file, unpack=True, skiprows=2,
                                                      usecols=(0, 1, 2), dtype={'names': ('name', 'lat', 'lon'),
-                                                                               'formats': ('U4', np.float, np.float)});
+                                                                               'formats': ('U4', float, float)});
     lon, lat = [], [];
     # find the stations
     for i in range(len(station_names)):
@@ -451,8 +449,7 @@ def read_grace(filename):
     [dts, lon, lat, _, u, v, w] = np.loadtxt(filename, usecols=range(0, 7),
                                              dtype={'names': ('dts', 'lon', 'lat', 'elev', 'u', 'v', 'w'),
                                                     'formats': (
-                                                        'U11', np.float, np.float, np.float, np.float, np.float,
-                                                        np.float)}, unpack=True);
+                                                        'U11', float, float, float, float, float, float)}, unpack=True);
     # In the file, the datetime is in the format 01-Jan-2012_31-Jan-2012.
     # We take the start date and add 15 days to put the GRACE at the center of the bin.
     # There will be only one point per month, generally speaking
@@ -485,8 +482,8 @@ def read_humanread_vel_file(infile):
         temp = line.split();
         new_station = Station_Vel(name=temp[10], elon=float(temp[0]), nlat=float(temp[1]), e=float(temp[2]),
                                   n=float(temp[3]), u=float(temp[4]), se=float(temp[5]), sn=float(temp[6]),
-                                  su=float(temp[7]), first_epoch=dt.datetime.strptime(temp[8],"%Y%m%d"),
-                                  last_epoch=dt.datetime.strptime(temp[9],"%Y%m%d"), refframe='',
+                                  su=float(temp[7]), first_epoch=dt.datetime.strptime(temp[8], "%Y%m%d"),
+                                  last_epoch=dt.datetime.strptime(temp[9], "%Y%m%d"), refframe='',
                                   proccenter='', subnetwork='', survey=False);
         myVelfield.append(new_station);
     return [myVelfield];
