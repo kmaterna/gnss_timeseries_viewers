@@ -13,6 +13,13 @@ Station_Vel = collections.namedtuple("Station_Vel", ['name', 'nlat', 'elon', 'n'
                                                      'first_epoch',
                                                      'last_epoch', 'refframe', 'proccenter', 'subnetwork', 'survey']);
 # Station_Vel are in mm/yr, with -180<lon<180, used for velfields
+Station_Vel_XYZ = collections.namedtuple("Station_Vel_XYZ", ['name',
+                                                             'x_pos', 'y_pos', 'z_pos',
+                                                             'x_rate', 'y_rate', 'z_rate',
+                                                             'x_sigma', 'y_sigma', 'z_sigma',
+                                                             'first_epoch', 'last_epoch']);
+# Station_Vel_XYZ are in m/yr (under consideration), with XYZ as ECEF position in meters. Used for velocities.
+
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
 Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir',
