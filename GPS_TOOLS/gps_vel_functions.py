@@ -7,27 +7,40 @@ import gps_io_functions
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
 
 
-def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1000, coord_box=(-180, 180, -90, 90)):
+def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1000, coord_box=(-180, 180, -90, 90),
+                   verbose=False):
     """
-    Filter into cleaner GPS velocities:
-    Remove data that's less than num_years long, has formal uncertainties above max_sigma,
-    or is outside our box of interest.
+    Filter into cleaner GPS velocities by time series length, formal uncertainty, or geographic range.
     Default arguments are meant to be global.
+    Verbose means print why you're excluding stations.
+
+    :param velfield: a list of station_vel objects
+    :param num_years: number of years, float
+    :param max_horiz_sigma: formal uncertainty for east or north, mm/yr
+    :param max_vert_sigma: formal uncertainty for vertical, mm/yr
+    :param coord_box: list or tuple geographic range, [w, e, s, n]
+    :param verbose: bool
     """
     cleaned_velfield = [];
-    for station_vel in velfield:
-        if station_vel.sn > max_horiz_sigma:  # too high sigma, please exclude
+    for station in velfield:
+        if station.sn > max_horiz_sigma:  # too high sigma, please exclude
+            print('Excluding '+station.name+' for large north sigma of '+str(station.sn)+' mm/yr') if verbose else 0;
             continue;
-        if station_vel.se > max_horiz_sigma:
+        if station.se > max_horiz_sigma:
+            print('Excluding '+station.name+' for large east sigma of '+str(station.se)+' mm/yr') if verbose else 0;
             continue;
-        if station_vel.su > max_vert_sigma:
+        if station.su > max_vert_sigma:
+            print('Excluding '+station.name+' for large vertical sigma of'+str(station.su)+' mm/yr') if verbose else 0;
             continue;
-        deltatime = station_vel.last_epoch - station_vel.first_epoch;
+        deltatime = station.last_epoch - station.first_epoch;
         if deltatime.days <= num_years * 365.24:  # too short time interval, please exclude
+            print('Excluding ' + station.name + 'for time range too short') if verbose else 0;
             continue;
-        if coord_box[0] < station_vel.elon < coord_box[1] and coord_box[2] < station_vel.nlat < coord_box[3]:
+        if coord_box[0] < station.elon < coord_box[1] and coord_box[2] < station.nlat < coord_box[3]:
             # The station is within the box of interest.
-            cleaned_velfield.append(station_vel);
+            cleaned_velfield.append(station);
+        else:
+            print("excluding for outside box of interest: ", station.elon, station.nlat) if verbose else 0;
     return cleaned_velfield;
 
 
