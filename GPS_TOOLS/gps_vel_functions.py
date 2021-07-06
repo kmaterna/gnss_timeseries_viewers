@@ -22,6 +22,8 @@ def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1
     :param verbose: bool
     """
     cleaned_velfield = [];
+    if verbose:
+        print("Cleaning: Starting with " + str(len(velfield)) + " stations");
     for station in velfield:
         if station.sn > max_horiz_sigma:  # too high sigma, please exclude
             print('Excluding '+station.name+' for large north sigma of '+str(station.sn)+' mm/yr') if verbose else 0;
@@ -41,12 +43,18 @@ def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1
             cleaned_velfield.append(station);
         else:
             print("excluding for outside box of interest: ", station.elon, station.nlat) if verbose else 0;
+    if verbose:
+        print("Cleaning: After applying selection criteria, we have " + str(len(cleaned_velfield)) + " stations\n");
     return cleaned_velfield;
 
 
-def remove_duplicates(velfield):
-    # Right now assuming all entries at the same lat/lon are the same station
+def remove_duplicates(velfield, verbose=False):
+    """
+    Right now assuming all entries at the same lat/lon are same station
+    """
     cleaned_velfield = []
+    if verbose:
+        print("Removing duplicates: Starting with %d stations" % len(velfield));
     for vel in velfield:
         is_duplicate = 0;
         for comp_station_vel in cleaned_velfield:
@@ -55,19 +63,27 @@ def remove_duplicates(velfield):
                 is_duplicate = 1;
         if is_duplicate == 0:
             cleaned_velfield.append(vel);
+    if verbose:
+        print("Removing duplicates: Ending with %d stations" % len(cleaned_velfield));
     return cleaned_velfield;
 
 
-def remove_blacklist_vels(velfield, blacklist):
+def remove_blacklist_vels(velfield, blacklist, verbose=False):
     cleaned_velfield = []
+    if verbose:
+        print("Removing blacklist: Starting with %d stations" % len(velfield));
     for vel in velfield:
         if vel.name not in blacklist:
             cleaned_velfield.append(vel);
+    if verbose:
+        print("Removing blacklist: Ending with %d stations" % len(cleaned_velfield));
     return cleaned_velfield;
 
 
 def velocity_misfit_function(Velfield1, Velfield2):
-    """Compares two velocity fields with identical stations by taking RMS of velocity differences."""
+    """
+    Compares two velocity fields with identical list of stations by taking RMS of velocity differences.
+    """
     misfit = 0;
     for i in range(len(Velfield1)):
         misfit += np.square(Velfield2[i].e - Velfield1[i].e);

@@ -1,24 +1,10 @@
 # May/June 2018
 # This is a toolbox that operates on Timeseries objects. 
 # Contains functions to map, filter, and reduce generic GPS time series
-# 
 # FIRST TYPE OF FUNCTION: RETURNS TSOBJECT
-# remove_outliers(Data0, outliers_def);
-# impose_time_limits(Data0, starttime, endtime)
-# remove_nans(Data0)
-# detrend_data_by_value(Data0,east_params,north_params,vert_params)
-# remove_seasonal_by_value(Data0,east_params,north_params,vert_params)
-# pair_gps_model(gps_data, model_data)
-# pair_gps_model_keeping_gps(gps_data, model_data)
-# get_referenced_data(roving_station_data, base_station_data)
-# remove_constant(Data0, east_offset, north_offset, vert_offset)
-# 
+# Ex: remove_nans(Data0)
 # SECOND TYPE OF FUNCTION: RETURNS VALUES
-# get_slope(Data0, starttime=None, endtime=None,missing_fraction=0.6)
-# get_slope_unc(dataObj, starttime, endtime)
-# get_linear_annual_semiannual(Data0, starttime=None, endtime=None,critical_len=365)
-# get_means(Data0, starttime=None, endtime=None)
-# get_values_at_date(Data0, selected_date)
+# Ex: get_slope(Data0, starttime=None, endtime=None,missing_fraction=0.6)
 
 import numpy as np
 import collections
@@ -35,8 +21,7 @@ Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 
 # -------------------------------------------- # 
 # FUNCTIONS THAT TAKE TIME SERIES OBJECTS # 
 # AND RETURN OTHER TIME SERIES OBJECTS # 
-# -------------------------------------------- # 
-
+# -------------------------------------------- #
 
 def remove_outliers(Data0, outliers_def):
     medfilt_e = signal.medfilt(Data0.dE, 35);
@@ -107,9 +92,7 @@ def detrend_data_by_value(Data0, east_params, north_params, vert_params):
         return Data0;
 
     # Parameters Format: slope, a2(cos), a1(sin), s2, s1.
-    east_detrended = [];
-    north_detrended = [];
-    vert_detrended = [];
+    east_detrended, north_detrended, vert_detrended = [], [], [];
     idx = np.isnan(Data0.dE);
     if (sum(idx)) > 0:  # if there are nans, please pull them out.
         Data0 = remove_nans(Data0);
@@ -133,8 +116,10 @@ def detrend_data_by_value(Data0, east_params, north_params, vert_params):
 
 
 def remove_seasonal_by_value(Data0, east_params, north_params, vert_params):
-    # Least squares seasonal parameters. Remove seasonal components.
-    # Parameters Format: slope, a2(cos), a1(sin), s2, s1.
+    """
+    Least squares seasonal parameters. Remove seasonal components.
+    Parameters Format: slope, a2(cos), a1(sin), s2, s1.
+    """
     east_detrended = [];
     north_detrended = [];
     vert_detrended = [];
@@ -158,8 +143,10 @@ def remove_seasonal_by_value(Data0, east_params, north_params, vert_params):
 
 
 def pair_gps_model(gps_data, model_data):
-    # Takes two time series objects, and returns two paired time series objects.
-    # It could be that GPS has days that model doesn't, or the other way around.
+    """
+    Take two time series objects, and return two paired time series objects.
+    It could be that GPS has days that model doesn't, or the other way around.
+    """
     dtarray = [];
     dE_gps, dN_gps, dU_gps = [], [], [];
     Se_gps, Sn_gps, Su_gps = [], [], [];
@@ -191,9 +178,11 @@ def pair_gps_model(gps_data, model_data):
 
 
 def pair_gps_model_keeping_gps(gps_data, model_data):
-    # Takes two time series objects, and returns two time series objects.
-    # It keeps all the data from the first one.
-    # It generates a model_data with length that matches the GPS.
+    """
+    Take two time series objects, and return two time series objects.
+    Keep all data from the first one.
+    Generate a model_data with length that matches the GPS.
+    """
     dtarray = [];
     dE_model, dN_model, dU_model = [], [], [];
     Se_model, Sn_model, Su_model = [], [], [];
@@ -223,9 +212,11 @@ def pair_gps_model_keeping_gps(gps_data, model_data):
 
 
 def get_referenced_data(roving_station_data, base_station_data):
-    # Takes a time series object and removes the motion of a base station (another time series object)
-    # If there's a starttime, then we will solve for a best-fitting model offset at the starttime.
-    # This is used when subtracting models
+    """
+    Take a time series object and remove motion of a base station (another time series object)
+    If there's a starttime, then we will solve for a best-fitting model offset at starttime.
+    Used when subtracting models
+    """
     dtarray = [];
     dE_gps, dN_gps, dU_gps = [], [], [];
     Se_gps, Sn_gps, Su_gps = [], [], [];
@@ -249,9 +240,7 @@ def get_referenced_data(roving_station_data, base_station_data):
 
 def remove_constant(Data0, east_offset, north_offset, vert_offset):
     # Subtract a constant number from each data array in a time series object
-    temp_east = [];
-    temp_north = [];
-    temp_vert = [];
+    temp_east, temp_north, temp_vert = [], [], [];
     for i in range(len(Data0.dtarray)):
         temp_east.append(Data0.dE[i] - east_offset);
         temp_north.append(Data0.dN[i] - north_offset);
@@ -273,8 +262,10 @@ def rotate_data():
 # -------------------------------------------- # 
 
 def get_slope(Data0, starttime=None, endtime=None, missing_fraction=0.6):
-    # Model the data with a best-fit y = mx + b.
-    # Returns six numbers: e_slope, n_slope, v_slope, e_std, n_std, v_std
+    """
+    Model data with a best-fit y = mx + b.
+    Returns six numbers: e_slope, n_slope, v_slope, e_std, n_std, v_std
+    """
 
     # Defensive programming
     error_flag, starttime, endtime = basic_defensive_programming(Data0, starttime, endtime);
@@ -282,10 +273,7 @@ def get_slope(Data0, starttime=None, endtime=None, missing_fraction=0.6):
         return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
 
     # Cut to desired window, and remove nans
-    mydtarray = [];
-    myeast = [];
-    mynorth = [];
-    myup = [];
+    mydtarray, myeast, mynorth, myup = [], [], [], [];
 
     for i in range(len(Data0.dtarray)):
         if starttime <= Data0.dtarray[i] <= endtime and ~np.isnan(Data0.dE[i]) and ~np.isnan(
@@ -332,8 +320,10 @@ def get_slope(Data0, starttime=None, endtime=None, missing_fraction=0.6):
 
 
 def get_slope_unc(dataObj, starttime, endtime):
-    # Uses the Allan Variance of Rates.
-    # slope is returned as params[0]
+    """
+    Calculate Allan Variance of Rates.
+    slope is returned as params[0]
+    """
     dataObj = impose_time_limits(dataObj, starttime, endtime);
     x = get_float_times(dataObj.dtarray);
     params, covm = lssq_model_errors.AVR(x, dataObj.dE, dataObj.Se, verbose=0);
@@ -346,8 +336,10 @@ def get_slope_unc(dataObj, starttime, endtime):
 
 
 def get_linear_annual_semiannual(Data0, starttime=None, endtime=None, critical_len=365):
-    # The critical_len parameter allows us to switch this function for both GPS and GRACE time series in GPS format
-    # Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F;
+    """
+    The critical_len parameter allows us to switch this function for both GPS and GRACE time series in GPS format
+    Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F;
+    """
 
     # Defensive programming
     error_flag, starttime, endtime = basic_defensive_programming(Data0, starttime, endtime);
@@ -358,10 +350,7 @@ def get_linear_annual_semiannual(Data0, starttime=None, endtime=None, critical_l
         return [east_params, north_params, vert_params];
 
     # Cut to desired time window, and remove nans.
-    mydtarray = [];
-    myeast = [];
-    mynorth = [];
-    myup = [];
+    mydtarray, myeast, mynorth, myup = [], [], [], [];
     for i in range(len(Data0.dtarray)):
         if starttime <= Data0.dtarray[i] <= endtime and ~np.isnan(Data0.dE[i]):
             mydtarray.append(Data0.dtarray[i]);
@@ -396,8 +385,10 @@ def get_linear_annual_semiannual(Data0, starttime=None, endtime=None, critical_l
 
 
 def get_means(Data0, starttime=None, endtime=None):
-    # Return the average value of the time series between starttime and endtime
-    # Can be used to set offsets for plotting, etc.
+    """
+    Return average value of time series between starttime and endtime
+    Can be used to set offsets for plotting, etc.
+    """
 
     # Defensive programming
     error_flag, starttime, endtime = basic_defensive_programming(Data0, starttime, endtime);
@@ -405,10 +396,7 @@ def get_means(Data0, starttime=None, endtime=None):
         return [np.nan, np.nan, np.nan];
 
     # Cut to desired window, and remove nans
-    mydtarray = [];
-    myeast = [];
-    mynorth = [];
-    myup = [];
+    mydtarray, myeast, mynorth, myup = [], [], [], [];
     for i in range(len(Data0.dtarray)):
         if starttime <= Data0.dtarray[i] <= endtime and ~np.isnan(Data0.dE[i]) and ~np.isnan(Data0.dN[i]) and ~np.isnan(
                 Data0.dU[i]):
@@ -421,10 +409,12 @@ def get_means(Data0, starttime=None, endtime=None):
 
 
 def get_logfunction(Data0, eqtime):
-    # y = B + Alog(1+t/tau);
-    # Useful for postseismic transients.
-    # Should match the construct-function function.
-    # The t is in decyear
+    """
+    y = B + Alog(1+t/tau);
+    Useful for postseismic transients.
+    Should match construct-function function.
+    t is in decyear
+    """
     def func(t, a, b, tau):
         return b + a * np.log(1 + t / tau);
 
@@ -562,9 +552,10 @@ def get_daily_dtarray(starttime, endtime):
 
 
 def yrnum2datetime(yearnums, starttime):
-    # This function will take a set of dates, in decimal years past a certain date,
-    # and convert it into normal datetime objects.
-    # The input and output vectors will be exactly the same length
+    """
+    Take a set of dates, in decimal years past a certain date, and convert it into normal datetime objects.
+    The input and output vectors will be exactly the same length
+    """
     dtarray = [];
     for i in range(len(yearnums)):
         myyr = yearnums[i];
@@ -622,10 +613,12 @@ def annual_only_function(decyear, fit_params):
 
 
 def construct_log_function(decday, fit_params):
-    # Function has functional form:
-    # y = b + a*np.log(1+t/tau);
-    # fit params = [a, b, tau];
-    # The x axis is the same as the get_log_function()
+    """
+    Function has functional form:
+    y = b + a*np.log(1+t/tau);
+    fit params = [a, b, tau];
+    The x axis is the same as the get_log_function()
+    """
     a = fit_params[0];
     b = fit_params[1];
     tau = fit_params[2];
