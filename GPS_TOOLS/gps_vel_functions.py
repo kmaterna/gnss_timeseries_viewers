@@ -159,7 +159,7 @@ def convert_enu_velfield_to_xyz(velfield):
 
 def prepare_velocities_for_helmert_trans(velfield):
     """
-    We take regular Station_Vel objects (ENU).
+    Take regular Station_Vel objects (ENU).
     Then, we are using the "Station_Vel_XYZ" object in a clever way.
     x_pos, y_pos, z_pos are related to ONLY the lon/lat position
     x_rate, y_rate, z_rate are the position when a few years of velocity has been added
@@ -209,8 +209,10 @@ def get_Helmert_parameters(xyz_velfieldA, xyz_velfieldB):
         return residuals;
 
     Htrans_starting_guess = np.array([0, 0, 0, 1, 0, 0, 0]);
-    response = scipy.optimize.least_squares(fun, Htrans_starting_guess);  # solve nonlinear least squares problem!
+    # solve nonlinear least squares problem!
+    response = scipy.optimize.least_squares(fun, Htrans_starting_guess, loss='soft_l1');
     Htrans_optimal = response.x;  # the 7 parameters of the Helmert transformation.
+    print(Htrans_optimal);
     return Htrans_optimal;
 
 
