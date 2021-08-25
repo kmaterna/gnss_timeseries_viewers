@@ -11,7 +11,8 @@ import configparser
 
 Station_Vel = collections.namedtuple("Station_Vel", ['name', 'nlat', 'elon', 'n', 'e', 'u', 'sn', 'se', 'su',
                                                      'first_epoch',
-                                                     'last_epoch', 'refframe', 'proccenter', 'subnetwork', 'survey']);
+                                                     'last_epoch', 'refframe', 'proccenter', 'subnetwork', 'survey',
+                                                     'meas_type'], defaults=(None,) * 15 + ('gnss',));
 # Station_Vel are in mm/yr, with -180<lon<180, used for velfields
 Station_Vel_XYZ = collections.namedtuple("Station_Vel_XYZ", ['name',
                                                              'x_pos', 'y_pos', 'z_pos',
@@ -99,7 +100,7 @@ def read_pbo_vel_file(infile):
             last_epoch = dt.datetime.strptime(t2[0:8], '%Y%m%d');
             myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
                                        se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
-                                       proccenter='pbo', subnetwork='', refframe='ITRF', survey=0);
+                                       proccenter='pbo', subnetwork='', refframe='ITRF', survey=0, meas_type='gnss');
             myVelfield.append(myStationVel);
         if "*" in line:
             start = 1;
@@ -136,7 +137,7 @@ def read_pbo_vel_file_format(infile):
             last_epoch = dt.datetime.strptime(t2[0:8], '%Y%m%d');
             myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
                                        se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
-                                       proccenter='pbo', subnetwork='', refframe='ITRF', survey=0);
+                                       proccenter='pbo', subnetwork='', refframe='ITRF', survey=0, meas_type='gnss');
             myVelfield.append(myStationVel);
         if "*" in line:
             start = 1;
@@ -188,7 +189,7 @@ def read_unr_vel_file(infile, coordinate_file):
 
             myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
                                        se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
-                                       proccenter='unr', subnetwork='', refframe=refframe, survey=0);
+                                       proccenter='unr', subnetwork='', refframe=refframe, survey=0, meas_type='gnss');
             myVelfield.append(myStationVel);
     ifile.close();
     return [myVelfield];
@@ -222,7 +223,7 @@ def read_gamit_velfile(infile):
 
             myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
                                        se=se, sn=sn, su=su, first_epoch=first_epoch, last_epoch=last_epoch,
-                                       proccenter='gamit', subnetwork='', refframe='ITRF', survey=0);
+                                       proccenter='gamit', subnetwork='', refframe='ITRF', survey=0, meas_type='gnss');
             myVelfield.append(myStationVel);
     ifile.close();
     return [myVelfield];
@@ -291,7 +292,7 @@ def read_usgs_velfile(infile, cache_file):
         myStationVel = Station_Vel(name=names[i], elon=lon[i], nlat=lat[i], e=e[i], n=n[i], u=u[i],
                                    se=se[i], sn=sn[i], su=su[i], first_epoch=first_epoch, last_epoch=last_epoch,
                                    proccenter='usgs', subnetwork=usgs_sub_network, refframe=usgs_refframe,
-                                   survey=survey_flag);
+                                   survey=survey_flag, meas_type='gnss');
         myVelField.append(myStationVel);
     return [myVelField];
 
@@ -491,7 +492,7 @@ def read_humanread_vel_file(infile):
                                   n=float(temp[3]), u=float(temp[4]), se=float(temp[5]), sn=float(temp[6]),
                                   su=float(temp[7]), first_epoch=dt.datetime.strptime(temp[8], "%Y%m%d"),
                                   last_epoch=dt.datetime.strptime(temp[9], "%Y%m%d"), refframe='',
-                                  proccenter='', subnetwork='', survey=False);
+                                  proccenter='', subnetwork='', survey=False, meas_type='gnss');
         myVelfield.append(new_station);
     return [myVelfield];
 
