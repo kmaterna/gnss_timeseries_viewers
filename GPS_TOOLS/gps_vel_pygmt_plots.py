@@ -16,7 +16,7 @@ def station_vels_to_arrays(station_vels):
     return np.array(elon), np.array(nlat), np.array(e), np.array(n), np.array(u);
 
 
-def simple_pygmt_plot(velfield, outname, symsize=0.1, region=()):
+def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=None):
     """Simply plot the displacement vectors from a velocity field in PyGMT, with vertical denoted by colors"""
     lons = [x.elon for x in velfield];
     lats = [x.nlat for x in velfield];
@@ -34,6 +34,10 @@ def simple_pygmt_plot(velfield, outname, symsize=0.1, region=()):
     fig.plot(x=elon, y=nlat, style='c0.04i', color='black', pen='0.4p,white');  # station locations
     fig.plot(x=elon, y=nlat, style='v0.20+e+a40+gblack+h0+p1p,black+z0.04', pen='0.6p,black',
              direction=[e, n]);  # displacement vectors
+    if horiz_velfield:  # horizontal-only velocities
+        h_elon, h_nlat, h_e, h_n, h_u = station_vels_to_arrays(horiz_velfield);
+        fig.plot(x=h_elon, y=h_nlat, style='v0.20+e+a40+gblack+h0+p1p,black+z0.04', pen='0.6p,black',
+                 direction=[h_e, h_n]);  # displacement vectors
     fig.plot(x=elon, y=nlat, style='c'+str(symsize)+'i', G=u, cmap='mycpt.cpt', pen='thin,black');  # vertical
     fig.plot(x=region[0] + 0.9, y=region[2] + 0.1, style='v0.20+e+a40+gblack+h0+p1p,black+z0.04', pen='0.6p,black',
              direction=[[20], [0]]);  # scale vector
