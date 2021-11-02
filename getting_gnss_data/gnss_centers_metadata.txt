@@ -10,16 +10,13 @@ pbo_gps_dir:
 	Takes about 2 hours, about 5 GB. 
 	NOTE: On October 1 2018, the GAGE processing center stopped funding both CWU and NMT.  They are only supporting 
 	CWU from this point forward. As a result, NMT will only go until September 15, 2018. 
-	All further downloads should only focus on the CWU data, since the others are effectively static. 
-
+	All new downloads only get CWU data, since the others are static.
 pbo_velocities: monthly-updated velocity fields
 	source: ftp://data-out.unavco.org/pub/products/velocity/
 	Download your preferred velocity field
-
 pbo_earthquakes_dir: Event files for PBO earthquakes
 	source: ftp://data-out.unavco.org/pub/products/event/
 	Download all *coseis_kalts.evt and put them into this directory
-	
 pbo_offsets_dir: PBO offsets from antenna changes, etc.
 	source: ftp://data-out.unavco.org/pub/products/offset/
 	Download single file and put it into this directory

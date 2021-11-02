@@ -52,8 +52,10 @@ usgs_cache_file = "usgs_station_cache.txt"  # this cache file is necessary for s
 
 
 def download_usgs_velocity_tables(network, base_directory, outfile):
-    # Go online and grab USGS velocity tables, in NA, ITRF2008, and Filtered
-    # One table for each network, as organized in the USGS database.
+    """
+    Go online and grab USGS velocity tables, in NA, ITRF2008, and Filtered
+    One table for each network, as organized in the USGS database.
+    """
     url = base_url + network + '/velocities';
     df_list = pd.read_html(requests.get(url).content)
     print("Reading %d tables on website %s " % (len(df_list), url) );
@@ -144,8 +146,10 @@ def download_usgs_offset_tables(network, base_directory, outfile):
 
 
 def download_usgs_ts_file(station, network, ts_base_directory):
-    # Download some time series files from USGS in NA and ITRF2008
-    # They will be organized by network, as they are in the USGS database
+    """
+    Download some time series files from USGS in NA and ITRF2008
+    They will be organized by network, as they are in the USGS database
+    """
     directory_name = ts_base_directory + network + '/';
     subprocess.call(['mkdir', '-p', directory_name], shell=False);
     url_name = base_url + 'data/networks/' + network + '/' + station.lower() + '/nafixed/' + station.lower() + '.rneu'
@@ -156,9 +160,11 @@ def download_usgs_ts_file(station, network, ts_base_directory):
 
 
 def get_usgs_network_directory_from_velfile(infile):
-    # Network parsing and plumbing
-    # We assume a parallel directory above the Velocity directory with a bunch of TS files
-    # From which we can derive startdate and enddate
+    """
+    Network parsing and plumbing
+    We assume a parallel directory above the Velocity directory with a bunch of TS files
+    From which we can derive startdate and enddate
+    """
     usgs_network = infile.split('/')[-1][0:-9];
     print(usgs_network);
     if usgs_network[0:4] == 'NAM_':
@@ -175,21 +181,23 @@ def get_usgs_network_directory_from_velfile(infile):
 
 
 def cache_usgs_start_endtimes():
-    print("Writing network cache %s " % (usgs_cache_file) );
+    print("Writing network cache %s " % usgs_cache_file );
     ofile = open(usgs_cache_file, 'w');
     for network in networks:
         velfile = vel_base_directory + network + '/ITRF_' + network + '_vels.txt';
         network_ts_directory, _ = get_usgs_network_directory_from_velfile(velfile);
 
         [names, lon, lat] = np.loadtxt(velfile, skiprows=3, usecols=(0, 1, 2), unpack=True, dtype={'names': (
-                'name', 'lon', 'lat'), 'formats': ('U4', np.float, np.float)});
+                'name', 'lon', 'lat'), 'formats': ('U4', float, float)});
         # Populating the first_epoch and last_epoch with information from the associated time series directory.
         for i in range(len(names)):
-            ts_filename = network_ts_directory + '/' + names[i] + '_NAfixed.rneu';
+            ts_filename = network_ts_directory + '/' + names[i] + '_ITRF2008.rneu';
             dates = np.loadtxt(ts_filename, unpack=True, usecols=(0,),
                                dtype={'names': ('dtstrs',), 'formats': ('U8',)}, ndmin=1);
-            first_epoch=dates[0][0];
-            last_epoch=dates[-1][0];
+            if len(dates) == 0:   # for the rare empty file
+                continue;
+            first_epoch = dates[0][0];
+            last_epoch = dates[-1][0];
             ofile.write("%s %.5f %.5f %s %s %s\n" % (names[i], lon[i], lat[i], first_epoch, last_epoch, network) );
 
     ofile.close();
@@ -215,14 +223,15 @@ def download_usgs_time_series():
     for network in networks:
         velfile = vel_base_directory + network + '/ITRF_' + network + '_vels.txt';
         if os.path.isfile(velfile):
-            name = np.loadtxt(velfile, skiprows=3, usecols=(0,), unpack=True, dtype={'names': ('name',), 'formats': ('U4',)})
+            name = np.loadtxt(velfile, skiprows=3, usecols=(0,), unpack=True, dtype={'names': ('name',),
+                                                                                     'formats': ('U4',)})
             for station in name:
                 download_usgs_ts_file(station[0], network, ts_base_directory)    
     return;
 
 
 if __name__ == "__main__":
-    # Go get all the USGS GPS files from the website!
+    # Go get all USGS GPS files from the website!
     # This gets velocity tables and time series in ITRF2008/NA
     # When you're done downloading, you must run the cache function
     
@@ -230,4 +239,3 @@ if __name__ == "__main__":
     download_usgs_offsets();
     download_usgs_time_series();
     cache_usgs_start_endtimes();
-

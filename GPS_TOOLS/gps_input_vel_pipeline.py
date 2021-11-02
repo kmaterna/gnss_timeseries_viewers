@@ -47,9 +47,9 @@ def get_cwu_velfile(velocities_dir, refframe='NA'):
 
 def get_unr_velfile(velocities_dir, refframe):
     if refframe == 'NA':
-        velfile = velocities_dir + 'NAM_MAGNET_nov2020.txt'
+        velfile = velocities_dir + 'midas.NA_nov2021.txt'
     else:
-        velfile = velocities_dir + 'IGS14_MAGNET_nov2020.txt'
+        velfile = velocities_dir + 'midas.IGS14_nov2021.txt'
     return velfile;
 
 
