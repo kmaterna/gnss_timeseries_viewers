@@ -17,7 +17,9 @@ def station_vels_to_arrays(station_vels):
 
 
 def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=None, fault_file=None):
-    """Simply plot the displacement vectors from a velocity field in PyGMT, with vertical denoted by colors"""
+    """
+    Simply plot the displacement vectors from StationVels in PyGMT, with vertical denoted by colors
+    """
     lons = [x.elon for x in velfield];
     lats = [x.nlat for x in velfield];
     erange = np.max(lons) - np.min(lons);

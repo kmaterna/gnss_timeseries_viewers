@@ -1,13 +1,7 @@
-# Plotting tools for stacks and movies
-# Whether we are plotting stacks with trends, with steps, or anything else, 
-# This is the common set of plotting tools we want to use. 
-# ------------------------------- # 
-# Contains:
-# horizontal_full_ts(dataobj_list, distances, myparams, label)
-# vertical_full_ts(dataobj_list, distances, myparams, label)
-# horizontal_filtered_plots(dataobj_list, distances, myparams, label)
-# vertical_filtered_plots(dataobj_list, distances, myparams, label)
-# pygmt_map(dataobj_list, myparams)
+"""
+Plotting tools for GNSS stacks and movies
+Whether we are plotting stacks with trends, with steps, or anything else.
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,16 +11,14 @@ import datetime as dt
 import scipy.ndimage
 
 
-def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
-    fig = plt.figure(figsize=(20, 15), dpi=160);
-    [f, axarr] = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(10, 8))
-    label_date = dt.datetime.strptime("20200215", "%Y%m%d");
-    start_time_plot = dt.datetime.strptime("20050101", "%Y%m%d");
-    end_time_plot = dt.datetime.strptime("20200116", "%Y%m%d");
+def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1,
+                       start_time_plot=dt.datetime.strptime("20050101", "%Y%m%d"),
+                       end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d"),
+                       label_date=dt.datetime.strptime("20200215", "%Y%m%d")):
+    [_f, axarr] = plt.subplots(1, 2, sharex='all', sharey='all', figsize=(10, 8), dpi=300)
 
     spacing = 15;
-    EQtimes, labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname,
-                                                                                               distances);
+    labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname, distances);
 
     color_boundary_object = matplotlib.colors.Normalize(vmin=closest_station, vmax=farthest_station, clip=True);
     custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap='jet_r');
@@ -40,15 +32,15 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
             emean = 0;  # leave the data un-meaned
         edata = [x + offset - emean for x in edata];
         line_color = custom_cmap.to_rgba(distances[i]);
-        l1 = axarr[0].plot_date(dataobj_list[i].dtarray, edata, marker='+', markersize=1.5, color=line_color);
+        _l1 = axarr[0].plot_date(dataobj_list[i].dtarray, edata, marker='+', markersize=1.5, color=line_color);
         axarr[0].text(label_date, offset, dataobj_list[i].name, fontsize=9, color=line_color);
     axarr[0].set_xlim(start_time_plot, end_time_plot);
-    # axarr[0].set_ylim([-20,offset+15])
     bottom, top = axarr[0].get_ylim();
-    for i in range(len(EQtimes)):
-        axarr[0].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k');
+    for i in range(len(myparams.eqtimes)):
+        axarr[0].plot_date([myparams.eqtimes[i], myparams.eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
     for i in range(len(labeltimes)):
         axarr[0].text(labeltimes[i], top - spacing / 2, labels[i], fontsize=10, color='blue', fontweight='bold');
+    axarr[0].tick_params(axis='x', labelrotation=40)
     axarr[0].set_ylabel("East (mm)");
     axarr[0].set_title("East GPS Time Series")
     axarr[0].grid(True)
@@ -62,15 +54,16 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
             nmean = 0;  # leave the data un-meaned
         ndata = [x + offset - nmean for x in ndata];
         line_color = custom_cmap.to_rgba(distances[i]);
-        l1 = axarr[1].plot_date(dataobj_list[i].dtarray, ndata, marker='+', markersize=1.5, color=line_color);
+        _l1 = axarr[1].plot_date(dataobj_list[i].dtarray, ndata, marker='+', markersize=1.5, color=line_color);
     axarr[1].set_xlim(start_time_plot, end_time_plot);
-    # axarr[1].set_ylim([-20,offset+15])
     bottom, top = axarr[1].get_ylim();
-    for i in range(len(EQtimes)):
-        axarr[1].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k');
+    for i in range(len(myparams.eqtimes)):
+        axarr[1].plot_date([myparams.eqtimes[i], myparams.eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
     axarr[1].set_ylabel("North (mm)");
     axarr[1].set_title("North GPS Time Series")
     axarr[1].grid(True)
+    axarr[1].tick_params(axis='x', labelrotation=40)
+
     for i in range(len(labeltimes)):
         axarr[1].text(labeltimes[i], top - spacing / 2, labels[i], fontsize=10, color='blue', fontweight='bold');
     custom_cmap.set_array(range(int(closest_station), int(farthest_station)))
@@ -84,15 +77,14 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
     return;
 
 
-def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
+def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1,
+                     start_time_plot=dt.datetime.strptime("20050101", "%Y%m%d"),
+                     end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d"),
+                     label_date=dt.datetime.strptime("20200215", "%Y%m%d")):
     plt.figure(figsize=(6, 8), dpi=160);
-    label_date = dt.datetime.strptime("20200215", "%Y%m%d");
-    start_time_plot = dt.datetime.strptime("20050101", "%Y%m%d");
-    end_time_plot = dt.datetime.strptime("20200116", "%Y%m%d");
 
     spacing = 40;
-    EQtimes, labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname,
-                                                                                               distances);
+    labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname, distances);
     color_boundary_object = matplotlib.colors.Normalize(vmin=closest_station, vmax=farthest_station, clip=True);
     custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap='jet_r');
 
@@ -105,13 +97,13 @@ def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
             umean = 0;  # leave the data un-meaned
         udata = [x + offset - umean for x in udata];
         line_color = custom_cmap.to_rgba(distances[i]);
-        l1 = plt.gca().plot_date(dataobj_list[i].dtarray, udata, marker='+', markersize=1.5, color=line_color);
+        _l1 = plt.gca().plot_date(dataobj_list[i].dtarray, udata, marker='+', markersize=1.5, color=line_color);
         plt.gca().text(label_date, offset, dataobj_list[i].name, fontsize=9, color=line_color);
     plt.gca().set_xlim(start_time_plot, end_time_plot);
-    # plt.gca().set_ylim([-20,offset+20])
+    plt.gca().tick_params(axis='x', labelrotation=40)
     bottom, top = plt.gca().get_ylim();
-    for i in range(len(EQtimes)):
-        plt.gca().plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k');
+    for i in range(len(myparams.eqtimes)):
+        plt.gca().plot_date([myparams.eqtimes[i], myparams.eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
     plt.gca().set_ylabel("Vertical (mm)");
     plt.gca().set_title("Vertical GPS Time Series")
     plt.gca().grid(True)
@@ -120,68 +112,52 @@ def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1):
     cb = plt.colorbar(custom_cmap);
     cb.set_label('Kilometers from center');
 
-    # # new axis for plotting the map of california
-    # ax = plt.axes(position=[0.8, 0.1, 0.2, 0.2], xticklabels=[], yticklabels=[]);
-    # [ca_lons, ca_lats] = np.loadtxt('../california_bdr', unpack=True);
-    # ax.plot(ca_lons, ca_lats, 'k');
-    # for i in range(len(dataobj_list)):
-    #     ax.plot(dataobj_list[i].coords[0], dataobj_list[i].coords[1], '.g', markersize=0.6);
-
-    # new axis for extra labels
-    ax = plt.axes(position=[0.8, 0.4, 0.2, 0.2], xticklabels=[], yticklabels=[]);
-    ax.set_ylim([-1, 1])
-    ax.set_xlim([-0.1, 1])
-    ax.text(0, 0.75, myparams.proc_center + " data");
-    ax.text(0, 0.37, myparams.center);
-    ax.text(0, 0, str(myparams.radius) + " km radius");
-
     plt.savefig(myparams.outdir + "/" + myparams.outname + '_TS_' + label + '_vertical.png');
     plt.close();
     print("Vertical plot created.");
     return;
 
 
-def horizontal_filtered_plots(dataobj_list, distances, myparams, label=""):
-    [f, axarr] = plt.subplots(2, 1, sharex=True, figsize=(15, 8), dpi=160);
-    label_date = dt.datetime.strptime("20200215", "%Y%m%d");
-    start_time_plot = dt.datetime.strptime("20050101", "%Y%m%d");
-    end_time_plot = dt.datetime.strptime("20200116", "%Y%m%d");
+def horizontal_filtered_plots(dataobj_list, distances, myparams, label="",
+                              start_time_plot=dt.datetime.strptime("20050101", "%Y%m%d"),
+                              end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d"),
+                              label_date=dt.datetime.strptime("20200215", "%Y%m%d")):
+    [_f, axarr] = plt.subplots(2, 1, sharex='all', figsize=(15, 8), dpi=160);
     offset = -15;
     spacing = 2;
 
-    EQtimes, labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname,
-                                                                                               distances);
+    labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname, distances);
     color_boundary_object = matplotlib.colors.Normalize(vmin=closest_station, vmax=farthest_station, clip=True);
     custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap='jet_r');
 
     # East and North
     for i in range(len(dataobj_list)):
         offset = offset + spacing;
-        # umean=np.mean(dataobj_list[i].dE);  # start at the mean.
         umean = dataobj_list[i].dE[0];  # start at the beginning
         line_color = custom_cmap.to_rgba(distances[i]);
-        # l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' ); # for debugging the filter
+        # l1 = axarr[0].plot(dataobj_list[i].dtarray, dataobj_list[i].dU-umean, linestyle='solid', linewidth=0,
+        #                    marker='.', color='red'); # debugging
         udata = scipy.ndimage.median_filter(dataobj_list[i].dE - umean, size=365);
         axarr[0].plot(dataobj_list[i].dtarray, udata, linestyle='solid', linewidth=1, color=line_color);
         axarr[0].text(label_date, offset, dataobj_list[i].name, fontsize=9, color=line_color);
     axarr[0].set_xlim(start_time_plot, end_time_plot);
     bottom, top = axarr[0].get_ylim();
-    for i in range(len(EQtimes)):
-        axarr[0].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k');
+    for i in range(len(myparams.eqtimes)):
+        axarr[0].plot_date([myparams.eqtimes[i], myparams.eqtimes[i]], [bottom, top], '--k');
     axarr[0].set_ylabel("Filtered East (mm)");
     axarr[0].set_title("Filtered GPS Time Series")
     axarr[0].grid(True)
 
     for i in range(len(dataobj_list)):
-        # umean=np.mean(dataobj_list[i].dE);  # start at the mean.
         umean = dataobj_list[i].dN[0];  # start at the beginning
         line_color = custom_cmap.to_rgba(distances[i]);
-        # l1 = plt.gca().plot(dataobj_list[i].dtarray,dataobj_list[i].dU-umean,linestyle='solid',linewidth=0,marker='.',color='red' ); # for debugging the filter
+        # l1 = axarr[1].plot(dataobj_list[i].dtarray, dataobj_list[i].dU-umean, linestyle='solid', linewidth=0,
+        #                    marker='.', color='red'); # debugging
         udata = scipy.ndimage.median_filter(dataobj_list[i].dN - umean, size=365);
-        l1 = axarr[1].plot(dataobj_list[i].dtarray, udata, linestyle='solid', linewidth=1, color=line_color);
+        _l1 = axarr[1].plot(dataobj_list[i].dtarray, udata, linestyle='solid', linewidth=1, color=line_color);
     bottom, top = axarr[1].get_ylim();
-    for i in range(len(EQtimes)):
-        axarr[1].plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k');
+    for i in range(len(myparams.eqtimes)):
+        axarr[1].plot_date([myparams.eqtimes[i], myparams.eqtimes[i]], [bottom, top], '--k');
     axarr[1].set_ylabel("Filtered North (mm)");
     axarr[1].grid(True)
 
@@ -191,14 +167,13 @@ def horizontal_filtered_plots(dataobj_list, distances, myparams, label=""):
     return;
 
 
-def vertical_filtered_plots(dataobj_list, distances, myparams, label=""):
+def vertical_filtered_plots(dataobj_list, distances, myparams, label="",
+                            start_time_plot=dt.datetime.strptime("20050101", "%Y%m%d"),
+                            end_time_plot=dt.datetime.strptime("20200116", "%Y%m%d"),
+                            label_date=dt.datetime.strptime("20200215", "%Y%m%d")):
     plt.figure(figsize=(15, 8), dpi=160);
-    label_date = dt.datetime.strptime("20200215", "%Y%m%d");
-    start_time_plot = dt.datetime.strptime("20050101", "%Y%m%d");
-    end_time_plot = dt.datetime.strptime("20200116", "%Y%m%d");
 
-    EQtimes, labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname,
-                                                                                               distances);
+    labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname, distances);
     color_boundary_object = matplotlib.colors.Normalize(vmin=closest_station, vmax=farthest_station, clip=True);
     custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap='jet_r');
     offset = -10;
@@ -215,13 +190,13 @@ def vertical_filtered_plots(dataobj_list, distances, myparams, label=""):
             udata = scipy.ndimage.median_filter(dataobj_list[i].dU - umean, size=365);
 
         line_color = custom_cmap.to_rgba(distances[i]);
-        l1 = plt.gca().plot(dataobj_list[i].dtarray, udata, linestyle='solid', linewidth=1, color=line_color);
+        _l1 = plt.gca().plot(dataobj_list[i].dtarray, udata, linestyle='solid', linewidth=1, color=line_color);
         plt.gca().text(label_date, label_mm, dataobj_list[i].name, fontsize=9, color=line_color);
         offset = offset + 1.6;
     plt.gca().set_xlim(start_time_plot, end_time_plot);
     bottom, top = plt.gca().get_ylim();
-    for i in range(len(EQtimes)):
-        plt.gca().plot_date([EQtimes[i], EQtimes[i]], [bottom, top], '--k');
+    for i in range(len(myparams.eqtimes)):
+        plt.gca().plot_date([myparams.eqtimes[i], myparams.eqtimes[i]], [bottom, top], '--k');
     plt.gca().set_ylabel("Filtered Vertical (mm)");
     plt.gca().set_title("Filtered Vertical GPS Time Series")
     plt.gca().grid(True)
@@ -230,21 +205,6 @@ def vertical_filtered_plots(dataobj_list, distances, myparams, label=""):
     cb = plt.colorbar(custom_cmap);
     cb.set_label('Kilometers from center');
 
-    # # new axis for plotting the map of california
-    # ax = plt.axes(position=[0.8, 0.1, 0.1, 0.2], xticklabels=[], yticklabels=[]);
-    # [ca_lons, ca_lats] = np.loadtxt('../california_bdr', unpack=True);
-    # ax.plot(ca_lons, ca_lats, 'k');
-    # for i in range(len(dataobj_list)):
-    #     ax.plot(dataobj_list[i].coords[0], dataobj_list[i].coords[1], '.g', markersize=0.6);
-
-    # new axis for extra labels
-    ax = plt.axes(position=[0.8, 0.4, 0.1, 0.2], xticklabels=[], yticklabels=[]);
-    ax.set_ylim([-1, 1])
-    ax.set_xlim([-0.1, 1])
-    ax.text(0, 0.75, myparams.proc_center + " data");
-    ax.text(0, 0.37, myparams.center);
-    ax.text(0, 0, str(myparams.radius) + " km radius");
-
     plt.savefig(myparams.outdir + "/" + myparams.outname + '_TS_' + label + 'vert_filt.png');
     plt.close();
     print("Vertical plot created.");
@@ -252,10 +212,8 @@ def vertical_filtered_plots(dataobj_list, distances, myparams, label=""):
 
 
 def configure_beautiful_plots(expname, distances):
-    # Some hard coded information to make beautiful plots for specific experiments
-    EQtimes = [];
-    labeltimes = [];
-    labels = [];
+    """
+    Some hard-coded information to make beautiful plots for specific experiments.  Reminder for old code:
 
     if expname == 'Mend' or expname == "Humboldt":
         # What black lines do you want added to the figure? This is good for Mendocino
@@ -269,6 +227,8 @@ def configure_beautiful_plots(expname, distances):
         EQtimes.append(dt.datetime.strptime("20100403", "%Y%m%d"));  # starts with the most important one
         EQtimes.append(dt.datetime.strptime("20050615", "%Y%m%d"));  # other earthquakes added to the figure
         EQtimes.append(dt.datetime.strptime("20120808", "%Y%m%d"));
+    """
+    labeltimes, labels = [], [];
 
     if expname == "Mend":
         closest_station = 70;
@@ -288,31 +248,29 @@ def configure_beautiful_plots(expname, distances):
         labels.append("T3");
         labels.append("T4");
 
-    return EQtimes, labeltimes, labels, closest_station, farthest_station;
+    return labeltimes, labels, closest_station, farthest_station;
 
 
 def pygmt_map(dataobj_list, myparams):
-    # Optionally, use the pygmt library to make a plot of the stations themselves.
+    """
+    Optionally, use pygmt library to make a plot of stations locations
+    """
     import pygmt
     offset = 0.2;
 
-    lons = [];
-    lats = [];
-    names = [];
-    for i in range(len(dataobj_list)):
-        lons.append(dataobj_list[i].coords[0]);
-        lats.append(dataobj_list[i].coords[1]);
-        names.append(dataobj_list[i].name);
+    lons = [x.coords[0] for x in dataobj_list];
+    lats = [x.coords[1] for x in dataobj_list];
+    names = [x.name for x in dataobj_list];
     region = [min(lons) - offset, max(lons) + offset, min(lats) - offset, max(lats) + offset];
 
     fig = pygmt.Figure()
-    fig.basemap(region=region, projection="M8i", B="0.25");
-    # fig.grdimage("@earth_relief_30s",region=region,I="+d");  # takes a little while the first time, but faster each time afterwards
-    fig.coast(shorelines="0.5p,black", G='peachpuff2', S='skyblue', D="h");
-    fig.coast(N='1', W='1.0p,black');
-    fig.coast(N='2', W='0.5p,black');
+    fig.basemap(region=region, projection="M8i", frame="0.25");
+    # fig.grdimage("@earth_relief_30s",region=region,I="+d");  # takes a while the first time, but faster afterwards
+    fig.coast(shorelines="0.5p,black", land='peachpuff2', water='skyblue', resolution="h");
+    fig.coast(borders='1', shorelines='1.0p,black');
+    fig.coast(borders='2', shorelines='0.5p,black');
     fig.text(x=[i + 0.06 for i in lons], y=lats, text=names, font='15p,Helvetica-Bold,black');
-    fig.plot(x=lons, y=lats, S='c0.1i', G='black', W='0.5p,black')
-    fig.plot(x=myparams.center[0], y=myparams.center[1], S='a0.1i', G='red', W='0.5p,red')
+    fig.plot(x=lons, y=lats, style='c0.1i', color='black', pen='0.5p,black')
+    fig.plot(x=myparams.center[0], y=myparams.center[1], style='a0.1i', color='red', pen='0.5p,red')
     fig.savefig(myparams.outdir + "/" + myparams.outname + '_map.png');
     return;

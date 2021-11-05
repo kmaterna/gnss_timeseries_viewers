@@ -1,38 +1,36 @@
-# August 2018
-# This is a toolbox that operates on Timeseries objects. 
-# Its purpose is to deal with antenna offsets and earthquake offsets
+"""
+August 2018
+This is a toolbox that operates on Timeseries objects.
+Its purpose is to deal with antenna offsets and earthquake offsets
+"""
 
 import numpy as np
 import collections
 import datetime as dt
 import gps_io_functions
 
-# The namedtuple definition.
-# The offests should be in mm
+# The namedtuple definition.  Offsets should be in mm
 Offsets = collections.namedtuple("Offsets", ['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
 
 
 def remove_offsets(Data0, offsets_obj):
-    # the actual subtraction of offsets.
+    """
+    the actual subtraction of offsets.
+    """
     if not offsets_obj:
         return Data0;
     if len(offsets_obj.e_offsets) == 0:
         return Data0;
-    newdtarray = [];
-    newdN, newdE, newdU = [], [], [];
+    newdtarray, newdN, newdE, newdU = [], [], [], [];
 
     # Removing offsets
     for i in range(len(Data0.dtarray)):
         # For each day...
-        tempE = Data0.dE[i];
-        tempN = Data0.dN[i];
-        tempU = Data0.dU[i];
+        tempE, tempN, tempU = Data0.dE[i], Data0.dN[i], Data0.dU[i];
         for j in range(len(offsets_obj.evdts)):
             # print("removing %f mm from east at %s" % (offsets_obj.e_offsets[j], offsets_obj.evdts[j]));
             if Data0.dtarray[i] == offsets_obj.evdts[j]:  # removing the date of the offset directly (can be messed up)
-                tempE = np.nan;
-                tempN = np.nan;
-                tempU = np.nan;
+                tempE, tempN, tempU = np.nan, np.nan, np.nan;
             if Data0.dtarray[i] > offsets_obj.evdts[j]:
                 tempE = tempE - offsets_obj.e_offsets[j];
                 tempN = tempN - offsets_obj.n_offsets[j];
@@ -48,11 +46,12 @@ def remove_offsets(Data0, offsets_obj):
 
 
 def fit_single_offset(dtarray, data, interval, offset_num_days):
-    # Loop through the array and find dates that are used for offset calculation.
-    # This is done for one component, like east
-    # The offset time can be a day or an interval (day is just repeated twice.)
-    before_indeces = [];
-    after_indeces = [];
+    """
+    Loop through the array and find dates that are used for offset calculation.
+    This is done for one component, like east
+    Offset time can be a day or an interval (day is just repeated twice.)
+    """
+    before_indeces, after_indeces = [], [];
 
     # Find the indeces of nearby days
     for i in range(len(dtarray)):
@@ -79,11 +78,12 @@ def fit_single_offset(dtarray, data, interval, offset_num_days):
 
 
 def solve_for_offsets(ts_object, offset_times, num_days=10):
-    # Here we solve for all the offsets at a given time, which is necessary for UNR data.
-    # Offset_times is a list of datetime objects with unique dates.
+    """
+    Here we solve for all the offsets at a given time, which is necessary for UNR data.
+    Offset_times is a list of datetime objects with unique dates.
+    """
     print("Solving empirically for offsets at ", offset_times);
-    e_offsets, n_offsets, u_offsets = [], [], [];
-    evdts_new = [];
+    e_offsets, n_offsets, u_offsets, evdts_new = [], [], [], [];
 
     for i in range(len(offset_times)):
         e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [offset_times[i], offset_times[i]], num_days);
