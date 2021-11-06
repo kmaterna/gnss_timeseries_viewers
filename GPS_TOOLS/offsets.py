@@ -9,7 +9,7 @@ import collections
 import datetime as dt
 import gps_io_functions
 
-# The namedtuple definition.  Offsets should be in mm
+# The namedtuple definition.  Offsets should be in mm. One object per offset
 Offsets = collections.namedtuple("Offsets", ['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
 
 
@@ -17,39 +17,37 @@ def remove_offsets(Data0, offsets_obj):
     """
     the actual subtraction of offsets.
     """
-    if not offsets_obj:
+    if len(offsets_obj) == 0:
         return Data0;
-    if len(offsets_obj.e_offsets) == 0:
-        return Data0;
-    newdtarray, newdN, newdE, newdU = [], [], [], [];
+    newN, newE, newU = [], [], [];
 
     # Removing offsets
     for i in range(len(Data0.dtarray)):
         # For each day...
         tempE, tempN, tempU = Data0.dE[i], Data0.dN[i], Data0.dU[i];
-        for j in range(len(offsets_obj.evdts)):
-            # print("removing %f mm from east at %s" % (offsets_obj.e_offsets[j], offsets_obj.evdts[j]));
-            if Data0.dtarray[i] == offsets_obj.evdts[j]:  # removing the date of the offset directly (can be messed up)
+        for item in offsets_obj:
+            # print("removing %f mm from east at %s" % (item.e_offsets, item.evdts));
+            if Data0.dtarray[i] == item.evdts:  # removing the date of the offset directly (can be messed up)
                 tempE, tempN, tempU = np.nan, np.nan, np.nan;
-            if Data0.dtarray[i] > offsets_obj.evdts[j]:
-                tempE = tempE - offsets_obj.e_offsets[j];
-                tempN = tempN - offsets_obj.n_offsets[j];
-                tempU = tempU - offsets_obj.u_offsets[j];
-        newdtarray.append(Data0.dtarray[i]);
-        newdE.append(tempE);
-        newdN.append(tempN);
-        newdU.append(tempU);
+            if Data0.dtarray[i] > item.evdts:
+                tempE = tempE - item.e_offsets;
+                tempN = tempN - item.n_offsets;
+                tempU = tempU - item.u_offsets;
+        newE.append(tempE);
+        newN.append(tempN);
+        newU.append(tempU);
 
-    newData = gps_io_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdtarray, dN=newdN, dE=newdE,
-                                          dU=newdU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+    newData = gps_io_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN, dE=newE,
+                                          dU=newU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
     return newData;
 
 
 def fit_single_offset(dtarray, data, interval, offset_num_days):
     """
-    Loop through the array and find dates that are used for offset calculation.
+    Loop through a 1D array and find dates that are used for offset calculation.
     This is done for one component, like east
-    Offset time can be a day or an interval (day is just repeated twice.)
+    Offset can be calculated at a day or an interval (day is just repeated twice.)
+    offset_num_days is the averaging window before and after the offset time.
     """
     before_indeces, after_indeces = [], [];
 
@@ -83,30 +81,19 @@ def solve_for_offsets(ts_object, offset_times, num_days=10):
     Offset_times is a list of datetime objects with unique dates.
     """
     print("Solving empirically for offsets at ", offset_times);
-    e_offsets, n_offsets, u_offsets, evdts_new = [], [], [], [];
-
+    Offset_obj = [];
     for i in range(len(offset_times)):
         e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [offset_times[i], offset_times[i]], num_days);
         n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [offset_times[i], offset_times[i]], num_days);
         u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [offset_times[i], offset_times[i]], num_days);
-        e_offsets.append(e_offset);
-        n_offsets.append(n_offset);
-        u_offsets.append(u_offset);
-        evdts_new.append(offset_times[i]);
-
-    Offset_obj = Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts_new);
+        newobj = Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=offset_times[i]);
+        Offset_obj.append(newobj);
     return Offset_obj;
 
 
-def get_empty_offsets():
-    Offset = Offsets(e_offsets=[], n_offsets=[], u_offsets=[], evdts=[]);
-    return Offset;
-
-
 def print_offset_object(Offset_obj):
-    for i in range(len(Offset_obj.e_offsets)):
-        print("%s: %.4f mmE, %.4f mmN, %.4f mmU" % (dt.datetime.strftime(Offset_obj.evdts[i], "%Y-%m-%d"),
-                                                    Offset_obj.e_offsets[i], Offset_obj.n_offsets[i],
-                                                    Offset_obj.u_offsets[i]));
+    for item in Offset_obj:
+        print("%s: %.4f mmE, %.4f mmN, %.4f mmU" % (dt.datetime.strftime(item.evdts, "%Y-%m-%d"),
+                                                    item.e_offsets, item.n_offsets, item.u_offsets));
     print("");
     return;
