@@ -21,6 +21,12 @@ def linear_fitting_menke(x, y, sig, verbose=1):
     It assumes random white noise and only cares about the
     uncertainties and x-placement of the data (doesn't care what the data actually is).
     However, it's easy, and technically correct.
+    :param x: array-like, such as days or years since start time.
+    :param y: array-like, such as position data
+    :param sig: float, a single representative uncertainty for the data, in the same units as data
+    :param verbose: boolean
+    :returns params, covm: params are SLOPE and INTERCEPT estimates from least squares.
+    covm is 2x2 covariance matrix uncertainties on SLOPE and INTERCEPT.
     """
     if verbose:
         print("\nEstimating slope and intercept from Menke Error Propagation");
