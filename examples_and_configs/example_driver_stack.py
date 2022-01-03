@@ -4,7 +4,7 @@ Example driver for stacked time series viewing.
 """
 
 import datetime as dt
-import gps_stack
+from GNSS_TimeSeries_Viewers.gps_tools import gps_stack
 
 data_config_file="/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"
 expname='NBay'; 

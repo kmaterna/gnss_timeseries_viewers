@@ -1,9 +1,8 @@
-# Read the inputs for various time series and velocity files
+"""Reading inputs for various time series and velocity files"""
 
 import subprocess, sys, os, glob
 import datetime as dt
-import gps_io_functions
-import offsets
+from . import gps_io_functions, offsets
 
 
 # Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su',
@@ -51,8 +50,10 @@ def multi_station_inputs(station_names, blacklist_user, proc_center, refframe, d
 # ----------------------------------------
 
 def get_station_data(station, datasource, data_config_file, refframe="NA", sub_network=''):
-    # A function that you can use to access the reading library.
-    # refframe choices are NA and ITRF
+    """
+    Function to access the time-series reading library.
+    refframe choices are NA and ITRF.
+    """
     datasource, sub_network = pre_screen_datasource(data_config_file, station, datasource, refframe, sub_network);
 
     if datasource == 'pbo':
@@ -195,7 +196,7 @@ def get_lsdm(data_config_file, station):
 
 
 def pre_screen_datasource(data_config_file, station, input_datasource='pbo', refframe="NA", sub_network=''):
-    # A defensive programming function that quits if it doesn't find the right file.
+    """ A defensive programming function that quits if it doesn't find the right file."""
     print("\nStation %s: " % station);
     Params = gps_io_functions.read_config_file(data_config_file);
     if refframe == "NA":
@@ -260,8 +261,10 @@ def pre_screen_datasource(data_config_file, station, input_datasource='pbo', ref
 
 
 def query_usgs_network_name(station, gps_ts_dir):
-    # Given that USGS puts stations into networks, which network is a given station a member of?
-    # This function may print more than one.
+    """
+    Given that USGS puts stations into networks, which network is a given station a member of?
+    This function may print more than one.
+    """
     network_list = [];
     directories = glob.glob(gps_ts_dir+"/*");
     print("Querying for station %s in USGS sub-networks... " % station);
@@ -285,12 +288,9 @@ def remove_blacklist(data_config_file, stations):
     return new_stations;
 
 
-# ----------------------------------------------- 
 # THE GUTS --------------------------------------
-# -----------------------------------------------
-
 def get_unr_offsets(Data0, station, offsets_dir):
-    # The grep -1 is the code for antenna and reference frame offsets
+    """ grep -1 is the code for antenna and reference frame offsets"""
     print("Offset table for station %s:" % station);
     try:
         table = subprocess.check_output(
@@ -306,7 +306,7 @@ def get_unr_offsets(Data0, station, offsets_dir):
 
 
 def get_unr_earthquakes(Data0, station, offsets_dir):
-    # The grep -2 is the code for earthquake offsets
+    """ grep -2 is the code for earthquake offsets """
     print("Earthquakes table for station %s:" % station);
     try:
         table = subprocess.check_output(
@@ -426,10 +426,7 @@ def get_usgs_earthquakes(station, usgs_offsets_dir, sub_network, refframe):
     return USGS_earthquakes;
 
 
-#
-# TABLE INPUTS --------------------------- 
-# 
-
+# TABLE INPUTS ---------------------------
 def parse_antenna_table_pbo(table):
     e_offsets, n_offsets, u_offsets, evdts = [], [], [], [];
     if len(table) == 0:
@@ -505,7 +502,7 @@ def parse_table_usgs(table, offset_type):
 
 
 def parse_table_unr(table):
-    # Here we extract all the antenna or earthquake offsets from the UNR table.
+    """Here we extract all the antenna or earthquake offsets from the UNR table."""
     evdts = [];
     if len(table) == 0:  # if an empty list.
         return [];
@@ -523,7 +520,7 @@ def parse_table_unr(table):
 
 
 def get_datetime_from_unrfile(input_string):
-    # Turns something like "12FEB13" into datetime for 2012-02-13
+    """Turns something like "12FEB13" into datetime.dt object for 2012-02-13"""
     year = input_string[0:2];
     if int(year) >= 80:
         year = '19' + year;

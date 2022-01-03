@@ -1,7 +1,9 @@
-# Functions for reading a variety of GNSS data formats, including:
-# GNSS time series
-# GNSS velocity fields
-# GRACE and other hydrological models
+"""
+Functions for reading a variety of GNSS data formats, including:
+  GNSS time series
+  GNSS velocity fields
+  GRACE and other hydrological models
+"""
 
 
 import numpy as np
@@ -30,7 +32,7 @@ Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'un
                                            'unr_velocities', 'usgs_vel_dir', 'usgs_networks', 'usgs_offsets_dir',
                                            'usgs_cache_file',
                                            'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
-                                           'lsdm_dir', 'stl_dir', 'blacklist']);
+                                           'lsdm_dir', 'stl_dir', 'lakes_dir', 'blacklist']);
 
 
 def read_config_file(infile):
@@ -68,7 +70,8 @@ def read_config_file(infile):
                       noah_dir=param_dict["noah_dir"],
                       grace_dir=param_dict["grace_dir"], 
                       lsdm_dir=param_dict["lsdm_dir"], 
-                      stl_dir=param_dict["stl_dir"], 
+                      stl_dir=param_dict["stl_dir"],
+                      lakes_dir=param_dict["lakes_dir"],
                       blacklist=param_dict["blacklist"]);
     return myParams;
 

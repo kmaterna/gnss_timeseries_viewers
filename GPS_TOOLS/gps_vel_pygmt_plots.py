@@ -1,4 +1,4 @@
-# Make plots of velocity fields with PyGMT
+"""Make plots of velocity fields with PyGMT"""
 
 import numpy as np
 import pygmt

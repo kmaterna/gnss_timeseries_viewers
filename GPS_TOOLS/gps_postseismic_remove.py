@@ -1,12 +1,11 @@
-# A new function to remove postseismic deformation
-# February 17, 2020
-# The first model is from Hines et al., JGR, 2016
+"""
+A function to remove postseismic deformation via existing model time series
+The first model is from Hines et al., JGR, 2016
+"""
 
 import datetime as dt
 import os
-import gps_io_functions
-import offsets
-import gps_ts_functions
+from . import gps_io_functions, offsets, gps_ts_functions
 
 
 # HELPER FUNCTIONS #

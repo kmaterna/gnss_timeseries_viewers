@@ -1,22 +1,20 @@
-# May/June 2018
-# This is a toolbox that operates on Timeseries objects. 
-# Contains functions to map, filter, and reduce generic GPS time series
-# FIRST TYPE OF FUNCTION: RETURNS TSOBJECT
-# Ex: remove_nans(Data0)
-# SECOND TYPE OF FUNCTION: RETURNS VALUES
-# Ex: get_slope(Data0, starttime=None, endtime=None,missing_fraction=0.6)
+"""
+Toolbox for operating on Timeseries objects.
+Contains functions to map, filter, and reduce generic GPS time series
+    -Ex: remove_nans(Data0)
+    -Ex: get_slope(Data0, starttime=None, endtime=None,missing_fraction=0.6)
+"""
 
 import numpy as np
 import collections
 import datetime as dt
 from scipy import signal
-import lssq_model_errors
+from . import lssq_model_errors
 from scipy.optimize import curve_fit
 
 # A line for referencing the namedtuple definition. 
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
-
 
 # -------------------------------------------- # 
 # FUNCTIONS THAT TAKE TIME SERIES OBJECTS # 
@@ -27,8 +25,7 @@ def remove_outliers(Data0, outliers_def):
     medfilt_e = signal.medfilt(Data0.dE, 35);
     medfilt_n = signal.medfilt(Data0.dN, 35);
     medfilt_u = signal.medfilt(Data0.dU, 35);
-    newdt = [];
-    newdN, newdE, newdU = [], [], [];
+    newdt, newdN, newdE, newdU = [], [], [], [];
     newSe, newSn, newSu = [], [], [];
     for i in range(len(medfilt_e)):
         if abs(Data0.dE[i] - medfilt_e[i]) < outliers_def and abs(Data0.dN[i] - medfilt_n[i]) < outliers_def and abs(
@@ -47,8 +44,7 @@ def remove_outliers(Data0, outliers_def):
 
 def impose_time_limits(Data0, starttime, endtime):
     # Starttime and endtime are datetime objects
-    newdtarray = [];
-    newdN, newdE, newdU = [], [], [];
+    newdtarray, newdN, newdE, newdU = [], [], [], [];
     newSe, newSn, newSu = [], [], [];
     for i in range(len(Data0.dN)):
         if starttime <= Data0.dtarray[i] <= endtime:
@@ -68,8 +64,7 @@ def remove_nans(Data0):
     idxE = np.isnan(Data0.dE);
     idxN = np.isnan(Data0.dN);
     idxU = np.isnan(Data0.dU);
-    temp_dates = [];
-    temp_east, temp_north, temp_vert = [], [], [];
+    temp_dates, temp_east, temp_north, temp_vert = [], [], [], [];
     temp_Sn, temp_Se, temp_Su = [], [], [];
     for i in range(len(Data0.dtarray)):
         if idxE[i] == 0 and idxN[i] == 0 and idxU[i] == 0:
@@ -147,8 +142,7 @@ def pair_gps_model(gps_data, model_data):
     Take two time series objects, and return two paired time series objects.
     It could be that GPS has days that model doesn't, or the other way around.
     """
-    dtarray = [];
-    dE_gps, dN_gps, dU_gps = [], [], [];
+    dtarray, dE_gps, dN_gps, dU_gps = [], [], [], [];
     Se_gps, Sn_gps, Su_gps = [], [], [];
     dE_model, dN_model, dU_model = [], [], [];
     Se_model, Sn_model, Su_model = [], [], [];
@@ -183,8 +177,7 @@ def pair_gps_model_keeping_gps(gps_data, model_data):
     Keep all data from the first one.
     Generate a model_data with length that matches the GPS.
     """
-    dtarray = [];
-    dE_model, dN_model, dU_model = [], [], [];
+    dtarray, dE_model, dN_model, dU_model = [], [], [], [];
     Se_model, Sn_model, Su_model = [], [], [];
     gps_data = remove_nans(gps_data);
     model_data = remove_nans(model_data);
@@ -217,8 +210,7 @@ def get_referenced_data(roving_station_data, base_station_data):
     If there's a starttime, then we will solve for a best-fitting model offset at starttime.
     Used when subtracting models
     """
-    dtarray = [];
-    dE_gps, dN_gps, dU_gps = [], [], [];
+    dtarray, dE_gps, dN_gps, dU_gps = [], [], [], [];
     Se_gps, Sn_gps, Su_gps = [], [], [];
     roving_station_data = remove_nans(roving_station_data);
     for i in range(len(roving_station_data.dtarray)):
@@ -239,7 +231,12 @@ def get_referenced_data(roving_station_data, base_station_data):
 
 
 def remove_constant(Data0, east_offset, north_offset, vert_offset):
-    # Subtract a constant number from each data array in a time series object
+    """Subtract a constant number from each data array in a time series object
+    :param Data0: a time-series object
+    :param east_offset: a scalar
+    :param north_offset: a scalar
+    :param vert_offset: a scalar
+    """
     temp_east, temp_north, temp_vert = [], [], [];
     for i in range(len(Data0.dtarray)):
         temp_east.append(Data0.dE[i] - east_offset);
@@ -437,12 +434,9 @@ def get_values_at_date(Data0, selected_date, num_days=10):
         [e_value, n_value, u_value] = [np.nan, np.nan, np.nan];
     return e_value, n_value, u_value;
 
-
-# -------------------------------------------- # 
-# MISCELLANEOUS FUNCTIONS
-# SUCH AS MATH AND TIME OPERATIONS
-# -------------------------------------------- # 
-
+# -------------------------------------------- #
+# MISCELLANEOUS FUNCTIONS: MATH AND TIME OPERATIONS
+# -------------------------------------------- #
 
 def basic_defensive_programming(Data0, starttime, endtime):
     # Check for all sorts of nasty things.

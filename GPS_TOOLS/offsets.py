@@ -1,13 +1,11 @@
 """
-August 2018
-This is a toolbox that operates on Timeseries objects.
-Its purpose is to deal with antenna offsets and earthquake offsets
+Toolbox that operates on Timeseries objects to deal with antenna offsets and earthquake offsets.
 """
 
 import numpy as np
 import collections
 import datetime as dt
-import gps_io_functions
+from . import gps_io_functions
 
 # The namedtuple definition.  Offsets should be in mm. One object per offset
 Offsets = collections.namedtuple("Offsets", ['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);

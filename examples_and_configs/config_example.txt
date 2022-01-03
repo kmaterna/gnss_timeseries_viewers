@@ -34,3 +34,4 @@ noah_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/NOAH025/
 grace_dir = /Users/kmaterna/Documents/GPS_POS_DATA/GRACE_loading_model/
 lsdm_dir = /Users/kmaterna/Documents/GPS_POS_DATA/PBO_Hydro/LSDM/
 stl_dir = /Users/kmaterna/Documents/GPS_POS_DATA/STL_models/
+lakes_dir = /Users/kmaterna/Documents/GPS_POS_DATA/Hydro/Lake_loading/

@@ -1,20 +1,16 @@
-# Python viewing to see a stack of stations
-
-# Step 1: Determine the stations in the radius. 
-# Step 2: Read them in. Make a list of timeseries objects in one large dataobject. 
-# Step 3: Compute: Remove outliers, earthquakes, and eventually trend from the data. 
-# Step 4: Plot in order of increasing latitude, colored by how close they are to the central point
+"""
+Viewing a stack of stations
+  Step 1: Determine the stations in the radius.
+  Step 2: Read them in. Make a list of timeseries objects in one large dataobject.
+  Step 3: Compute: Remove outliers, earthquakes, and eventually trend from the data.
+  Step 4: Plot in order of increasing latitude, colored by how close they are to the central point
+"""
 
 import numpy as np
 import collections
 import subprocess
-import gps_input_pipeline
-import gps_io_functions
-import gps_ts_functions
-import gps_seasonal_removals
-import stations_within_radius
-import offsets
-import outputs_gps_stacks
+from . import gps_input_pipeline, gps_io_functions, gps_ts_functions, gps_seasonal_removals, stations_within_radius, \
+    offsets, outputs_gps_stacks
 
 Parameters = collections.namedtuple("Parameters",
                                     ['expname', 'proc_center', 'refframe', 'center', 'radius', 'stations', 'distances',
@@ -67,10 +63,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
     sorted_eqs = [x for _, x in sorted(zip(latitudes_list, eqobj_list))];  # the raw, sorted data.
     sorted_distances = [x for _, x in sorted(zip(latitudes_list, distances))];  # the sorted distances.
 
-    detrended_objects = [];
-    no_offset_objects = [];
-    no_offsets_no_trends = [];
-    no_offsets_no_trends_no_seasons = [];
+    detrended_objects, no_offset_objects = [], [];
+    no_offsets_no_trends, no_offsets_no_trends_no_seasons = [], [];
 
     # Detrended objects (or objects with trends and no offsets; depends on what you want.)
     for i in range(len(sorted_objects)):

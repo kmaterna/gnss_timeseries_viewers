@@ -1,14 +1,14 @@
-# Python functions to generate a list of GNSS station names/locations that are
-# within a certain radius of that point or a given box.
-# num_years is the minimum duration of the time series
-# max_sigma is the formal uncertainty on the velocity in mm
+"""
+Functions to generate a list of GNSS station names/locations within certain radius of a point or within a box.
+num_years is minimum duration of time series
+max_sigma is formal uncertainty on velocity in mm
+"""
 
 import numpy as np
 from Tectonic_Utils.geodesy import haversine
 from Tectonic_Utils.read_write import read_kml
-import gps_vel_functions
+from . import gps_vel_functions, gps_input_vel_pipeline
 import matplotlib.path as mpltPath
-import gps_input_vel_pipeline
 
 
 # DRIVER 1: STATIONS WITHIN RADIUS
@@ -49,8 +49,7 @@ def inputs_velfield(data_config_file, network, num_years, max_sigma, coord_box):
 
 # ----------- CIRCLE FUNCTIONS ---------------- # 
 def compute_circle(myVelfield, center, radius):
-    close_stations = [];
-    rad_distance = [];
+    close_stations, rad_distance = [], [];
     lon, lat = [], [];
     for station_vel in myVelfield:
         mydist = haversine.distance([center[1], center[0]], [station_vel.nlat, station_vel.elon])
@@ -63,8 +62,7 @@ def compute_circle(myVelfield, center, radius):
     return close_stations, lon, lat, rad_distance;
 
 
-# ----------- BOX FUNCTIONS ---------------- # 
-
+# ----------- BOX FUNCTIONS ---------------- #
 def compute_box(myVelfield, coord_box):
     close_stations, lon, lat = [], [], [];
     for station_vel in myVelfield:
@@ -77,11 +75,13 @@ def compute_box(myVelfield, coord_box):
     return close_stations, lon, lat;
 
 
-# ----------- POLYGON FUNCTIONS ---------------- # 
-
+# ----------- POLYGON FUNCTIONS ---------------- #
 def compute_within_polygon(myVelfield, polygon_lon, polygon_lat):
-    # If within the polygon:
-    # Should implement refactored velfield in the future if actually used
+    """
+    :param myVelfield: velfield object
+    :param polygon_lon: list of lon polygon vertices
+    :param polygon_lat: list of lat polygon vertices
+    """
     lon, lat = [], [];
     polygon = np.row_stack((np.array(polygon_lon), np.array(polygon_lat))).T;
     points = np.row_stack((np.array(myVelfield.elon), myVelfield.nlat)).T;
@@ -90,13 +90,3 @@ def compute_within_polygon(myVelfield, polygon_lon, polygon_lat):
     within_stations = [i for (i, v) in zip(myVelfield.name, inside2) if v];
     print("Returning %d stations within the given polygon" % (len(within_stations)));
     return within_stations, lon, lat;
-
-
-if __name__ == "__main__":
-    center = [-124, 40];
-    radius = 80;
-    data_config_file = "/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/GPS_POS_DATA/config.txt"
-    # close_stations, lons, lats, rad_dist = get_stations_within_radius(data_config_file, center, radius,
-    # network='usgs-Pacific_Northwest');
-    close_stations, lons, lats, rad_dist = get_stations_within_radius(data_config_file, center, radius, network='pbo');
-    print(close_stations);

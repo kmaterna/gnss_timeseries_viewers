@@ -4,9 +4,7 @@ Example driver for individual time series reading and writing.
 Read, Process a little, and Write Back Out.  
 """
 
-import gps_input_pipeline
-import offsets
-import gps_io_functions
+from GNSS_TimeSeries_Viewers.gps_tools import gps_input_pipeline, offsets, gps_io_functions
 
 station="P325"
 data_config_file="/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"

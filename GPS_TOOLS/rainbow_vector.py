@@ -141,15 +141,14 @@ def plotting_function(dataobj_list, sorted_distances, params):
 
 
 def make_vector(Data0, start_time):
-    # Every once in a while, extract a date and a vector displacement
-    # Return those values.
-    # Very simple right now, no smoothing or filtering.
-    evec = [];
-    nvec = [];
-    uvec = [];
-    num_days = [];
+    """
+    Every once in a while, extract a date and a vector displacement
+    Return those values.
+    Very simple right now, no smoothing or filtering.
+    """
     sampling_interval = 200;
     inc = 45;
+    evec, nvec, uvec, num_days = [], [], [], [];
 
     for i in range(len(Data0.dtarray)):
         if Data0.dtarray[i] > dt.datetime.strptime("20160101", "%Y%m%d"):

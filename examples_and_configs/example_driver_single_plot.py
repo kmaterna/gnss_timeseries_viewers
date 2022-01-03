@@ -4,7 +4,7 @@ Example driver for individual time series viewing.
 """
 
 import sys
-import single_station_tsplot
+from GNSS_TimeSeries_Viewers.gps_tools import single_station_tsplot
 
 station="P325"
 data_config_file="/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"

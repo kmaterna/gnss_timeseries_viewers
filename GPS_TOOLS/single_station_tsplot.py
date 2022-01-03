@@ -1,27 +1,20 @@
-# Makes a basic python plot of time series position
-# Takes in a namedTuple with the data. 
-# Makes a basic plot. 
+"""
+Make a basic python plot of single-station position time series with corrections optional.
+Types of seasonal options:
+   lssq: fits seasonals and linear trend by least squares inversion.
+  notch: removes the 1-year and 6-month components by notch filter.
+  grace: uses GRACE loading model interpolated between monthly points where available, and linear inversion where not.
+    stl: uses a pre-computed look-up table for STL time series.
+"""
 
 import matplotlib.pyplot as plt
 import collections
-import gps_ts_functions
-import gps_seasonal_removals
-import offsets
-import gps_io_functions
-import gps_input_pipeline
+from . import gps_ts_functions, gps_seasonal_removals, offsets, gps_io_functions, gps_input_pipeline
 
 # Parameters for controlling plotting
 Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove', 'outliers_def',
                                                    'earthquakes_remove', 'offsets_remove', 'seasonals_remove',
                                                    'seasonals_type', 'datasource', 'refframe', 'data_config_file']);
-
-
-# Types of seasonal options: 
-#   lssq: fits seasonals and linear trend by least squares inversion.
-#  notch: removes the 1-year and 6-month components by notch filter.
-#  grace: uses GRACE loading model interpolated between monthly points where available,
-#  and linear inversion where not available.
-#    stl: uses a pre-computed look-up table for STL time series
 
 
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0,
@@ -40,11 +33,13 @@ def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, ou
 # -------------- CONFIGURE ------------ # 
 def configure(station, offsets_remove, earthquakes_remove, outliers_remove, outliers_def,
               seasonals_remove, seasonals_type, datasource, refframe, data_config_file):
-    # outliers_def : mm away from median filter.
-    # refframe : itrf or nam
-    # offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove : booleans
-    # seasonals type : lssq, nldas, gldas, grace, lsdm, shasta, stl, notch
-    # datasource : unr, cwu, pbo, nmt, usgs
+    """
+    outliers_def : mm away from median filter.
+    refframe : itrf or nam
+    offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove : booleans
+    seasonals type : lssq, nldas, gldas, grace, lsdm, shasta, stl, notch
+    datasource : unr, cwu, pbo, nmt, usgs
+    """
     MyParams = Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def,
                           earthquakes_remove=earthquakes_remove,
                           offsets_remove=offsets_remove, seasonals_remove=seasonals_remove,
@@ -60,10 +55,11 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, outl
 # ----------- INPUTS ---------------- # 
 def input_data(st_name, datasource, refframe, data_config_file):
     [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(st_name, datasource, data_config_file, refframe);
-    # First, we embed the data with the eq object (always useful)
+    eqdates = [x.evdts for x in eq_obj];
+    # First, we embed the data with the eq object metadata (always useful)
     myData = gps_io_functions.Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray, dN=myData.dN,
                                          dE=myData.dE, dU=myData.dU, Sn=myData.Sn, Se=myData.Se, Su=myData.Su,
-                                         EQtimes=eq_obj.evdts);
+                                         EQtimes=eqdates);
     return [myData, offset_obj, eq_obj];
 
 
@@ -137,13 +133,15 @@ def single_ts_plot(ts_obj, detrended, MyParams, outdir):
 
 
 def get_figure_name(MyParams, outdir):
-    # Things that might go into the name:
-    # 1. Station
-    # 2. Earthquakes removed
-    # 3. Outliers removed
-    # 4. Seasonals removed
-    # 5. Datasource
-    # 6. Refframe
+    """
+    Things that might go into the name:
+    1. Station
+    2. Earthquakes removed
+    3. Outliers removed
+    4. Seasonals removed
+    5. Datasource
+    6. Refframe
+    """
 
     savename = outdir + MyParams.station;
     title = MyParams.station;

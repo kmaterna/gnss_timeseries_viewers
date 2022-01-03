@@ -1,11 +1,11 @@
-# Functions to import velocity fields as part of an easier import pipeline
+"""Functions to import velocity fields"""
 
 import sys
-import gps_io_functions
+from . import gps_io_functions
 
 
 def import_velfield(gps_config_file, network='pbo', refframe='ITRF', sub_network=''):
-    # Read a velocity field from a certain network and refframe
+    """Read a velocity field from a certain network and refframe"""
     myParams = gps_io_functions.read_config_file(gps_config_file);
     if network == 'pbo':
         pbo_velfile = get_pbo_velfile(myParams.pbo_velocities, refframe);

@@ -1,9 +1,11 @@
-# A toolbox for fitting by least squares and getting uncertainties on velocity parameters. 
-# TOOLS:
-# Linear_fitting_menke  : the formal uncertainties from the textbook
-# fit_curvefit          : a python function that does practically the same thing, but with
-# more sophisticated handling of individual errors
-# colored_noise         : Allan Variance
+"""
+Toolbox for fitting by least squares and getting uncertainties on velocity parameters.
+TOOLS:
+Linear_fitting_menke  : the formal uncertainties from the textbook
+fit_curvefit          : a python function that does practically the same thing, but with
+more sophisticated handling of individual errors
+colored_noise         : Allan Variance
+"""
 
 import numpy as np
 from scipy import optimize
@@ -87,11 +89,13 @@ def fit_curvefit(x, y, sig, verbose=1):
 
 
 def AVR(x, y, sig, verbose=1, overlapping=True):
-    # This is based on the Allan Variance for Rates, devised in Hackl et al.
-    # (https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2010JB008142)
-    # This has 2 tunable parameters, tau and the overlapping inveral
-    # This provides very similar uncertainty estimates to MLE techniques, but it's faster.
-    # The uncertainty is the square root of the variance.
+    """
+    Based on the Allan Variance for Rates, devised in Hackl et al. 2011
+    (https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2010JB008142)
+    AVR has 2 tunable parameters, tau and the overlapping inveral
+    This provides very similar uncertainty estimates to MLE techniques, but it's faster.
+    The uncertainty is the square root of the variance.
+    """
 
     tau = 150;
     step_interval = 3;  # how much do you step to have overlapping windows

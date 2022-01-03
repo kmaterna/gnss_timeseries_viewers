@@ -1,9 +1,11 @@
-# A library of functions that operate on velocity-field objects (lists of station-vels)
-# Future work: Combining two velocity fields in outer combination (inclusive) or inner combination (common stations)
+"""
+Functions to operate on velocity-field objects (lists of station-vels)
+Future work: Combining two velocity fields in outer combination (inclusive) or inner combination (common stations)
+"""
 
 import numpy as np
 import scipy.optimize
-import gps_io_functions
+from . import gps_io_functions
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
 
 

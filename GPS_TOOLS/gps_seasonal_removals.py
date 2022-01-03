@@ -1,25 +1,19 @@
-# A set of functions that take TimeSeries objects and return other TimeSeries objects
-# Without seasonal components. 
+"""A set of functions that take TimeSeries objects and return other TimeSeries objects"""
 
 import numpy as np
 import subprocess
 import datetime as dt
 import glob, os, sys
-import gps_ts_functions
-import notch_filter
-import grace_ts_functions
-import gps_io_functions
+from . import gps_ts_functions, notch_filter, grace_ts_functions, gps_io_functions
 
 
-# Make a detrended/modeled version of this time series. 
-def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file,
-                      remove_trend=1, lakes_dir="../../GPS_POS_DATA/Hydro/Lake_loading/"):
-    # The purpose of this function is to generate a version of the time series that has been
-    # detrended and optionally seasonal-removed,
-    # Where the seasonal fitting (if necessary) and detrending happen in the same function.
-    # There are options for the seasonal removal (least squares, notch filter, grace, etc.)
-    # Fit params definition: slope, a2(cos), a1(sin), s2, s1.
-    # Here we are asking to invert the data for linear and seasonal components simultaneously
+def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file, remove_trend=1):
+    """
+    Generate a detrended and/or seasonally-removed version of a time series
+    Where the seasonal fitting (if necessary) and detrending happen in the same function.
+    There are options for the seasonal removal (least squares, notch filter, grace, etc.)
+    Fit params definition: slope, a2(cos), a1(sin), s2, s1.
+    """
 
     Params = gps_io_functions.read_config_file(data_config_file);
 
@@ -62,10 +56,10 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file,
             trend_out, trend_in = remove_seasonals_by_german_load(Data, Params.lsdm_dir);
 
         elif seasonals_type == 'oroville':
-            trend_out, trend_in = remove_seasonals_by_lakes(Data, lakes_dir, 'oroville');
+            trend_out, trend_in = remove_seasonals_by_lakes(Data, Params.lakes_dir, 'oroville');
 
         elif seasonals_type == 'shasta':
-            trend_out, trend_in = remove_seasonals_by_lakes(Data, lakes_dir, 'shasta');
+            trend_out, trend_in = remove_seasonals_by_lakes(Data, Params.lakes_dir, 'shasta');
 
         else:
             print("Error: %s not supported as a seasonal removal type" % seasonals_type);
@@ -86,11 +80,13 @@ def remove_seasonals_by_lssq(Data):
     return trend_out, trend_in;
 
 
-# This function is the function that actually gets called by other programs.
-# It operates on a TimeSeries object and returns another TimeSeries object
 def remove_seasonals_by_notch(Data):
-    # Using Sang-Ho's notch filter script to remove power at frequencies corresponding to 1 year and 6 months.
-    # We are also removing a linear trend in this step.
+    """
+    Sang-Ho's notch filter script to remove power at frequencies corresponding to 1 year and 6 months.
+    We are also removing a linear trend in this step.
+    :param Data: a time-series object
+    :returns: two time-series objects
+    """
 
     Data = gps_ts_functions.remove_nans(Data);
 
@@ -151,8 +147,10 @@ def remove_seasonals_by_notch(Data):
 
 
 def remove_seasonals_by_STL(Data, STL_dir):
-    # Has an issue: Not sure if it returns trended data.
-    # Right now only returns detrended data.
+    """
+    Has an issue: Not sure if it returns trended data.
+    Right now only returns detrended data.
+    """
     filename = STL_dir + Data.name + "_STL_30.txt";
 
     if os.path.isfile(filename):
@@ -245,11 +243,9 @@ def output_stl(Data, outdir):
 
 
 def preprocess_stl(dtarray, data_column, uncertainties):
-    # fill in gaps, and make to a multiple of 365 day cycles.
+    """fill in gaps, and make to a multiple of 365 day cycles."""
 
-    new_data_column = [];
-    new_sig = [];
-    new_dtarray = [];
+    new_data_column, new_sig, new_dtarray = [], [], [];
     new_data_column.append(data_column[0]);
     new_sig.append(uncertainties[0]);
     new_dtarray.append(dtarray[0]);
@@ -472,13 +468,15 @@ def get_wimpy_object(Data):
 # 	'u','v','w']);
 
 def remove_seasonals_by_GRACE(Data, grace_dir):
-    # Here we use pre-computed GRACE load model time series to correct the GPS time series.
-    # We recognize that the horizontals will be bad, and that the resolution of GRACE is coarse.
-    # For these reasons, this is not an important part of the analysis.
-    # Read and interpolate GRACE loading model
-    # Subtract the GRACE model
-    # Remove a trend from the GPS data
-    # Return the object.
+    """
+    Here we use pre-computed GRACE load model time series to correct the GPS time series.
+    We recognize that the horizontals will be bad, and that the resolution of GRACE is coarse.
+    For these reasons, this is not an important part of the analysis.
+    Read and interpolate GRACE loading model
+    Subtract the GRACE model
+    Remove a trend from the GPS data
+    Return the object.
+    """
 
     filename = grace_dir + "scaled_" + Data.name + "_PREM_model_ts.txt";
     if not os.path.isfile(filename):
