@@ -89,6 +89,40 @@ def solve_for_offsets(ts_object, offset_times, num_days=10):
     return Offset_obj;
 
 
+def filter_offset_list_to_date(offset_list, date_of_interest):
+    """Filter a list of possible offsets to only the offset on a particular day of interest."""
+    retained_offset = Offsets(e_offsets=None, n_offsets=None, u_offsets=None, evdts=None);
+    for item in offset_list:
+        if item.evdts == date_of_interest:
+            retained_offset = item
+    return retained_offset;
+
+
+def offset_to_vel_object(offset_obj_list, ts_obj_list, refframe, proccenter, subnetwork=None, survey=False,
+                         first_epoch=None, last_epoch=None, target_date=None, offset_type='proc_table'):
+    """
+    Turn a list of list of offset_objects and ts_objects into a pseudo-vel object for plotting and writing.
+    meas_type is either auto (from tables) or manual_solve with a starttime and endtime.
+    """
+    offsetpts = [];
+    # If we're querying the tables:
+    if  offset_type == 'proc_table':
+        for i in range(len(offset_obj_list)):
+            offseti = filter_offset_list_to_date(offset_obj_list[i], target_date);
+            tsi = ts_obj_list[i];
+            if offseti.e_offsets is not None:
+                newobj = gps_io_functions.Station_Vel(name=tsi.name, nlat=tsi.coords[1], elon=tsi.coords[0],
+                                                      n=offseti.n_offsets, e=offseti.e_offsets, u=offseti.u_offsets,
+                                                      sn=0, se=0, su=0,
+                                                      first_epoch=first_epoch, last_epoch=last_epoch, refframe=refframe,
+                                                      proccenter=proccenter, subnetwork=subnetwork, survey=survey,
+                                                      meas_type=offset_type);
+                offsetpts.append(newobj);
+        print("Found %d look-up-table offsets for %s " % (len(offsetpts), dt.datetime.strftime(target_date, "%Y%m%d")));
+    # Haven't yet coded the logic for offset_type ==  manual_solve.
+    return offsetpts;
+
+
 def print_offset_object(Offset_obj):
     for item in Offset_obj:
         print("%s: %.4f mmE, %.4f mmN, %.4f mmU" % (dt.datetime.strftime(item.evdts, "%Y-%m-%d"),

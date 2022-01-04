@@ -273,4 +273,5 @@ def pygmt_map(dataobj_list, myparams):
     fig.plot(x=lons, y=lats, style='c0.1i', color='black', pen='0.5p,black')
     fig.plot(x=myparams.center[0], y=myparams.center[1], style='a0.1i', color='red', pen='0.5p,red')
     fig.savefig(myparams.outdir + "/" + myparams.outname + '_map.png');
+    print("Saving map %s" % (myparams.outdir + "/" + myparams.outname + '_map.png') );
     return;

@@ -535,11 +535,13 @@ def write_humanread_vel_file(myVelfield, outfile):
     return;
 
 
-def write_stationvel_file(myVelfield, outfile):
+def write_stationvel_file(myVelfield, outfile, metadata=None):
     print("writing human-readable velfile in station-vel format, %s" % outfile);
     ofile = open(outfile, 'w');
     ofile.write(
         "# Format: lon(deg) lat(deg) VE(mm) VN(mm) VU(mm) SE(mm) SN(mm) SU(mm) name(optional)\n");
+    if metadata:
+        ofile.write("# derived from metadata: %s\n" % metadata);
     for station_vel in myVelfield:
         ofile.write("%f %f %f %f %f %f %f %f %s\n" % (
             station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.u, station_vel.se,
