@@ -101,12 +101,15 @@ def filter_offset_list_to_date(offset_list, date_of_interest):
 def offset_to_vel_object(offset_obj_list, ts_obj_list, refframe, proccenter, subnetwork=None, survey=False,
                          first_epoch=None, last_epoch=None, target_date=None, offset_type='proc_table'):
     """
-    Turn a list of list of offset_objects and ts_objects into a pseudo-vel object for plotting and writing.
-    meas_type is either auto (from tables) or manual_solve with a starttime and endtime.
+    Turn a list of list of offset_objects and list of ts_objects into a pseudo-vel object for plotting and writing.
+    offset_type == proc_table (from tables): target-date required.
+    offset_type == manual_solve: starttime and endtime required.
+    refframe, proccenter, subnetwork, and survey are just metadata for packing into StationVel objects.
     """
     offsetpts = [];
-    # If we're querying the tables:
-    if  offset_type == 'proc_table':
+    if offset_type == 'proc_table':  # If we're querying the tables for offsets:
+        if target_date is None:
+            raise ValueError("Error! Must provide target date for looking up offsets from tables");
         for i in range(len(offset_obj_list)):
             offseti = filter_offset_list_to_date(offset_obj_list[i], target_date);
             tsi = ts_obj_list[i];
@@ -114,12 +117,31 @@ def offset_to_vel_object(offset_obj_list, ts_obj_list, refframe, proccenter, sub
                 newobj = gps_io_functions.Station_Vel(name=tsi.name, nlat=tsi.coords[1], elon=tsi.coords[0],
                                                       n=offseti.n_offsets, e=offseti.e_offsets, u=offseti.u_offsets,
                                                       sn=0, se=0, su=0,
-                                                      first_epoch=first_epoch, last_epoch=last_epoch, refframe=refframe,
+                                                      first_epoch=target_date, last_epoch=target_date,
+                                                      refframe=refframe,
                                                       proccenter=proccenter, subnetwork=subnetwork, survey=survey,
                                                       meas_type=offset_type);
                 offsetpts.append(newobj);
-        print("Found %d look-up-table offsets for %s " % (len(offsetpts), dt.datetime.strftime(target_date, "%Y%m%d")));
-    # Haven't yet coded the logic for offset_type ==  manual_solve.
+        print("Found %d look-up-table offsets, %s" % (len(offsetpts), dt.datetime.strftime(target_date, "%Y-%m-%d")));
+
+    else:
+        # offset_type == manual_solve.
+        if first_epoch is None or last_epoch is None:
+            raise ValueError("Error! Must provide first_epoch and last_epoch for solving manual offsets.");
+        for i in range(len(offset_obj_list)):
+            tsi = ts_obj_list[i];
+            e_offset = fit_single_offset(tsi.dtarray, tsi.dE, [first_epoch, last_epoch], offset_num_days=7);
+            n_offset = fit_single_offset(tsi.dtarray, tsi.dN, [first_epoch, last_epoch], offset_num_days=7);
+            u_offset = fit_single_offset(tsi.dtarray, tsi.dU, [first_epoch, last_epoch], offset_num_days=7);
+            newobj = gps_io_functions.Station_Vel(name=tsi.name, nlat=tsi.coords[1], elon=tsi.coords[0],
+                                                  n=n_offset, e=e_offset, u=u_offset,
+                                                  sn=0, se=0, su=0,
+                                                  first_epoch=first_epoch, last_epoch=last_epoch,
+                                                  refframe=refframe,
+                                                  proccenter=proccenter, subnetwork=subnetwork, survey=survey,
+                                                  meas_type=offset_type);
+            offsetpts.append(newobj);
+        print("Solved %d offsets around %s" % (len(offsetpts), dt.datetime.strftime(first_epoch, "%Y-%m-%d")));
     return offsetpts;
 
 

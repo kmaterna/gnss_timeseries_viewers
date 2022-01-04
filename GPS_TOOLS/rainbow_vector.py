@@ -1,8 +1,10 @@
-# Project Rainbow Vector
-# Plot a vector that changes as a function of time
-# Along with the time series that it came from. 
-# For viewing the evolution of a transient 
-# April 2020
+"""
+Project Rainbow Vector
+Plot a vector that changes as a function of time
+Along with the time series that it came from.
+For viewing the evolution of a transient
+April 2020
+"""
 
 
 import numpy as np
@@ -130,7 +132,7 @@ def plotting_function(dataobj_list, sorted_distances, params):
     from matplotlib.cbook import get_sample_data
     axarr[1][1].axis('off')
     im = plt.imread('/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/ts_viewing/exp_minus_hines/map.png');
-    newax = fig.add_axes([0.52,0.07,0.4,0.4],zorder=10);
+    newax = fig.add_axes([0.52, 0.07, 0.4, 0.4], zorder=10);
     newax.imshow(im);
     newax.axis('off');
 
