@@ -33,8 +33,8 @@ def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=
 
     fig = pygmt.Figure()
     pygmt.makecpt(cmap="polar", series="-5/5/0.25", background="o", output="mycpt.cpt");
-    fig.coast(region=region, projection="M7i", frame="0.5", borders='2', shorelines='1.0p,black', water='lightblue',
-              map_scale="n0.12/0.12+c" + str(region[2]) + "+w10");
+    fig.coast(region=region, projection="M7i", frame="0.5", borders=['1', '2'], shorelines='1.0p,black',
+              water='lightblue', map_scale="n0.12/0.12+c" + str(region[2]) + "+w10");
     if fault_file:
         fig.plot(data=fault_file, pen='thin,darkgray');
     elon, nlat, e, n, u = station_vels_to_arrays(velfield);

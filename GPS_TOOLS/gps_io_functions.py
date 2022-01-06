@@ -77,8 +77,10 @@ def read_config_file(infile):
 
 
 def read_pbo_vel_file(infile):
-    # Meant for reading velocity files from the PBO/UNAVCO website.
-    # Returns a list of station_vel objects.
+    """
+    Read velocity files from the PBO/UNAVCO website.
+    Returns a list of station_vel objects.
+    """
     myVelfield = [];
     print("Reading %s" % infile);
     start = 0;
@@ -113,9 +115,11 @@ def read_pbo_vel_file(infile):
 
 
 def read_pbo_vel_file_format(infile):
-    # Meant for reading velocity files from the PBO/UNAVCO website.
-    # Returns a list of station_vel objects.
-    # Splits the lines by character, like Fortran style
+    """
+    Read velocity files from the PBO/UNAVCO website.
+    Returns a list of station_vel objects.
+    Splits the lines by character, like Fortran style
+    """
     myVelfield = [];
     print("Reading %s" % infile);
     start = 0;
@@ -150,11 +154,13 @@ def read_pbo_vel_file_format(infile):
 
 
 def read_unr_vel_file(infile, coordinate_file):
-    # Meant for reading velocity files from the MAGNET/MIDAS website.
-    # Returns a list of station_vel objects.
+    """
+    Read velocity files from the MAGNET/MIDAS website, looking up coordinates from associated file.
+    Returns a list of station_vel objects.
+    """
     myVelfield = []
     # open cache of coordinates and start-dates
-    [cache_name, cache_lat, cache_lon, dtbeg, dtend] = np.loadtxt(coordinate_file, unpack=True, skiprows=2,
+    [cache_name, cache_lat, cache_lon, dtbeg, dtend] = np.loadtxt(coordinate_file, unpack=True, skiprows=1,
                                                                   usecols=(0, 1, 2, 7, 8), dtype={
             'names': ('name', 'lat', 'lon', 'dtbeg', 'dtend'),
             'formats': ('U4', float, float, 'U10', 'U10')});
@@ -179,7 +185,7 @@ def read_unr_vel_file(infile, coordinate_file):
             su = float(temp[13]) * 1000.0;
 
             myindex = np.where(cache_name == name);
-            if not myindex[0]:
+            if len(myindex[0]) == 0:
                 print("Error! Could not find cache record for station %s in %s " % (name, coordinate_file));
                 sys.exit(0);
             else:
@@ -199,9 +205,10 @@ def read_unr_vel_file(infile, coordinate_file):
 
 
 def read_gamit_velfile(infile):
-    # Meant for reading a velocity file for example from GAMIT processing
-    # A simpler format than the PBO (only 13 fields)
-    # Doesn't have starttime and stoptime information.
+    """
+    Read a velocity file for example from GAMIT processing
+    A simpler format than the PBO (only 13 fields), without starttime and stoptime information.
+    """
     myVelfield = [];
     print("Reading %s" % infile);
     ifile = open(infile, 'r');
@@ -233,9 +240,11 @@ def read_gamit_velfile(infile):
 
 
 def usgs_vel_file_from_tsfile(infile):
-    # Network parsing and plumbing
-    # We assume a parallel directory above the TS directory with a bunch of Velocity files
-    # From which we can derive coordinates
+    """
+    Network parsing and plumbing
+    We assume a parallel directory above the TS directory with a bunch of Velocity files
+    From which we can derive coordinates
+    """
     usgs_network = infile.split('/')[-2];
     usgs_directory = '';
     for i in range(len(infile.split('/')) - 3):
@@ -246,7 +255,9 @@ def usgs_vel_file_from_tsfile(infile):
 
 
 def usgs_network_from_velfile(velfile):
-    # velfile is something like 'ITRF_Pacific_Northwest_vels.txt'
+    """
+    velfile is something like 'ITRF_Pacific_Northwest_vels.txt'
+    """
     usgs_network = velfile.split('/')[-1][0:-9];
     if usgs_network[0:4] == 'NAM_':
         usgs_network = usgs_network[4:];
@@ -261,8 +272,9 @@ def usgs_network_from_velfile(velfile):
 
 
 def read_usgs_velfile(infile, cache_file):
-    # Reading a USGS velocity file.
-    # Requires a cache of start and end dates
+    """
+    Read a USGS velocity file. Requires a cache of start and end dates.
+    """
     print("Reading %s" % infile);
     usgs_sub_network, usgs_refframe, survey_flag = usgs_network_from_velfile(infile);
     [names, lon, lat, e, n, se, sn, u, su] = np.loadtxt(infile, skiprows=3, usecols=(0, 1, 2, 4, 5, 6, 7, 9, 10),
@@ -375,8 +387,10 @@ def read_USGS_ts_file(filename):
 
 
 def read_pbo_hydro_file(filename, coords_file=None):
-    # Useful for reading hydrology files like NLDAS, GLDAS, etc.
-    # In the normal pipeline for this function, it is guaranteed to be given a real file.
+    """
+    Read hydrology files like NLDAS, GLDAS, etc.
+    In the normal pipeline for this function, it is guaranteed to be given a real file.
+    """
     print("Reading %s" % filename);
     dtarray = [];
     station_name = filename.split('/')[-1][0:4];
@@ -401,8 +415,10 @@ def read_pbo_hydro_file(filename, coords_file=None):
 
 
 def read_lsdm_file(filename, coords_file=None):
-    # Useful for reading hydrology files from LSDM German loading product
-    # In the normal pipeline for this function, it is guaranteed to be given a real file.
+    """
+    Read hydrology files from LSDM German loading product
+    In the normal pipeline for this function, it is guaranteed to be given a real file.
+    """
     print("Reading %s" % filename);
     dtarray = [];
     station_name = filename.split('/')[-1][0:4];
@@ -429,8 +445,12 @@ def read_lsdm_file(filename, coords_file=None):
 
 
 def get_coordinates_for_unr_stations(station_names, coordinates_file):
-    # station_names is an array
-    # open cache of coordinates and start-dates
+    """
+    Read UNR coordinates for set of stations.
+
+    :param station_names: array of strings
+    :param coordinates_file: cache of coordinates and start-dates
+    """
     [cache_names, cache_lat, cache_lon] = np.loadtxt(coordinates_file, unpack=True, skiprows=2,
                                                      usecols=(0, 1, 2), dtype={'names': ('name', 'lat', 'lon'),
                                                                                'formats': ('U4', float, float)});
@@ -452,8 +472,9 @@ def get_coordinates_for_unr_stations(station_names, coordinates_file):
 
 
 def read_grace(filename):
-    # Read the GRACE data into a GPS-style time series object.
-    # THE GRACE DATA
+    """
+    Read GRACE model into a GPS-style time series object.
+    """
     print("Reading %s" % filename);
     station_name = filename.split('/')[-1];  # this is the local name of the file
     station_name = station_name.split('_')[1];  # this is the four-character name
@@ -461,8 +482,8 @@ def read_grace(filename):
                                              dtype={'names': ('dts', 'lon', 'lat', 'elev', 'u', 'v', 'w'),
                                                     'formats': (
                                                         'U11', float, float, float, float, float, float)}, unpack=True);
-    # In the file, the datetime is in the format 01-Jan-2012_31-Jan-2012.
-    # We take the start date and add 15 days to put the GRACE at the center of the bin.
+    # In the file, datetime is format 01-Jan-2012_31-Jan-2012.
+    # We take start date and add 15 days to put the GRACE at center of bin.
     # There will be only one point per month, generally speaking
     grace_t = [dt.datetime.strptime(x, "%d-%b-%Y") for x in dts];
     grace_t = [i + dt.timedelta(days=15) for i in grace_t];
@@ -482,8 +503,10 @@ def read_blacklist(blacklist_file):
 
 
 def read_humanread_vel_file(infile):
-    # Reading velfield file with format:
-    # lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
+    """
+    Reading velfield file with format:
+    lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
+    """
     myVelfield = [];
     print("Reading %s" % infile);
     ifile = open(infile, 'r');
@@ -502,8 +525,10 @@ def read_humanread_vel_file(infile):
 
 # ---------- WRITING FUNCTIONS ----------- # 
 def write_pbo_pos_file(ts_object, filename, comment=""):
-    # Useful for writing common mode objects, etc.
-    # Opposite of read_pbo_pos_file(filename)
+    """
+    Useful for writing common mode objects, etc.
+    Opposite of read_pbo_pos_file(filename)
+    """
     print("Writing pbo-posfile %s" % filename);
     ofile = open(filename, 'w');
     ofile.write("%s\n" % comment);
@@ -524,7 +549,7 @@ def write_humanread_vel_file(myVelfield, outfile):
     print("writing human-readable velfile %s" % outfile);
     ofile = open(outfile, 'w');
     ofile.write(
-        "# Format: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
+        "# Fmt: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
     for station_vel in myVelfield:
         first_epoch = dt.datetime.strftime(station_vel.first_epoch, '%Y%m%d');
         last_epoch = dt.datetime.strftime(station_vel.last_epoch, '%Y%m%d');
@@ -563,7 +588,9 @@ def write_gmt_velfile(myVelfield, outfile):
 
 
 def restrict_pbo_vel_file(infile, outfile, coord_box):
-    # Copying the format of pbo velocities, let's make a restricted dataset
+    """
+    Copying format of pbo velocities, let's make a restricted dataset
+    """
     ifile = open(infile, 'r');
     ofile = open(outfile, 'w');
     start = 0;

@@ -19,11 +19,25 @@ Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove',
 
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0,
                         starttime=None, endtime=None, outliers_def=15,
-                        seasonals_type='lssq', datasource='pbo', refframe='NA',
+                        seasonals_type='lssq', datasource='cwu', refframe='NA',
                         data_config_file="data_config.txt", outdir="single_plots/"):
+    """
+    :param station_name: string
+    :param offsets_remove: bool, default True
+    :param earthquakes_remove: bool, default False
+    :param outliers_remove: bool, default False
+    :param seasonals_remove: bool, default False
+    :param starttime: dt.datetime object, default None
+    :param endtime: dt.datetime object, default None
+    :param outliers_def: mm, default 15
+    :param seasonals_type: string, default 'lssq'
+    :param datasource: string, default cwu
+    :param refframe: string, default NA
+    :param data_config_file: string
+    :param outdir: string
+    """
     MyParams = configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, outliers_def,
-                         seasonals_remove,
-                         seasonals_type, datasource, refframe, data_config_file);
+                         seasonals_remove, seasonals_type, datasource, refframe, data_config_file);
     [myData, offset_obj, eq_obj] = input_data(MyParams.station, MyParams.datasource, MyParams.refframe,
                                               MyParams.data_config_file);
     [updatedData, detrended] = compute(myData, offset_obj, eq_obj, MyParams, starttime, endtime);

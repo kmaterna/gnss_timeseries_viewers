@@ -7,14 +7,10 @@ Viewing a stack of stations
 """
 
 import numpy as np
-import collections
 import subprocess
 from . import gps_input_pipeline, gps_io_functions, gps_ts_functions, gps_seasonal_removals, stations_within_radius, \
-    offsets, outputs_gps_stacks
-
-Parameters = collections.namedtuple("Parameters",
-                                    ['expname', 'proc_center', 'refframe', 'center', 'radius', 'stations', 'distances',
-                                     'blacklist', 'outdir', 'outname']);
+    offsets
+from . import outputs_gps_stacks as out_stack
 
 
 def driver(data_config_file, expname, center, radius, proc_center, refframe, outdir, must_include=(None, None)):
@@ -24,20 +20,18 @@ def driver(data_config_file, expname, center, radius, proc_center, refframe, out
         myparams.stations, myparams.blacklist, proc_center, refframe, data_config_file, myparams.distances,
         must_include=must_include);
 
-    [detrend_objects, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons,
+    [_, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons,
      sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances, data_config_file);
 
     # A series of output options that can be chained together, selected or unselected, etc.
-    outputs_gps_stacks.horizontal_full_ts(no_offsets_no_trends, sorted_distances, myparams, "noeq");
-    outputs_gps_stacks.horizontal_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams,
-                                          "noeq_noseasons");
-    outputs_gps_stacks.vertical_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
+    out_stack.horizontal_full_ts(no_offsets_no_trends, sorted_distances, myparams, "noeq");
+    out_stack.horizontal_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams, "noeq_noseasons");
+    out_stack.vertical_full_ts(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
 
-    outputs_gps_stacks.horizontal_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
-    outputs_gps_stacks.vertical_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
-    outputs_gps_stacks.vertical_filtered_plots(no_offset_objects, sorted_distances, myparams, 'trendsin_');
-    outputs_gps_stacks.pygmt_map(no_offsets_no_trends_no_seasons, myparams);
-
+    out_stack.horizontal_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
+    out_stack.vertical_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
+    out_stack.vertical_filtered_plots(no_offset_objects, sorted_distances, myparams, 'trendsin_');
+    out_stack.pygmt_map(no_offsets_no_trends_no_seasons, myparams);
     return;
 
 
@@ -51,8 +45,11 @@ def configure(data_config_file, expname, center, radius, proc_center, refframe, 
     blacklist = [i[0] for i in blacklist];
     subprocess.call(["mkdir", "-p", outdir], shell=False);
     outname = expname + "_" + str(center[0]) + "_" + str(center[1]) + "_" + str(radius)
-    myparams = Parameters(expname=expname, proc_center=proc_center, refframe=refframe, center=center, radius=radius,
-                          stations=stations, distances=distances, blacklist=blacklist, outdir=outdir, outname=outname);
+    myparams = out_stack.StackParams(expname=expname, proc_center=proc_center, refframe=refframe, center=center,
+                                     radius=radius, stations=stations, bbox=None, distances=distances,
+                                     blacklist=blacklist, outdir=outdir, outname=outname, starttime=None, endtime=None,
+                                     data_config_file=data_config_file, eqtimes=(), labeltime=None);
+    out_stack.write_stack_params(myparams);  # for good measure
     return myparams;
 
 

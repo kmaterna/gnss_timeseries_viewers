@@ -1,14 +1,17 @@
 """
 Plotting tools for GNSS stacks and movies
-Whether we are plotting stacks with trends, with steps, or anything else.
+Plot stacks with trends, with steps, or anything else.
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
+import matplotlib, collections, scipy.ndimage
 import matplotlib.cm as cm
 import datetime as dt
-import scipy.ndimage
+
+StackParams = collections.namedtuple("StackParams", ['expname', 'proc_center', 'refframe', 'center', 'radius', 'bbox',
+                                                     'stations', 'distances', 'blacklist', 'eqtimes', 'starttime',
+                                                     'endtime', 'labeltime', 'data_config_file', 'outdir', 'outname']);
 
 
 def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1,
@@ -274,4 +277,17 @@ def pygmt_map(dataobj_list, myparams):
     fig.plot(x=myparams.center[0], y=myparams.center[1], style='a0.1i', color='red', pen='0.5p,red')
     fig.savefig(myparams.outdir + "/" + myparams.outname + '_map.png');
     print("Saving map %s" % (myparams.outdir + "/" + myparams.outname + '_map.png') );
+    return;
+
+
+def write_stack_params(myparams):
+    outfilename = myparams.outdir+"/"+myparams.outname+"_params.txt";
+    print('Writing param file %s ' % outfilename);
+    ofile = open(outfilename, 'w');
+    for name, value in zip(myparams._fields, myparams):
+        ofile.write(name);
+        ofile.write(": ");
+        ofile.write(str(value));
+        ofile.write("\n");
+    ofile.close();
     return;
