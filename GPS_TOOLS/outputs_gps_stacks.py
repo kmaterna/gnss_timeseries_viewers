@@ -24,7 +24,7 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
     labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname, distances);
 
     color_boundary_object = matplotlib.colors.Normalize(vmin=closest_station, vmax=farthest_station, clip=True);
-    custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap='jet_r');
+    custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap='rainbow');
 
     # East
     for i in range(len(dataobj_list)):
@@ -89,7 +89,7 @@ def vertical_full_ts(dataobj_list, distances, myparams, label="", removemean=1,
     spacing = 40;
     labeltimes, labels, closest_station, farthest_station = configure_beautiful_plots(myparams.expname, distances);
     color_boundary_object = matplotlib.colors.Normalize(vmin=closest_station, vmax=farthest_station, clip=True);
-    custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap='jet_r');
+    custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap='rainbow');
 
     # Vertical
     for i in range(len(dataobj_list)):

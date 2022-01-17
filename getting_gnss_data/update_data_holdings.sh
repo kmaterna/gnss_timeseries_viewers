@@ -1,5 +1,6 @@
 #!/bin/bash
 # Updating all data holdings as of November 2021.
+# for USGS, be in an environment that has pandas
 # Call this script from the parent directory where GNSS data is locally stored (ex: GPS_POS_DATA/)
 
 # Setup
@@ -32,7 +33,7 @@ cd ../../
 
 # UPDATE UNR DATA: OFFSETS, COORDINATES, AND TIME SERIES
 # VELOCITIES get updated manually with the datestamp and #URL placed on the first line. 
-unr_coords_cache_file="UNR_coords_nov2021.txt"   # update this with the datestamp
+unr_coords_cache_file="UNR_coords_jan2022.txt"   # update this with the datestamp
 mkdir -p UNR_Data/
 mkdir -p UNR_Data/Offsets/
 cd UNR_Data/Offsets/
