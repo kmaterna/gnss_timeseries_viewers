@@ -232,16 +232,15 @@ def get_referenced_data(roving_station_data, base_station_data):
 
 def remove_constant(Data0, east_offset, north_offset, vert_offset):
     """Subtract a constant number from each data array in a time series object
+
     :param Data0: a time-series object
-    :param east_offset: a scalar
-    :param north_offset: a scalar
-    :param vert_offset: a scalar
+    :param east_offset: a scalar, in mm
+    :param north_offset: a scalar, in mm
+    :param vert_offset: a scalar, in mm
     """
-    temp_east, temp_north, temp_vert = [], [], [];
-    for i in range(len(Data0.dtarray)):
-        temp_east.append(Data0.dE[i] - east_offset);
-        temp_north.append(Data0.dN[i] - north_offset);
-        temp_vert.append(Data0.dU[i] - vert_offset);
+    temp_east = np.array([x - east_offset for x in Data0.dE]);
+    temp_north = np.array([x - north_offset for x in Data0.dN]);
+    temp_vert = np.array([x - vert_offset for x in Data0.dU]);
     newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, 
                          dN=np.array(temp_north), dE=np.array(temp_east), dU=np.array(temp_vert), 
                          Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
@@ -433,6 +432,26 @@ def get_values_at_date(Data0, selected_date, num_days=10):
         print("Error: requested date %s not found in dtarray" % dt.datetime.strftime(selected_date, "%Y-%m-%d"));
         [e_value, n_value, u_value] = [np.nan, np.nan, np.nan];
     return e_value, n_value, u_value;
+
+
+def subsample_in_time(Data0, target_time, window_days=30):
+    """
+    Downsample TS: return position corresponding a given time by averaging over a month around target date.
+    Almost the same as the function above, just with a little smarter window-handling for gaps.
+    return E0, N0, U0
+    """
+    dE_start, dN_start, dU_start = [], [], [];
+    for i in range(len(Data0.dtarray)):
+        if abs((Data0.dtarray[i] - target_time).days) < window_days:
+            dE_start.append(Data0.dE[i]);
+            dN_start.append(Data0.dN[i]);
+            dU_start.append(Data0.dU[i]);
+    if len(dE_start) > 2:
+        E0, N0, U0 = np.nanmean(dE_start), np.nanmean(dN_start), np.nanmean(dU_start);
+    else:
+        E0, N0, U0 = np.nan, np.nan, np.nan;
+    return E0, N0, U0;
+
 
 # -------------------------------------------- #
 # MISCELLANEOUS FUNCTIONS: MATH AND TIME OPERATIONS

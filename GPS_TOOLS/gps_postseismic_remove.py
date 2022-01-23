@@ -3,13 +3,17 @@ A function to remove postseismic deformation via existing model time series
 The first model is from Hines et al., JGR, 2016
 """
 
-import datetime as dt
+import numpy as np
 import os
 from . import gps_io_functions, offsets, gps_ts_functions
 
 
 # HELPER FUNCTIONS #
 def get_station_hines(station_name, data_config_file):
+    """
+    Reads a model time series from Hines et al., JGR, 2016 into a gps_object.
+    The time series are stored on disk within a directory in the /contrib part of the GNSS data directory.
+    """
     system_params = gps_io_functions.read_config_file(data_config_file);
     model_dir = "/Contrib_Data/Remove_postseismic/Hines/Stations/"
     model_file = system_params.general_gps_dir + model_dir + station_name + "_psmodel.pos";
@@ -22,41 +26,31 @@ def get_station_hines(station_name, data_config_file):
         return None;
 
 
-def remove_by_model(Data0, data_config_file):
-    # Right now configured for the Hines data.
-    starttime1 = dt.datetime.strptime("20100403", "%Y%m%d");
-    endtime1 = dt.datetime.strptime("20100405", "%Y%m%d");
-    starttime2 = dt.datetime.strptime("20200328", "%Y%m%d");
-    endtime2 = dt.datetime.strptime("20200330", "%Y%m%d");
+def remove_by_model(data_obj, model_obj, starttime1, endtime1, starttime2, endtime2):
+    """
+    Remove a postseismic transient model from a gps_object,
+    using a model time series formatted the same way as a gps_object.
+    starttime and endtime parameters have to do with fixing the edges of the time spanned by the model.
+    """
+    if not model_obj:  # if None
+        return data_obj;
+    if len(data_obj.dtarray) == 0:  # if empty
+        return data_obj;
 
-    # Input Hines data.
-    model_data = get_station_hines(Data0.name, data_config_file);
-
-    if not model_data:  # if None
-        return Data0;
-    if len(Data0.dtarray) == 0:  # if empty
-        return Data0;
-
-    if model_data.dtarray[-1] < Data0.dtarray[-1]:
+    if model_obj.dtarray[-1] < data_obj.dtarray[-1]:
         print("\nWARNING! Trying to use a short postseismic model to fix a long GNSS time series.");
         print("PROBLEMS MAY OCCUR- tread carefully!!\n\n");
 
     # These will be the same size.
-    Data0, model = gps_ts_functions.pair_gps_model_keeping_gps(Data0, model_data);
+    Data0, model = gps_ts_functions.pair_gps_model_keeping_gps(data_obj, model_obj);
     # pair_gps_model_keeping_gps leaves data outside of the model timespan
     # Data0, model = gps_ts_functions.pair_gps_model(Data0, model_data);  # removes data outside of the model timespan.
 
-    # Subtract the model from the data.
-    dtarray, dE_gps, dN_gps, dU_gps = [], [], [], [];
-    Se_gps, Sn_gps, Su_gps = [], [], [];
-    for i in range(len(Data0.dtarray)):
-        dtarray.append(Data0.dtarray[i]);
-        dE_gps.append(Data0.dE[i] - model.dE[i]);
-        dN_gps.append(Data0.dN[i] - model.dN[i]);
-        dU_gps.append(Data0.dU[i] - model.dU[i]);
-        Se_gps.append(Data0.Se[i]);
-        Sn_gps.append(Data0.Sn[i]);
-        Su_gps.append(Data0.Su[i]);
+    # Subtract model from data.
+    dtarray = Data0.dtarray;
+    dE_gps = np.array(np.subtract(Data0.dE, model.dE));
+    dN_gps = np.array(np.subtract(Data0.dN, model.dN));
+    dU_gps = np.array(np.subtract(Data0.dU, model.dU));
 
     # In this method, we correct for offsets at the beginning and end of the modeled time series.
     interval1 = [starttime1, endtime1];
@@ -72,7 +66,7 @@ def remove_by_model(Data0, data_config_file):
     offsets_obj = [offsets1, offsets2];
 
     corrected_data = gps_io_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=dtarray, dE=dE_gps,
-                                                 dN=dN_gps, dU=dU_gps, Se=Se_gps, Sn=Sn_gps, Su=Su_gps,
+                                                 dN=dN_gps, dU=dU_gps, Se=Data0.Se, Sn=Data0.Sn, Su=Data0.Su,
                                                  EQtimes=Data0.EQtimes);
     corrected_data = offsets.remove_offsets(corrected_data, offsets_obj);
     return corrected_data;
