@@ -404,6 +404,16 @@ def get_means(Data0, starttime=None, endtime=None):
     return [np.nanmean(myeast), np.nanmean(mynorth), np.nanmean(myup)];
 
 
+def get_gap_fraction(Data0):
+    """Return the fraction of the time series that is missing. """
+    starttime = Data0.dtarray[0];
+    endtime = Data0.dtarray[-1];
+    delta = endtime - starttime;
+    total_possible_days = delta.days;
+    days_present = len(Data0.dtarray);
+    return 1 - (days_present/total_possible_days);
+
+
 def get_logfunction(Data0, eqtime):
     """
     y = B + Alog(1+t/tau);
