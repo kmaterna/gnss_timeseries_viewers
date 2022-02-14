@@ -184,14 +184,14 @@ def cache_usgs_start_endtimes():
     print("Writing network cache %s " % usgs_cache_file );
     ofile = open(usgs_cache_file, 'w');
     for network in networks:
-        velfile = vel_base_directory + network + '/ITRF_' + network + '_vels.txt';
+        velfile = vel_base_directory + network + '/NAM_' + network + '_vels.txt';
         network_ts_directory, _ = get_usgs_network_directory_from_velfile(velfile);
 
         [names, lon, lat] = np.loadtxt(velfile, skiprows=3, usecols=(0, 1, 2), unpack=True, dtype={'names': (
                 'name', 'lon', 'lat'), 'formats': ('U4', float, float)});
         # Populating the first_epoch and last_epoch with information from the associated time series directory.
         for i in range(len(names)):
-            ts_filename = network_ts_directory + '/' + names[i] + '_ITRF2008.rneu';
+            ts_filename = network_ts_directory + '/' + names[i] + '_NAfixed.rneu';
             dates = np.loadtxt(ts_filename, unpack=True, usecols=(0,),
                                dtype={'names': ('dtstrs',), 'formats': ('U8',)}, ndmin=1);
             if len(dates) == 0:   # for the rare empty file
