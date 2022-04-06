@@ -2,6 +2,7 @@
 
 import numpy as np
 import pygmt
+from . import gps_vel_functions
 
 
 def station_vels_to_arrays(station_vels):
@@ -54,4 +55,39 @@ def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=
     fig.colorbar(position="JCR+w4.0i+v+o0.7i/0i", cmap="mycpt.cpt", frame=["x1", "y+L\"mm/yr\""]);
     fig.savefig(outname);
     print("Saving %s " % outname);
+    return;
+
+
+def map_velocity_profile(velfield, selected_velfield, outname,  vector_scale_info=(0.1, 2, "20 mm"),
+                         startcoord=None, endcoord=None, fault_traces=None):
+    """
+    Map a velocity field.
+    Then map a selected profile of stations across it, in a different color.
+    fault_traces can be a list of files
+    """
+    fig = pygmt.Figure();
+    region = gps_vel_functions.get_bounding_box(velfield);
+    fig.coast(region=region, projection="M6i", frame="1.0", shorelines="1.0p,black", water="lightblue",
+              borders=['1', '2']);
+    elon, nlat, e, n, u = station_vels_to_arrays(velfield);
+    scale = (6 * vector_scale_info[0] / 12);  # empirical scaling, convenient display
+    fig.plot(x=elon, y=nlat, style='c0.04i', color='black', pen='0.4p,white');  # station locations
+    fig.plot(x=elon, y=nlat, style='v0.20+e+a40+gblack+h0+p1p,black+z'+str(scale), pen='0.6p,black',
+             direction=[e, n]);  # displacement vectors
+
+    # The selected stations in the profile
+    elon, nlat, e, n, u = station_vels_to_arrays(selected_velfield);
+    scale = (6 * vector_scale_info[0] / 12);  # empirical scaling, convenient display
+    fig.plot(x=elon, y=nlat, style='c0.04i', color='red', pen='0.4p,white');  # station locations
+    fig.plot(x=elon, y=nlat, style='v0.20+e+a40+gred+h0+p1p,red+z'+str(scale), pen='0.6p,red',
+             direction=[e, n]);  # displacement vectors
+
+    if fault_traces:
+        for item in fault_traces:
+            fig.plot(data=item, pen='1.6p,slateblue3');
+
+    if startcoord and endcoord:
+        fig.plot(x=[startcoord[0], endcoord[0]], y=[startcoord[1], endcoord[1]], pen='0.4p,black,dashed');
+
+    fig.savefig(outname);
     return;

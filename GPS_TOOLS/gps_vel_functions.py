@@ -246,6 +246,14 @@ def postproc_after_helmert(xyz_velfield):
     return enu_station_list;
 
 
+def get_bounding_box(velfield, border=0.1):
+    """Get a bounding box for a list of station_vels.  Returns a list of [E, W, S, N]"""
+    lons = [x.elon for x in velfield]
+    lats = [x.nlat for x in velfield]
+    bbox = [np.min(lons)-border, np.max(lons)+border, np.min(lats)-border, np.max(lats)+border];
+    return bbox;
+
+
 """
 Steps to solving the Helmert transformation:
 DONE: Get a list of 551 SCEC_SYS_B/MIDAS_SYS_A common stations, with known lon/lat coordinates
