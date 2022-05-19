@@ -100,9 +100,9 @@ def plot_profile_in_distance(x_distance, vel_parallel, vel_perp, fault_xlocation
     plt.yticks(fontsize=fontsize)
     if len(fault_xlocations) > 0:
         for item in fault_xlocations:
-            top, bottom = [-10, 50];
+            top, bottom = [-10, 65];
             plt.plot([item, item], [top, bottom], '--', color='black');  # fault edges
-    plt.ylim([-10, 50]);
+    plt.ylim([-10, 60]);
     plt.xlim([-150, 251]);
 
     # SAF experiment:

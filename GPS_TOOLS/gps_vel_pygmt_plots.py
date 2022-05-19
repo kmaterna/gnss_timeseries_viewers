@@ -18,7 +18,7 @@ def station_vels_to_arrays(station_vels):
 
 
 def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=None, fault_file=None,
-                      vector_scale_info=(1, 2, "2 mm")):
+                      vector_scale_info=(1, 2, "2 mm"), plot_names=True):
     """
     Simply plot the displacement vectors from StationVels in PyGMT, with vertical denoted by colors
     example: scale_factor = 1; scale_arrow = 2; vectext = "2 mm";  # 1 mm, extra small vectors
@@ -51,7 +51,8 @@ def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=
     fig.plot(x=region[0], y=region[2], style='v0.20+e+a40+gblack+h0+p1p,black+z'+str(scale), offset="0.5i/0.3i",
              pen='0.6p,black', direction=[[vector_scale_info[1]], [0]]);  # scale vector
     fig.text(x=region[0], y=region[2], text=vector_scale_info[2], offset="0.3i/0.3i", font='10p,Helvetica,black')
-    fig.text(x=[i + 0.02 for i in lons], y=lats, text=names, font='11p,Helvetica-Bold,black');
+    if plot_names:
+        fig.text(x=[i + 0.02 for i in lons], y=lats, text=names, font='11p,Helvetica-Bold,black');
     fig.colorbar(position="JCR+w4.0i+v+o0.7i/0i", cmap="mycpt.cpt", frame=["x1", "y+L\"mm/yr\""]);
     fig.savefig(outname);
     print("Saving %s " % outname);
