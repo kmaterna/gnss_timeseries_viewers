@@ -70,6 +70,22 @@ def remove_duplicates(velfield, verbose=False):
     return cleaned_velfield;
 
 
+def disp_points_to_station_vels(obs_disp_points):
+    """
+    Convert from disp_point_object (which might contain velocities) to station_vel object.
+    This is the opposite of Elastic_stresses_py.PyCoulomb.disp_points_object.utilities.station_vel_object_to_disp_points
+    """
+    station_vel_list = [];
+    for item in obs_disp_points:
+        new_obj = gps_io_functions.Station_Vel(nlat=item.lat, elon=item.lon, name=item.name, n=item.dN_obs*1000,
+                                               e=item.dE_obs*1000, u=item.dU_obs*1000, sn=item.Sn_obs*1000,
+                                               se=item.Se_obs*1000, su=item.Su_obs*1000, meas_type=item.meas_type,
+                                               first_epoch=item.starttime, last_epoch=item.endtime,
+                                               refframe=item.refframe);
+        station_vel_list.append(new_obj);
+    return station_vel_list;
+
+
 def remove_blacklist_vels(velfield, blacklist, verbose=False):
     cleaned_velfield = []
     if verbose:
@@ -240,8 +256,8 @@ def postproc_after_helmert(xyz_velfield):
         new_station_vel = gps_io_functions.Station_Vel(name=item.name, elon=lonlat[0][0], nlat=lonlat[0][1],
                                                        e=enu_vel[0][0], n=enu_vel[0][1], u=enu_vel[0][2],
                                                        se=enu_cov[0][0], sn=enu_cov[1][1], su=enu_cov[2][2],
-                                                       first_epoch=0, last_epoch=0,
-                                                       refframe=0, proccenter=0, subnetwork=0, survey=0);
+                                                       first_epoch=0, last_epoch=0, refframe=0, proccenter=0,
+                                                       subnetwork=0, survey=0, meas_type=None);
         enu_station_list.append(new_station_vel);
     return enu_station_list;
 
