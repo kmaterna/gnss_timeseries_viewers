@@ -40,7 +40,7 @@ def configure(data_config_file, expname, center, radius, proc_center, refframe, 
     stations, lons, lats, distances = stations_within_radius.get_stations_within_radius(data_config_file, center,
                                                                                         radius, network=proc_center);
     data_config = gps_io_functions.read_config_file(data_config_file);
-    blacklist = np.loadtxt(data_config.blacklist, unpack=False, usecols=(0),
+    blacklist = np.loadtxt(data_config["blacklist"], unpack=False, usecols=(0),
                            dtype={'names': ('name',), 'formats': ('U4',)});
     blacklist = [i[0] for i in blacklist];
     subprocess.call(["mkdir", "-p", outdir], shell=False);

@@ -16,7 +16,7 @@ def get_station_hines(station_name, data_config_file):
     """
     system_params = gps_io_functions.read_config_file(data_config_file);
     model_dir = "/Contrib_Data/Remove_postseismic/Hines/Stations/"
-    model_file = system_params.general_gps_dir + model_dir + station_name + "_psmodel.pos";
+    model_file = system_params["gps_data_dir"] + model_dir + station_name + "_psmodel.pos";
     # This is stored in general_gps_dir because it's on my system, but may not be on general systems. 
     if os.path.isfile(model_file):
         [Data0] = gps_io_functions.read_pbo_pos_file(model_file);

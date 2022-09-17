@@ -55,7 +55,7 @@ def get_station_data(station, datasource, data_config_file, refframe="NA", sub_n
     refframe choices are NA and ITRF.
     """
     Params = gps_io_functions.read_config_file(data_config_file);
-    filename, sub_network = pre_screen_datasource(Params, station, datasource, refframe, sub_network);
+    filename, sub_network = pre_screen_datasource_paths(Params, station, datasource, refframe, sub_network);
 
     if datasource == 'unr':
         [myData, offset_obj, eq_obj] = get_unr(Params, filename);  # UNR data format
@@ -110,14 +110,14 @@ def get_lsdm(filename):
     return [myData, [], []];
 
 
-def pre_screen_datasource(Params, station, inps='pbo', refframe="NA", sub_network=''):
+def pre_screen_datasource_paths(Params, station, inps='pbo', refframe="NA", sub_network=''):
     """ A defensive programming function that quits if it doesn't find the right file."""
     print("\nStation %s: " % station);
 
     if refframe not in ['NA', 'ITRF']:
         print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
 
-    # MUST REPLACE SUBNETWORK FOR USGS HERE
+    # CHECK IF STATION EXISTS IN JUST ONE SUBNETWORK FOR CONVENIENCE
     if inps == 'usgs' and sub_network == '':
         network_list = query_usgs_network_name(station, Params['usgs']['directory']+Params['usgs']['gps_ts_dir']);
         if len(network_list) == 1:
@@ -126,7 +126,7 @@ def pre_screen_datasource(Params, station, inps='pbo', refframe="NA", sub_networ
             print("ERROR! User must select one sub-network for USGS time series. Exiting. ");
             sys.exit(1);
 
-    # Path-setting Look-up Table
+    # Path-setting through a look-up table
     if inps == 'unr':
         na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.NA.tenv3';
         itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.IGS14.tenv3';

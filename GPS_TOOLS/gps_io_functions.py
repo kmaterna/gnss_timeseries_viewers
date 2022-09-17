@@ -7,9 +7,8 @@ Functions for reading a variety of GNSS data formats, including:
 
 
 import numpy as np
-import collections, sys, os
+import collections, sys, os, configparser
 import datetime as dt
-import configparser
 from . import utilities
 
 Station_Vel = collections.namedtuple("Station_Vel", ['name', 'nlat', 'elon', 'n', 'e', 'u', 'sn', 'se', 'su',
@@ -492,6 +491,7 @@ def read_humanread_vel_file(infile):
                                   last_epoch=dt.datetime.strptime(temp[9], "%Y%m%d"), refframe='',
                                   proccenter='', subnetwork='', survey=False, meas_type='gnss');
         myVelfield.append(new_station);
+    ifile.close();
     return [myVelfield];
 
 

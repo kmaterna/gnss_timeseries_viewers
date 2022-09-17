@@ -6,59 +6,50 @@ from . import gps_io_functions
 
 def import_velfield(gps_config_file, network='pbo', refframe='ITRF', sub_network=''):
     """Read a velocity field from a certain network and refframe"""
-    myParams = gps_io_functions.read_config_file(gps_config_file);
+    Params = gps_io_functions.read_config_file(gps_config_file);
+    lookup_dict = build_lookup_dictionary(Params, network, sub_network);   # build a tranche of filenames
     if network == 'pbo':
-        pbo_velfile = get_pbo_velfile(myParams.pbo_velocities, refframe);
-        [myVelocities] = gps_io_functions.read_pbo_vel_file(pbo_velfile);
+        [myVelocities] = gps_io_functions.read_pbo_vel_file(lookup_dict["pbo_"+refframe]);
     elif network == 'cwu':
-        cwu_velfile = get_cwu_velfile(myParams.pbo_velocities, refframe);
-        [myVelocities] = gps_io_functions.read_pbo_vel_file_format(cwu_velfile);
+        [myVelocities] = gps_io_functions.read_pbo_vel_file_format(lookup_dict["cwu_"+refframe]);
     elif network == 'unr':
-        unr_velfile = get_unr_velfile(myParams, refframe);
-        [myVelocities] = gps_io_functions.read_unr_vel_file(unr_velfile, myParams.unr_coords_file);
-    elif network[0:4] == 'usgs':
-        if len(network) == 4:  # if the network is just usgs
-            usgs_velfile = get_usgs_velfile(myParams.usgs_vel_dir, refframe, sub_network);
-        else:  # if the network has format similar to 'usgs-Pacific_Northwest'
-            sub_network = network.split('-')[1];
-            usgs_velfile = get_usgs_velfile(myParams.usgs_vel_dir, refframe, sub_network);
-        [myVelocities] = gps_io_functions.read_usgs_velfile(usgs_velfile, myParams.usgs_cache_file);
+        [myVelocities] = gps_io_functions.read_unr_vel_file(lookup_dict["unr_"+refframe],
+                                                            Params["unr"]["directory"]+Params["unr"]["coords_file"]);
+    elif network == 'usgs':
+        [myVelocities] = gps_io_functions.read_usgs_velfile(lookup_dict["usgs_"+refframe],
+                                                            Params["usgs"]["directory"]+Params["usgs"]["cache_file"]);
     else:
         print("Error! Invalid choice of network [pick one of pbo/cwu/unr/usgs]");
         sys.exit(0);
     return myVelocities;
 
 
-def get_pbo_velfile(velocities_dir, refframe='NA'):
-    if refframe == 'NA':
-        velfile = velocities_dir + 'NAM08_pbovelfile_feb2018.txt';
-    else:
-        velfile = velocities_dir + 'IGS08_pbovelfile_feb2018.txt';
-    return velfile;
+def build_lookup_dictionary(Params, network, sub_network=''):
+    """ Construct a dictionary of filepaths to velocity files. This can potentially grow if we add more frames."""
+    lookup_dict = {};
+    if network == 'pbo':
+        lookup_dict["pbo_NA"] = Params["pbo"]["directory"] + Params["pbo"]["velocities_nam"];
+        lookup_dict["pbo_ITRF"] = Params["pbo"]["directory"] + Params["pbo"]["velocities_itrf"];
+    if network == 'cwu':
+        lookup_dict["cwu_NA"] = Params["cwu"]["directory"] + Params["cwu"]["velocities_nam"];
+        lookup_dict["cwu_ITRF"] = Params["cwu"]["directory"] + Params["cwu"]["velocities_itrf"];
+    if network == 'unr':
+        lookup_dict["unr_NA"] = Params["unr"]["directory"] + Params["unr"]["velocities_nam"];
+        lookup_dict["unr_ITRF"] = Params["unr"]["directory"] + Params["unr"]["velocities_itrf"];
+    if network == 'usgs':
+        lookup_dict["usgs_NA"] = get_usgs_velfile(Params, 'NA', sub_network);
+        lookup_dict["usgs_ITRF"] = get_usgs_velfile(Params, 'ITRF', sub_network);
+    return lookup_dict;
 
 
-def get_cwu_velfile(velocities_dir, refframe='NA'):
-    if refframe == 'NA':
-        velfile = velocities_dir + 'cwu.final_nam14.vel'
-    else:
-        velfile = velocities_dir + 'cwu.final_igs14.vel'
-    return velfile;
-
-
-def get_unr_velfile(MyParams, refframe):
-    if refframe == 'NA':
-        velfile = MyParams.unr_velocities_nam;
-    else:
-        velfile = MyParams.unr_velocities_itrf;
-    return velfile;
-
-
-def get_usgs_velfile(velocities_dir, refframe, sub_network):
+def get_usgs_velfile(MyParams, refframe, sub_network):
     if sub_network == '':
         print("Error! Must provide sub-network for USGS velocity field");
         sys.exit(0);
     if refframe == 'NA':
-        velfile = velocities_dir + sub_network + '/NAM_' + sub_network + '_vels.txt';
+        velfile = MyParams["usgs"]['directory'] + MyParams["usgs"]["vel_dir"] + sub_network + '/NAM' + \
+                  sub_network + '_vels.txt';
     else:
-        velfile = velocities_dir + sub_network + '/ITRF_' + sub_network + '_vels.txt';
+        velfile = MyParams["usgs"]['directory'] + MyParams["usgs"]["vel_dir"] + sub_network + '/ITRF' + \
+                  sub_network + '_vels.txt';
     return velfile;
