@@ -10,6 +10,7 @@ import numpy as np
 import collections, sys, os
 import datetime as dt
 import configparser
+from . import utilities
 
 Station_Vel = collections.namedtuple("Station_Vel", ['name', 'nlat', 'elon', 'n', 'e', 'u', 'sn', 'se', 'su',
                                                      'first_epoch',
@@ -26,10 +27,10 @@ Station_Vel_XYZ = collections.namedtuple("Station_Vel_XYZ", ['name',
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
 Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir',
-                                           'pbo_earthquakes_dir', 'pbo_offsets_dir',
-                                           'unr_offsets_dir', 'unr_coords_file',
-                                           'pbo_velocities',
-                                           'unr_velocities', 'usgs_vel_dir', 'usgs_networks', 'usgs_offsets_dir',
+                                           'pbo_earthquakes_dir', 'pbo_offsets_dir', 'pbo_velocities',
+                                           'unr_offsets_file', 'unr_coords_file', 'unr_user_offsets_file',
+                                           'unr_velocities_nam', 'unr_velocities_itrf',
+                                           'usgs_vel_dir', 'usgs_networks', 'usgs_offsets_dir',
                                            'usgs_cache_file',
                                            'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
                                            'lsdm_dir', 'stl_dir', 'lakes_dir', 'blacklist']);
@@ -57,10 +58,12 @@ def read_config_file(infile):
                       usgs_gps_dir=param_dict["usgs_gps_dir"],
                       pbo_earthquakes_dir=param_dict["pbo_earthquakes_dir"], 
                       pbo_offsets_dir=param_dict["pbo_offsets_dir"], 
-                      unr_offsets_dir=param_dict["unr_offsets_dir"], 
+                      unr_offsets_file=param_dict["unr_offsets_file"],
+                      unr_user_offsets_file=param_dict["unr_user_offsets_file"],
                       unr_coords_file=param_dict["unr_coords_file"],
                       pbo_velocities=param_dict["pbo_velocities"], 
-                      unr_velocities=param_dict["unr_velocities"], 
+                      unr_velocities_nam=param_dict["unr_velocities_nam"],
+                      unr_velocities_itrf=param_dict["unr_velocities_itrf"],
                       usgs_vel_dir=param_dict["usgs_vel_dir"],
                       usgs_networks=param_dict["usgs_network_list"], 
                       usgs_cache_file=param_dict["usgs_cache_file"], 
@@ -89,10 +92,8 @@ def read_pbo_vel_file(infile):
         if start == 1:
             temp = line.split();
             name = temp[0];
-            nlat = float(temp[7]);
-            elon = float(temp[8]);
-            if elon > 180:
-                elon = elon - 360.0;
+            nlat, elon = float(temp[7]), float(temp[8]);
+            elon = utilities.check_lon_sanity(elon);
             n = float(temp[19]) * 1000.0;
             e = float(temp[20]) * 1000.0;
             u = float(temp[21]) * 1000.0;
@@ -129,8 +130,7 @@ def read_pbo_vel_file_format(infile):
             name = line[1:5];
             nlat = float(line[97:111]);
             elon = float(line[112:127]);
-            if elon > 180:
-                elon = elon - 360.0;
+            elon = utilities.check_lon_sanity(elon);
 
             n = float(line[214:223]) * 1000.0;
             e = float(line[223:231]) * 1000.0;
@@ -192,8 +192,7 @@ def read_unr_vel_file(infile, coordinate_file):
                 first_epoch = dt.datetime.strptime(dtbeg[myindex[0][0]], '%Y-%m-%d');
                 last_epoch = dt.datetime.strptime(dtend[myindex[0][0]], '%Y-%m-%d');
                 elon = cache_lon[myindex[0][0]];
-                if elon > 180:
-                    elon = elon - 360;
+                elon = utilities.check_lon_sanity(elon);
                 nlat = cache_lat[myindex[0][0]];
 
             myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,
@@ -218,8 +217,7 @@ def read_gamit_velfile(infile):
             continue;
         else:
             elon = float(temp[0]);
-            if elon > 180:
-                elon = elon - 360.0;
+            elon = utilities.check_lon_sanity(elon);
             nlat = float(temp[1]);
             e = float(temp[2]);
             n = float(temp[3]);
@@ -316,6 +314,7 @@ def read_pbo_pos_file(filename):
     print("Reading %s" % filename);
     [yyyymmdd, Nlat, Elong, dN, dE, dU, Sn, Se, Su] = np.loadtxt(filename, skiprows=37, unpack=True,
                                                                  usecols=(0, 12, 13, 15, 16, 17, 18, 19, 20));
+    Elong = utilities.check_lon_sanity(Elong[0]);
     dN = [i * 1000.0 for i in dN];
     dE = [i * 1000.0 for i in dE];
     dU = [i * 1000.0 for i in dU];
@@ -324,7 +323,7 @@ def read_pbo_pos_file(filename):
     Su = [i * 1000.0 for i in Su];
     specific_file = filename.split('/')[-1];
     dtarray = [dt.datetime.strptime(str(int(i)), "%Y%m%d") for i in yyyymmdd];
-    myData = Timeseries(name=specific_file[0:4], coords=[Elong[0] - 360, Nlat[0]], dtarray=dtarray, dN=dN, dE=dE, dU=dU,
+    myData = Timeseries(name=specific_file[0:4], coords=[Elong, Nlat[0]], dtarray=dtarray, dN=dN, dE=dE, dU=dU,
                         Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
     print("Reading data for station %s in time range %s:%s" % (
         myData.name, dt.datetime.strftime(myData.dtarray[0], "%Y-%m-%d"),
@@ -350,12 +349,8 @@ def read_UNR_magnet_ts_file(filename, coordinates_file):
     Su = [i * 1000.0 for i in Su];
 
     [lon, lat] = get_coordinates_for_unr_stations([station_name], coordinates_file);  # format [lat, lon]
-    if lon[0] < -360:
-        coords = [lon[0] - 360, lat[0]];
-    elif lon[0] > 180:
-        coords = [lon[0] + 360, lat[0]];
-    else:
-        coords = [lon[0], lat[0]];
+    lon = utilities.check_lon_sanity(lon[0]);
+    coords = [lon, lat[0]];
 
     myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
                         EQtimes=[]);
@@ -463,8 +458,7 @@ def get_coordinates_for_unr_stations(station_names, coordinates_file):
             sys.exit(0);
         else:
             elon = cache_lon[myindex[0][0]];
-            if elon > 180:
-                elon = elon - 360;
+            elon = utilities.check_lon_sanity(elon);
             nlat = cache_lat[myindex[0][0]];
             lon.append(elon);
             lat.append(nlat);
@@ -598,8 +592,7 @@ def restrict_pbo_vel_file(infile, outfile, coord_box):
         if start == 1:
             nlat = float(line[97:111]);
             elon = float(line[112:127]);
-            if elon > 180:
-                elon = elon - 360.0;
+            elon = utilities.check_lon_sanity(elon);
             if coord_box[0] <= elon <= coord_box[1] and coord_box[2] <= nlat <= coord_box[3]:
                 ofile.write(line);
         if start == 0:

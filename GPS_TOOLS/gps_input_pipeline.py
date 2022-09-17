@@ -89,10 +89,9 @@ def get_unr(data_config_file, station, refframe="NA"):
         reflabel = "NA";
     Params = gps_io_functions.read_config_file(data_config_file);
     unr_filename = Params.unr_gps_dir + station + "." + reflabel + ".tenv3"
-    offsets_dir = Params.unr_offsets_dir;
     [myData] = gps_io_functions.read_UNR_magnet_ts_file(unr_filename, Params.unr_coords_file);  # UNR data format
-    Offsets = get_unr_offsets(myData, station, offsets_dir);
-    Earthquakes = get_unr_earthquakes(myData, station, offsets_dir);
+    Offsets = get_unr_offsets(myData, Params.unr_offsets_file, Params.unr_user_offsets_file);
+    Earthquakes = get_unr_earthquakes(myData, Params.unr_offsets_file, Params.unr_user_offsets_file);
     return [myData, Offsets, Earthquakes];
 
 
@@ -289,48 +288,39 @@ def remove_blacklist(data_config_file, stations):
 
 
 # THE GUTS --------------------------------------
-def get_unr_offsets(Data0, station, offsets_dir):
+def get_unr_offsets(Data0, offsets_file, user_offsets_file):
     """ grep -1 is the code for antenna and reference frame offsets"""
-    print("Offset table for station %s:" % station);
-    try:
-        table = subprocess.check_output(
-            "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  1' " + offsets_dir + "UNR_steps.txt", shell=True);
-        table = table.decode();  # needed when switching to python 3
-    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
-        table = [];
-    print(table);
-    evdts = parse_table_unr(table);
-    UNR_offsets = offsets.solve_for_offsets(Data0, evdts);
+    print("Offset table for station %s:" % Data0.name);
+    evdts1 = search_file_for_unr_offsets(Data0.name, offsets_file, mode=1);
+    evdts2 = search_file_for_unr_offsets(Data0.name, user_offsets_file, mode=1);
+    UNR_offsets = offsets.solve_for_offsets(Data0, evdts1 + evdts2);
     offsets.print_offset_object(UNR_offsets);
     return UNR_offsets;
 
 
-def get_unr_earthquakes(Data0, station, offsets_dir):
+def get_unr_earthquakes(Data0, offsets_file, user_offsets_file):
     """ grep -2 is the code for earthquake offsets """
-    print("Earthquakes table for station %s:" % station);
-    try:
-        table = subprocess.check_output(
-            "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  2' " + offsets_dir + "UNR_steps.txt", shell=True);
-        table = table.decode();  # needed when switching to python 3
-    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
-        table = [];
-    print(table);
-    evdts1 = parse_table_unr(table);
-
-    try:   # This is an example of a user-defined offset table
-        table = subprocess.check_output(
-            "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  2' " + offsets_dir + "UNR_userdefined_offsets.txt",
-            shell=True);
-        table = table.decode();  # needed when switching to python 3
-    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
-        table = [];
-    print(table);
-    evdts2 = parse_table_unr(table);
-
-    evdts = evdts1 + evdts2;
-    UNR_earthquakes = offsets.solve_for_offsets(Data0, evdts);
+    print("Earthquakes table for station %s:" % Data0.name);
+    evdts1 = search_file_for_unr_offsets(Data0.name, offsets_file, mode=2);
+    evdts2 = search_file_for_unr_offsets(Data0.name, user_offsets_file, mode=2);
+    UNR_earthquakes = offsets.solve_for_offsets(Data0, evdts1 + evdts2);
     offsets.print_offset_object(UNR_earthquakes);
     return UNR_earthquakes;
+
+
+def search_file_for_unr_offsets(station, offsets_file, mode=2):
+    """
+    Mode1 is antenna etc.
+    Mode2 is earthquakes
+    """
+    try:
+        table = subprocess.check_output(
+            "grep -E '" + station + "  [0-9]{2}[A-Z]{3}[0-9]{2}  "+str(mode)+"' " + offsets_file, shell=True);
+        table = table.decode();  # needed when switching to python 3
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
+        table = [];
+    evdts = parse_table_unr(table);
+    return evdts;
 
 
 def get_pbo_offsets(station, offsets_dir):

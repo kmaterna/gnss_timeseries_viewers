@@ -14,7 +14,7 @@ def import_velfield(gps_config_file, network='pbo', refframe='ITRF', sub_network
         cwu_velfile = get_cwu_velfile(myParams.pbo_velocities, refframe);
         [myVelocities] = gps_io_functions.read_pbo_vel_file_format(cwu_velfile);
     elif network == 'unr':
-        unr_velfile = get_unr_velfile(myParams.unr_velocities, refframe);
+        unr_velfile = get_unr_velfile(myParams, refframe);
         [myVelocities] = gps_io_functions.read_unr_vel_file(unr_velfile, myParams.unr_coords_file);
     elif network[0:4] == 'usgs':
         if len(network) == 4:  # if the network is just usgs
@@ -45,11 +45,11 @@ def get_cwu_velfile(velocities_dir, refframe='NA'):
     return velfile;
 
 
-def get_unr_velfile(velocities_dir, refframe):
+def get_unr_velfile(MyParams, refframe):
     if refframe == 'NA':
-        velfile = velocities_dir + 'midas.NA_nov2021.txt'
+        velfile = MyParams.unr_velocities_nam;
     else:
-        velfile = velocities_dir + 'midas.IGS14_nov2021.txt'
+        velfile = MyParams.unr_velocities_itrf;
     return velfile;
 
 

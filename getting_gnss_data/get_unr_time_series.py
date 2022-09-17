@@ -3,6 +3,7 @@ Download GNSS time series from the University of Nevada Reno (http://geodesy.unr
 Inputs are based on a cache file (for coordinates) and a geographic region.
 Will download in several reference frames, such as NA and IGS14.
 Call this script from the directory where time series will live.
+Example runstring:
 Script by K. Materna, 2020
 """
 
@@ -18,7 +19,8 @@ def configure(argv):
     For the western US, it's about 2600 stations and ~1 hour.
     """
     if len(argv) != 2:
-        print("Error! Please provide get_unr_time_series.py with the name of the coordinate cache file. Exiting...")
+        print("\n\nError! Please provide get_unr_time_series.py with the name of the coordinate cache file. ")
+        print("ex: get_unr_time_series.py ../systems/path/to/UNR_coords.txt\n")
         sys.exit(0);
     else:
         coordfile = argv[1];
