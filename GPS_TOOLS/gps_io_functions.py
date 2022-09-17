@@ -44,12 +44,13 @@ def read_config_file(infile):
     config_section = config["py-config"];
 
     # Create a default dictionary so we can tolerate a config file with less-complete fields
-    param_dict = collections.defaultdict(lambda: "Key Not Present In Config");
+    param_dict = collections.defaultdict(lambda: "Key Not Present In Config");   # dictionary of dictionaries
     for key in config_section.keys():
         param_dict[key] = config_section[key];
         if 'config' in key:
             database_name = key.split('_')[0];
             one_dictionary = read_one_database_config(config_section[key], 'data-config');
+            one_dictionary['directory'] = "/".join(param_dict[key].split('/')[0:-1])+'/';  # the directory for data
             param_dict[database_name] = one_dictionary;
     return param_dict;
 
@@ -198,15 +199,10 @@ def read_gamit_velfile(infile):
         if temp[0] == "#" or temp[0][0] == "#":
             continue;
         else:
-            elon = float(temp[0]);
+            elon, nlat = float(temp[0]), float(temp[1]);
             elon = utilities.check_lon_sanity(elon);
-            nlat = float(temp[1]);
-            e = float(temp[2]);
-            n = float(temp[3]);
-            se = float(temp[6]);
-            sn = float(temp[7]);
-            u = float(temp[9]);
-            su = float(temp[11]);
+            e, n, se, sn = float(temp[2]), float(temp[3]), float(temp[6]), float(temp[7]);
+            u, su = float(temp[9]), float(temp[11]);
             name = temp[12][0:4];
             first_epoch = dt.datetime.strptime("19900101", "%Y%m%d");  # placeholders
             last_epoch = dt.datetime.strptime("20300101", "%Y%m%d");  # placeholders

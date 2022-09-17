@@ -55,14 +55,14 @@ def get_station_data(station, datasource, data_config_file, refframe="NA", sub_n
     refframe choices are NA and ITRF.
     """
     Params = gps_io_functions.read_config_file(data_config_file);
-    filename = pre_screen_datasource(Params, station, datasource, refframe, sub_network);
+    filename, sub_network = pre_screen_datasource(Params, station, datasource, refframe, sub_network);
 
     if datasource == 'unr':
         [myData, offset_obj, eq_obj] = get_unr(Params, filename);  # UNR data format
     elif datasource in ['pbo', 'cwu', 'nmt']:
-        [myData, offset_obj, eq_obj] = get_pbo_type(Params, filename, station, 'pbo');  # PBO data format
+        [myData, offset_obj, eq_obj] = get_pbo_type(Params, filename, station, datasource);  # PBO data format
     elif datasource == 'usgs':
-        [myData, offset_obj, eq_obj] = get_usgs(filename, station, sub_network);  # USGS data
+        [myData, offset_obj, eq_obj] = get_usgs(Params, filename, station, refframe, sub_network);  # USGS data
     elif datasource in ['gldas', 'nldas', 'noah025']:
         [myData, offset_obj, eq_obj] = get_gldas(Params, filename);  # hydro
     elif datasource == 'grace':
@@ -89,11 +89,11 @@ def get_pbo_type(Params, pbo_filename, station, database):
     Earthquakes = get_pbo_earthquakes(station, Params[database]["directory"]+Params[database]["earthquakes_dir"]);
     return [myData, Offsets, Earthquakes];
 
-def get_usgs(filename, station, sub_network):
-    """ FIX THIS """
+def get_usgs(Params, filename, station, refframe, sub_network):
     [myData] = gps_io_functions.read_USGS_ts_file(filename);
-    Offsets = get_usgs_offsets(station, sub_network);
-    Earthquakes = get_usgs_earthquakes(station, sub_network);
+    usgs_offsets_dir = Params['usgs']['directory'] + Params['usgs']['offsets_dir'];
+    Offsets = get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe, typekey='antenna/other');
+    Earthquakes = get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe, typekey='earthquake');
     return [myData, Offsets, Earthquakes];
 
 def get_gldas(Params, filename):
@@ -114,49 +114,67 @@ def pre_screen_datasource(Params, station, inps='pbo', refframe="NA", sub_networ
     """ A defensive programming function that quits if it doesn't find the right file."""
     print("\nStation %s: " % station);
 
-    if refframe == 'NA':
-        chosen_ref_key = "nam_ts_formatstring"
-    elif refframe == "ITRF":
-        chosen_ref_key = "itrf_ts_formatstring"
-    else:
+    if refframe not in ['NA', 'ITRF']:
         print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
 
     # MUST REPLACE SUBNETWORK FOR USGS HERE
     if inps == 'usgs' and sub_network == '':
-        network_list = query_usgs_network_name(station, Params['usgs']['directory']);
+        network_list = query_usgs_network_name(station, Params['usgs']['directory']+Params['usgs']['gps_ts_dir']);
         if len(network_list) == 1:
             sub_network = network_list[0].split('/')[-1];
         else:
             print("ERROR! User must select one sub-network for USGS time series. Exiting. ");
             sys.exit(1);
 
-    # Path setting
-    if inps in ['unr', 'cwu', 'pbo', 'nmt']:
-        raw_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + Params[inps][chosen_ref_key];
-        filename = raw_filename.replace('????', station);
-    elif inps in ['usgs']:
-        raw_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + Params[inps][chosen_ref_key];
-        raw_filename = raw_filename.replace('SUBNETWORK', sub_network);
-        filename = raw_filename.replace('????', station.lower());
-    elif inps in ['gldas', 'nldas', 'grace', 'lsdm', 'noah025']:
-        raw_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + Params["hydro"][inps+"_formatstring"]
-        filename = raw_filename.replace('????', station.lower());
+    # Path-setting Look-up Table
+    if inps == 'unr':
+        na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.NA.tenv3';
+        itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.IGS14.tenv3';
+    elif inps in ['cwu', 'pbo', 'nmt']:
+        na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_nam14.pos';
+        itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_igs14.pos';
+    elif inps == 'usgs':  # needs subnetwork
+        na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + sub_network + '/' + station.lower()+"_NAfixed.rneu";
+        itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + sub_network + '/' + station.lower() + "_ITRF2008.rneu";
+    elif inps == 'gldas':
+        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_noah10_gldas2.hyd'
+        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_noah10_gldas2.hyd'
+    elif inps == 'nldas':
+        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_noah125_nldas2.hyd'
+        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_noah125_nldas2.hyd'
+    elif inps == 'noah025':
+        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_NOAH025.hyd'
+        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_NOAH025.hyd'
+    elif inps == 'grace':
+        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + 'scaled_????_PREM_model_ts.txt'
+        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + 'scaled_????_PREM_model_ts.txt'
+    elif inps == 'lsdm':
+        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_LSDM_hydro.txt.txt'
+        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_LSDM_hydro.txt.txt'
     else:
         print("Error! Invalid input datasource %s" % inps);
         sys.exit(1);
 
+    # Return the right filename based on selected reference frame
+    if refframe == "NA":
+        final_filename = na_ts_filename;
+    elif refframe == "ITRF":
+        final_filename = itrf_ts_filename;
+    else:
+        final_filename = itrf_ts_filename;
+
     # Determine if the file is found on the computer or not. Provide helpful suggestions if not.
-    if os.path.isfile(filename):
-        print("Found file %s from datasource %s %s " % (filename, inps, sub_network));
+    if os.path.isfile(final_filename):
+        print("Found file %s from datasource %s %s " % (final_filename, inps, sub_network));
     # If the file is not found on the computer:
     else:
-        print("Error!  Cannot find %s in %s %s database." % (filename, inps, sub_network) );
+        print("Error!  Cannot find %s in %s %s database." % (final_filename, inps, sub_network) );
         if inps == 'usgs':
             print("The station %s could be found in the following sub_networks instead: " % station);
             query_usgs_network_name(station, Params["usgs"]["directory"]);
         print("Exiting immediately...");
         sys.exit(1);
-    return filename;
+    return final_filename, sub_network;
 
 
 def query_usgs_network_name(station, gps_ts_dir):
@@ -267,9 +285,9 @@ def search_pbo_offset_table(station, offset_dir, search_path):
     return table;
 
 
-def get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe):
-    # For antenna changes and other offsets
-    print("Offset table for station %s in %s :" % (station, refframe));
+def get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe, typekey='antenna/other'):
+    # For earthquakes, antenna changes, and other offsets
+    print(typekey, "table for station %s in %s :" % (station, refframe));
     USGS_offsets = [];
     offset_file = usgs_offsets_dir + sub_network + '/' + refframe + '_' + sub_network + '_offsets.txt';
     # Read the offset table
@@ -279,32 +297,12 @@ def get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe):
         table = [];
     if len(table) > 0:
         table = table.decode();  # needed when switching to python 3
-    [e_offsets, n_offsets, u_offsets, evdts] = parse_table_usgs(table, 'antenna/other');
+    [e_offsets, n_offsets, u_offsets, evdts] = parse_table_usgs(table, typekey);
     for i in range(len(e_offsets)):
         offi = offsets.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i], evdts=evdts[i]);
         USGS_offsets.append(offi);
     offsets.print_offset_object(USGS_offsets);
     return USGS_offsets;
-
-
-def get_usgs_earthquakes(station, usgs_offsets_dir, sub_network, refframe):
-    # For earthquake offsets
-    print("Earthquake table for station %s in %s :" % (station, refframe));
-    USGS_earthquakes = [];
-    offset_file = usgs_offsets_dir + sub_network + '/' + refframe + '_' + sub_network + '_offsets.txt';
-    # Read the offset table
-    try:
-        table = subprocess.check_output("grep " + station + " " + offset_file, shell=True);
-    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
-        table = [];
-    if len(table) > 0:
-        table = table.decode();  # needed when switching to python 3
-    [e_offsets, n_offsets, u_offsets, evdts] = parse_table_usgs(table, 'earthquake');
-    for i in range(len(e_offsets)):
-        offi = offsets.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i], evdts=evdts[i]);
-        USGS_earthquakes.append(offi);
-    offsets.print_offset_object(USGS_earthquakes);
-    return USGS_earthquakes;
 
 
 # TABLE INPUTS ---------------------------

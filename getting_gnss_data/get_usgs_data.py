@@ -111,7 +111,7 @@ def download_usgs_offset_tables(network, base_directory, outfile):
         print("Assuming they follow the pattern NAM, ITRF2008, Filtered");
 
         # NORTH AMERICA
-        nam_outfile = base_directory + "NAM_" + outfile;
+        nam_outfile = base_directory + "NA_" + outfile;
         one_outfile = open(nam_outfile, 'w');
         one_outfile.write("# USGS Offset File in NAM\n")
         one_outfile.write("# Downloaded from %s on %s\n" % (url, dt.datetime.now()));
