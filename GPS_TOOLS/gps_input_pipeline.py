@@ -130,9 +130,12 @@ def pre_screen_datasource_paths(Params, station, inps='pbo', refframe="NA", sub_
     if inps == 'unr':
         na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.NA.tenv3';
         itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.IGS14.tenv3';
-    elif inps in ['cwu', 'pbo', 'nmt']:
+    elif inps in ['cwu']:
         na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_nam14.pos';
         itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_igs14.pos';
+    elif inps in ['pbo', 'nmt']:
+        na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_nam08.pos';
+        itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_igs08.pos';
     elif inps == 'usgs':  # needs subnetwork
         na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + sub_network + '/' + station.lower()+"_NAfixed.rneu";
         itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + sub_network + '/' + station.lower() + "_ITRF2008.rneu";
