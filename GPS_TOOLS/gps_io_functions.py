@@ -26,17 +26,13 @@ Station_Vel_XYZ = collections.namedtuple("Station_Vel_XYZ", ['name',
 
 Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
                                                    'EQtimes']);  # in mm
-Params = collections.namedtuple("Params", ['general_gps_dir', 'pbo_gps_dir', 'unr_gps_dir', 'usgs_gps_dir',
-                                           'pbo_earthquakes_dir', 'pbo_offsets_dir', 'pbo_velocities',
-                                           'unr_offsets_file', 'unr_coords_file', 'unr_user_offsets_file',
-                                           'unr_velocities_nam', 'unr_velocities_itrf',
-                                           'usgs_vel_dir', 'usgs_networks', 'usgs_offsets_dir',
-                                           'usgs_cache_file',
-                                           'gldas_dir', 'nldas_dir', 'noah_dir', 'grace_dir',
-                                           'lsdm_dir', 'stl_dir', 'lakes_dir', 'blacklist']);
 
 
 def read_config_file(infile):
+    """
+    Reading system configuration into a dictionary of dictionaries.
+    Upper level keys are for each database: [unr, pbo, cwu, etc.]
+    """
     if not os.path.isfile(infile):
         print("Error! Data Config file %s not found on your machine. Must fix!" % infile);
         sys.exit(1);
@@ -45,38 +41,25 @@ def read_config_file(infile):
     config = configparser.ConfigParser()
     config.optionxform = str  # make the config file case-sensitive
     config.read(infile);
+    config_section = config["py-config"];
 
     # Create a default dictionary so we can tolerate a config file with less-complete fields
-    config_dictionary = config["py-config"];
     param_dict = collections.defaultdict(lambda: "Key Not Present In Config");
-    for key in config_dictionary.keys():
-        param_dict[key] = config_dictionary[key];
+    for key in config_section.keys():
+        param_dict[key] = config_section[key];
+        if 'config' in key:
+            database_name = key.split('_')[0];
+            one_dictionary = read_one_database_config(config_section[key], 'data-config');
+            param_dict[database_name] = one_dictionary;
+    return param_dict;
 
-    myParams = Params(general_gps_dir=param_dict["gps_data_dir"], 
-                      pbo_gps_dir=param_dict["pbo_gps_dir"], 
-                      unr_gps_dir=param_dict["unr_gps_dir"], 
-                      usgs_gps_dir=param_dict["usgs_gps_dir"],
-                      pbo_earthquakes_dir=param_dict["pbo_earthquakes_dir"], 
-                      pbo_offsets_dir=param_dict["pbo_offsets_dir"], 
-                      unr_offsets_file=param_dict["unr_offsets_file"],
-                      unr_user_offsets_file=param_dict["unr_user_offsets_file"],
-                      unr_coords_file=param_dict["unr_coords_file"],
-                      pbo_velocities=param_dict["pbo_velocities"], 
-                      unr_velocities_nam=param_dict["unr_velocities_nam"],
-                      unr_velocities_itrf=param_dict["unr_velocities_itrf"],
-                      usgs_vel_dir=param_dict["usgs_vel_dir"],
-                      usgs_networks=param_dict["usgs_network_list"], 
-                      usgs_cache_file=param_dict["usgs_cache_file"], 
-                      usgs_offsets_dir=param_dict["usgs_offsets_dir"],
-                      gldas_dir=param_dict["gldas_dir"], 
-                      nldas_dir=param_dict["nldas_dir"], 
-                      noah_dir=param_dict["noah_dir"],
-                      grace_dir=param_dict["grace_dir"], 
-                      lsdm_dir=param_dict["lsdm_dir"], 
-                      stl_dir=param_dict["stl_dir"],
-                      lakes_dir=param_dict["lakes_dir"],
-                      blacklist=param_dict["blacklist"]);
-    return myParams;
+
+def read_one_database_config(configfile, sectionname):
+    config = configparser.ConfigParser()
+    config.optionxform = str  # make the config file case-sensitive
+    config.read(configfile);
+    config_dictionary = dict(config[sectionname]);
+    return config_dictionary;
 
 
 def read_pbo_vel_file(infile):
@@ -100,8 +83,7 @@ def read_pbo_vel_file(infile):
             sn = float(temp[22]) * 1000.0;
             se = float(temp[23]) * 1000.0;
             su = float(temp[24]) * 1000.0;
-            t1 = temp[-2];
-            t2 = temp[-1];
+            t1, t2 = temp[-2], temp[-1];
             first_epoch = dt.datetime.strptime(t1[0:8], '%Y%m%d');
             last_epoch = dt.datetime.strptime(t2[0:8], '%Y%m%d');
             myStationVel = Station_Vel(name=name, elon=elon, nlat=nlat, e=e, n=n, u=u,

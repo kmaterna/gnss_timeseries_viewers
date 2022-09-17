@@ -1,6 +1,5 @@
 
 
-
 def check_lon_sanity(lon):
     """
     Make sure longitude is between -180 and +180
@@ -8,5 +7,5 @@ def check_lon_sanity(lon):
     if lon > 180:
         lon = lon - 360.0;
     if lon < -360:
-        lon = lon[0] - 360
+        lon = lon + 360;
     return lon;

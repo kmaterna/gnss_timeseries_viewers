@@ -1,9 +1,8 @@
 """A set of functions that take TimeSeries objects and return other TimeSeries objects"""
 
 import numpy as np
-import subprocess
 import datetime as dt
-import glob, os, sys
+import glob, os, sys, subprocess
 from . import gps_ts_functions, notch_filter, grace_ts_functions, gps_io_functions
 
 
@@ -38,28 +37,28 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file, 
             trend_out, trend_in = remove_seasonals_by_notch(Data);
 
         elif seasonals_type == 'grace':
-            trend_out, trend_in = remove_seasonals_by_GRACE(Data, Params.grace_dir);
+            trend_out, trend_in = remove_seasonals_by_GRACE(Data, Params['hydro']['grace_dir']);
 
         elif seasonals_type == 'stl':
-            trend_out, trend_in = remove_seasonals_by_STL(Data, Params.stl_dir);
+            trend_out, trend_in = remove_seasonals_by_STL(Data, Params['hydro']['stl_dir']);
 
         elif seasonals_type == 'nldas':
-            trend_out, trend_in = remove_seasonals_by_hydro(Data, Params.nldas_dir);
+            trend_out, trend_in = remove_seasonals_by_hydro(Data, Params['hydro']['nldas_dir']);
 
         elif seasonals_type == 'nldas_scaled':
-            trend_out, trend_in = remove_seasonals_by_hydro(Data, Params.nldas_dir, scaling=True);
+            trend_out, trend_in = remove_seasonals_by_hydro(Data, Params['hydro']['nldas_dir'], scaling=True);
 
         elif seasonals_type == 'gldas':
-            trend_out, trend_in = remove_seasonals_by_hydro(Data, Params.gldas_dir);
+            trend_out, trend_in = remove_seasonals_by_hydro(Data, Params['hydro']['gldas_dir']);
 
         elif seasonals_type == 'lsdm':
-            trend_out, trend_in = remove_seasonals_by_german_load(Data, Params.lsdm_dir);
+            trend_out, trend_in = remove_seasonals_by_german_load(Data, Params['hydro']['lsdm_dir']);
 
         elif seasonals_type == 'oroville':
-            trend_out, trend_in = remove_seasonals_by_lakes(Data, Params.lakes_dir, 'oroville');
+            trend_out, trend_in = remove_seasonals_by_lakes(Data, Params['hydro']['lakes_dir'], 'oroville');
 
         elif seasonals_type == 'shasta':
-            trend_out, trend_in = remove_seasonals_by_lakes(Data, Params.lakes_dir, 'shasta');
+            trend_out, trend_in = remove_seasonals_by_lakes(Data, Params['hydro']['lakes_dir'], 'shasta');
 
         else:
             print("Error: %s not supported as a seasonal removal type" % seasonals_type);
