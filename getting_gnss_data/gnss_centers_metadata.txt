@@ -25,20 +25,28 @@ pbo_offsets_dir: PBO offsets from antenna changes, etc.
 
 
 UNR DOWNLOAD: Velocities, Offsets, Data Holdings, and Data
-unr_gps_dir: Time series data from UNR
-	download all .tenv3 files in your region of interest and put them into this directory. 
-	source: http://geodesy.unr.edu/index.php
-unr_velocities:
-	Download velocity file and place it into this file
-	source: http://geodesy.unr.edu/velocities/midas.IGS14.txt
-	source: http://geodesy.unr.edu/velocities/midas.NA.txt
 unr_coords_file: 
-	Download coords file and place it into this file
+	Download coords file and place it into this file. Update the pointer in your config file. 
 	source: http://geodesy.unr.edu/NGLStationPages/DataHoldings.txt
 unr_offsets_dir: Directory for UNR offsets
 	Download steps file and place it into this directory
 	source: http://geodesy.unr.edu/NGLStationPages/steps.txt
-	I also save their website text as a readme. 	
+	I also saved their website text as a readme in 2018. 
+unr_velocities:
+	Manually download velocity file and place into this directory. Update datestamp, place #URL in first line. 
+	source: http://geodesy.unr.edu/velocities (not going to direct table URL because HTML formatting was weird)
+	I manually download midas.IGS14.txt and midas.NA.txt (the ones that are actively updated)
+unr_gps_dir: Time series data from UNR
+	download all .tenv3 files in your region of interest and put them into this directory. 
+	source: http://geodesy.unr.edu/index.php
+	Example: ```python /Users/kmaterna/Documents/B_Research/Github_Tools/GNSS_TimeSeries_Viewers/getting_gnss_data/get_unr_time_series.py ../Metadata/UNR_coords_sept2022.txt ```
+	Just downloading NA and IGS14, because NA12 processing is static after 2019. Takes about 1 hour for WUS. 
+
+
+USGS DOWNLOAD:
+Last downloaded September 17, 2022
+Takes about 2 hours. Run using the 'research' conda environment. 
+Run "get_usgs_data.py" script to download velocity, time series, and offset files from USGS. 
 
 
 HYDROLOGICAL MODELS DOWNLOAD:

@@ -48,7 +48,7 @@ Networks_ignored = ['Alaska',
 vel_base_directory = "Velocities/"   # where will velocity files live on the local machine? 
 ts_base_directory = "Time_Series/"   # where will time series files live on the local machine? 
 offsets_directory = "Offsets/"       # where will the offsets live on the local machine? 
-usgs_cache_file = "usgs_station_cache.txt"  # this cache file is necessary for storing coordinates and start/end times
+usgs_cache_file = "Metadata/usgs_station_cache.txt"  # cache file is necessary for storing coords and start/end times
 
 
 def download_usgs_velocity_tables(network, base_directory, outfile):

@@ -7,13 +7,15 @@ This library contains a set of tools to read GNSS time series and velocities, re
 ## Dependencies and Installation
 This library requires basic Python packages such as numpy and matplotlib. For full downloading functions, it requires a few other pip Python dependencies: pandas, html5lib, beautifulsoup4. For the "stations_within_radius" function, it also requires a file called 'haversine' that is located in my Utilities library (https://github.com/kmaterna/Tectonic_Utils), so please install that as welll (can be done through pip). For the mapping utility, I use the pygmt library based on GMT-6 (https://github.com/GenericMappingTools/pygmt). It's highly optional, but you can make an automatic map if you have it.  
 
-Please download, clone, or fork this library and put the parent directory storing "GNSS_TimeSeries_Viewers" on your $PYTHONPATH. The drivers in examples_and_configs provide some examples on how to access the major functions in this library.  I expect this library will work on Mac and Linux systems, but it hasn't been tested on Windows. 
+You can clone this library locallly and put the parent directory storing "GNSS_TimeSeries_Viewers" on your $PYTHONPATH. The drivers in examples_and_configs provide some examples on how to access the major functions in this library.  I expect this library will work on Mac and Linux systems, but it hasn't been tested on Windows. 
 
 
 ## Accessing Prerequisite GNSS Data
 This library requires a local copy of GNSS time series, velocities, steps, and/or hydrological loading models from various online repositories in their online-provided formats. The "getting_gnss_data/metadata.txt" file describes some of how to locate and download these files. The script 'getting_gnss_data/update_data_holdings.sh' now automates the download of all of the repositories locally, which might take a few hours (and ~10Gb) if you're downloading every time series from every processing center. 
 
-Once you have a local copy of desired GNSS products, you must create a file called data_config.txt that tells the library where all the data files are located on your system.  An example data_config.txt is provided in the "examples_and_configs"; please follow a similar template for your own system. The path to the data_config.txt file will be passed into the library each time you use it.  
+Once you have a local copy of desired GNSS products, you must create an overall ```config.txt``` that tells the library where all the databases are located on your system.  
+I create one overall config file (e.g., ```config.txt```, with absolute paths) for all databases, and one specific config file (e.g., ```unr_config.txt``` with relative paths) for each database that I've downloaded. 
+Examples for ```config.txt``` and ```unr_config.txt``` etc. are provided in the "examples_and_configs"; please follow a similar templates for your own system. The path to the ```config.txt``` file will be passed into the library each time you use it.  
 
 
 ## Contributing
@@ -45,7 +47,7 @@ From this library, one can:
 ### Example 1: How many stations within a region? 
 Using one function, we can figure out which stations in the PBO newtwork are within a certain radius or region. In this example, we read the PBO stations and return any within 100 km of a chosen coordinate. 
 ```bash
-(base) MacBook-Pro-2:example kmaterna$ example_driver_find_within_radius.py 
+(pygmt) MacBook-Pro-2:example kmaterna$ example_driver_find_within_radius.py 
 Reading /Users/kmaterna/Documents/GPS_POS_DATA/Velocity_Files/NAM08_pbovelfile_feb2018.txt
 Returning 26 stations that are within 100.000 km of center -122.0000, 40.0000
 ['ORVB', 'P270', 'P272', 'P333', 'P334', 'P335', 'P336', 'P337', 'P339', 'P341', 'P344', 'P345', 'P346', 
@@ -56,7 +58,7 @@ Returning 26 stations that are within 100.000 km of center -122.0000, 40.0000
 ### Example 2: Single GNSS Time Series
 As another example, we plot the PBO time series of P511, a station in Southern California with seasonal terms and antenna changes removed but earthquakes still left in. One possible usage of one driver is illustrated and its command-line outputs are shown. 
 ```bash
-(base) MacBook-Pro-2:example kmaterna$ example_driver_single_plot.py P511
+(pygmt) MacBook-Pro-2:example kmaterna$ example_driver_single_plot.py P511
 ------- P511 --------
 Viewing station P511, earthquakes_remove=0, outliers_remove=1, seasonals_remove=1, datasource=cwu, refframe=NA
 

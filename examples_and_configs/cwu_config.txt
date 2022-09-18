@@ -1,0 +1,7 @@
+[data-config]
+
+gps_ts_dir = Time_Series/
+offsets_dir = Offsets/
+earthquakes_dir = PBO_Event_Files/
+velocities_nam = Velocities/cwu.final_nam14.vel
+velocities_itrf = Velocities/cwu.final_igs14.vel
