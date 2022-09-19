@@ -1,10 +1,10 @@
 """ Profiles using pygmt """
-
+import gps_tools.gps_objects
 from Tectonic_Utils.geodesy import haversine, insar_vector_functions
 import numpy as np
 import pygmt
 import matplotlib.pyplot as plt
-from . import gps_vel_pygmt_plots, gps_io_functions
+from . import gps_vel_pygmt_plots
 
 
 def project_onto_perpendicular_profile(velfield, startcoord, endcoord, width, vel_azimuth=None,
@@ -44,8 +44,8 @@ def project_onto_perpendicular_profile(velfield, startcoord, endcoord, width, ve
     # Pack up the selected stations in the profile
     selected_stations = [];
     for i in range(len(retval[0])):
-        newstation = gps_io_functions.Station_Vel(name='', elon=retval[0][i], nlat=retval[1][i], e=retval[2][i],
-                                                  n=retval[3][i]);
+        newstation = gps_tools.gps_objects.Station_Vel(name='', elon=retval[0][i], nlat=retval[1][i], e=retval[2][i],
+                                                       n=retval[3][i]);
         selected_stations.append(newstation);
 
     select_east = np.array(retval[2]);   # first column = east velocity

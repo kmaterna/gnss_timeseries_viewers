@@ -10,8 +10,7 @@
 # Feature: verticals and horizontals at the same time, making two output plots
 # Feature: feed seasonal type as parameter, and include that in the output_file name
 # This lets us run several experiments.
-
-
+import gps_tools.file_io.io_other
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime as dt
@@ -268,7 +267,7 @@ def grace_configure(deltat1, deltat2, grace_dir, outfile_name):
 def grace_inputs(file_list):
     dataobj_list = [];
     for item in file_list:
-        grace_ts = gps_io_functions.read_grace(item);
+        grace_ts = gps_tools.file_io.io_other.read_grace(item);
         dataobj_list.append(grace_ts);
     return [dataobj_list];
 

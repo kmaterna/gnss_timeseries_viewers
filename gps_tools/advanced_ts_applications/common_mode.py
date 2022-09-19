@@ -2,8 +2,8 @@
 # We save that as a time series format
 # We plot the vertical time series with and without the common mode term. 
 # Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
-
-import numpy as np 
+import gps_tools.file_io.io_nota
+import numpy as np
 import matplotlib.pyplot as plt 
 import matplotlib
 import scipy.ndimage
@@ -209,7 +209,7 @@ def write_cm_object(common_mode, myparams):
 	filename=myparams.outdir+"/"+myparams.outname+"_common_mode.pos";
 	print("Writing common_mode into %s " % filename)
 	comment=myparams.stations;  # right now this is all stations, not just the ones that were used. 
-	gps_io_functions.write_pbo_pos_file(common_mode, filename, comment);
+	gps_tools.file_io.io_nota.write_pbo_pos_file(common_mode, filename, comment);
 	return;
 
 

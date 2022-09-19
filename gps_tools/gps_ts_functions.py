@@ -6,15 +6,15 @@ Contains functions to map, filter, and reduce generic GPS time series
 """
 
 import numpy as np
-import collections
 import datetime as dt
 from scipy import signal
 from . import lssq_model_errors
 from scipy.optimize import curve_fit
+from .gps_objects import Timeseries as Timeseries
 
-# A line for referencing the namedtuple definition. 
-Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
-                                                   'EQtimes']);  # in mm
+# # A line for referencing the namedtuple definition.
+# Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
+#                                                    'EQtimes']);  # in mm
 
 # -------------------------------------------- # 
 # FUNCTIONS THAT TAKE TIME SERIES OBJECTS # 

@@ -3,6 +3,8 @@
 
 import subprocess
 import datetime as dt
+
+import gps_tools.file_io.io_other
 from GNSS_TimeSeries_Viewers import gps_tools as gps_tools
 
 # CONFIG PARAMETERS FOR THIS EXPERIMENT #
@@ -27,7 +29,7 @@ def driver():
                                                              target_date=dt.datetime.strptime("20140310", "%Y%m%d"));
     gps_tools.gps_vel_pygmt_plots.simple_pygmt_plot(station_vectors, myparams["outdir"] + "/mtj_vector_map.png",
                                                     symsize=0.1, vector_scale_info=(0.5, 10, "10 mm"));
-    gps_tools.gps_io_functions.write_stationvel_file(station_vectors, myparams["outdir"] + '/mtj_vectors.txt',
+    gps_tools.file_io.io_other.write_stationvel_file(station_vectors, myparams["outdir"] + '/mtj_vectors.txt',
                                                      metadata='cwu_NA look-up table for 03-10-2014');
     return;
 

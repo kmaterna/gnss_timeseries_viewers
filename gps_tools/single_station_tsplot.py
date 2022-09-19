@@ -6,10 +6,10 @@ Types of seasonal options:
   grace: uses GRACE loading model interpolated between monthly points where available, and linear inversion where not.
     stl: uses a pre-computed look-up table for STL time series.
 """
-
+import gps_tools.gps_objects
 import matplotlib.pyplot as plt
 import collections
-from . import gps_ts_functions, gps_seasonal_removals, offsets, gps_io_functions, gps_input_pipeline
+from . import gps_ts_functions, gps_seasonal_removals, offsets, gps_input_pipeline
 
 # Parameters for controlling plotting
 Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove', 'outliers_def',
@@ -71,9 +71,9 @@ def input_data(st_name, datasource, refframe, data_config_file):
     [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(st_name, datasource, data_config_file, refframe);
     eqdates = [x.evdts for x in eq_obj];
     # First, we embed the data with the eq object metadata (always useful)
-    myData = gps_io_functions.Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray, dN=myData.dN,
-                                         dE=myData.dE, dU=myData.dU, Sn=myData.Sn, Se=myData.Se, Su=myData.Su,
-                                         EQtimes=eqdates);
+    myData = gps_tools.gps_objects.Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray,
+                                              dN=myData.dN, dE=myData.dE, dU=myData.dU, Sn=myData.Sn, Se=myData.Se,
+                                              Su=myData.Su, EQtimes=eqdates);
     return [myData, offset_obj, eq_obj];
 
 

@@ -1,6 +1,6 @@
 # Remove data during ETS times
-# Estimate offsets during those times. 
-
+# Estimate offsets during those times.
+import gps_tools.gps_objects
 import numpy as np
 import matplotlib.pyplot as plt 
 import collections
@@ -113,7 +113,7 @@ def remove_characteristic_ETS(ts_obj,ets_intervals):
 	# for i in range(len(evdts)):  # A nice sanity check
 		# print(str(evdts[i])+" %f" % (n_offsets[i]) );
 	# --> This is not refactored yet for lists of offsets. Will break.
-	offset_obj = offsets.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	offset_obj = gps_tools.gps_objects.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	ts_obj_fix = offsets.remove_offsets(ts_obj_gaps,offset_obj);
 	ts_obj_new=Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=ts_obj_fix.dtarray, dE=ts_obj_fix.dE, dN=ts_obj_fix.dN, dU=ts_obj_fix.dU, Se=ts_obj_fix.Se, Sn=ts_obj_fix.Sn, Su=ts_obj_fix.Su, EQtimes=ts_obj_fix.EQtimes);
 	return ts_obj_new;
@@ -155,7 +155,7 @@ def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
 	# for i in range(len(evdts)):  # A nice sanity check
 		# print(str(evdts[i])+" %f" % (n_offsets[i]) );
 	# --> This is not refactored yet for lists of offsets. Will break.
-	offset_obj = offsets.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
+	offset_obj = gps_tools.gps_objects.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets, evdts=evdts);
 	# print("Mean east offset: %.3f mm" % (np.mean(e_offsets) ));
 	# print("Mean north offset: %.3f mm" % (np.mean(n_offsets) ));
 	# print("Mean vert offset: %.3f mm" % (np.mean(u_offsets) ));

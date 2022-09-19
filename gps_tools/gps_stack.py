@@ -6,11 +6,10 @@ Viewing a stack of stations
   Step 4: Plot in order of increasing latitude, colored by how close they are to the central point
 """
 
-import numpy as np
 import subprocess
-from . import gps_input_pipeline, gps_io_functions, gps_ts_functions, gps_seasonal_removals, stations_within_radius, \
-    offsets
+from . import gps_input_pipeline, gps_ts_functions, gps_seasonal_removals, stations_within_radius, offsets
 from . import outputs_gps_stacks as out_stack
+from file_io import config_io, io_other
 
 
 def driver(data_config_file, expname, center, radius, proc_center, refframe, outdir, must_include=(None, None)):
@@ -39,10 +38,8 @@ def configure(data_config_file, expname, center, radius, proc_center, refframe, 
     # Set up the stacking process
     stations, lons, lats, distances = stations_within_radius.get_stations_within_radius(data_config_file, center,
                                                                                         radius, network=proc_center);
-    data_config = gps_io_functions.read_config_file(data_config_file);
-    blacklist = np.loadtxt(data_config["blacklist"], unpack=False, usecols=(0),
-                           dtype={'names': ('name',), 'formats': ('U4',)});
-    blacklist = [i[0] for i in blacklist];
+    data_config = config_io.read_config_file(data_config_file);
+    blacklist = io_other.read_blacklist(data_config["blacklist"]);
     subprocess.call(["mkdir", "-p", outdir], shell=False);
     outname = expname + "_" + str(center[0]) + "_" + str(center[1]) + "_" + str(radius)
     myparams = out_stack.StackParams(expname=expname, proc_center=proc_center, refframe=refframe, center=center,

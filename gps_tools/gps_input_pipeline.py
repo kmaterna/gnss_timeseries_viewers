@@ -2,7 +2,9 @@
 
 import subprocess, sys, os, glob
 import datetime as dt
-from . import gps_io_functions, offsets
+from gps_tools.file_io import io_magnet_unr, io_nota, io_other, io_usgs, config_io
+import gps_tools.gps_objects
+from . import offsets
 
 
 # Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su',
@@ -54,7 +56,7 @@ def get_station_data(station, datasource, data_config_file, refframe="NA", sub_n
     Function to access the time-series reading library.
     refframe choices are NA and ITRF.
     """
-    Params = gps_io_functions.read_config_file(data_config_file);
+    Params = config_io.read_config_file(data_config_file);
     filename, sub_network = pre_screen_datasource_paths(Params, station, datasource, refframe, sub_network);
 
     if datasource == 'unr':
@@ -76,7 +78,8 @@ def get_station_data(station, datasource, data_config_file, refframe="NA", sub_n
 
 
 def get_unr(Params, filename):
-    [myData] = gps_io_functions.read_UNR_magnet_ts_file(filename, Params["unr"]["directory"]+Params["unr"]["coords_file"]);
+    [myData] = io_magnet_unr.read_UNR_magnet_ts_file(filename, Params["unr"]["directory"] +
+                                                     Params["unr"]["coords_file"]);
     Offsets = get_unr_offsets(myData, Params["unr"]["directory"]+Params["unr"]["offsets_file"],
                               Params["unr"]["directory"]+Params["unr"]["user_offsets_file"]);
     Earthquakes = get_unr_earthquakes(myData, Params["unr"]["directory"]+Params["unr"]["offsets_file"],
@@ -84,13 +87,13 @@ def get_unr(Params, filename):
     return [myData, Offsets, Earthquakes];
 
 def get_pbo_type(Params, pbo_filename, station, database):
-    [myData] = gps_io_functions.read_pbo_pos_file(pbo_filename);  # PBO data format
+    [myData] = io_nota.read_pbo_pos_file(pbo_filename);  # PBO data format
     Offsets = get_pbo_offsets(station, Params[database]["directory"]+Params[database]["offsets_dir"]);
     Earthquakes = get_pbo_earthquakes(station, Params[database]["directory"]+Params[database]["earthquakes_dir"]);
     return [myData, Offsets, Earthquakes];
 
 def get_usgs(Params, filename, station, refframe, sub_network):
-    [myData] = gps_io_functions.read_USGS_ts_file(filename);
+    [myData] = io_usgs.read_USGS_ts_file(filename);
     usgs_offsets_dir = Params['usgs']['directory'] + Params['usgs']['offsets_dir'];
     Offsets = get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe, typekey='antenna/other');
     Earthquakes = get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe, typekey='earthquake');
@@ -98,15 +101,15 @@ def get_usgs(Params, filename, station, refframe, sub_network):
 
 def get_gldas(Params, filename):
     coords_file = Params["unr"]["directory"]+Params["unr"]["coords_file"];
-    [myData] = gps_io_functions.read_pbo_hydro_file(filename, coords_file);
+    [myData] = io_nota.read_pbo_hydro_file(filename, coords_file);
     return [myData, [], []];
 
 def get_grace(filename):
-    [myData] = gps_io_functions.read_grace(filename);
+    [myData] = io_other.read_grace(filename);
     return [myData, [], []];
 
 def get_lsdm(filename):
-    [myData] = gps_io_functions.read_lsdm_file(filename);
+    [myData] = io_other.read_lsdm_file(filename);
     return [myData, [], []];
 
 
@@ -197,9 +200,9 @@ def query_usgs_network_name(station, gps_ts_dir):
 
 
 def remove_blacklist(data_config_file, stations):
-    Params = gps_io_functions.read_config_file(data_config_file);
+    Params = config_io.read_config_file(data_config_file);
     new_stations = [];
-    blacklisted_stations = gps_io_functions.read_blacklist(Params["blacklist"]);
+    blacklisted_stations = io_other.read_blacklist(Params["blacklist"]);
     for station in stations:
         if not (station in blacklisted_stations):
             new_stations.append(station);
@@ -250,7 +253,8 @@ def get_pbo_offsets(station, offsets_dir):
     table = search_pbo_offset_table(station, offsets_dir, "cwu*.off")  # Read the offset table
     [e_offsets, n_offsets, u_offsets, evdts] = parse_antenna_table_pbo(table);
     for i in range(len(e_offsets)):
-        offi = offsets.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i], evdts=evdts[i]);
+        offi = gps_tools.gps_objects.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i],
+                                             evdts=evdts[i]);
         PBO_offsets.append(offi);
     return PBO_offsets;
 
@@ -261,7 +265,8 @@ def get_pbo_earthquakes(station, earthquakes_dir):
     table = search_pbo_offset_table(station, earthquakes_dir, "pbo*kalts.evt")  # Read the events table
     [e_offsets, n_offsets, u_offsets, evdts] = parse_earthquake_table_pbo(table);
     for i in range(len(e_offsets)):
-        offi = offsets.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i], evdts=evdts[i]);
+        offi = gps_tools.gps_objects.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i],
+                                             evdts=evdts[i]);
         PBO_earthquakes.append(offi);
     return PBO_earthquakes;
 
@@ -272,7 +277,8 @@ def get_cwu_earthquakes(station, earthquakes_dir):
     table = search_pbo_offset_table(station, earthquakes_dir, "cwu*kalts.evt")  # Read the events table
     [e_offsets, n_offsets, u_offsets, evdts] = parse_earthquake_table_pbo(table);
     for i in range(len(e_offsets)):
-        offi = offsets.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i], evdts=evdts[i]);
+        offi = gps_tools.gps_objects.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i],
+                                             evdts=evdts[i]);
         CWU_earthquakes.append(offi);
     return CWU_earthquakes;
 
@@ -302,7 +308,8 @@ def get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe, typekey='
         table = table.decode();  # needed when switching to python 3
     [e_offsets, n_offsets, u_offsets, evdts] = parse_table_usgs(table, typekey);
     for i in range(len(e_offsets)):
-        offi = offsets.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i], evdts=evdts[i]);
+        offi = gps_tools.gps_objects.Offsets(e_offsets=e_offsets[i], n_offsets=n_offsets[i], u_offsets=u_offsets[i],
+                                             evdts=evdts[i]);
         USGS_offsets.append(offi);
     offsets.print_offset_object(USGS_offsets);
     return USGS_offsets;

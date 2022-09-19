@@ -1,14 +1,9 @@
 """
 Toolbox that operates on Timeseries objects to deal with antenna offsets and earthquake offsets.
 """
-
+import gps_tools.gps_objects
 import numpy as np
-import collections
 import datetime as dt
-from . import gps_io_functions
-
-# The namedtuple definition.  Offsets should be in mm. One object per offset
-Offsets = collections.namedtuple("Offsets", ['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
 
 
 def remove_offsets(Data0, offsets_obj):
@@ -35,8 +30,9 @@ def remove_offsets(Data0, offsets_obj):
         newN.append(tempN);
         newU.append(tempU);
 
-    newData = gps_io_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN, dE=newE,
-                                          dU=newU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+    newData = gps_tools.gps_objects.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN,
+                                               dE=newE,
+                                               dU=newU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
     return newData;
 
 
@@ -84,18 +80,18 @@ def solve_for_offsets(ts_object, offset_times, num_days=10):
         e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [offset_times[i], offset_times[i]], num_days);
         n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [offset_times[i], offset_times[i]], num_days);
         u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [offset_times[i], offset_times[i]], num_days);
-        newobj = Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=offset_times[i]);
+        newobj = gps_tools.gps_objects.Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset,
+                                               evdts=offset_times[i]);
         Offset_obj.append(newobj);
     return Offset_obj;
 
 
 def filter_offset_list_to_date(offset_list, date_of_interest):
     """Filter a list of possible offsets to only the offset on a particular day of interest."""
-    retained_offset = Offsets(e_offsets=None, n_offsets=None, u_offsets=None, evdts=None);
     for item in offset_list:
         if item.evdts == date_of_interest:
-            retained_offset = item
-    return retained_offset;
+            return item;
+    return None;
 
 
 def offset_to_vel_object(offset_obj_list, ts_obj_list, refframe, proccenter, subnetwork=None, survey=False,
@@ -113,14 +109,14 @@ def offset_to_vel_object(offset_obj_list, ts_obj_list, refframe, proccenter, sub
         for i in range(len(offset_obj_list)):
             offseti = filter_offset_list_to_date(offset_obj_list[i], target_date);
             tsi = ts_obj_list[i];
-            if offseti.e_offsets is not None:
-                newobj = gps_io_functions.Station_Vel(name=tsi.name, nlat=tsi.coords[1], elon=tsi.coords[0],
-                                                      n=offseti.n_offsets, e=offseti.e_offsets, u=offseti.u_offsets,
-                                                      sn=0, se=0, su=0,
-                                                      first_epoch=target_date, last_epoch=target_date,
-                                                      refframe=refframe,
-                                                      proccenter=proccenter, subnetwork=subnetwork, survey=survey,
-                                                      meas_type=offset_type);
+            if offseti is not None:
+                newobj = gps_tools.gps_objects.Station_Vel(name=tsi.name, nlat=tsi.coords[1], elon=tsi.coords[0],
+                                                           n=offseti.n_offsets, e=offseti.e_offsets,
+                                                           u=offseti.u_offsets, sn=0, se=0, su=0,
+                                                           first_epoch=target_date, last_epoch=target_date,
+                                                           refframe=refframe,
+                                                           proccenter=proccenter, subnetwork=subnetwork, survey=survey,
+                                                           meas_type=offset_type);
                 offsetpts.append(newobj);
         print("Found %d look-up-table offsets, %s" % (len(offsetpts), dt.datetime.strftime(target_date, "%Y-%m-%d")));
 
@@ -133,13 +129,13 @@ def offset_to_vel_object(offset_obj_list, ts_obj_list, refframe, proccenter, sub
             e_offset = fit_single_offset(tsi.dtarray, tsi.dE, [first_epoch, last_epoch], offset_num_days=7);
             n_offset = fit_single_offset(tsi.dtarray, tsi.dN, [first_epoch, last_epoch], offset_num_days=7);
             u_offset = fit_single_offset(tsi.dtarray, tsi.dU, [first_epoch, last_epoch], offset_num_days=7);
-            newobj = gps_io_functions.Station_Vel(name=tsi.name, nlat=tsi.coords[1], elon=tsi.coords[0],
-                                                  n=n_offset, e=e_offset, u=u_offset,
-                                                  sn=0, se=0, su=0,
-                                                  first_epoch=first_epoch, last_epoch=last_epoch,
-                                                  refframe=refframe,
-                                                  proccenter=proccenter, subnetwork=subnetwork, survey=survey,
-                                                  meas_type=offset_type);
+            newobj = gps_tools.gps_objects.Station_Vel(name=tsi.name, nlat=tsi.coords[1], elon=tsi.coords[0],
+                                                       n=n_offset, e=e_offset, u=u_offset,
+                                                       sn=0, se=0, su=0,
+                                                       first_epoch=first_epoch, last_epoch=last_epoch,
+                                                       refframe=refframe,
+                                                       proccenter=proccenter, subnetwork=subnetwork, survey=survey,
+                                                       meas_type=offset_type);
             offsetpts.append(newobj);
         print("Solved %d offsets around %s" % (len(offsetpts), dt.datetime.strftime(first_epoch, "%Y-%m-%d")));
     return offsetpts;
