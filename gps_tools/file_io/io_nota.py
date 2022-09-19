@@ -3,17 +3,17 @@
 File to read and write data from Network of the Americas / Plate Boundary Observatory formats
 """
 import datetime as dt
-
+import subprocess
 import numpy as np
 from gps_tools import utilities
 from gps_tools.file_io.io_magnet_unr import get_coordinates_for_unr_stations
-from gps_tools.gps_objects import Station_Vel, Timeseries
+from gps_tools.gps_objects import Station_Vel, Timeseries, Offsets
 
 
 def read_pbo_vel_file(infile):
     """
-    Read velocity files from the PBO/UNAVCO website.
-    Returns a list of station_vel objects.
+    :param infile: string, velocity file from the PBO/UNAVCO/NOTA website
+    :returns: list of Station_Vel objects
     """
     myVelfield = [];
     print("Reading %s" % infile);
@@ -42,14 +42,15 @@ def read_pbo_vel_file(infile):
             start = 1;
 
     ifile.close();
-    return [myVelfield];
+    return myVelfield;
 
 
 def read_pbo_vel_file_format(infile):
-    """
-    Read velocity files from the PBO/UNAVCO website.
-    Returns a list of station_vel objects.
+    """.
     Splits the lines by character, like Fortran style
+
+    :param infile: string, velocity file from the PBO/UNAVCO/NOTA website
+    :returns: list of Station_Vel objects
     """
     myVelfield = [];
     print("Reading %s" % infile);
@@ -80,13 +81,16 @@ def read_pbo_vel_file_format(infile):
             start = 1;
 
     ifile.close();
-    return [myVelfield];
+    return myVelfield;
 
 
 def read_gamit_velfile(infile):
     """
     Read a velocity file for example from GAMIT processing
     A simpler format than the PBO (only 13 fields), without starttime and stoptime information.
+
+    :param infile: string, velocity file from GAMIT processing
+    :returns: list of Station_Vel objects
     """
     myVelfield = [];
     print("Reading %s" % infile);
@@ -109,10 +113,14 @@ def read_gamit_velfile(infile):
                                        proccenter='gamit', subnetwork='', refframe='ITRF', survey=0, meas_type='gnss');
             myVelfield.append(myStationVel);
     ifile.close();
-    return [myVelfield];
+    return myVelfield;
 
 
 def read_pbo_pos_file(filename):
+    """
+    :param filename: string, name of .pos file
+    :returns: TimeSeries object
+    """
     print("Reading %s" % filename);
     [yyyymmdd, Nlat, Elong, dN, dE, dU, Sn, Se, Su] = np.loadtxt(filename, skiprows=37, unpack=True,
                                                                  usecols=(0, 12, 13, 15, 16, 17, 18, 19, 20));
@@ -130,17 +138,21 @@ def read_pbo_pos_file(filename):
     print("Reading data for station %s in time range %s:%s" % (
         myData.name, dt.datetime.strftime(myData.dtarray[0], "%Y-%m-%d"),
         dt.datetime.strftime(myData.dtarray[-1], "%Y-%m-%d")));
-    return [myData];
+    return myData;
 
 
 def read_pbo_hydro_file(filename, coords_file=None):
     """
-    Read hydrology files like NLDAS, GLDAS, etc.
-    In the normal pipeline for this function, it is guaranteed to be given a real file.
+    Read hydrology files like NLDAS, GLDAS, etc. In normal pipeline, it is guaranteed to be given a real file.
+    Optional: to look up the coordinates of this station, then provide the name of a UNR-style metadata file.
+
+    :param filename: string, name of file
+    :param coords_file: optional, string, file where you can look up the station's coordinates
+    :returns: TimeSeries object
     """
     print("Reading %s" % filename);
     dtarray = [];
-    station_name = filename.split('/')[-1][0:4];
+    station_name = filename.split('/')[-1][0:4];  # first 4 characters of filename
     station_name = station_name.upper();
     if coords_file is not None:
         [lon, lat] = get_coordinates_for_unr_stations([station_name], coords_file);  # format [lat, lon]
@@ -158,13 +170,17 @@ def read_pbo_hydro_file(filename, coords_file=None):
 
     myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
                         EQtimes=[]);
-    return [myData];
+    return myData;
 
 
 def write_pbo_pos_file(ts_object, filename, comment=""):
     """
     Useful for writing common mode objects, etc.
     Opposite of read_pbo_pos_file(filename)
+
+    :param ts_object: a TimeSeries object
+    :param filename: string, name of pos file to be written
+    :param comment: string, used for a header
     """
     print("Writing pbo-posfile %s" % filename);
     ofile = open(filename, 'w');
@@ -185,7 +201,8 @@ def write_pbo_pos_file(ts_object, filename, comment=""):
 def restrict_pbo_vel_file(infile, outfile, coord_box):
     """
     Copying format of pbo velocities, let's make a restricted dataset.
-    In the ideal case, this should probably be multiple functions (READ, FILTER, WRITE), or possibly not exist.
+    In the ideal case, this function should be multiple functions (READ, FILTER, WRITE), or possibly not exist.
+    It strikes me as a little lazy.
     """
     ifile = open(infile, 'r');
     ofile = open(outfile, 'w');
@@ -205,3 +222,72 @@ def restrict_pbo_vel_file(infile, outfile, coord_box):
     ifile.close();
     ofile.close();
     return;
+
+
+def parse_earthquake_table_pbo(table):
+    """
+    Separate a table (from a grep result) into lists of Earthquake Offsets for PBO/NOTA
+
+    :param table: string, block of text
+    :return: list of Offset objects
+    """
+    offset_list = [];
+    if len(table) == 0:
+        return [];
+    tablesplit = table.split('\n');
+    for item in tablesplit:  # for each earthquake
+        if len(item) == 0:
+            continue;  # if we're at the end, move on.
+        words = item.split();
+        filename = words[0];
+        e_offset, n_offset, u_offset = float(words[3]), float(words[4]), float(words[8]);  # in mm
+        evdate = filename.split('/')[-1];
+        evdate = evdate[4:10];
+        year = evdate[0:2];
+        month = evdate[2:4];
+        day = evdate[4:6];
+        year = "20" + year;
+        evdt = dt.datetime.strptime(year + month + day, "%Y%m%d");
+        offi = Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=evdt);
+        offset_list.append(offi);
+    return offset_list;
+
+
+def parse_antenna_table_pbo(table):
+    """
+    Separate a table (from a grep result) into lists of antenna and maintenance Offsets for PBO/NOTA
+
+    :param table: string, block of text
+    :return: list of Offset objects
+    """
+    offset_list = [];
+    if len(table) == 0:
+        return [];
+    table_rows = table.split('\n');
+    for line in table_rows:
+        if "EQ" in line:
+            continue;
+        else:
+            print(line);
+        if len(line) == 0:
+            continue;  # if we're at the end, move on.
+        words = line.split();
+        yyyy, mm, dd = words[1], words[2], words[3];
+        e_offset = float(words[8]);  # in mm
+        n_offset = float(words[6]);
+        u_offset = float(words[10]);
+        evdt = dt.datetime.strptime(yyyy + mm + dd, "%Y%m%d");
+        offi = Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=evdt);
+        offset_list.append(offi);
+    return offset_list;
+
+
+def search_files_for_nota_offsets(station_name, offset_dir, file_pattern):
+    """Grep offsets table from the files in PBO/NOTA. File Pattern is something like cwu*kalts.evt  """
+    try:
+        table = subprocess.check_output("grep " + station_name + " " + offset_dir + file_pattern, shell=True);
+    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
+        table = [];
+    if len(table) > 0:
+        table = table.decode();  # needed when switching to python 3
+    return table;

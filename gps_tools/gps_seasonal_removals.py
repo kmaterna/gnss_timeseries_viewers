@@ -295,7 +295,7 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
         filename = files[0];
 
     # Read the hydro model and pair it to the GPS
-    [hydro_data] = io_nota.read_pbo_hydro_file(filename);
+    hydro_data = io_nota.read_pbo_hydro_file(filename);
 
     # Clean up and pair data
     Data = gps_ts_functions.remove_nans(Data);
@@ -362,7 +362,7 @@ def remove_seasonals_by_german_load(Data, lsdm_dir):
         filename = files[0];
 
     # Read the hydro model and pair it to the GPS
-    [hydro_data] = io_other.read_lsdm_file(filename);
+    hydro_data = io_other.read_lsdm_file(filename);
 
     # Clean up and pair data
     Data = gps_ts_functions.remove_nans(Data);
@@ -476,7 +476,7 @@ def remove_seasonals_by_GRACE(Data, grace_dir):
 
     # If the station has been pre-computed with GRACE:
     Data = gps_ts_functions.remove_nans(Data);
-    [grace_model] = io_other.read_grace(filename);
+    grace_model = io_other.read_grace(filename);
     my_paired_ts = grace_ts_functions.pair_GPSGRACE(Data, grace_model);
     decyear = gps_ts_functions.get_float_times(my_paired_ts.dtarray);
 

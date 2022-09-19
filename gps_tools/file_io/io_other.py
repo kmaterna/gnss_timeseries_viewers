@@ -3,7 +3,6 @@
 File to read and write data from miscellaneous formats
 """
 import datetime as dt
-
 import numpy as np
 from gps_tools import gps_objects
 from gps_tools.file_io.io_magnet_unr import get_coordinates_for_unr_stations
@@ -13,7 +12,11 @@ from gps_tools.gps_objects import Timeseries, Station_Vel
 def read_lsdm_file(filename, coords_file=None):
     """
     Read hydrology files from LSDM German loading product
-    In the normal pipeline for this function, it is guaranteed to be given a real file.
+    Optional: to look up the coordinates of this station, then provide the name of a UNR-style metadata file.
+
+    :param filename: string, name of file
+    :param coords_file: optional, string, file where you can look up the station's coordinates
+    :returns: TimeSeries object
     """
     print("Reading %s" % filename);
     dtarray = [];
@@ -37,12 +40,15 @@ def read_lsdm_file(filename, coords_file=None):
     Su = 0.2 * np.ones(np.shape(dU));
     myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
                         EQtimes=[]);
-    return [myData];
+    return myData;
 
 
 def read_grace(filename):
     """
     Read GRACE model into a GPS-style time series object.
+
+    :param filename: string, name of file
+    :returns: TimeSeries object
     """
     print("Reading %s" % filename);
     station_name = filename.split('/')[-1];  # this is the local name of the file
@@ -59,13 +65,16 @@ def read_grace(filename):
     S = np.zeros(np.shape(u));
     GRACE_TS = Timeseries(name=station_name, coords=[lon[0], lat[0]], dtarray=grace_t, dE=u, dN=v, dU=w, Se=S, Sn=S,
                           Su=S, EQtimes=[]);
-    return [GRACE_TS];
+    return GRACE_TS;
 
 
 def read_humanread_vel_file(infile):
     """
     Reading velfield file with format:
     lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
+
+    :param infile: string, filename
+    :returns: list of StationVel objects
     """
     myVelfield = [];
     print("Reading %s" % infile);
@@ -81,10 +90,14 @@ def read_humanread_vel_file(infile):
                                   proccenter='', subnetwork='', survey=False, meas_type='gnss');
         myVelfield.append(new_station);
     ifile.close();
-    return [myVelfield];
+    return myVelfield;
 
 
 def write_humanread_vel_file(myVelfield, outfile):
+    """
+    :param myVelfield: list of StationVel objects
+    :param outfile: string, filename
+    """
     print("writing human-readable velfile %s" % outfile);
     ofile = open(outfile, 'w');
     ofile.write(
@@ -100,6 +113,11 @@ def write_humanread_vel_file(myVelfield, outfile):
 
 
 def write_stationvel_file(myVelfield, outfile, metadata=None):
+    """
+    :param myVelfield: list of StationVel objects
+    :param outfile: string, filename
+    :param metadata: string, optional, used for header
+    """
     print("writing human-readable velfile in station-vel format, %s" % outfile);
     ofile = open(outfile, 'w');
     ofile.write(
@@ -115,6 +133,10 @@ def write_stationvel_file(myVelfield, outfile, metadata=None):
 
 
 def write_gmt_velfile(myVelfield, outfile):
+    """
+    :param myVelfield: list of StationVel objects
+    :param outfile: string, filename
+    """
     print("Writing gmt velfile %s" % outfile);
     ofile = open(outfile, 'w');
     ofile.write("# Format: lon(deg) lat(deg) e(mm) n(mm) Se(mm) Sn(mm) 0 0 1 name\n");
@@ -127,6 +149,11 @@ def write_gmt_velfile(myVelfield, outfile):
 
 
 def read_blacklist(blacklist_file):
+    """
+    :param blacklist_file: string, filename
+    :return: list of strings
+    """
+    print("Reading blacklist file %s " % blacklist_file)
     with open(blacklist_file, "r") as f:
         blacklist = []
         blacklist_all = f.readlines()
@@ -136,6 +163,10 @@ def read_blacklist(blacklist_file):
 
 
 def read_lake_loading_ts(infile):
+    """
+    :param infile: string, filename
+    :returns: a TimeSeries object
+    """
     [dtstrings, u, v, w] = np.loadtxt(infile, usecols=(0, 4, 5, 6), unpack=True, dtype={
         'names': ('d', 'u', 'v', 'w'), 'formats': ('U10', np.float, np.float, np.float)});
     dtarray = [dt.datetime.strptime(x, "%Y-%m-%d") for x in dtstrings];

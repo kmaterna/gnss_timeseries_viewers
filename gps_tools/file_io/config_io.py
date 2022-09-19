@@ -12,6 +12,9 @@ def read_config_file(infile):
     """
     Reading system configuration into a dictionary of dictionaries.
     Upper level keys are for each database: [unr, pbo, cwu, etc.]
+
+    :param infile: string, filename
+    :returns: dictionary, which may contain other dictionaries
     """
     if not os.path.isfile(infile):
         print("Error! Data Config file %s not found on your machine. Must fix!" % infile);
@@ -36,10 +39,13 @@ def read_config_file(infile):
 
 
 def read_one_database_config(configfile, sectionname):
+    """
+    :param configfile: string, filename
+    :param sectionname: string
+    :returns: dictionary, representing one database
+    """
     config = configparser.ConfigParser()
     config.optionxform = str  # make the config file case-sensitive
     config.read(configfile);
     config_dictionary = dict(config[sectionname]);
     return config_dictionary;
-
-

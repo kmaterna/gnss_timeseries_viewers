@@ -9,15 +9,15 @@ def import_velfield(gps_config_file, network='pbo', refframe='ITRF', sub_network
     Params = config_io.read_config_file(gps_config_file);
     lookup_dict = build_lookup_dictionary(Params, network, sub_network);   # build a tranche of filenames
     if network == 'pbo':
-        [myVelocities] = io_nota.read_pbo_vel_file(lookup_dict["pbo_" + refframe]);
+        myVelocities = io_nota.read_pbo_vel_file(lookup_dict["pbo_" + refframe]);
     elif network == 'cwu':
-        [myVelocities] = io_nota.read_pbo_vel_file_format(lookup_dict["cwu_" + refframe]);
+        myVelocities = io_nota.read_pbo_vel_file_format(lookup_dict["cwu_" + refframe]);
     elif network == 'unr':
-        [myVelocities] = io_magnet_unr.read_unr_vel_file(lookup_dict["unr_" + refframe], Params["unr"]["directory"] +
-                                                         Params["unr"]["coords_file"]);
+        myVelocities = io_magnet_unr.read_unr_vel_file(lookup_dict["unr_" + refframe], Params["unr"]["directory"] +
+                                                       Params["unr"]["coords_file"]);
     elif network == 'usgs':
-        [myVelocities] = io_usgs.read_usgs_velfile(lookup_dict["usgs_" + refframe], Params["usgs"]["directory"] +
-                                                   Params["usgs"]["cache_file"]);
+        myVelocities = io_usgs.read_usgs_velfile(lookup_dict["usgs_" + refframe], Params["usgs"]["directory"] +
+                                                 Params["usgs"]["cache_file"]);
     else:
         print("Error! Invalid choice of network [pick one of pbo/cwu/unr/usgs]");
         sys.exit(0);

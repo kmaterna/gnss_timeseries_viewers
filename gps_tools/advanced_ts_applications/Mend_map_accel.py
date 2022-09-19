@@ -11,6 +11,7 @@
 # Feature: feed seasonal type as parameter, and include that in the output_file name
 # This lets us run several experiments.
 import gps_tools.file_io.io_other
+import gps_tools.utilities
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime as dt
@@ -65,7 +66,7 @@ def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=
         else:
             stations, _, _, _ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords,
                                                                                   network);
-        stations = gps_input_pipeline.remove_blacklist(stations);
+        stations = gps_tools.utilities.remove_blacklist(stations);
 
     return [stations, outdir, time_after_start_date, critical_variance];
 
