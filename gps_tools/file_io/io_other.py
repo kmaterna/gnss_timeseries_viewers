@@ -4,9 +4,8 @@ File to read and write data from miscellaneous formats
 """
 import datetime as dt
 import numpy as np
-from gps_tools import gps_objects
-from gps_tools.file_io.io_magnet_unr import get_coordinates_for_unr_stations
-from gps_tools.gps_objects import Timeseries, Station_Vel
+from .io_magnet_unr import get_coordinates_for_unr_stations
+from ..gps_objects import Timeseries, Station_Vel
 
 
 def read_lsdm_file(filename, coords_file=None):
@@ -171,6 +170,5 @@ def read_lake_loading_ts(infile):
         'names': ('d', 'u', 'v', 'w'), 'formats': ('U10', np.float, np.float, np.float)});
     dtarray = [dt.datetime.strptime(x, "%Y-%m-%d") for x in dtstrings];
     S = np.zeros(np.shape(u));
-    loading_defo = gps_objects.Timeseries(name='', coords=[], dtarray=dtarray, dE=u, dN=v, dU=w, Sn=S, Se=S,
-                                          Su=S, EQtimes=[]);
+    loading_defo = Timeseries(name='', coords=[], dtarray=dtarray, dE=u, dN=v, dU=w, Sn=S, Se=S, Su=S, EQtimes=[]);
     return loading_defo;

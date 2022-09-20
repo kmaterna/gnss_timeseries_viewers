@@ -3,9 +3,8 @@
 
 import subprocess
 import datetime as dt
-
-import gps_tools.file_io.io_other
 from GNSS_TimeSeries_Viewers import gps_tools as gps_tools
+import GNSS_TimeSeries_Viewers.gps_tools.file_io.io_other as io_other
 
 # CONFIG PARAMETERS FOR THIS EXPERIMENT #
 params = {"data_config_file": "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt",
@@ -25,12 +24,13 @@ def driver():
                                                                               myparams["data_config_file"],
                                                                               myparams["distances"]);
     # FOR 2014 earthquake
-    station_vectors = gps_tools.offsets.offset_to_vel_object(eq_list, data, myparams["refframe"], myparams["proc_center"],
+    station_vectors = gps_tools.offsets.offset_to_vel_object(eq_list, data, myparams["refframe"],
+                                                             myparams["proc_center"],
                                                              target_date=dt.datetime.strptime("20140310", "%Y%m%d"));
     gps_tools.gps_vel_pygmt_plots.simple_pygmt_plot(station_vectors, myparams["outdir"] + "/mtj_vector_map.png",
                                                     symsize=0.1, vector_scale_info=(0.5, 10, "10 mm"));
-    gps_tools.file_io.io_other.write_stationvel_file(station_vectors, myparams["outdir"] + '/mtj_vectors.txt',
-                                                     metadata='cwu_NA look-up table for 03-10-2014');
+    io_other.write_stationvel_file(station_vectors, myparams["outdir"] + '/mtj_vectors.txt',
+                                   metadata='cwu_NA look-up table for 03-10-2014');
     return;
 
 

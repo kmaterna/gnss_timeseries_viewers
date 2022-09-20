@@ -2,7 +2,7 @@
 Functions to operate on velocity-field objects (lists of station-vels)
 Future work: Combining two velocity fields in outer combination (inclusive) or inner combination (common stations)
 """
-import gps_tools.gps_objects
+from . import gps_objects as gps_objects
 import numpy as np
 import scipy.optimize
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
@@ -27,13 +27,16 @@ def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1
         print("Cleaning: Starting with " + str(len(velfield)) + " stations");
     for station in velfield:
         if station.sn > max_horiz_sigma:  # too high sigma, please exclude
-            print('Excluding '+station.name+' for large north sigma of '+str(station.sn)+' mm/yr') if verbose else 0;
+            print('Excluding ' + station.name + ' for large north sigma of ' + str(
+                station.sn) + ' mm/yr') if verbose else 0;
             continue;
         if station.se > max_horiz_sigma:
-            print('Excluding '+station.name+' for large east sigma of '+str(station.se)+' mm/yr') if verbose else 0;
+            print('Excluding ' + station.name + ' for large east sigma of ' + str(
+                station.se) + ' mm/yr') if verbose else 0;
             continue;
         if station.su > max_vert_sigma:
-            print('Excluding '+station.name+' for large vertical sigma of'+str(station.su)+' mm/yr') if verbose else 0;
+            print('Excluding ' + station.name + ' for large vertical sigma of' + str(
+                station.su) + ' mm/yr') if verbose else 0;
             continue;
         deltatime = station.last_epoch - station.first_epoch;
         if deltatime.days <= num_years * 365.24:  # too short time interval, please exclude
@@ -76,11 +79,11 @@ def disp_points_to_station_vels(obs_disp_points):
     """
     station_vel_list = [];
     for item in obs_disp_points:
-        new_obj = gps_tools.gps_objects.Station_Vel(nlat=item.lat, elon=item.lon, name=item.name, n=item.dN_obs * 1000,
-                                                    e=item.dE_obs*1000, u=item.dU_obs*1000, sn=item.Sn_obs*1000,
-                                                    se=item.Se_obs*1000, su=item.Su_obs*1000, meas_type=item.meas_type,
-                                                    first_epoch=item.starttime, last_epoch=item.endtime,
-                                                    refframe=item.refframe);
+        new_obj = gps_objects.Station_Vel(nlat=item.lat, elon=item.lon, name=item.name, n=item.dN_obs * 1000,
+                                          e=item.dE_obs * 1000, u=item.dU_obs * 1000, sn=item.Sn_obs * 1000,
+                                          se=item.Se_obs * 1000, su=item.Su_obs * 1000, meas_type=item.meas_type,
+                                          first_epoch=item.starttime, last_epoch=item.endtime,
+                                          refframe=item.refframe);
         station_vel_list.append(new_obj);
     return station_vel_list;
 
@@ -106,7 +109,7 @@ def velocity_misfit_function(Velfield1, Velfield2):
         misfit += np.square(Velfield2[i].e - Velfield1[i].e);
         misfit += np.square(Velfield2[i].n - Velfield1[i].n);
         misfit += np.square(Velfield2[i].u - Velfield1[i].u);
-    misfit /= 3*len(Velfield1);
+    misfit /= 3 * len(Velfield1);
     misfit = np.sqrt(misfit);
     return misfit;
 
@@ -125,7 +128,7 @@ def Apply_Helmert_Transformation(xyz_velfieldA, Helmert_params):
     """
     xyz_velfieldB = [];
     [Cx, Cy, Cz, s, Rx, Ry, Rz] = [*Helmert_params];
-    s_mult = 1 + s*1e-6;
+    s_mult = 1 + s * 1e-6;
     H_Matrix = np.array([[1, -Rz, Ry],
                          [Rz, 1, -Rx],
                          [-Ry, Rx, 1]]);
@@ -133,21 +136,21 @@ def Apply_Helmert_Transformation(xyz_velfieldA, Helmert_params):
     translation_vector = np.array([[Cx, Cy, Cz]]);
     for item in xyz_velfieldA:
         # We store raw coordinates in x_pos, and velocity-considered coordinates in x_rate
-        position_in_A = np.array([[item.x_rate, item.y_rate, item.z_rate]]);   # We use rate for transformed position
-        position_in_B = np.dot(scaled_H_Matrix, position_in_A.T);   # Performing rotation/scaling transformation
+        position_in_A = np.array([[item.x_rate, item.y_rate, item.z_rate]]);  # We use rate for transformed position
+        position_in_B = np.dot(scaled_H_Matrix, position_in_A.T);  # Performing rotation/scaling transformation
         position_in_B = np.add(position_in_B, translation_vector.T);  # adding translation transformation
         position_in_B = position_in_B.T;
         xyz_stds = np.array([item.x_sigma, item.y_sigma, item.z_sigma]);
         ecov = np.diag(xyz_stds);  # a 3x3 np array matrix with covariances on the diagonal
-        sigma_B = np.dot(np.dot(scaled_H_Matrix, ecov), scaled_H_Matrix.T);   # Transform sigmas
+        sigma_B = np.dot(np.dot(scaled_H_Matrix, ecov), scaled_H_Matrix.T);  # Transform sigmas
         sigma_B = np.multiply(sigma_B, np.square(s_mult));
-        newobj = gps_tools.gps_objects.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos,
-                                                       z_pos=item.z_pos,
-                                                       x_rate=position_in_B[0][0], y_rate=position_in_B[0][1],
-                                                       z_rate=position_in_B[0][2],
-                                                       x_sigma=sigma_B[0][0], y_sigma=sigma_B[1][1],
-                                                       z_sigma=sigma_B[2][2],
-                                                       first_epoch=item.first_epoch, last_epoch=item.last_epoch);
+        newobj = gps_objects.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos,
+                                             z_pos=item.z_pos,
+                                             x_rate=position_in_B[0][0], y_rate=position_in_B[0][1],
+                                             z_rate=position_in_B[0][2],
+                                             x_sigma=sigma_B[0][0], y_sigma=sigma_B[1][1],
+                                             z_sigma=sigma_B[2][2],
+                                             first_epoch=item.first_epoch, last_epoch=item.last_epoch);
         xyz_velfieldB.append(newobj);
     return xyz_velfieldB;
 
@@ -164,14 +167,14 @@ def convert_enu_velfield_to_xyz(velfield):
         llh_origin_simple = np.array([item.elon, item.nlat, 0]);  # simpler numpy array
         enu_stds = 0.001 * np.array([item.se, item.sn, item.su]);
         xyz_pos = geo_conv.llh2xyz(llh_origin);
-        enu_vel = 0.001 * np.array([[item.e, item.n, item.u], ]);   # velocity in m
+        enu_vel = 0.001 * np.array([[item.e, item.n, item.u], ]);  # velocity in m
         ecov = np.diag(enu_stds);  # a 3x3 np array matrix with covariances on the diagonal
         xyz_vel, xyz_cov = geo_conv.enu2xyz(enu_vel, llh_origin_simple, ecov);
-        newobj = gps_tools.gps_objects.Station_Vel_XYZ(name=item.name, x_pos=xyz_pos[0][0], y_pos=xyz_pos[0][1],
-                                                       z_pos=xyz_pos[0][2], x_rate=xyz_vel[0][0], y_rate=xyz_vel[0][1],
-                                                       z_rate=xyz_vel[0][2], x_sigma=xyz_cov[0][0],
-                                                       y_sigma=xyz_cov[1][1], z_sigma=xyz_cov[2][2],
-                                                       first_epoch=item.first_epoch, last_epoch=item.last_epoch);
+        newobj = gps_objects.Station_Vel_XYZ(name=item.name, x_pos=xyz_pos[0][0], y_pos=xyz_pos[0][1],
+                                             z_pos=xyz_pos[0][2], x_rate=xyz_vel[0][0], y_rate=xyz_vel[0][1],
+                                             z_rate=xyz_vel[0][2], x_sigma=xyz_cov[0][0],
+                                             y_sigma=xyz_cov[1][1], z_sigma=xyz_cov[2][2],
+                                             first_epoch=item.first_epoch, last_epoch=item.last_epoch);
         xyz_objects.append(newobj);
     return xyz_objects;
 
@@ -192,11 +195,11 @@ def prepare_velocities_for_helmert_trans(velfield):
         x_special_pos = item.x_pos + multiplier * item.x_rate;
         y_special_pos = item.y_pos + multiplier * item.y_rate;
         z_special_pos = item.z_pos + multiplier * item.z_rate;
-        newobj = gps_tools.gps_objects.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos,
-                                                       z_pos=item.z_pos,
-                                                       x_rate=x_special_pos, y_rate=y_special_pos, z_rate=z_special_pos,
-                                                       x_sigma=item.x_sigma, y_sigma=item.y_sigma, z_sigma=item.z_sigma,
-                                                       first_epoch=item.first_epoch, last_epoch=item.last_epoch);
+        newobj = gps_objects.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos,
+                                             z_pos=item.z_pos,
+                                             x_rate=x_special_pos, y_rate=y_special_pos, z_rate=z_special_pos,
+                                             x_sigma=item.x_sigma, y_sigma=item.y_sigma, z_sigma=item.z_sigma,
+                                             first_epoch=item.first_epoch, last_epoch=item.last_epoch);
         special_pos_objects.append(newobj);
     return special_pos_objects;
 
@@ -213,14 +216,14 @@ def get_Helmert_parameters(xyz_velfieldA, xyz_velfieldB):
     def fun(v):
         vecA, vecB = [], [];
         [Cx, Cy, Cz, s, Rx, Ry, Rz] = [*v];
-        s_mult = 1 + s*1e-6;
+        s_mult = 1 + s * 1e-6;
         for i in range(len(xyz_velfieldA)):
             newobs = np.array([xyz_velfieldB[i].x_rate, xyz_velfieldB[i].y_rate, xyz_velfieldB[i].z_rate]);
-            transformed_Aobs_x = Cx + s_mult * (xyz_velfieldA[i].x_rate - Rz*xyz_velfieldA[i].y_rate +
-                                                Ry*xyz_velfieldA[i].z_rate);
-            transformed_Aobs_y = Cy + s_mult * (Rz*xyz_velfieldA[i].x_rate + xyz_velfieldA[i].y_rate -
-                                                Rx*xyz_velfieldA[i].z_rate);
-            transformed_Aobs_z = Cz + s_mult * (-Ry*xyz_velfieldA[i].x_rate + Rx*xyz_velfieldA[i].y_rate +
+            transformed_Aobs_x = Cx + s_mult * (xyz_velfieldA[i].x_rate - Rz * xyz_velfieldA[i].y_rate +
+                                                Ry * xyz_velfieldA[i].z_rate);
+            transformed_Aobs_y = Cy + s_mult * (Rz * xyz_velfieldA[i].x_rate + xyz_velfieldA[i].y_rate -
+                                                Rx * xyz_velfieldA[i].z_rate);
+            transformed_Aobs_z = Cz + s_mult * (-Ry * xyz_velfieldA[i].x_rate + Rx * xyz_velfieldA[i].y_rate +
                                                 xyz_velfieldA[i].z_rate);
             transformed_obsA = np.array([transformed_Aobs_x, transformed_Aobs_y, transformed_Aobs_z]);
             vecB = np.concatenate((vecB, newobs), axis=0);
@@ -255,11 +258,10 @@ def postproc_after_helmert(xyz_velfield):
 
         enu_vel, enu_cov = geo_conv.xyz2enu(xyz_vel, llh_origin_simple, ecov);  # covariances go here
 
-        new_station_vel = gps_tools.gps_objects.Station_Vel(name=item.name, elon=lonlat[0][0], nlat=lonlat[0][1],
-                                                            e=enu_vel[0][0], n=enu_vel[0][1], u=enu_vel[0][2],
-                                                            se=enu_cov[0][0], sn=enu_cov[1][1], su=enu_cov[2][2],
-                                                            first_epoch=0, last_epoch=0, refframe=0, proccenter=0,
-                                                            subnetwork=0, survey=0, meas_type=None);
+        new_station_vel = gps_objects.Station_Vel(name=item.name, elon=lonlat[0][0], nlat=lonlat[0][1], e=enu_vel[0][0],
+                                                  n=enu_vel[0][1], u=enu_vel[0][2], se=enu_cov[0][0], sn=enu_cov[1][1],
+                                                  su=enu_cov[2][2], first_epoch=0, last_epoch=0, refframe=0,
+                                                  proccenter=0, subnetwork=0, survey=0, meas_type=None);
         enu_station_list.append(new_station_vel);
     return enu_station_list;
 
@@ -268,7 +270,7 @@ def get_bounding_box(velfield, border=0.1):
     """Get a bounding box for a list of station_vels.  Returns a list of [E, W, S, N]"""
     lons = [x.elon for x in velfield]
     lats = [x.nlat for x in velfield]
-    bbox = [np.min(lons)-border, np.max(lons)+border, np.min(lats)-border, np.max(lats)+border];
+    bbox = [np.min(lons) - border, np.max(lons) + border, np.min(lats) - border, np.max(lats) + border];
     return bbox;
 
 

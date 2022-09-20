@@ -5,9 +5,9 @@ File to read and write data from Network of the Americas / Plate Boundary Observ
 import datetime as dt
 import subprocess
 import numpy as np
-from gps_tools import utilities
-from gps_tools.file_io.io_magnet_unr import get_coordinates_for_unr_stations
-from gps_tools.gps_objects import Station_Vel, Timeseries, Offsets
+from .. import utilities
+from .io_magnet_unr import get_coordinates_for_unr_stations
+from ..gps_objects import Station_Vel, Timeseries, Offsets
 
 
 def read_pbo_vel_file(infile):

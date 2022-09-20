@@ -2,7 +2,7 @@
 A function to remove postseismic deformation via existing model time series
 The first model is from Hines et al., JGR, 2016
 """
-from gps_tools.file_io import config_io, io_nota
+from .file_io import config_io, io_nota
 import numpy as np
 import os
 from . import offsets, gps_ts_functions, gps_objects

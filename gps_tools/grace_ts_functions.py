@@ -1,5 +1,5 @@
 # GRACE FUNCTIONS
-import gps_tools.file_io.io_other
+from .file_io import io_other as io_other
 import numpy as np
 import matplotlib.pyplot as plt
 import collections
@@ -39,7 +39,7 @@ def pair_GPSGRACE(GPS_TS, GRACE_TS):
 
 
 def plot_grace(station_name, filename, out_dir):
-    grace_ts = gps_tools.file_io.io_other.read_grace(filename);
+    grace_ts = io_other.read_grace(filename);
     plt.figure();
     plt.plot_date(grace_ts.dtarray, grace_ts.u, '-b');
     plt.plot_date(grace_ts.dtarray, grace_ts.v, '-g');

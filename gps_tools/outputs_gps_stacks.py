@@ -272,7 +272,7 @@ def pygmt_map(dataobj_list, myparams):
     fig.coast(shorelines="0.5p,black", land='peachpuff2', water='skyblue', resolution="h");
     fig.coast(borders='1', shorelines='1.0p,black');
     fig.coast(borders='2', shorelines='0.5p,black');
-    fig.text(x=[i + 0.06 for i in lons], y=lats, text=names, font='15p,Helvetica-Bold,black');
+    fig.text(x=lons, y=lats, text=names, font='15p,Helvetica-Bold,black', offset="0.24i/0.11i");
     fig.plot(x=lons, y=lats, style='c0.1i', color='black', pen='0.5p,black')
     fig.plot(x=myparams.center[0], y=myparams.center[1], style='a0.1i', color='red', pen='0.5p,red')
     fig.savefig(myparams.outdir + "/" + myparams.outname + '_map.png');

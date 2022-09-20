@@ -2,7 +2,7 @@
 
 import sys, os
 import datetime as dt
-from gps_tools.file_io import io_magnet_unr, io_nota, io_other, io_usgs, config_io
+from .file_io import io_magnet_unr, io_nota, io_other, io_usgs, config_io
 from . import offsets, utilities
 
 

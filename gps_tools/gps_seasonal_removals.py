@@ -1,5 +1,5 @@
 """A set of functions that take TimeSeries objects and return other TimeSeries objects"""
-from gps_tools.file_io import io_nota, io_other, config_io
+from .file_io import io_nota, io_other, config_io
 import numpy as np
 import datetime as dt
 import glob, os, sys, subprocess

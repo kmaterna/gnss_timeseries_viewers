@@ -9,7 +9,7 @@ Viewing a stack of stations
 import subprocess
 from . import gps_input_pipeline, gps_ts_functions, gps_seasonal_removals, stations_within_radius, offsets
 from . import outputs_gps_stacks as out_stack
-from file_io import config_io, io_other
+from .file_io import config_io, io_other
 
 
 def driver(data_config_file, expname, center, radius, proc_center, refframe, outdir, must_include=(None, None)):

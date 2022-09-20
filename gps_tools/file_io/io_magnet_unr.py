@@ -4,8 +4,8 @@ File to read and write data from Magnet / University of Nevada Reno formats
 import datetime as dt
 import subprocess, sys
 import numpy as np
-from gps_tools import utilities
-from gps_tools.gps_objects import Station_Vel, Timeseries
+from .. import utilities
+from ..gps_objects import Station_Vel, Timeseries
 
 
 def read_unr_vel_file(infile, coordinate_file):

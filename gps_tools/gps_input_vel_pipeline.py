@@ -1,7 +1,7 @@
 """Functions to import velocity fields"""
 
 import sys
-from gps_tools.file_io import io_magnet_unr, io_nota, io_usgs, config_io
+from .file_io import io_magnet_unr, io_nota, io_usgs, config_io
 
 
 def import_velfield(gps_config_file, network='pbo', refframe='ITRF', sub_network=''):
