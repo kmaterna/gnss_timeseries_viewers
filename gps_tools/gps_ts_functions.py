@@ -9,7 +9,7 @@ import numpy as np
 import datetime as dt
 from scipy import signal
 from scipy.optimize import curve_fit
-from . import lssq_model_errors
+from . import lssq_model_errors, utilities
 from .gps_objects import Timeseries as Timeseries
 
 # # A line for referencing the namedtuple definition.
@@ -91,7 +91,7 @@ def detrend_data_by_value(Data0, east_params, north_params, vert_params):
     idx = np.isnan(Data0.dE);
     if (sum(idx)) > 0:  # if there are nans, please pull them out.
         Data0 = remove_nans(Data0);
-    decyear = get_float_times(Data0.dtarray);
+    decyear = utilities.get_float_times(Data0.dtarray);
 
     east_model = linear_annual_semiannual_function(decyear, east_params);
     north_model = linear_annual_semiannual_function(decyear, north_params);
@@ -115,13 +115,11 @@ def remove_seasonal_by_value(Data0, east_params, north_params, vert_params):
     Least squares seasonal parameters. Remove seasonal components.
     Parameters Format: slope, a2(cos), a1(sin), s2, s1.
     """
-    east_detrended = [];
-    north_detrended = [];
-    vert_detrended = [];
+    east_detrended, north_detrended, vert_detrended = [], [], [];
     idx = np.isnan(Data0.dE);
     if (sum(idx)) > 0:  # if there are nans, please pull them out.
         Data0 = remove_nans(Data0);
-    decyear = get_float_times(Data0.dtarray);
+    decyear = utilities.get_float_times(Data0.dtarray);
 
     east_model = annual_semiannual_only_function(decyear, east_params[1:]);
     north_model = annual_semiannual_only_function(decyear, north_params[1:]);
@@ -293,7 +291,7 @@ def get_slope(Data0, starttime=None, endtime=None, missing_fraction=0.6):
         return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
 
     # doing the inversion here, since it's only one line.
-    decyear = get_float_times(mydtarray);
+    decyear = utilities.get_float_times(mydtarray);
     east_coef = np.polyfit(decyear, myeast, 1);
     north_coef = np.polyfit(decyear, mynorth, 1);
     vert_coef = np.polyfit(decyear, myup, 1);
@@ -321,7 +319,7 @@ def get_slope_unc(dataObj, starttime, endtime):
     slope is returned as params[0]
     """
     dataObj = impose_time_limits(dataObj, starttime, endtime);
-    x = get_float_times(dataObj.dtarray);
+    x = utilities.get_float_times(dataObj.dtarray);
     params, covm = lssq_model_errors.AVR(x, dataObj.dE, dataObj.Se, verbose=0);
     Esigma = np.sqrt(covm[0][0]);
     params, covm = lssq_model_errors.AVR(x, dataObj.dN, dataObj.Sn, verbose=0);
@@ -363,7 +361,7 @@ def get_linear_annual_semiannual(Data0, starttime=None, endtime=None, critical_l
         up_params = [np.nan, 0, 0, 0, 0];
         return [east_params, north_params, up_params];
 
-    decyear = get_float_times(mydtarray);
+    decyear = utilities.get_float_times(mydtarray);
     east_params_unordered = invert_linear_annual_semiannual(decyear, myeast);
     north_params_unordered = invert_linear_annual_semiannual(decyear, mynorth);
     vert_params_unordered = invert_linear_annual_semiannual(decyear, myup);
@@ -424,7 +422,7 @@ def get_logfunction(Data0, eqtime):
     def func(t, a, b, tau):
         return b + a * np.log(1 + t / tau);
 
-    float_times = get_relative_times(Data0.dtarray, eqtime);  # in days
+    float_times = utilities.get_relative_times(Data0.dtarray, eqtime);  # in days
     e_params, ecov = curve_fit(func, float_times, Data0.dE);
     n_params, ecov = curve_fit(func, float_times, Data0.dN);
     u_params, ecov = curve_fit(func, float_times, Data0.dU);
@@ -464,7 +462,7 @@ def subsample_in_time(Data0, target_time, window_days=30):
 
 
 # -------------------------------------------- #
-# MISCELLANEOUS FUNCTIONS: MATH AND TIME OPERATIONS
+# MISCELLANEOUS FUNCTIONS: MATH OPERATIONS
 # -------------------------------------------- #
 
 def basic_defensive_programming(Data0, starttime, endtime):
@@ -481,8 +479,7 @@ def basic_defensive_programming(Data0, starttime, endtime):
     if endtime is None:
         endtime = Data0.dtarray[-1];
 
-    starttime_proper = starttime;
-    endtime_proper = endtime;
+    starttime_proper, endtime_proper = starttime, endtime;
 
     if starttime < Data0.dtarray[0]:
         starttime_proper = Data0.dtarray[0];
@@ -512,78 +509,6 @@ def invert_linear_annual_semiannual(decyear, data):
     design_matrix = np.array(design_matrix);
     params = np.dot(np.linalg.inv(np.dot(design_matrix.T, design_matrix)), np.dot(design_matrix.T, data));
     return params;
-
-
-def get_float_times(datetimes):
-    floats = [];
-    for item in datetimes:
-        floats.append(get_float_time(item));
-    return floats;
-
-
-def get_float_time(datetime_item):
-    temp = datetime_item.strftime("%Y %j");
-    temp = temp.split();
-    year = temp[0]
-    last_day_of_year = dt.datetime.strptime(year + "1231", "%Y%m%d");
-    num_days_this_year = float(last_day_of_year.strftime("%Y %j").split()[1]);  # This is either 365 or 366
-    floats = (float(temp[0]) + float(temp[1]) / num_days_this_year);
-    return floats;
-
-
-def get_relative_times(datetimes, origin_dt):
-    floats = [];
-    for item in datetimes:
-        floats.append(get_relative_time(item, origin_dt));
-    return floats;
-
-
-def get_relative_time(datetime_item, origin_dt):
-    timedelta = datetime_item - origin_dt;
-    relative_time = timedelta.days;
-    return relative_time;
-
-
-def reltime_to_dt(relative_time, origin_dt):
-    timedelta = dt.timedelta(days=relative_time);
-    my_date = origin_dt + timedelta;
-    return my_date;
-
-
-def float_to_dt(float_time):
-    # Example: 2014.194 --> datetime object
-    fractional_year = str(1 + int(365.24 * (float_time - np.floor(float_time))));  # something like 004, 204, 321, etc.
-    if len(fractional_year) == 1:
-        fractional_year = '00' + fractional_year;
-    elif len(fractional_year) == 2:
-        fractional_year = '0' + fractional_year;
-    if fractional_year == '367' or fractional_year == '366':
-        fractional_year = '365';
-    myyear = str(int(np.floor(float_time)));  # something like 2014
-    my_date = dt.datetime.strptime(myyear + fractional_year, "%Y%j");
-    return my_date;
-
-
-def get_daily_dtarray(starttime, endtime):
-    # Return a datetime array that spans starttime to endtime with daily intervals
-    i = 0;
-    dtarray = [starttime];
-    while dtarray[-1] < endtime:
-        i = i + 1;
-        dtarray.append(starttime + dt.timedelta(days=i));
-    return dtarray;
-
-
-def yrnum2datetime(yearnums, starttime):
-    """
-    Take a set of dates, in decimal years past a certain date, and convert it into normal datetime objects.
-    The input and output vectors will be exactly the same length
-    """
-    dtarray = [];
-    for i in range(len(yearnums)):
-        myyr = yearnums[i];
-        dtarray.append(starttime + dt.timedelta(days=myyr * 365.24));
-    return dtarray;
 
 
 def add_two_unc_quadrature(unc1, unc2):

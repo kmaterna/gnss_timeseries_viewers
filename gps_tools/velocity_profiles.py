@@ -4,7 +4,7 @@ import numpy as np
 import pygmt
 import matplotlib.pyplot as plt
 from . import gps_objects as gps_objects
-from . import gps_vel_pygmt_plots
+from . import pygmt_plots
 
 
 def project_onto_perpendicular_profile(velfield, startcoord, endcoord, width, vel_azimuth=None,
@@ -72,8 +72,8 @@ def project_onto_perpendicular_profile(velfield, startcoord, endcoord, width, ve
 
     # Plotting stage: Map and Cartesian Plot.
     plot_profile_in_distance(p, vel_parallel, vel_perp, fault_xlocations=fault_x);
-    gps_vel_pygmt_plots.map_velocity_profile(velfield, selected_stations, "profile.png", startcoord=startcoord,
-                                             endcoord=endcoord, fault_traces=fault_traces);
+    pygmt_plots.map_velocity_profile(velfield, selected_stations, "profile.png", startcoord=startcoord,
+                                     endcoord=endcoord, fault_traces=fault_traces);
     return;
 
 

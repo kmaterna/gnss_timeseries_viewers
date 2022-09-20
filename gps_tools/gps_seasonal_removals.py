@@ -1,9 +1,9 @@
 """A set of functions that take TimeSeries objects and return other TimeSeries objects"""
-from .file_io import io_nota, io_other, config_io
 import numpy as np
 import datetime as dt
 import glob, os, sys, subprocess
-from . import gps_ts_functions, notch_filter, grace_ts_functions, gps_objects
+from . import gps_ts_functions, notch_filter, grace_ts_functions, gps_objects, utilities
+from .file_io import io_nota, io_other, config_io
 
 
 def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file, remove_trend=1):
@@ -101,7 +101,7 @@ def remove_seasonals_by_notch(Data):
     fn2 = 2.0 / 365.24;  # fn = notch frequency, semiannual
     Bn2 = 0.1 * fn2;  # a choice: 10% seems to work well.
 
-    decyear = gps_ts_functions.get_float_times(Data.dtarray);
+    decyear = utilities.get_float_times(Data.dtarray);
     dE_detrended = np.zeros(np.shape(Data.dE));
     dN_detrended = np.zeros(np.shape(Data.dN));
     dU_detrended = np.zeros(np.shape(Data.dU));
@@ -186,7 +186,7 @@ def remove_seasonals_by_STL(Data, STL_dir):
         [dE, dN, dU] = np.loadtxt('filtered_ts_data.txt', unpack=True, usecols=(1, 2, 3));
 
         # East, North, Up Detrending
-        decyear = gps_ts_functions.get_float_times(new_dtarray);
+        decyear = utilities.get_float_times(new_dtarray);
 
         dE_detrended = np.zeros(np.shape(dE));
         dN_detrended = np.zeros(np.shape(dN));
@@ -228,7 +228,7 @@ def remove_seasonals_by_STL(Data, STL_dir):
         # Write the file so that we don't recompute it next time.
         output_stl(Data, STL_dir);
 
-    return Data, Data;
+    return Data, Data;  # sorry, what is this?
 
 
 def output_stl(Data, outdir):
@@ -327,7 +327,7 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
         dU_filt.append(gps_data.dU[i] - scale_factor * hydro_data.dU[i]);
 
     # A Simple detrending
-    decyear = gps_ts_functions.get_float_times(gps_data.dtarray);
+    decyear = utilities.get_float_times(gps_data.dtarray);
     dE_detrended = np.zeros(np.shape(decyear));
     dN_detrended = np.zeros(np.shape(decyear));
     dU_detrended = np.zeros(np.shape(decyear));
@@ -377,7 +377,7 @@ def remove_seasonals_by_german_load(Data, lsdm_dir):
         dU_filt.append(gps_data.dU[i] - hydro_data.dU[i]);
 
     # A Simple detrending
-    decyear = gps_ts_functions.get_float_times(gps_data.dtarray);
+    decyear = utilities.get_float_times(gps_data.dtarray);
     dE_detrended = np.zeros(np.shape(decyear));
     dN_detrended = np.zeros(np.shape(decyear));
     dU_detrended = np.zeros(np.shape(decyear));
@@ -418,7 +418,7 @@ def remove_seasonals_by_lakes(Data, lakes_dir, lake_name):
     dN = [GPS_paired.dN[i] - loading_paired.dN[i] for i in range(len(GPS_paired.dN))];
     dU = [GPS_paired.dU[i] - loading_paired.dU[i] for i in range(len(GPS_paired.dU))];
 
-    decyear = gps_ts_functions.get_float_times(GPS_paired.dtarray);
+    decyear = utilities.get_float_times(GPS_paired.dtarray);
     dE_detrended = np.zeros(np.shape(dE));
     dN_detrended = np.zeros(np.shape(dN));
     dU_detrended = np.zeros(np.shape(dU));
@@ -450,12 +450,6 @@ def get_wimpy_object(Data):
     return wimpyObj;
 
 
-# Paired_TS=collections.namedtuple('Paired_TS',[
-# 	'dtarray',
-# 	'north','east','vert',
-# 	'N_err','E_err','V_err',
-# 	'u','v','w']);
-
 def remove_seasonals_by_GRACE(Data, grace_dir):
     """
     Here we use pre-computed GRACE load model time series to correct the GPS time series.
@@ -478,7 +472,7 @@ def remove_seasonals_by_GRACE(Data, grace_dir):
     Data = gps_ts_functions.remove_nans(Data);
     grace_model = io_other.read_grace(filename);
     my_paired_ts = grace_ts_functions.pair_GPSGRACE(Data, grace_model);
-    decyear = gps_ts_functions.get_float_times(my_paired_ts.dtarray);
+    decyear = utilities.get_float_times(my_paired_ts.dtarray);
 
     # Subtract the GRACE object
     dE_filt, dN_filt, dU_filt = [], [], [];

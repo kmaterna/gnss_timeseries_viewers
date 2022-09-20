@@ -11,6 +11,8 @@ Script by K. Materna
 
 import os, subprocess
 import datetime as dt
+
+import gps_tools.utilities
 import gps_ts_functions
 
 def configure():
@@ -31,8 +33,8 @@ def get_stations(input_file, product, output_dir):
         station_name, lon, lat = temp[0], temp[1], temp[2];
         dec_startdate = float(temp[3]);
         dec_enddate = float(temp[4]);
-        start_date = gps_ts_functions.float_to_dt(dec_startdate);
-        end_date = gps_ts_functions.float_to_dt(dec_enddate);
+        start_date = gps_tools.utilities.float_to_dt(dec_startdate);
+        end_date = gps_tools.utilities.float_to_dt(dec_enddate);
 
         if os.path.isfile(output_dir+station_name+"_LSDM_hydro.txt.txt"):  # if we already have the file
             print("Skipping " + station_name + " because we already have the file");

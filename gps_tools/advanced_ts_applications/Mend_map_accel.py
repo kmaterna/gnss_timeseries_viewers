@@ -5,26 +5,21 @@
 # Step 3: Compute: Remove outliers and earthquakes. Then identify 
 # Step 4: Produce a table and plot of accelerations before/after time ranges. 
 
-# Reference: 
-# Timeseries = collections.namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su','EQtimes']);  # in mm
+# Reference:
 # Feature: verticals and horizontals at the same time, making two output plots
 # Feature: feed seasonal type as parameter, and include that in the output_file name
 # This lets us run several experiments.
 import gps_tools.file_io.io_other
 import gps_tools.utilities
 import numpy as np
-import matplotlib.pyplot as plt
 import datetime as dt
-import glob
-import subprocess, sys
-import gps_io_functions
-import gps_ts_functions
-import gps_seasonal_removals
-import gps_input_pipeline
-import offsets
-import stations_within_radius
+import glob, subprocess
+from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, gps_seasonal_removals, gps_input_pipeline, offsets, \
+    stations_within_radius
 from Tectonic_Utils.geodesy import haversine
 import remove_ets_events
+
+data_config = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt";
 
 
 def driver(EQcoords, size, network, refframe, fit_type, deltat1, deltat2, expname, station_list=()):
@@ -66,15 +61,13 @@ def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=
         else:
             stations, _, _, _ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords,
                                                                                   network);
-        stations = gps_tools.utilities.remove_blacklist(stations);
+        stations = gps_tools.utilities.remove_blacklist(stations, ());  # plumb real blacklist later
 
     return [stations, outdir, time_after_start_date, critical_variance];
 
 
 def inputs(station_names, network, refframe):
-    dataobj_list = [];
-    offsetobj_list = [];
-    eqobj_list = [];
+    dataobj_list, offsetobj_list, eqobj_list = [], [], [];
     for station_name in station_names:
 
         [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, network, refframe);
@@ -88,22 +81,17 @@ def inputs(station_names, network, refframe):
     return [dataobj_list, offsetobj_list, eqobj_list];
 
 
-def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type, time_after_start_date,
-            critical_variance):
+def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type, time_after_start, critical_variance):
     dt1_start = dt.datetime.strptime(deltat1[0], "%Y%m%d");
     dt1_end = dt.datetime.strptime(deltat1[1], "%Y%m%d");
     dt2_start = dt.datetime.strptime(deltat2[0], "%Y%m%d");
     dt2_end = dt.datetime.strptime(deltat2[1], "%Y%m%d");
 
     # No earthquakes objects
-    noeq_objects = [];
-    east_slope_obj = [];
-    north_slope_obj = [];
-    vert_slope_obj = [];
+    noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj = [], [], [], [];
 
     # For the vertical correction.
-    names = [];
-    coords = [];
+    names, coords = [], [];
     for i in range(len(dataobj_list)):
         names.append(dataobj_list[i].name);
         coords.append(dataobj_list[i].coords);
@@ -114,46 +102,42 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
         print(names[i]);
         newobj = offsets.remove_offsets(dataobj_list[i], offsetobj_list[i]);
         newobj = offsets.remove_offsets(newobj, eqobj_list[i]);
-        if fit_type == 'none':
-            newobj = gps_seasonal_removals.make_detrended_ts(newobj, 0, fit_type);  # remove seasonals
+        if fit_type == 'none':  # remove seasonal
+            newobj = gps_seasonal_removals.make_detrended_ts(newobj, 0, fit_type, data_config_file=data_config);
         else:
             if newobj.name == 'P349':
-                newobj = gps_seasonal_removals.make_detrended_ts(newobj, 1, 'shasta');
+                newobj = gps_seasonal_removals.make_detrended_ts(newobj, 1, 'shasta', data_config_file=data_config);
             if newobj.name == 'ORVB':
-                newobj = gps_seasonal_removals.make_detrended_ts(newobj, 1, 'oroville');
+                newobj = gps_seasonal_removals.make_detrended_ts(newobj, 1, 'oroville', data_config_file=data_config);
 
-        if fit_type != 'none':
-            newobj = gps_seasonal_removals.make_detrended_ts(newobj, 1, fit_type);  # remove seasonals
+        if fit_type != 'none':  # remove seasonal
+            newobj = gps_seasonal_removals.make_detrended_ts(newobj, 1, fit_type, data_config_file=data_config);
 
         # NOTE: WRITTEN IN JUNE 2019
         # An experiment for removing ETS events
         # if newobj.name in ["P349","P060","P330","P331","P332","P343","P338","P341"]:
         ets_intervals = remove_ets_events.input_tremor_days();
         # newobj=gps_ts_functions.remove_outliers(newobj,3.0);  # 3 mm outlier def.
-        # newobj=remove_ets_events.remove_ETS_times(newobj,ets_intervals, offset_num_days=15);  # 30 days on either end of the offsets
-        newobj = remove_ets_events.remove_characteristic_ETS(newobj,
-                                                             ets_intervals);  # using only the characteristic offset
+        # 30 days on either end of the offsets
+        # newobj=remove_ets_events.remove_ETS_times(newobj,ets_intervals, offset_num_days=15);
+        newobj = remove_ets_events.remove_characteristic_ETS(newobj, ets_intervals);  # using only characteristic offset
 
         noeq_objects.append(newobj);
 
         # Get the pre-event and post-event velocities (earthquakes removed)
-        [east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, usig0] = gps_ts_functions.get_slope(
-            newobj, starttime=dt1_start + dt.timedelta(days=time_after_start_date), endtime=dt1_end);
-        [east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, usig1] = gps_ts_functions.get_slope(
-            newobj, starttime=dt2_start + dt.timedelta(days=time_after_start_date), endtime=dt2_end);
+        [east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, _usig0] = gps_ts_functions.get_slope(
+            newobj, starttime=dt1_start + dt.timedelta(days=time_after_start), endtime=dt1_end);
+        [east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, _usig1] = gps_ts_functions.get_slope(
+            newobj, starttime=dt2_start + dt.timedelta(days=time_after_start), endtime=dt2_end);
 
         # Get the uncertainties on the velocity-change estimate
-        [east_slope_unc1, north_slope_unc1, vert_slope_unc1] = gps_ts_functions.get_slope_unc(newobj,
-                                                                                              dt1_start + dt.timedelta(
-                                                                                                  days=time_after_start_date),
-                                                                                              dt1_end);
-        [east_slope_unc2, north_slope_unc2, vert_slope_unc2] = gps_ts_functions.get_slope_unc(newobj,
-                                                                                              dt2_start + dt.timedelta(
-                                                                                                  days=time_after_start_date),
-                                                                                              dt2_end);
-        east_dv_unc = gps_ts_functions.add_two_unc_quadrature(east_slope_unc1, east_slope_unc2);
-        north_dv_unc = gps_ts_functions.add_two_unc_quadrature(north_slope_unc1, north_slope_unc2);
-        vert_dv_unc = gps_ts_functions.add_two_unc_quadrature(vert_slope_unc1, vert_slope_unc2);
+        [east_sl_unc1, north_sl_unc1, vert_sl_unc1] = gps_ts_functions.get_slope_unc(newobj, dt1_start + dt.timedelta(
+            days=time_after_start), dt1_end);
+        [east_sl_unc2, north_sl_unc2, vert_sl_unc2] = gps_ts_functions.get_slope_unc(newobj, dt2_start + dt.timedelta(
+            days=time_after_start), dt2_end);
+        east_dv_unc = gps_ts_functions.add_two_unc_quadrature(east_sl_unc1, east_sl_unc2);
+        north_dv_unc = gps_ts_functions.add_two_unc_quadrature(north_sl_unc1, north_sl_unc2);
+        vert_dv_unc = gps_ts_functions.add_two_unc_quadrature(vert_sl_unc1, vert_sl_unc2);
 
         # When do we ignore stations? When their detrended time series have a large variance.
         if abs(esig0) > critical_variance or abs(nsig0) > critical_variance or abs(esig1) > critical_variance or abs(
@@ -161,8 +145,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
             print("Kicking station %s out..." % dataobj_list[i].name);
             [east_slope_after, north_slope_after, vert_slope_after] = [np.nan, np.nan, np.nan];
             [east_slope_before, north_slope_before, vert_slope_before] = [np.nan, np.nan, np.nan];
-            [east_slope_unc1, north_slope_unc1, vert_slope_unc1] = [np.nan, np.nan, np.nan];
-            [east_slope_unc2, north_slope_unc2, vert_slope_unc2] = [np.nan, np.nan, np.nan];
+            [_east_slope_unc1, _north_slope_unc1, _vert_slope_unc1] = [np.nan, np.nan, np.nan];
+            [_east_slope_unc2, _north_slope_unc2, _vert_slope_unc2] = [np.nan, np.nan, np.nan];
 
         east_slope_obj.append([east_slope_before, east_slope_after, east_dv_unc]);
         north_slope_obj.append([north_slope_before, north_slope_after, north_dv_unc]);
@@ -226,9 +210,9 @@ def outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, outdi
     for i in range(len(noeq_objects)):
         # Lon, Lat, East, North, 0, Vert, SigE, SigN, SigV, Corr, Name
         ofile1.write("%.2f %.2f %.2f %.2f 0 %.2f %.2f %.2f %.2f 0 %s\n" % (
-        noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1] - east_slope_obj[i][0],
-        (north_slope_obj[i][1] - north_slope_obj[i][0]), vert_slope_obj[i][1] - vert_slope_obj[i][0],
-        east_slope_obj[i][2], north_slope_obj[i][2], vert_slope_obj[i][2], noeq_objects[i].name));
+            noeq_objects[i].coords[0], noeq_objects[i].coords[1], east_slope_obj[i][1] - east_slope_obj[i][0],
+            (north_slope_obj[i][1] - north_slope_obj[i][0]), vert_slope_obj[i][1] - vert_slope_obj[i][0],
+            east_slope_obj[i][2], north_slope_obj[i][2], vert_slope_obj[i][2], noeq_objects[i].name));
     ofile1.close();
 
     # Here we call the GMT master script, if we want.
@@ -274,25 +258,25 @@ def grace_inputs(file_list):
 
 
 def grace_compute(dt1_start, dt1_end, dt2_start, dt2_end, dataobject_list):
-    east_slope_obj = [];
-    north_slope_obj = [];
-    vert_slope_obj = [];
+    east_slope_obj, north_slope_obj, vert_slope_obj = [], [], [];
     period_after_start_date = 7;  # wait a week.
 
     for i in range(len(dataobject_list)):
         # Just fit the best line.
         # # Get the pre-event and post-event velocities
-        [east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, usig0] = gps_ts_functions.get_slope(
+        [east_slope_before, north_slope_before, vert_slope_before, _esig0, _nsig0, _usig0] = gps_ts_functions.get_slope(
             dataobject_list[i], starttime=dt1_start + dt.timedelta(days=period_after_start_date), endtime=dt1_end);
-        [east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, usig1] = gps_ts_functions.get_slope(
+        [east_slope_after, north_slope_after, vert_slope_after, _esig1, _nsig1, _usig1] = gps_ts_functions.get_slope(
             dataobject_list[i], starttime=dt2_start + dt.timedelta(days=period_after_start_date), endtime=dt2_end);
         east_slope_obj.append([east_slope_before, east_slope_after]);
         north_slope_obj.append([north_slope_before, north_slope_after]);
         vert_slope_obj.append([vert_slope_before, vert_slope_after]);
 
     # # Experiment: Remove the sinusoidal components. Result is identical.
-    # [east_params_before, north_params_before, vert_params_before] = grace_ts_functions.get_linear_annual_semiannual(dataobject_list[i], starttime=dt1_start+dt.timedelta(days=period_after_start_date),endtime=dt1_end);
-    # [east_params_after, north_params_after, vert_params_after]=grace_ts_functions.get_linear_annual_semiannual(dataobject_list[i],starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
+    # [east_params_before, north_params_before, vert_params_before] = grace_ts_functions.get_linear_annual_semiannual(
+    #     dataobject_list[i], starttime=dt1_start+dt.timedelta(days=period_after_start_date),endtime=dt1_end);
+    # [east_params_after, north_params_after, vert_params_after] = grace_ts_functions.get_linear_annual_semiannual(
+    #     dataobject_list[i],starttime=dt2_start+dt.timedelta(days=period_after_start_date),endtime=dt2_end);
     # east_slope_obj.append([east_params_before[0], east_params_after[0]]);
     # north_slope_obj.append([north_params_before[0], north_params_after[0]]);
     # vert_slope_obj.append([vert_params_before[0], vert_params_after[0]]);
@@ -304,10 +288,12 @@ def grace_outputs(dataobj_list, east_slope_obj, north_slope_obj, vert_slope_obj,
     ofile1 = open(out_dir + basename + '.txt', 'w');
     for i in range(len(dataobj_list)):
         ofile1.write("%f %f %f %f 0 %f 0 0 0 0 %s\n" % (
-        dataobj_list[i].coords[0], dataobj_list[i].coords[1], east_slope_obj[i][1] - east_slope_obj[i][0],
-        (north_slope_obj[i][1] - north_slope_obj[i][0]), vert_slope_obj[i][1] - vert_slope_obj[i][0],
-        dataobj_list[i].name));
+            dataobj_list[i].coords[0], dataobj_list[i].coords[1], east_slope_obj[i][1] - east_slope_obj[i][0],
+            (north_slope_obj[i][1] - north_slope_obj[i][0]), vert_slope_obj[i][1] - vert_slope_obj[i][0],
+            dataobj_list[i].name));
     ofile1.close();
-    # subprocess.call(['./accel_map_gps.gmt',basename+'.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),str(map_coords[3]),basename],shell=False);
-    # print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])+' '+str(map_coords[3])+' '+basename);
+    # subprocess.call(['./accel_map_gps.gmt',basename+'.txt',str(map_coords[0]),str(map_coords[1]),str(map_coords[2]),
+    #                  str(map_coords[3]),basename],shell=False);
+    # print('./accel_map_gps.gmt '+str(map_coords[0])+' '+str(map_coords[1])+' '+str(map_coords[2])
+    #       +' '+str(map_coords[3])+' '+basename);
     return;

@@ -7,7 +7,7 @@ from . import single_station_tsplot
 from . import lssq_model_errors
 from . import outputs_gps_stacks
 from . import offsets
-from . import gps_vel_pygmt_plots
+from . import pygmt_plots
 from . import gps_seasonal_removals
 from . import gps_postseismic_remove
 from . import file_io

@@ -52,8 +52,14 @@ def multi_station_inputs(station_names, blacklist_user, proc_center, refframe, d
 
 def get_station_data(station, datasource, data_config_file, refframe="NA", sub_network=''):
     """
-    Function to access the time-series reading library.
-    refframe choices are NA and ITRF.
+    Function to access the time-series reading library. refframe choices are NA and ITRF.
+
+    :param station: string, 4-characters
+    :param datasource: string, like 'pbo' or 'unr'
+    :param data_config_file: string, filepath
+    :param refframe: string, default 'NA', choices usually 'NA' or 'ITRF'
+    :param sub_network: string, sometimes required for USGS data
+    :returns: [TimeSeries, list of Offsets for EQs, list of Offsets for antenna changes]
     """
     Params = config_io.read_config_file(data_config_file);
     filename, sub_network = pre_screen_datasource_paths(Params, station, datasource, refframe, sub_network);
@@ -131,7 +137,7 @@ def pre_screen_datasource_paths(Params, station, inps='pbo', refframe="NA", sub_
 
     # CHECK IF STATION EXISTS IN JUST ONE SUBNETWORK FOR CONVENIENCE
     if inps == 'usgs' and sub_network == '':
-        network_list = io_usgs.query_usgs_network_name(station, Params['usgs']['directory']+
+        network_list = io_usgs.query_usgs_network_name(station, Params['usgs']['directory'] +
                                                        Params['usgs']['gps_ts_dir']);
         if len(network_list) == 1:
             sub_network = network_list[0].split('/')[-1];

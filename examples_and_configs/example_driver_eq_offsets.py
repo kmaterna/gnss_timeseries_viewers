@@ -27,8 +27,8 @@ def driver():
     station_vectors = gps_tools.offsets.offset_to_vel_object(eq_list, data, myparams["refframe"],
                                                              myparams["proc_center"],
                                                              target_date=dt.datetime.strptime("20140310", "%Y%m%d"));
-    gps_tools.gps_vel_pygmt_plots.simple_pygmt_plot(station_vectors, myparams["outdir"] + "/mtj_vector_map.png",
-                                                    symsize=0.1, vector_scale_info=(0.5, 10, "10 mm"));
+    gps_tools.pygmt_plots.simple_pygmt_plot(station_vectors, myparams["outdir"] + "/mtj_vector_map.png",
+                                            symsize=0.1, vector_scale_info=(0.5, 10, "10 mm"));
     io_other.write_stationvel_file(station_vectors, myparams["outdir"] + '/mtj_vectors.txt',
                                    metadata='cwu_NA look-up table for 03-10-2014');
     return;

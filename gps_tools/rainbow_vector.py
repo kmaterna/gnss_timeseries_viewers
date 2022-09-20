@@ -14,12 +14,10 @@ import matplotlib.cm as cm
 import datetime as dt
 
 
-def plotting_function(dataobj_list, sorted_distances, params):
+def plotting_function(dataobj_list, _sorted_distances, params):
     # Setting annotations
     # # This is good for SoCal
-    EQtimes = [];
-    EQtimes.append(dt.datetime.strptime("20100403", "%Y%m%d"));  # starts with the most important one
-    EQtimes.append(dt.datetime.strptime("20120826", "%Y%m%d"));
+    EQtimes = [dt.datetime.strptime("20100403", "%Y%m%d"), dt.datetime.strptime("20120826", "%Y%m%d")];
     start_time_plot = dt.datetime.strptime("20050101", "%Y%m%d");
     end_time_plot = dt.datetime.strptime("20200116", "%Y%m%d");
     label_date = dt.datetime.strptime("20200215", "%Y%m%d");
@@ -28,7 +26,7 @@ def plotting_function(dataobj_list, sorted_distances, params):
     vmax = 5000;
     chosen_colormap = 'jet_r'  # jet_r is okay. Also tried gnuplot, rainbow, and brg
     color_boundary_object = matplotlib.colors.Normalize(vmin=0, vmax=vmax, clip=True);
-    custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap=chosen_colormap);  # maybe useful?
+    _custom_cmap = cm.ScalarMappable(norm=color_boundary_object, cmap=chosen_colormap);  # maybe useful?
 
     vector_file = open('vecfile.txt', 'w');
 
@@ -44,8 +42,8 @@ def plotting_function(dataobj_list, sorted_distances, params):
         for j in range(len(edata)):
             deltas = dataobj_list[i].dtarray[j] - start_time_plot;
             date_deltas.append(deltas.days);
-        l1 = axarr[0][0].scatter(dataobj_list[i].dtarray, edata, c=date_deltas, marker='+', s=1.5, cmap=chosen_colormap,
-                                 vmin=0, vmax=vmax);
+        _l1 = axarr[0][0].scatter(dataobj_list[i].dtarray, edata, c=date_deltas, marker='+', s=1.5,
+                                  cmap=chosen_colormap, vmin=0, vmax=vmax);
         # axarr[0][0].text(label_date, edata[0], dataobj_list[i].name, fontsize=9, color='black');
     axarr[0][0].set_xlim(start_time_plot, end_time_plot);
     axarr[0][0].set_ylim([-20, offset + 15])
@@ -68,8 +66,8 @@ def plotting_function(dataobj_list, sorted_distances, params):
         for j in range(len(ndata)):
             deltas = dataobj_list[i].dtarray[j] - start_time_plot;
             date_deltas.append(deltas.days);
-        l1 = axarr[0][1].scatter(dataobj_list[i].dtarray, ndata, c=date_deltas, marker='+', s=1.5, cmap=chosen_colormap,
-                                 vmin=0, vmax=5000);
+        _l1 = axarr[0][1].scatter(dataobj_list[i].dtarray, ndata, c=date_deltas, marker='+', s=1.5,
+                                  cmap=chosen_colormap, vmin=0, vmax=5000);
         axarr[0][1].text(label_date, ndata[-1], dataobj_list[i].name, fontsize=14, color='black'); 
     axarr[0][1].set_xlim(start_time_plot, end_time_plot);
     axarr[0][1].set_ylim([-20, offset + 15])
@@ -92,8 +90,8 @@ def plotting_function(dataobj_list, sorted_distances, params):
         for j in range(len(udata)):
             deltas = dataobj_list[i].dtarray[j] - start_time_plot;
             date_deltas.append(deltas.days);
-        l1 = axarr[1][0].scatter(dataobj_list[i].dtarray, udata, c=date_deltas, marker='+', s=1.5, cmap=chosen_colormap,
-                                 vmin=0, vmax=5000);
+        _l1 = axarr[1][0].scatter(dataobj_list[i].dtarray, udata, c=date_deltas, marker='+', s=1.5,
+                                  cmap=chosen_colormap, vmin=0, vmax=5000);
         axarr[1][0].text(label_date, udata[0], dataobj_list[i].name, fontsize=14, color='black');
     axarr[1][0].set_xlim(start_time_plot, end_time_plot);
     axarr[1][0].set_ylim([-20, offset + 15])
@@ -107,7 +105,7 @@ def plotting_function(dataobj_list, sorted_distances, params):
 
     # Vector Map
     # for i in range(len(dataobj_list)):
-    #     axarr[1][1].plot(dataobj_list[i].coords[0], dataobj_list[i].coords[1], marker='v', markersize=6, color='black');
+    #     axarr[1][1].plot(dataobj_list[i].coords[0], dataobj_list[i].coords[1], marker='v', markersize=6);
     #     [evec, nvec, _, num_days] = make_vector(dataobj_list[i], start_time_plot);
     #     for j in range(len(evec)):
     #         mycolor = custom_cmap.to_rgba(num_days[j]);
@@ -129,7 +127,6 @@ def plotting_function(dataobj_list, sorted_distances, params):
     # axarr[1][1].set_ylim([32.75, 33.35]);
     # axarr[1][1].set_xlim([-115.8, -115.2]);
 
-    from matplotlib.cbook import get_sample_data
     axarr[1][1].axis('off')
     im = plt.imread('/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/ts_viewing/exp_minus_hines/map.png');
     newax = fig.add_axes([0.52, 0.07, 0.4, 0.4], zorder=10);

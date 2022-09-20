@@ -5,16 +5,25 @@ max_sigma is formal uncertainty on velocity in mm
 """
 
 import numpy as np
+import matplotlib.path as mpltPath
 from Tectonic_Utils.geodesy import haversine
 from Tectonic_Utils.read_write import read_kml
 from . import gps_vel_functions, gps_input_vel_pipeline
-import matplotlib.path as mpltPath
 
 
 # DRIVER 1: STATIONS WITHIN RADIUS
 def get_stations_within_radius(data_config_file, center, radius, coord_box=(-126, -110, 30.0, 49), network='pbo',
                                num_years=3.0, max_sigma=2):
-    # default coord box is western US
+    """
+    :param data_config_file: string, filename
+    :param center: list, [lon, lat]
+    :param radius: float, km
+    :param coord_box: tuple, (W, E, S, N), default is western US
+    :param network: string, default 'pbo'
+    :param num_years: float, default 3.0
+    :param max_sigma: float, mm/yr, default 2.0
+    :returns: list of strings, list of floats, list of floats, list of floats [stations, lon, lat, distances]
+    """
     myVelfield = inputs_velfield(data_config_file, network, num_years, max_sigma, coord_box);
     close_stations, lon, lat, rad_distance = compute_circle(myVelfield, center, radius);
     return close_stations, lon, lat, rad_distance;
@@ -22,6 +31,14 @@ def get_stations_within_radius(data_config_file, center, radius, coord_box=(-126
 
 # DRIVER 2: STATIONS WITHIN BOX
 def get_stations_within_box(data_config_file, coord_box, network='pbo', num_years=3.0, max_sigma=2):
+    """
+    :param data_config_file: string, filename
+    :param coord_box: tuple, (W, E, S, N), required
+    :param network: string, default 'pbo'
+    :param num_years: float, default 3.0
+    :param max_sigma: float, mm/yr, default 2.0
+    :returns: list of strings, list of floats, list of floats [stations, lon, lat]
+    """
     myVelfield = inputs_velfield(data_config_file, network, num_years, max_sigma, coord_box);
     within_stations, lon, lat = compute_box(myVelfield, coord_box);
     return within_stations, lon, lat;
@@ -30,6 +47,15 @@ def get_stations_within_box(data_config_file, coord_box, network='pbo', num_year
 # DRIVER 3: STATIONS WITHIN A USER-DEFINED KML BORDER
 def get_stations_within_polygon(data_config_file, polygon_file, coord_box=(-126, -110, 30.0, 49), network='pbo',
                                 num_years=3.0, max_sigma=2):
+    """
+    :param data_config_file: string, filename
+    :param polygon_file: string, filename to simple KML file
+    :param coord_box: tuple, (W, E, S, N), default western US
+    :param network: string, default 'pbo'
+    :param num_years: float, default 3.0
+    :param max_sigma: float, mm/yr, default 2.0
+    :returns: list of strings, list of floats, list of floats [stations, lon, lat]
+    """
     [polygon_lon, polygon_lat] = read_kml.read_simple_kml(polygon_file);
     myVelfield = inputs_velfield(data_config_file, network, num_years, max_sigma, coord_box);
     within_stations, lon, lat = compute_within_polygon(myVelfield, polygon_lon, polygon_lat);
@@ -49,6 +75,12 @@ def inputs_velfield(data_config_file, network, num_years, max_sigma, coord_box):
 
 # ----------- CIRCLE FUNCTIONS ---------------- # 
 def compute_circle(myVelfield, center, radius):
+    """
+    :param myVelfield: list of Station_Vels
+    :param center: list [lon, lat]
+    :param radius: float, km
+    :returns: list of strings, list of floats, list of floats, list of floats [stations, lon, lat, distances]
+    """
     close_stations, rad_distance = [], [];
     lon, lat = [], [];
     for station_vel in myVelfield:
@@ -64,6 +96,11 @@ def compute_circle(myVelfield, center, radius):
 
 # ----------- BOX FUNCTIONS ---------------- #
 def compute_box(myVelfield, coord_box):
+    """
+    :param myVelfield: list of Station_Vels
+    :param coord_box: list [W, E, S, N]
+    :returns: list of strings, list of floats, list of floats [stations, lon, lat]
+    """
     close_stations, lon, lat = [], [], [];
     for station_vel in myVelfield:
         if coord_box[0] <= station_vel.elon <= coord_box[1]:
@@ -81,6 +118,7 @@ def compute_within_polygon(myVelfield, polygon_lon, polygon_lat):
     :param myVelfield: velfield object
     :param polygon_lon: list of lon polygon vertices
     :param polygon_lat: list of lat polygon vertices
+    :returns: list of strings, list of floats, list of floats [stations, lon, lat]
     """
     lon, lat = [], [];
     polygon = np.row_stack((np.array(polygon_lon), np.array(polygon_lat))).T;
