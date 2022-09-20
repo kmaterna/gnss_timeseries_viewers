@@ -1,7 +1,0 @@
-[data-config]
-
-gps_ts_dir = Time_Series/
-vel_dir = Velocities/
-offsets_dir = Offsets/
-network_list = Metadata/network_list.txt
-cache_file = Metadata/usgs_station_cache.txt
