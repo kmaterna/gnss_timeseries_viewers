@@ -1,6 +1,7 @@
 #!/bin/bash
-# Updating all data holdings as of November 2021.
+# Updating all data holdings as of November 2022.
 # for USGS, be in an environment that has pandas
+# for CWU, be in an environment that has "pip install earthscope-cli"
 # Call this script from the parent directory where GNSS data is locally stored (ex: GPS_POS_DATA/)
 
 # Setup
@@ -8,32 +9,34 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 
 # UPDATE CWU/PBO POS, OFFSET, EVENT, AND VELOCITY DATA
+# First, enable your es sso token with 'es sso login' (expires every day?)
 mkdir -p PBO_Data
 mkdir -p PBO_Data/Time_Series/
 cd PBO_Data/Time_Series/
-wget -N --recursive --no-parent --no-directories --accept "*.cwu.final_igs14.pos, *.cwu.final_nam14.pos" ftp://data-out.unavco.org/pub/products/position
+wget -N --recursive --no-directories --no-parent --accept "*cwu.final_nam14.pos,*cwu.final_igs14.pos" -e robots=off --header "authorization: Bearer $(es sso access --token)" https://data.unavco.org/archive/gnss/products/position/
 cd ../../
 
 mkdir -p PBO_Data/PBO_Event_Files/
 cd PBO_Data/PBO_Event_Files/
-wget -N --recursive --no-parent --no-directories --accept "cwu*coseis_kalts.evt, pbo*coseis_kalts.evt" ftp://data-out.unavco.org/pub/products/event/
+wget -r -np --reject=tmp,ps,index* --accept "*_kalts.evt" -e robots=off --no-directories --header "authorization: Bearer $(es sso access --token)" https://data.unavco.org/archive/gnss/products/event/
+cp data.unavco.org/archive/gnss/products/event/*.evt .
+rm -r data.unavco.org
 cd ../../
 
 mkdir -p PBO_Data/Offsets/
 cd PBO_Data/Offsets/
-wget -N --recursive --no-parent --no-directories --accept "cwu*nam14.off, pbo*nam08.off" ftp://data-out.unavco.org/pub/products/offset/
+wget -N --recursive --no-parent --no-directories --header "authorization: Bearer $(es sso access --token)" https://data.unavco.org/archive/gnss/products/offset/cwu.kalts_nam14.off
 cd ../../
 
 mkdir -p PBO_Data/Velocities/
 cd PBO_Data/Velocities/
-wget -N --recursive --no-parent --no-directories --accept "cwu.final_nam14.vel, cwu.final_igs14.vel" ftp://data-out.unavco.org/pub/products/velocity/
+wget -N --recursive --no-parent -e robots=off --no-directories --accept "cwu.final_nam14.vel, cwu.final_igs14.vel" --header "authorization: Bearer $(es sso access --token)" https://data.unavco.org/archive/gnss/products/velocity/
 cd ../../
-
 
 
 # UPDATE UNR DATA: OFFSETS, COORDINATES, AND TIME SERIES
 # VELOCITIES get updated manually with the datestamp and #URL placed on the first line. 
-unr_coords_cache_file="UNR_coords_jan2022.txt"   # update this with the datestamp
+unr_coords_cache_file="UNR_coords_nov2022.txt"   # update this with the datestamp
 mkdir -p UNR_Data/
 mkdir -p UNR_Data/Offsets/
 cd UNR_Data/Offsets/
@@ -64,18 +67,16 @@ cd ../
 mkdir -p Hydro
 mkdir -p Hydro/NLDAS/
 cd Hydro/NLDAS/
-wget -N --recursive --no-parent --no-directories --accept "*.hyd" ftp://data-out.unavco.org/pub/products/hydro/nldas2/
+wget -N --recursive --no-directories --no-parent --accept "*hyd" -e robots=off --header "authorization: Bearer $(es sso access --token)" https://data.unavco.org/archive/gnss/products/hydro/nldas2/
 cd ../../
 
 mkdir -p Hydro/GLDAS/
 cd Hydro/GLDAS/
-wget --recursive --no-parent --no-directories --accept "*.hyd" ftp://data-out.unavco.org/pub/products/hydro/gldas2
+wget -N --recursive --no-directories --no-parent --accept "*hyd" -e robots=off --header "authorization: Bearer $(es sso access --token)" https://data.unavco.org/archive/gnss/products/hydro/gldas2/
 cd ../../
 
 mkdir -p Hydro/NOAH025
 cd Hydro/NOAH025/
-wget --recursive --no-parent --no-directories --accept "*.hyd" ftp://data-out.unavco.org/pub/products/hydro/noah025
+wget -N --recursive --no-directories --no-parent --accept "*hyd" -e robots=off --header "authorization: Bearer $(es sso access --token)" https://data.unavco.org/archive/gnss/products/hydro/noah025/
 cd ../../
-
-
 
