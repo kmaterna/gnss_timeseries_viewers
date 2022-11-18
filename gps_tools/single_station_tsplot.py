@@ -197,5 +197,5 @@ def get_figure_name(MyParams, outdir):
             savename = savename + "_oroville";
             title = title + ' by Oroville';
     savename = savename + '_' + MyParams.datasource + '_' + MyParams.refframe;
-    savename = savename + "_ts.jpg";
+    savename = savename + "_ts.png";
     return title, savename;

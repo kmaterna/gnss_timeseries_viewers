@@ -252,7 +252,7 @@ def single_ts_plot(ts_obj, detrended, _MyParams, ets_intervals, name):
     plt.setp(ax3.get_yticklabels(), fontsize=label_fontsize);
 
     title = ts_obj.name + " without ETS offset";
-    savename = title + "_" + name + ".jpg";
+    savename = title + "_" + name + ".png";
     axarr[0].set_title(title, fontsize=label_fontsize + 2);
     plt.savefig(savename, dpi=dpival);
     return;
