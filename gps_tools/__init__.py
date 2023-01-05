@@ -11,3 +11,4 @@ from . import pygmt_plots
 from . import gps_seasonal_removals
 from . import gps_postseismic_remove
 from . import file_io
+from . import gps_objects

@@ -6,9 +6,9 @@ Read, Process a little, and Write Back Out.
 import gps_tools.file_io.io_nota
 from GNSS_TimeSeries_Viewers.gps_tools import gps_input_pipeline, offsets
 
-station="P325"
-data_config_file="/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"
-outfile=station+"_noearthquake.pos"
+station = "P325"
+data_config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"
+outfile = station + "_noearthquake.pos"
 
 [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station, 'unr', data_config_file, refframe='ITRF')
 newobj = offsets.remove_offsets(myData, offset_obj);   # remove antenna changes and instrument changes
