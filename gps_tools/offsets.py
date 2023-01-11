@@ -75,11 +75,11 @@ def solve_for_offsets(ts_object, offset_times, num_days=10):
     """
     print("Solving empirically for offsets at ", offset_times);
     Offset_obj = [];
-    for i in range(len(offset_times)):
-        e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [offset_times[i], offset_times[i]], num_days);
-        n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [offset_times[i], offset_times[i]], num_days);
-        u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [offset_times[i], offset_times[i]], num_days);
-        newobj = gps_objects.Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=offset_times[i]);
+    for offset_time in offset_times:
+        e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [offset_time, offset_time], num_days);
+        n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [offset_time, offset_time], num_days);
+        u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [offset_time, offset_time], num_days);
+        newobj = gps_objects.Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=offset_time);
         Offset_obj.append(newobj);
     return Offset_obj;
 

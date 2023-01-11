@@ -45,8 +45,10 @@ def project_onto_perpendicular_profile(velfield, startcoord, endcoord, width, ve
     selected_stations = [];
     for i in range(len(retval[0])):
         newstation = gps_objects.Station_Vel(name='', elon=retval[0][i], nlat=retval[1][i], e=retval[2][i],
-                                             n=retval[3][i], proccenter=velfield[0].proccenter,
-                                             refframe=velfield[0].refframe, subnetwork=velfield[0].subnetwork);
+                                             n=retval[3][i], u=0, proccenter=velfield[0].proccenter,
+                                             refframe=velfield[0].refframe, subnetwork=velfield[0].subnetwork, se=0,
+                                             sn=0, su=0, first_epoch=None, last_epoch=None, meas_type='gnss',
+                                             survey=False);
         selected_stations.append(newstation);
 
     select_east = np.array(retval[2]);   # first column = east velocity
