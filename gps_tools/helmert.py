@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.optimize
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
-from . import gps_objects, gps_vel_functions
+from . import gps_objects, vel_functions
 
 
 def create_Helmert_and_apply(sys_A_common_vels, sys_B_common_vels):
@@ -17,7 +17,7 @@ def create_Helmert_and_apply(sys_A_common_vels, sys_B_common_vels):
     if len(sys_A_common_vels) != len(sys_B_common_vels):
         raise ValueError("Error! You are estimating a Helmert transformation between two non-matching vectors.");
     # Preparing for Estimating Helmert Transformation
-    print("BEFORE HELMERT:", gps_vel_functions.velocity_misfit_function(sys_A_common_vels, sys_B_common_vels),
+    print("BEFORE HELMERT:", vel_functions.velocity_misfit_function(sys_A_common_vels, sys_B_common_vels),
           "mm RMS misfit");
     sysA_posform_xyz = prepare_velocities_for_helmert_trans(sys_A_common_vels);
     sysB_posform_xyz = prepare_velocities_for_helmert_trans(sys_B_common_vels);
@@ -27,7 +27,7 @@ def create_Helmert_and_apply(sys_A_common_vels, sys_B_common_vels):
     # converting back to ENU
     B_enu_in_A = postproc_after_helmert(sysB_postH);
     A_enu_in_A = postproc_after_helmert(sysA_posform_xyz);
-    print("AFTER HELMERT:", gps_vel_functions.velocity_misfit_function(A_enu_in_A, B_enu_in_A), "mm RMS misfit");
+    print("AFTER HELMERT:", vel_functions.velocity_misfit_function(A_enu_in_A, B_enu_in_A), "mm RMS misfit");
     return Hparams, A_enu_in_A, B_enu_in_A;
 
 
@@ -41,7 +41,7 @@ def prepare_velocities_for_helmert_trans(velfield, multiplier=100):
     This is going to be used for helmert transformation of positions into a new reference frame.
     Multiplier is the number of years for velocities, to avoid floating point and rounding errors
     """
-    velfield_xyz = gps_vel_functions.convert_enu_velfield_to_xyz(velfield);  # convert to xyz
+    velfield_xyz = vel_functions.convert_enu_velfield_to_xyz(velfield);  # convert to xyz
     special_pos_objects = [];
     for item in velfield_xyz:
         x_special_pos = item.x_pos + multiplier * item.x_rate;

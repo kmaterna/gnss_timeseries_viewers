@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.path as mpltPath
 from Tectonic_Utils.geodesy import haversine
 from Tectonic_Utils.read_write import read_kml
-from . import gps_vel_functions, gps_input_vel_pipeline
+from . import vel_functions, gps_input_vel_pipeline
 
 
 # DRIVER 1: STATIONS WITHIN RADIUS
@@ -70,9 +70,9 @@ def inputs_velfield(data_config_file, network, num_years, max_sigma, coord_box, 
     # Purpose: generate input velocity field.
     print("Searching for GNSS stations in the %s network " % network);
     myVelfield = gps_input_vel_pipeline.import_velfield(data_config_file, network, refframe=refframe);
-    myVelfield = gps_vel_functions.clean_velfield(myVelfield, num_years=num_years, max_horiz_sigma=max_sigma,
-                                                  max_vert_sigma=max_sigma * 3, coord_box=coord_box);
-    myVelfield = gps_vel_functions.remove_duplicates(myVelfield);
+    myVelfield = vel_functions.clean_velfield(myVelfield, num_years=num_years, max_horiz_sigma=max_sigma,
+                                              max_vert_sigma=max_sigma * 3, coord_box=coord_box);
+    myVelfield = vel_functions.remove_duplicates(myVelfield);
     return myVelfield;
 
 

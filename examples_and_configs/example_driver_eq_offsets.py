@@ -1,5 +1,7 @@
+#!/usr/bin/python3
+
 # See earthquake offsets at stations
-# Step 1: Determine the stations in the radius.  Then identify their offsets
+# Determine the stations in the radius.  Then identify their offsets.
 # This could be further automated with a strongly typed params object
 
 import subprocess
@@ -9,9 +11,9 @@ import GNSS_TimeSeries_Viewers.gps_tools.file_io.io_other as io_other
 
 # CONFIG PARAMETERS FOR THIS EXPERIMENT #
 params = {"data_config_file": "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt",
-          "center": [-124.0, 40.15],
+          "center": [-124.0, 41.15],
           "expname": 'MTJ_2014',
-          "radius": 300,  # in km
+          "radius": 200,  # in km
           "proc_center": 'cwu',
           "refframe": 'NA',
           "blacklist": ()};
@@ -21,8 +23,7 @@ def driver():
     myparams, stations = configure();
     [data, _, eq_list, _] = gt.gps_input_pipeline.multi_station_inputs(stations, myparams["blacklist"],
                                                                        myparams["proc_center"], myparams["refframe"],
-                                                                       myparams["data_config_file"],
-                                                                       myparams["distances"]);
+                                                                       myparams["data_config_file"]);
     # FOR 2014 earthquake
     station_vectors = gt.offsets.offset_to_vel_object(eq_list, data, myparams["refframe"], myparams["proc_center"],
                                                       target_date=dt.datetime.strptime("20140310", "%Y%m%d"));
@@ -34,16 +35,12 @@ def driver():
 
 
 def configure():
-    stations, _, _, distances = gt.stations_within_radius.get_stations_within_radius(params["data_config_file"],
-                                                                                     params["center"],
-                                                                                     params["radius"],
-                                                                                     network=params["proc_center"]);
+    stations, _, _, _ = gt.stations_within_radius.get_stations_within_radius(params["data_config_file"],
+                                                                             params["center"], params["radius"],
+                                                                             network=params["proc_center"]);
     outdir = params["expname"] + "_" + params["proc_center"]
     subprocess.call(["mkdir", "-p", outdir], shell=False);
     params["outdir"] = outdir;
-    outname = params["expname"] + "_" + str(params["center"][0]) + "_" + str(params["center"][1]) + "_" + str(
-        params["radius"])
-    params["outname"] = outname;
     return params, stations;
 
 

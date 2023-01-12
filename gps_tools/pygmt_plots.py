@@ -2,7 +2,7 @@
 
 import numpy as np
 import pygmt
-from . import gps_vel_functions
+from . import vel_functions
 
 
 def station_vels_to_arrays(station_vels):
@@ -67,7 +67,7 @@ def map_velocity_profile(velfield, selected_velfield, outname,  vector_scale_inf
     fault_traces can be a list of files
     """
     fig = pygmt.Figure();
-    region = gps_vel_functions.get_bounding_box(velfield);
+    region = vel_functions.get_bounding_box(velfield);
     fig.coast(region=region, projection="M6i", frame="1.0", shorelines="1.0p,black", water="lightblue",
               borders=['1', '2']);
     elon, nlat, e, n, u = station_vels_to_arrays(velfield);

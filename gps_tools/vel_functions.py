@@ -2,6 +2,7 @@
 Functions to operate on velocity-field objects (lists of station-vels)
 Future work: Combining two velocity fields in outer combination (inclusive) or inner combination (common stations)
 """
+
 from . import gps_objects as gps_objects
 import numpy as np
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
