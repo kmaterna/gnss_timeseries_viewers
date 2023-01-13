@@ -7,20 +7,18 @@ Viewing a stack of stations
 """
 
 import subprocess
-from . import gps_input_pipeline, gps_ts_functions, gps_seasonal_removals, stations_within_radius, offsets
+from . import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss, vel_functions
 from . import outputs_gps_stacks as out_stack
 from .file_io import config_io, io_other
 
 
 def driver(data_config_file, expname, center, radius, proc_center, refframe, outdir, must_include=(None, None)):
-    myparams = configure(data_config_file, expname, center, radius, proc_center, refframe, outdir);
-
-    [dataobj_list, offsetobj_list, eqobj_list, paired_distances] = gps_input_pipeline.multi_station_inputs(
-        myparams.stations, myparams.blacklist, proc_center, refframe, data_config_file, myparams.distances,
-        must_include=must_include);
+    myparams, database = configure(data_config_file, expname, center, radius, proc_center, refframe, outdir);
+    [dataobj_list, offsetobj_list, eqobj_list] = database.load_stations(myparams.stations);
 
     [_, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons,
-     sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, paired_distances, data_config_file);
+     sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, myparams.distances, data_config_file,
+                                 date_range=must_include);
 
     # A series of output options that can be chained together, selected or unselected, etc.
     out_stack.horizontal_full_ts(no_offsets_no_trends, sorted_distances, myparams, "noeq");
@@ -36,21 +34,23 @@ def driver(data_config_file, expname, center, radius, proc_center, refframe, out
 
 def configure(data_config_file, expname, center, radius, proc_center, refframe, outdir):
     # Set up the stacking process
-    stations, lons, lats, distances = stations_within_radius.get_stations_within_radius(data_config_file, center,
-                                                                                        radius, network=proc_center);
+    database = load_gnss.create_station_repo(data_config_file, proc_center=proc_center, refframe=refframe);
+    stations, distances = database.search_stations_by_circle(center, radius);
     data_config = config_io.read_config_file(data_config_file);
     blacklist = io_other.read_blacklist(data_config["blacklist"]);
+    stations, distances = vel_functions.remove_blacklist_vels(stations, blacklist, matching_data=distances);
+
     subprocess.call(["mkdir", "-p", outdir], shell=False);
     outname = expname + "_" + str(center[0]) + "_" + str(center[1]) + "_" + str(radius)
     myparams = out_stack.StackParams(expname=expname, proc_center=proc_center, refframe=refframe, center=center,
-                                     radius=radius, stations=stations, bbox=None, distances=distances,
+                                     radius=radius, stations=[x.name for x in stations], bbox=None, distances=distances,
                                      blacklist=blacklist, outdir=outdir, outname=outname, starttime=None, endtime=None,
                                      data_config_file=data_config_file, eqtimes=(), labeltime=None);
     out_stack.write_stack_params(myparams);  # for good measure
-    return myparams;
+    return myparams, database;
 
 
-def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_file):
+def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_file, date_range):
     latitudes_list = [i.coords[1] for i in dataobj_list];
     sorted_objects = [x for _, x in sorted(zip(latitudes_list, dataobj_list))];  # the raw, sorted data.
     sorted_offsets = [x for _, x in sorted(zip(latitudes_list, offsetobj_list))];  # the raw, sorted data.
@@ -62,6 +62,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
 
     # Detrended objects (or objects with trends and no offsets; depends on what you want.)
     for i in range(len(sorted_objects)):
+        if not gps_ts_functions.covers_date_range(sorted_objects[i], date_range[0], date_range[1]):
+            continue;
         newobj = gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq', data_config_file);
         detrended_objects.append(newobj);  # still has offsets, doesn't have trends
 
@@ -71,6 +73,8 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
 
     # Objects with no earthquakes or seasonals
     for i in range(len(dataobj_list)):
+        if not gps_ts_functions.covers_date_range(sorted_objects[i], date_range[0], date_range[1]):
+            continue;
         # Remove the steps earthquakes
         newobj = offsets.remove_offsets(sorted_objects[i], sorted_offsets[i]);
         newobj = offsets.remove_offsets(newobj, sorted_eqs[i]);

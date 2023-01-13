@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 import datetime as dt
 
 
-def subsample_ts_at_points(station, dtlist, window_days=30, Se_default=None, Sn_default=None, Su_default=None):
+def subsample_ts_at_points(Data0, dtlist, window_days=30, Se_default=None, Sn_default=None, Su_default=None):
     """
-    :param station: GPS timeseries object
+    :param Data0: GPS timeseries object
     :param dtlist: list of datetimes for downsampling
     :param window_days: integer
     :param Se_default: float
@@ -19,15 +19,15 @@ def subsample_ts_at_points(station, dtlist, window_days=30, Se_default=None, Sn_
     """
     dE, dN, dU, Se, Sn, Su = [], [], [], [], [], [];
     for day in dtlist:
-        sample_pos = gps_ts_functions.subsample_in_time(station, day, window_days);
+        sample_pos = gps_ts_functions.subsample_in_time(Data0, day, window_days);
         dE.append(sample_pos[0]);
         dN.append(sample_pos[1]);
         dU.append(sample_pos[2]);
         Se.append(Se_default);
         Sn.append(Sn_default);
         Su.append(Su_default);
-    downsampled_object = gps_objects.Timeseries(name=station.name, coords=station.coords, dtarray=dtlist, dE=dE, dN=dN,
-                                                dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=station.EQtimes);
+    downsampled_object = gps_objects.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=dtlist, dE=dE, dN=dN,
+                                                dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=Data0.EQtimes);
     return downsampled_object;
 
 

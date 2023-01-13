@@ -1,6 +1,7 @@
 import datetime as dt
 import numpy as np
 import os, sys
+import Tectonic_Utils.read_write.read_kml as read_kml
 
 
 def check_lon_sanity(lon):
@@ -16,11 +17,16 @@ def check_lon_sanity(lon):
 
 def check_if_file_exists(filename):
     if os.path.isfile(filename):  # Determine if file is found on system. Provide helpful suggestions if not.
-        print("Found file %s from datasource " % filename);
+        print("Found file %s from database " % filename);
     else:  # If the file is not found on the system:
         print("Error!  Cannot find %s in database. Exiting immediately..." % filename);
         sys.exit(1);
     return;
+
+
+def read_kml_polygon(kml_file):
+    [polygon_lon, polygon_lat] = read_kml.read_simple_kml(kml_file);
+    return polygon_lon, polygon_lat;
 
 
 def remove_blacklist(stations, blacklisted_stations):

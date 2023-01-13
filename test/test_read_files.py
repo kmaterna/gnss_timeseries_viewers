@@ -6,25 +6,39 @@ config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/co
 
 class Tests(unittest.TestCase):
 
-    def test_reading_ts(self):
-        [_myData, _, _] = gps_tools.gps_input_pipeline.get_station_data("P496", "unr", config_file, "NA");
-        [_myData, _, _] = gps_tools.gps_input_pipeline.get_station_data("P496", "unr", config_file, "ITRF");
-        [_myData, _, _] = gps_tools.gps_input_pipeline.get_station_data("P496", "pbo", config_file, "NA");
-        [_myData, _, _] = gps_tools.gps_input_pipeline.get_station_data("P496", "pbo", config_file, "ITRF");
-        [_myData, _, _] = gps_tools.gps_input_pipeline.get_station_data("P496", "cwu", config_file, "NA");
-        [_myData, _, _] = gps_tools.gps_input_pipeline.get_station_data("P496", "cwu", config_file, "ITRF");
-        [_myData, _, _] = gps_tools.gps_input_pipeline.get_station_data("P496", "usgs", config_file, "NA");
-        [_myData, _, _] = gps_tools.gps_input_pipeline.get_station_data("P496", "usgs", config_file, "ITRF");
+    def test_unr_database(self):
+        database = gps_tools.load_gnss.create_station_repo(config_file, proc_center='unr', refframe='NA');
+        database.import_full_velfield();
+        [_myData, _, _] = database.load_station("P496");
+        database = gps_tools.load_gnss.create_station_repo(config_file, proc_center='unr', refframe='ITRF');
+        # database.import_full_velfield();  # TODO
+        [_myData, _, _] = database.load_station("P496");
 
-    def test_reading_velocities(self):
-        _v = gps_tools.gps_input_vel_pipeline.import_velfield(config_file, network='pbo', refframe='ITRF');
-        _v = gps_tools.gps_input_vel_pipeline.import_velfield(config_file, network='unr', refframe='NA');
-        # _v = gps_tools.gps_input_vel_pipeline.import_velfield(config_file, network='unr', refframe='ITRF');  # TODO
-        _v = gps_tools.gps_input_vel_pipeline.import_velfield(config_file, network='cwu', refframe='NA');
-        _v = gps_tools.gps_input_vel_pipeline.import_velfield(config_file, network='usgs', refframe='NA',
-                                                              sub_network='SFBayArea');
-        _v = gps_tools.gps_input_vel_pipeline.import_velfield(config_file, network='usgs', refframe='ITRF',
-                                                              sub_network='SFBayArea');
+    def test_cwu_database(self):
+        database = gps_tools.load_gnss.create_station_repo(config_file, proc_center='cwu', refframe='NA');
+        database.import_full_velfield();
+        [_myData, _, _] = database.load_station("P496");
+        database = gps_tools.load_gnss.create_station_repo(config_file, proc_center='cwu', refframe='ITRF');
+        database.import_full_velfield();
+        [_myData, _, _] = database.load_station("P496");
+
+    def test_pbo_database(self):
+        database = gps_tools.load_gnss.create_station_repo(config_file, proc_center='pbo', refframe='NA');
+        database.import_full_velfield();
+        [_myData, _, _] = database.load_station("P496");
+        database = gps_tools.load_gnss.create_station_repo(config_file, proc_center='pbo', refframe='ITRF');
+        database.import_full_velfield();
+        [_myData, _, _] = database.load_station("P496");
+
+    def test_usgs_database(self):
+        database = gps_tools.load_gnss.create_station_repo(config_file, proc_center='usgs', refframe='NA',
+                                                           subnetwork='SFBayArea');
+        database.import_full_velfield();
+        [_myData, _, _] = database.load_station("P236");
+        database = gps_tools.load_gnss.create_station_repo(config_file, proc_center='usgs', refframe='ITRF',
+                                                           subnetwork='SFBayArea');
+        [_myData, _, _] = database.load_station("P236");
+        database.import_full_velfield();
 
 
 if __name__ == "__main__":

@@ -14,8 +14,7 @@ import gps_tools.utilities
 import numpy as np
 import datetime as dt
 import glob, subprocess
-from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, gps_seasonal_removals, gps_input_pipeline, offsets, \
-    stations_within_radius
+from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss
 from Tectonic_Utils.geodesy import haversine
 import remove_ets_events
 
@@ -56,21 +55,23 @@ def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=
         stations = station_list;
     else:
         # Getting the stations of interest ('huge' means we just want within the box.)
+        database = load_gnss.create_station_repo(data_config, proc_center=network, refframe=refframe);
         if radius == -1:
-            stations, _, _ = stations_within_radius.get_stations_within_box(map_coords, network);
+            stations = database.search_stations_by_box(map_coords)
         else:
-            stations, _, _, _ = stations_within_radius.get_stations_within_radius(EQcoords, radius, map_coords,
-                                                                                  network);
+
+            stations, _ = database.search_stations_by_circle(EQcoords, radius);
+        stations = [x.name for x in stations];
         stations = gps_tools.utilities.remove_blacklist(stations, ());  # plumb real blacklist later
 
     return [stations, outdir, time_after_start_date, critical_variance];
 
 
 def inputs(station_names, network, refframe):
+    database = load_gnss.create_station_repo(data_config, refframe, network)
     dataobj_list, offsetobj_list, eqobj_list = [], [], [];
     for station_name in station_names:
-
-        [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, network, refframe);
+        [myData, offset_obj, eq_obj] = database.load_station(station_name);
         if not myData:
             continue;
 

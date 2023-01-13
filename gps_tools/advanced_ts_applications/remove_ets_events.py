@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 import collections
 import datetime as dt
 import subprocess
-from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, gps_seasonal_removals, offsets, gps_input_pipeline
+from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss
 from GNSS_TimeSeries_Viewers.gps_tools.gps_objects import Timeseries
 
 # For reference of how this gets returned from the read functions.
 Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove', 'outliers_def', 'offset_num_days',
                                                    'earthquakes_remove', 'offsets_remove', 'seasonals_remove',
                                                    'seasonals_type', 'datasource', 'refframe', 'data_config']);
-
+data_config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt";
 
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0,
                         seasonals_type='lssq', datasource='pbo', refframe='NA'):
@@ -29,7 +29,6 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seas
               datasource, refframe):
     outliers_def = 2.0;  # mm away from average.
     offset_num_days = 30;  # days averaged on either side of offset.
-    data_config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt";
     MyParams = Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def,
                           offset_num_days=offset_num_days, earthquakes_remove=earthquakes_remove,
                           offsets_remove=offsets_remove, seasonals_remove=seasonals_remove,
@@ -44,7 +43,10 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seas
 
 # ----------- INPUTS ---------------- # 
 def input_data(station_name, datasource, refframe):
-    [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, refframe);
+    database = load_gnss.create_station_repo(data_config_file, refframe, datasource)
+    [myData, offset_obj, eq_obj] = database.load_station(station_name);
+
+    # [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, refframe);
     ets_intervals = input_tremor_days();
     return [myData, offset_obj, eq_obj, ets_intervals];
 

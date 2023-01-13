@@ -1,88 +1,12 @@
 """Reading inputs for time series files"""
 
-import sys, os
-import datetime as dt
-from .file_io import io_magnet_unr, io_nota, io_other, io_usgs, config_io
-from . import offsets, utilities
-
-
-# Timeseries = namedtuple("Timeseries",['name','coords','dtarray','dN', 'dE','dU','Sn','Se','Su', 'EQtimes']);  # in mm
-
-# ----------------------------------------
-#  MULTI STATION DRIVERS               ---
-# ----------------------------------------
-
-def multi_station_inputs(station_names, blacklist_user, proc_center, refframe, data_config_file, distances=None,
-                         must_include=(None, None)):
-    """
-    Returns a list of objects for time series data, offsets, and earthquakes
-    Also kicks out stations when necessary based on blacklist or timing criteria (through must_include parameter)
-    Keeps the distances object as metadata in case you pass it through.
-    must_include is a 2-vector of datetime objects that present a window that must be included in the time series.
-    default is not to impose the must_include criterion.
-    """
-    dataobj_list, offsetobj_list, eqobj_list, distances_surviving = [], [], [], [];
-    Params = config_io.read_config_file(data_config_file);
-    station_names = utilities.remove_blacklist(station_names, io_other.read_blacklist(Params["blacklist"]));  # filter
-    for i in range(len(station_names)):
-        if station_names[i] in blacklist_user:
-            continue;  # a second type of optional blacklist
-        else:
-            [myData, offset_obj, eq_obj] = get_station_data(station_names[i], proc_center, data_config_file, refframe);
-
-            if must_include[0] is not None:
-                if myData.dtarray[-1] < must_include[0] or myData.dtarray[0] > must_include[1]:
-                    # kicking out the stations that end early or start late.
-                    print("Excluding station %s due to not including data inside %s:%s" % (
-                        myData.name, dt.datetime.strftime(must_include[0], "%Y-%m-%d"),
-                        dt.datetime.strftime(must_include[1], "%Y-%m-%d")));
-                    continue;
-            if myData:
-                dataobj_list.append(myData);
-                offsetobj_list.append(offset_obj);
-                eqobj_list.append(eq_obj);
-                if distances is not None:  # if you want to sort distances too
-                    distances_surviving.append(distances[i]);
-    return [dataobj_list, offsetobj_list, eqobj_list, distances_surviving];
+from .file_io import io_magnet_unr, io_nota, io_other, io_usgs
+from . import offsets
 
 
 # ----------------------------------------
 # DRIVERS, CONFIGURE, AND FILE MASHING ---
 # ----------------------------------------
-
-def get_station_data(station, datasource, data_config_file, refframe="NA", sub_network=''):
-    """
-    Function to access the time-series reading library. refframe choices are NA and ITRF.
-
-    :param station: string, 4-characters
-    :param datasource: string, like 'pbo' or 'unr'
-    :param data_config_file: string, filepath
-    :param refframe: string, default 'NA', choices usually 'NA' or 'ITRF'
-    :param sub_network: string, sometimes required for USGS data
-    :returns: [TimeSeries, list of Offsets for EQs, list of Offsets for antenna changes]
-    """
-    Params = config_io.read_config_file(data_config_file);
-    filename, sub_network = pre_screen_datasource_paths(Params, station, datasource, refframe, sub_network);
-
-    if datasource == 'unr':
-        [myData, offset_obj, eq_obj] = get_unr(Params, filename);  # UNR data format
-    elif datasource in ['pbo', 'nmt']:
-        [myData, offset_obj, eq_obj] = get_pbo_type(Params, filename, station, datasource);  # PBO data format
-    elif datasource == 'cwu':
-        [myData, offset_obj, eq_obj] = get_cwu(Params, filename, station, datasource);  # CWU data format
-    elif datasource == 'usgs':
-        [myData, offset_obj, eq_obj] = get_usgs(Params, filename, station, refframe, sub_network);  # USGS data
-    elif datasource in ['gldas', 'nldas', 'noah025']:
-        [myData, offset_obj, eq_obj] = get_gldas(filename);  # hydro
-    elif datasource == 'grace':
-        [myData, offset_obj, eq_obj] = get_grace(filename);  # GRACE model
-    elif datasource == 'lsdm':
-        [myData, offset_obj, eq_obj] = get_lsdm(filename);  # LSDM model
-    else:
-        print('Error! data source "%s" not recognized. Returning empty object. ' % datasource);
-        return [[], [], []];  # Error code.
-    return [myData, offset_obj, eq_obj];
-
 
 def get_unr(Params, filename):
     myData = io_magnet_unr.read_UNR_magnet_ts_file(filename, Params["unr"]["directory"] + Params["unr"]["coords_file"]);
@@ -126,77 +50,6 @@ def get_grace(filename):
 def get_lsdm(filename):
     myData = io_other.read_lsdm_file(filename);
     return [myData, [], []];
-
-
-def pre_screen_datasource_paths(Params, station, inps='pbo', refframe="NA", sub_network=''):
-    """ A defensive programming function that quits if it doesn't find the right file."""
-    print("\nStation %s: " % station);
-
-    if refframe not in ['NA', 'ITRF']:
-        print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
-
-    # CHECK IF STATION EXISTS IN JUST ONE SUBNETWORK FOR CONVENIENCE
-    if inps == 'usgs' and sub_network == '':
-        network_list = io_usgs.query_usgs_network_name(station, Params['usgs']['directory'] +
-                                                       Params['usgs']['gps_ts_dir']);
-        if len(network_list) == 1:
-            sub_network = network_list[0].split('/')[-1];
-        else:
-            print("ERROR! User must select one sub-network for USGS time series. Exiting. ");
-            sys.exit(1);
-
-    # Path-setting through a look-up table
-    if inps == 'unr':
-        na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.NA.tenv3';
-        itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.IGS14.tenv3';
-    elif inps in ['cwu']:
-        na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_nam14.pos';
-        itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_igs14.pos';
-    elif inps in ['pbo', 'nmt']:
-        na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_nam08.pos';
-        itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + station + '.' + inps + '.final_igs08.pos';
-    elif inps == 'usgs':  # needs subnetwork
-        na_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + sub_network + '/' + station.lower()+"_NAfixed.rneu";
-        itrf_ts_filename = Params[inps]["directory"] + Params[inps]["gps_ts_dir"] + sub_network + '/' + station.lower() + "_ITRF2008.rneu";
-    elif inps == 'gldas':
-        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_noah10_gldas2.hyd'
-        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_noah10_gldas2.hyd'
-    elif inps == 'nldas':
-        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_noah125_nldas2.hyd'
-        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_noah125_nldas2.hyd'
-    elif inps == 'noah025':
-        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_NOAH025.hyd'
-        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_NOAH025.hyd'
-    elif inps == 'grace':
-        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + 'scaled_????_PREM_model_ts.txt'
-        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + 'scaled_????_PREM_model_ts.txt'
-    elif inps == 'lsdm':
-        na_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_LSDM_hydro.txt.txt'
-        itrf_ts_filename = Params["hydro"]["directory"] + Params["hydro"][inps+"_dir"] + station.lower() + '_LSDM_hydro.txt.txt'
-    else:
-        print("Error! Invalid input datasource %s" % inps);
-        sys.exit(1);
-
-    # Return the right filename based on selected reference frame
-    if refframe == "NA":
-        final_filename = na_ts_filename;
-    elif refframe == "ITRF":
-        final_filename = itrf_ts_filename;
-    else:
-        final_filename = itrf_ts_filename;
-
-    # Determine if the file is found on the computer or not. Provide helpful suggestions if not.
-    if os.path.isfile(final_filename):
-        print("Found file %s from datasource %s %s " % (final_filename, inps, sub_network));
-    # If the file is not found on the computer:
-    else:
-        print("Error!  Cannot find %s in %s %s database." % (final_filename, inps, sub_network) );
-        if inps == 'usgs':
-            print("The station %s could be found in the following sub_networks instead: " % station);
-            io_usgs.query_usgs_network_name(station, Params["usgs"]["directory"]);
-        print("Exiting immediately...");
-        sys.exit(1);
-    return final_filename, sub_network;
 
 
 # THE GUTS --------------------------------------

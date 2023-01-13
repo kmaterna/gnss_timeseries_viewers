@@ -20,10 +20,8 @@ params = {"data_config_file": "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA
 
 
 def driver():
-    myparams, stations = configure();
-    [data, _, eq_list, _] = gt.gps_input_pipeline.multi_station_inputs(stations, myparams["blacklist"],
-                                                                       myparams["proc_center"], myparams["refframe"],
-                                                                       myparams["data_config_file"]);
+    myparams, database, stations = configure();
+    [data, _, eq_list] = database.load_stations(stations);
     # FOR 2014 earthquake
     station_vectors = gt.offsets.offset_to_vel_object(eq_list, data, myparams["refframe"], myparams["proc_center"],
                                                       target_date=dt.datetime.strptime("20140310", "%Y%m%d"));
@@ -35,13 +33,13 @@ def driver():
 
 
 def configure():
-    stations, _, _, _ = gt.stations_within_radius.get_stations_within_radius(params["data_config_file"],
-                                                                             params["center"], params["radius"],
-                                                                             network=params["proc_center"]);
+    database = gt.load_gnss.create_station_repo(params['data_config_file'], proc_center=params["proc_center"],
+                                                refframe=params['refframe']);
+    stations, _ = database.search_stations_by_circle(params['center'], params['radius']);
     outdir = params["expname"] + "_" + params["proc_center"]
     subprocess.call(["mkdir", "-p", outdir], shell=False);
     params["outdir"] = outdir;
-    return params, stations;
+    return params, database, [x.name for x in stations];
 
 
 if __name__ == "__main__":

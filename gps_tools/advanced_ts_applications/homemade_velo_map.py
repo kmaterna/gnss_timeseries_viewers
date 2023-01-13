@@ -8,22 +8,17 @@
 
 import numpy as np
 import collections, subprocess
-from GNSS_TimeSeries_Viewers.gps_tools import gps_input_pipeline, gps_ts_functions, stations_within_radius, offsets
+from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, offsets, load_gnss, vel_functions
 import pygmt
 
 Parameters = collections.namedtuple("Parameters",
                                     ['data_config', 'expname', 'proc_center', 'refframe', 'center', 'radius',
-                                     'stations', 'distances', 'blacklist', 'outdir', 'outname']);
+                                     'stations', 'outdir', 'outname']);
 
 
 def driver():
-    myparams = configure();
-    [dataobj_list, offsetobj_list, eqobj_list, _] = gps_input_pipeline.multi_station_inputs(myparams.stations,
-                                                                                            myparams.blacklist,
-                                                                                            myparams.proc_center,
-                                                                                            myparams.refframe,
-                                                                                            myparams.data_config,
-                                                                                            distances=myparams.distances);
+    myparams, database = configure();
+    [dataobj_list, offsetobj_list, eqobj_list] = database.load_stations(myparams.stations);
     [_east_slope_list, _north_slope_list, vert_slope_list] = compute(dataobj_list, offsetobj_list, eqobj_list);
     pygmt_vertical_map(myparams, dataobj_list, vert_slope_list);
     return;
@@ -37,21 +32,23 @@ def configure():
     expname = 'SSGF';
     radius = 80;
     data_config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt";
+    blacklist = ["P340", "P316", "P170", "P158", "TRND", "P203", "BBDM", "KBRC", "RYAN", "BEAT", "CAEC",
+                 "MEXI"];  # This is global, just keeps growing
 
     proc_center = 'unr';  # WHICH DATASTREAM DO YOU WANT?
     refframe = 'NA';  # WHICH REFERENCE FRAME?
 
-    stations, lons, lats, distances = stations_within_radius.get_stations_within_radius(data_config_file, center,
-                                                                                        radius, network=proc_center);
-    blacklist = ["P340", "P316", "P170", "P158", "TRND", "P203", "BBDM", "KBRC", "RYAN", "BEAT", "CAEC",
-                 "MEXI"];  # This is global, just keeps growing
+    database = load_gnss.create_station_repo(data_config_file, proc_center=proc_center, refframe=refframe);
+    stations, _ = database.search_stations_by_circle(center, radius);
+    stations, _ = vel_functions.remove_blacklist_vels(stations, blacklist);
+
     outdir = expname + "_" + proc_center
     subprocess.call(["mkdir", "-p", outdir], shell=False);
     outname = expname + "_" + str(center[0]) + "_" + str(center[1]) + "_" + str(radius)
     myparams = Parameters(expname=expname, proc_center=proc_center, refframe=refframe, center=center, radius=radius,
-                          stations=stations, distances=distances, blacklist=blacklist, outdir=outdir, outname=outname,
+                          stations=[x.name for x in stations], outdir=outdir, outname=outname,
                           data_config=data_config_file);
-    return myparams;
+    return myparams, database;
 
 
 def compute(dataobj_list, offsetobj_list, eqobj_list):

@@ -9,7 +9,7 @@ Types of seasonal options:
 import matplotlib.pyplot as plt
 import collections
 from . import gps_objects as gps_objects
-from . import gps_ts_functions, gps_seasonal_removals, offsets, gps_input_pipeline
+from . import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss
 
 # Parameters for controlling plotting
 Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove', 'outliers_def',
@@ -68,7 +68,8 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, outl
 
 # ----------- INPUTS ---------------- # 
 def input_data(st_name, datasource, refframe, data_config_file):
-    [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(st_name, datasource, data_config_file, refframe);
+    database = load_gnss.create_station_repo(data_config_file, refframe, datasource)
+    [myData, offset_obj, eq_obj] = database.load_station(st_name);
     eqdates = [x.evdts for x in eq_obj];
     # First, we embed the data with the eq object metadata (always useful)
     myData = gps_objects.Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray, dN=myData.dN,

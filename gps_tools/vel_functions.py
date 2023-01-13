@@ -96,16 +96,25 @@ def disp_points_to_station_vels(obs_disp_points):
     return station_vel_list;
 
 
-def remove_blacklist_vels(velfield, blacklist, verbose=False):
-    cleaned_velfield = []
+def remove_blacklist_vels(velfield, blacklist, verbose=False, matching_data=None):
+    """
+    :param velfield: list of StationVels
+    :param blacklist: list of strings
+    :param verbose: boolean, false
+    :param matching_data: a vector of things that go with each station, like epicentral distance
+    :return: list of StationVels, list of matching data
+    """
+    cleaned_velfield, cleaned_distances = [], [];
     if verbose:
         print("Removing blacklist: Starting with %d stations" % len(velfield));
-    for vel in velfield:
-        if vel.name not in blacklist:
-            cleaned_velfield.append(vel);
+    for i in range(len(velfield)):
+        if velfield[i].name not in blacklist:
+            cleaned_velfield.append(velfield[i]);
+            if matching_data:
+                cleaned_distances.append(matching_data[i]);
     if verbose:
         print("Removing blacklist: Ending with %d stations" % len(cleaned_velfield));
-    return cleaned_velfield;
+    return cleaned_velfield, cleaned_distances;
 
 
 def filter_to_circle(myVelfield, center, radius):

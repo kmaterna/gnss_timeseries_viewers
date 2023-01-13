@@ -1,7 +1,7 @@
 
 import sys, os
 from .file_io import config_io, io_nota, io_magnet_unr, io_usgs
-from . import gps_input_vel_pipeline, vel_functions, gps_input_pipeline, utilities
+from . import vel_functions, gps_input_pipeline, utilities
 
 
 def create_station_repo(root_config, refframe, proc_center, subnetwork=None):
@@ -58,6 +58,14 @@ class station_repo:
         close_stations = vel_functions.filter_to_bounding_box(velfield, bbox);
         return close_stations;
 
+    def search_stations_by_kml_polygon(self, kml_file, basic_clean=False):
+        velfield = self.proc_engine.import_velfield();
+        if basic_clean:  # take long-lived stations and stations with low velocity uncertainties
+            velfield = vel_functions.basic_clean_stations(velfield);
+        polygon_lon, polygon_lat = utilities.read_kml_polygon(kml_file);
+        close_stations = vel_functions.filter_to_within_polygon(velfield, polygon_lon, polygon_lat);
+        return close_stations;
+
     def load_stations(self, station_name_list):
         """Load the full time series objects from a list of station names and a database"""
         data_obj_list, offset_obj_list, eq_obj_list = [], [], [];
@@ -67,6 +75,10 @@ class station_repo:
             offset_obj_list.append(offset_obj);
             eq_obj_list.append(eq_obj);
         return [data_obj_list, offset_obj_list, eq_obj_list]
+
+    def load_station(self, station_name):
+        [myData, offset_obj, eq_obj] = self.proc_engine.import_station(station_name);
+        return [myData, offset_obj, eq_obj];
 
 
 class cwu_proc_engine:
@@ -81,22 +93,32 @@ class cwu_proc_engine:
         return "Network: CWU, Refframe: %s " % self.refframe;
 
     def import_velfield(self):  # load the entire velocity field of CWU in a certain reference frame
-        lookup_dict = gps_input_vel_pipeline.build_lookup_dictionary(self.file_params, 'cwu');  # read filenames
-        myVelocities = io_nota.read_pbo_vel_file_format(lookup_dict["cwu_" + self.refframe]);
+        filename = self.pre_screen_vel_datasource_paths();
+        myVelocities = io_nota.read_pbo_vel_file_format(filename);
         return myVelocities;
 
     def import_station(self, station):
-        filename = self.pre_screen_datasource_paths(station);
+        filename = self.pre_screen_ts_datasource_paths(station);
         [myData, offset_obj, eq_obj] = gps_input_pipeline.get_cwu(self.file_params, filename, station, 'cwu');
         return [myData, offset_obj, eq_obj];
 
-    def pre_screen_datasource_paths(self, station):
+    def pre_screen_ts_datasource_paths(self, station):
         if self.refframe == "NA":
             filename = self.file_params['cwu']["directory"] + self.file_params['cwu']["gps_ts_dir"] + \
                        station + '.cwu.final_nam14.pos';
         elif self.refframe == "ITRF":  # ITRF
             filename = self.file_params['cwu']["directory"] + self.file_params['cwu']["gps_ts_dir"] + \
                        station + '.cwu.final_igs14.pos';
+        else:
+            print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
+        utilities.check_if_file_exists(filename);
+        return filename;
+
+    def pre_screen_vel_datasource_paths(self):
+        if self.refframe == "NA":
+            filename = self.file_params["cwu"]["directory"] + self.file_params["cwu"]["velocities_nam"];
+        elif self.refframe == "ITRF":
+            filename = self.file_params["cwu"]["directory"] + self.file_params["cwu"]["velocities_itrf"];
         else:
             print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
         utilities.check_if_file_exists(filename);
@@ -115,18 +137,16 @@ class unr_proc_engine:
         return "Network: UNR, Refframe: %s " % self.refframe;
 
     def import_velfield(self):
-        lookup_dict = gps_input_vel_pipeline.build_lookup_dictionary(self.file_params, 'unr');  # read filenames
-        myVelocities = io_magnet_unr.read_unr_vel_file(lookup_dict["unr_" + self.refframe],
-                                                       self.file_params["unr"]["directory"] +
-                                                       self.file_params["unr"]["coords_file"]);
+        vel_filename, coords_filename = self.pre_screen_vel_datasource_paths();
+        myVelocities = io_magnet_unr.read_unr_vel_file(vel_filename, coords_filename);
         return myVelocities;
 
     def import_station(self, station_name):
-        filename = self.pre_screen_datasource_paths(station_name);
+        filename = self.pre_screen_ts_datasource_paths(station_name);
         [myData, offset_obj, eq_obj] = gps_input_pipeline.get_unr(self.file_params, filename);  # UNR data format
         return [myData, offset_obj, eq_obj];
 
-    def pre_screen_datasource_paths(self, station):
+    def pre_screen_ts_datasource_paths(self, station):
         if self.refframe == 'NA':
             filename = self.file_params["unr"]["directory"]+self.file_params["unr"]["gps_ts_dir"]+station+'.NA.tenv3';
         elif self.refframe == 'ITRF':
@@ -135,6 +155,17 @@ class unr_proc_engine:
             print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
         utilities.check_if_file_exists(filename);
         return filename;
+
+    def pre_screen_vel_datasource_paths(self):
+        if self.refframe == 'NA':
+            vel_filename = self.file_params["unr"]["directory"] + self.file_params["unr"]["velocities_nam"];
+        elif self.refframe == "ITRF":
+            vel_filename = self.file_params["unr"]["directory"] + self.file_params["unr"]["velocities_itrf"];
+        else:
+            print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
+        coords_file = self.file_params["unr"]["directory"] + self.file_params["unr"]["coords_file"];
+        utilities.check_if_file_exists(vel_filename);
+        return vel_filename, coords_file;
 
 
 class usgs_proc_engine:
@@ -150,19 +181,18 @@ class usgs_proc_engine:
         return "Network: USGS, Subnetwork: %s, Refframe: %s " % (self.subnetwork, self.refframe);
 
     def import_velfield(self):
-        lookup_dict = gps_input_vel_pipeline.build_lookup_dictionary(self.file_params, 'usgs', self.subnetwork);
-        myVelocities = io_usgs.read_usgs_velfile(lookup_dict["usgs_" + self.refframe],
-                                                 self.file_params["usgs"]["directory"] +
+        filename = self.pre_screen_vel_datasource_paths();
+        myVelocities = io_usgs.read_usgs_velfile(filename, self.file_params["usgs"]["directory"] +
                                                  self.file_params["usgs"]["cache_file"]);
         return myVelocities;
 
     def import_station(self, station_name):
-        filename, sub_network = self.pre_screen_datasource_paths(station_name);
+        filename, sub_network = self.pre_screen_ts_datasource_paths(station_name);
         [myData, offset_obj, eq_obj] = gps_input_pipeline.get_usgs(self.file_params, filename, station_name,
                                                                    self.refframe, self.subnetwork);  # USGS data
         return [myData, offset_obj, eq_obj];
 
-    def pre_screen_datasource_paths(self, station_name):
+    def pre_screen_ts_datasource_paths(self, station_name):
         # CHECK IF STATION EXISTS IN JUST ONE SUBNETWORK FOR CONVENIENCE
         if self.subnetwork == '':
             network_list = io_usgs.query_usgs_network_name(station_name, self.file_params['usgs']['directory'] +
@@ -190,6 +220,21 @@ class usgs_proc_engine:
             sys.exit(1);
         return filename, self.subnetwork;
 
+    def pre_screen_vel_datasource_paths(self):
+        if self.subnetwork == '':
+            print("Error! Must provide sub-network for USGS velocity field");
+            sys.exit(0);
+        if self.refframe == 'NA':
+            filename = self.file_params["usgs"]['directory'] + self.file_params["usgs"]["vel_dir"] +\
+                       self.subnetwork + '/NAM_' + self.subnetwork + '_vels.txt';
+        elif self.refframe == 'ITRF':
+            filename = self.file_params["usgs"]['directory'] + self.file_params["usgs"]["vel_dir"] + \
+                       self.subnetwork + '/ITRF_' + self.subnetwork + '_vels.txt';
+        else:
+            print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
+        utilities.check_if_file_exists(filename);
+        return filename;
+
 
 class pbo_proc_engine:
     # specific read/write functions. Each one has a matching load velfield, load station
@@ -204,23 +249,35 @@ class pbo_proc_engine:
         return "Network: %s, Refframe: %s " % (self.proccenter, self.refframe);
 
     def import_velfield(self):  # load the entire velocity field of CWU in a certain reference frame
-        lookup_dict = gps_input_vel_pipeline.build_lookup_dictionary(self.file_params, self.proccenter);
-        myVelocities = io_nota.read_pbo_vel_file_format(lookup_dict[self.proccenter + "_" + self.refframe]);
+        filename = self.pre_screen_vel_datasource_paths();
+        myVelocities = io_nota.read_pbo_vel_file_format(filename);
         return myVelocities;
 
     def import_station(self, station):
-        filename = self.pre_screen_datasource_paths(station);
+        filename = self.pre_screen_ts_datasource_paths(station);
         [myData, offset_obj, eq_obj] = gps_input_pipeline.get_pbo_type(self.file_params, filename, station,
                                                                        self.proccenter);
         return [myData, offset_obj, eq_obj];
 
-    def pre_screen_datasource_paths(self, station):
+    def pre_screen_ts_datasource_paths(self, station):
         if self.refframe == "NA":
             filename = self.file_params[self.proccenter]["directory"]+self.file_params[self.proccenter]["gps_ts_dir"] \
                        + station + '.'+self.proccenter+'.final_nam08.pos';
         elif self.refframe == "ITRF":  # ITRF
             filename = self.file_params[self.proccenter]["directory"]+self.file_params[self.proccenter]["gps_ts_dir"] \
                        + station + '.'+self.proccenter+'.final_igs08.pos';
+        else:
+            print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
+        utilities.check_if_file_exists(filename);
+        return filename;
+
+    def pre_screen_vel_datasource_paths(self):
+        if self.refframe == "NA":
+            filename = self.file_params[self.proccenter]["directory"] + self.file_params[self.proccenter][
+                "velocities_nam"];
+        elif self.refframe == "ITRF":
+            filename = self.file_params[self.proccenter]["directory"] + self.file_params[self.proccenter][
+                "velocities_itrf"];
         else:
             print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
         utilities.check_if_file_exists(filename);
