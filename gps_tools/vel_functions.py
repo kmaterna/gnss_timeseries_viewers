@@ -5,10 +5,18 @@ Future work: Combining two velocity fields in outer combination (inclusive) or i
 
 from . import gps_objects as gps_objects
 import numpy as np
+import matplotlib.path as mpltPath
+from Tectonic_Utils.geodesy import haversine
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
 
 
-def clean_velfield(velfield, num_years=0, max_horiz_sigma=1000, max_vert_sigma=1000, coord_box=(-180, 180, -90, 90),
+def basic_clean_stations(velfield, coord_box=(-180, 180, -90, 90), num_years=3.0, max_sigma=2):
+    velfield = clean_velfield(velfield, num_years, max_sigma, max_sigma * 3, coord_box);
+    velfield = remove_duplicates(velfield);
+    return velfield;
+
+
+def clean_velfield(velfield, num_years=0.0, max_horiz_sigma=1000, max_vert_sigma=1000, coord_box=(-180, 180, -90, 90),
                    verbose=False):
     """
     Filter into cleaner GPS velocities by time series length, formal uncertainty, or geographic range.
@@ -98,6 +106,54 @@ def remove_blacklist_vels(velfield, blacklist, verbose=False):
     if verbose:
         print("Removing blacklist: Ending with %d stations" % len(cleaned_velfield));
     return cleaned_velfield;
+
+
+def filter_to_circle(myVelfield, center, radius):
+    """
+    :param myVelfield: list of Station_Vels
+    :param center: list [lon, lat]
+    :param radius: float, km
+    :returns: list of Station_Vels, list of floats [stations, distances]
+    """
+    close_stations, rad_distance = [], [];
+    for station_vel in myVelfield:
+        mydist = haversine.distance([center[1], center[0]], [station_vel.nlat, station_vel.elon])
+        if mydist <= radius:
+            rad_distance.append(mydist);
+            close_stations.append(station_vel);
+    print("Returning %d stations within %.3f km of %.4f, %.4f" % (len(close_stations), radius, center[0], center[1]));
+    return close_stations, rad_distance;
+
+
+def filter_to_bounding_box(myVelfield, coord_box):
+    """
+    :param myVelfield: list of Station_Vels
+    :param coord_box: list [W, E, S, N]
+    :returns: list of station_vels
+    """
+    close_stations = [];
+    for station_vel in myVelfield:
+        if coord_box[0] <= station_vel.elon <= coord_box[1]:
+            if coord_box[2] <= station_vel.nlat <= coord_box[3]:
+                close_stations.append(station_vel);
+    print("Returning %d stations within box" % (len(close_stations)));
+    return close_stations;
+
+
+def filter_to_within_polygon(myVelfield, polygon_lon, polygon_lat):
+    """
+    :param myVelfield: velfield object
+    :param polygon_lon: list of lon polygon vertices
+    :param polygon_lat: list of lat polygon vertices
+    :returns: list of station_vels
+    """
+    polygon = np.row_stack((np.array(polygon_lon), np.array(polygon_lat))).T;
+    points = np.row_stack((np.array(myVelfield.elon), myVelfield.nlat)).T;
+    path = mpltPath.Path(polygon);
+    inside2 = path.contains_points(points);
+    within_stations = [i for (i, v) in zip(myVelfield, inside2) if v];
+    print("Returning %d stations within the given polygon" % (len(within_stations)));
+    return within_stations;
 
 
 def velocity_misfit_function(Velfield1, Velfield2):

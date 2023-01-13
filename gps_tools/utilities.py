@@ -1,5 +1,6 @@
 import datetime as dt
 import numpy as np
+import os, sys
 
 
 def check_lon_sanity(lon):
@@ -11,6 +12,15 @@ def check_lon_sanity(lon):
     if lon < -360:
         lon = lon + 360;
     return lon;
+
+
+def check_if_file_exists(filename):
+    if os.path.isfile(filename):  # Determine if file is found on system. Provide helpful suggestions if not.
+        print("Found file %s from datasource " % filename);
+    else:  # If the file is not found on the system:
+        print("Error!  Cannot find %s in database. Exiting immediately..." % filename);
+        sys.exit(1);
+    return;
 
 
 def remove_blacklist(stations, blacklisted_stations):
