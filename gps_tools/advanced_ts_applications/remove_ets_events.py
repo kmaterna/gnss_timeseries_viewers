@@ -45,8 +45,6 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, seas
 def input_data(station_name, datasource, refframe):
     database = load_gnss.create_station_repo(data_config_file, refframe, datasource)
     [myData, offset_obj, eq_obj] = database.load_station(station_name);
-
-    # [myData, offset_obj, eq_obj] = gps_input_pipeline.get_station_data(station_name, datasource, refframe);
     ets_intervals = input_tremor_days();
     return [myData, offset_obj, eq_obj, ets_intervals];
 
@@ -124,8 +122,9 @@ def remove_characteristic_ETS(ts_obj, ets_intervals):
     # for i in range(len(evdts)):  # A nice sanity check
     # print(str(evdts[i])+" %f" % (n_offsets[i]) );
     # --> This is not refactored yet for lists of offsets. Will break.
-    offset_obj = gps_tools.gps_objects.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets,
-                                               evdts=evdts);
+    offset_obj = gps_tools.gps_objects.Offset(e_offset=e_offsets, n_offset=n_offsets, u_offset=u_offsets,
+                                              evdt=evdts);
+
     ts_obj_fix = offsets.remove_offsets(ts_obj_gaps, offset_obj);
     ts_obj_new = Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=ts_obj_fix.dtarray, dE=ts_obj_fix.dE,
                             dN=ts_obj_fix.dN, dU=ts_obj_fix.dU, Se=ts_obj_fix.Se, Sn=ts_obj_fix.Sn, Su=ts_obj_fix.Su,
@@ -172,8 +171,8 @@ def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
     # for i in range(len(evdts)):  # A nice sanity check
     # print(str(evdts[i])+" %f" % (n_offsets[i]) );
     # --> This is not refactored yet for lists of offsets. Will break.
-    offset_obj = gps_tools.gps_objects.Offsets(e_offsets=e_offsets, n_offsets=n_offsets, u_offsets=u_offsets,
-                                               evdts=evdts);
+    offset_obj = gps_tools.gps_objects.Offset(e_offset=e_offsets, n_offset=n_offsets, u_offset=u_offsets,
+                                              evdt=evdts);
     # print("Mean east offset: %.3f mm" % (np.mean(e_offsets) ));
     # print("Mean north offset: %.3f mm" % (np.mean(n_offsets) ));
     # print("Mean vert offset: %.3f mm" % (np.mean(u_offsets) ));

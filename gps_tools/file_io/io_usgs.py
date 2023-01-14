@@ -5,7 +5,7 @@ File to read and write data from USGS formats
 import datetime as dt
 import glob, os, sys, subprocess
 import numpy as np
-from ..gps_objects import Station_Vel, Timeseries, Offsets
+from ..gps_objects import Station_Vel, Timeseries, Offset
 
 
 def usgs_vel_file_from_tsfile(infile):
@@ -132,7 +132,7 @@ def parse_offset_table_usgs(table, offset_type):
                     continue;
                 evdt = dt.datetime.strptime(words[1], "%Y-%m-%d");
                 n_offset, e_offset, u_offset = float(words[3]), float(words[5]), float(words[7])
-                offi = Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=evdt);
+                offi = Offset(e_offset=e_offset, n_offset=n_offset, u_offset=u_offset, evdt=evdt);
                 offset_list.append(offi);
         else:
             if 'earthquake' not in item:
@@ -141,7 +141,7 @@ def parse_offset_table_usgs(table, offset_type):
                     continue;
                 evdt = dt.datetime.strptime(words[1], "%Y-%m-%d");
                 n_offset, e_offset, u_offset = float(words[3]), float(words[5]), float(words[7])
-                offi = Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=evdt);
+                offi = Offset(e_offset=e_offset, n_offset=n_offset, u_offset=u_offset, evdt=evdt);
                 offset_list.append(offi);
     return offset_list;
 

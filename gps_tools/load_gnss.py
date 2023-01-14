@@ -1,7 +1,7 @@
 
 import sys, os
-from .file_io import config_io, io_nota, io_magnet_unr, io_usgs
-from . import vel_functions, gps_input_pipeline, utilities
+from .file_io import config_io, io_nota, io_magnet_unr, io_usgs, gps_input_pipeline
+from . import vel_functions, utilities
 
 
 def create_station_repo(root_config, refframe, proc_center, subnetwork=None):

@@ -8,7 +8,8 @@ import datetime as dt
 
 def remove_offsets(Data0, offsets_obj):
     """
-    the actual subtraction of offsets.
+    :param Data0: timeseries object
+    :param offsets_obj: list of Offset objects
     """
     if len(offsets_obj) == 0:
         return Data0;
@@ -16,16 +17,16 @@ def remove_offsets(Data0, offsets_obj):
 
     # Removing offsets
     for i in range(len(Data0.dtarray)):
-        # For each day...
+        # For each day.
         tempE, tempN, tempU = Data0.dE[i], Data0.dN[i], Data0.dU[i];
         for item in offsets_obj:
-            # print("removing %f mm from east at %s" % (item.e_offsets, item.evdts));
-            if Data0.dtarray[i] == item.evdts:  # removing the date of the offset directly (can be messed up)
+            # print("removing %f mm from east at %s" % (item.e_offsets, item.evdt));
+            if Data0.dtarray[i] == item.evdt:  # removing the date of the offset directly (can be messed up)
                 tempE, tempN, tempU = np.nan, np.nan, np.nan;
-            if Data0.dtarray[i] > item.evdts:
-                tempE = tempE - item.e_offsets;
-                tempN = tempN - item.n_offsets;
-                tempU = tempU - item.u_offsets;
+            if Data0.dtarray[i] > item.evdt:
+                tempE = tempE - item.e_offset;
+                tempN = tempN - item.n_offset;
+                tempU = tempU - item.u_offset;
         newE.append(tempE);
         newN.append(tempN);
         newU.append(tempU);
@@ -37,10 +38,13 @@ def remove_offsets(Data0, offsets_obj):
 
 def fit_single_offset(dtarray, data, interval, offset_num_days):
     """
-    Loop through a 1D array and find dates that are used for offset calculation.
-    This is done for one component, like east
+    Solve for an offset at a given time in one component of data, like east
     Offset can be calculated at a day or an interval (day is just repeated twice.)
-    offset_num_days is the averaging window before and after the offset time.
+
+    :param dtarray: 1d array of datetimes
+    :param data: 1d array of floats
+    :param interval: [dt, dt] to show where the offset exists
+    :param offset_num_days: int, size of the averaging window where pre/post event position will be computed
     """
     before_indeces, after_indeces = [], [];
 
@@ -68,18 +72,25 @@ def fit_single_offset(dtarray, data, interval, offset_num_days):
     return offset;
 
 
-def solve_for_offsets(ts_object, offset_times, num_days=10):
+def solve_for_offsets(ts_object, offset_time_intervals, num_days=10):
     """
-    Here we solve for all the offsets at a given time, which is necessary for UNR data.
-    Offset_times is a list of datetime objects with unique dates.
+    Solve for all E/N/U offsets at given times. Necessary for UNR data.
+
+    :param ts_object: timeseries object
+    :param offset_time_intervals: list of individual datetimes, or list of [start, end] intervals,
+     each one associated with an offset or earthquake
+    :param num_days: int averaging window, default 10 days
+    :returns: list of Offset objects
     """
-    print("Solving empirically for offsets at ", offset_times);
+    print("Solving empirically for offsets at ", offset_time_intervals);
     Offset_obj = [];
-    for offset_time in offset_times:
-        e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [offset_time, offset_time], num_days);
-        n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [offset_time, offset_time], num_days);
-        u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [offset_time, offset_time], num_days);
-        newobj = gps_objects.Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=offset_time);
+    for interval in offset_time_intervals:
+        if isinstance(interval, dt.datetime):  # build an interval from a single day.
+            interval = [interval, interval];  # build an interval from a single day.
+        e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [interval[0], interval[1]], num_days);
+        n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [interval[0], interval[1]], num_days);
+        u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [interval[0], interval[1]], num_days);
+        newobj = gps_objects.Offset(e_offset=e_offset, n_offset=n_offset, u_offset=u_offset, evdt=interval[0]);
         Offset_obj.append(newobj);
     return Offset_obj;
 
@@ -87,57 +98,65 @@ def solve_for_offsets(ts_object, offset_times, num_days=10):
 def filter_offset_list_to_date(offset_list, date_of_interest):
     """Filter a list of possible offsets to only the offset on a particular day of interest."""
     for item in offset_list:
-        if item.evdts == date_of_interest:
+        if item.evdt == date_of_interest:
             return item;
     return None;
 
 
-def offset_to_vel_object(offset_obj_list, ts_obj_list, refframe, proccenter, subnetwork=None, survey=False,
-                         first_epoch=None, last_epoch=None, target_date=None, offset_type='proc_table'):
+def table_offset_to_velfield(ts_obj_list, offset_obj_list, target_date):
     """
-    Turn a list of list of offset_objects and list of ts_objects into a pseudo-vel object for plotting and writing.
-    offset_type == proc_table (from tables): target-date required.
-    offset_type == manual_solve: starttime and endtime required.
-    refframe, proccenter, subnetwork, and survey are just metadata for packing into StationVel objects.
+    Turn a list of offset_objects and ts_objects into a pseudo-vel object for plotting and writing.
+    Querying the tables for offsets.
+
+    :param ts_obj_list: list of timeseries objects
+    :param offset_obj_list: list of list of Offset objects, one for each timeseries object
+    :param target_date: datetime object
+    :returns: list of StationVels
     """
     offsetpts = [];
-    if offset_type == 'proc_table':  # If we're querying the tables for offsets:
-        if target_date is None:
-            raise ValueError("Error! Must provide target date for looking up offsets from tables");
-        for i in range(len(offset_obj_list)):
-            offseti = filter_offset_list_to_date(offset_obj_list[i], target_date);
-            tsi = ts_obj_list[i];
-            if offseti is not None:
-                newobj = gps_objects.Station_Vel(name=tsi.name, nlat=tsi.coords[1], elon=tsi.coords[0],
-                                                 n=offseti.n_offsets, e=offseti.e_offsets, u=offseti.u_offsets, sn=0,
-                                                 se=0, su=0, first_epoch=target_date, last_epoch=target_date,
-                                                 refframe=refframe, proccenter=proccenter, subnetwork=subnetwork,
-                                                 survey=survey, meas_type=offset_type);
-                offsetpts.append(newobj);
-        print("Found %d look-up-table offsets, %s" % (len(offsetpts), dt.datetime.strftime(target_date, "%Y-%m-%d")));
-
-    else:
-        # offset_type == manual_solve.
-        if first_epoch is None or last_epoch is None:
-            raise ValueError("Error! Must provide first_epoch and last_epoch for solving manual offsets.");
-        for i in range(len(offset_obj_list)):
-            tsi = ts_obj_list[i];
-            e_offset = fit_single_offset(tsi.dtarray, tsi.dE, [first_epoch, last_epoch], offset_num_days=7);
-            n_offset = fit_single_offset(tsi.dtarray, tsi.dN, [first_epoch, last_epoch], offset_num_days=7);
-            u_offset = fit_single_offset(tsi.dtarray, tsi.dU, [first_epoch, last_epoch], offset_num_days=7);
-            newobj = gps_objects.Station_Vel(name=tsi.name, nlat=tsi.coords[1], elon=tsi.coords[0],
-                                             n=n_offset, e=e_offset, u=u_offset, sn=0, se=0, su=0,
-                                             first_epoch=first_epoch, last_epoch=last_epoch, refframe=refframe,
-                                             proccenter=proccenter, subnetwork=subnetwork, survey=survey,
-                                             meas_type=offset_type);
-            offsetpts.append(newobj);
-        print("Solved %d offsets around %s" % (len(offsetpts), dt.datetime.strftime(first_epoch, "%Y-%m-%d")));
+    for i in range(len(offset_obj_list)):
+        offseti = filter_offset_list_to_date(offset_obj_list[i], target_date);
+        tsi = ts_obj_list[i];
+        if offseti is not None:
+            offsetpts.append(package_offset_as_StationVel(tsi, offseti));
+    print("Found %d look-up-table offsets, %s" % (len(offsetpts), dt.datetime.strftime(target_date, "%Y-%m-%d")));
     return offsetpts;
+
+
+def manual_offset_to_velfield(ts_obj_list, first_epoch, last_epoch, num_days=10):
+    """
+    Turn a list of ts_objects into an interval offset, expressed as pseudo-vel object for plotting and writing.
+    Solving for timeseries offset between the start and last days.
+
+    :param ts_obj_list: list of timeseries objects
+    :param first_epoch: datetime object
+    :param last_epoch: datetime object
+    :param num_days: averaging window, default to 7 days
+    :returns: list of StationVels
+    """
+    offsetpts = [];
+    for tsi in ts_obj_list:
+        new_offset = solve_for_offsets(tsi, [[first_epoch, last_epoch]], num_days=num_days)[0];
+        offsetpts.append(package_offset_as_StationVel(tsi, new_offset));
+    print("Solved %d offsets around %s" % (len(offsetpts), dt.datetime.strftime(first_epoch, "%Y-%m-%d")));
+    return offsetpts;
+
+
+def package_offset_as_StationVel(ts_object, offset):
+    """
+    :param ts_object: a timeseries object
+    :param offset: an offset object
+    :return: a StationVel
+    """
+    newobj = gps_objects.Station_Vel(name=ts_object.name, nlat=ts_object.coords[1], elon=ts_object.coords[0],
+                                     n=offset.n_offset, e=offset.e_offset, u=offset.u_offset, sn=0, se=0, su=0,
+                                     first_epoch='', last_epoch='', refframe='',
+                                     proccenter='', subnetwork='', survey='', meas_type='');
+    return newobj;
 
 
 def print_offset_object(Offset_obj):
     for item in Offset_obj:
-        print("%s: %.4f mmE, %.4f mmN, %.4f mmU" % (dt.datetime.strftime(item.evdts, "%Y-%m-%d"),
-                                                    item.e_offsets, item.n_offsets, item.u_offsets));
-    print("");
+        print("%s: %.4f mmE, %.4f mmN, %.4f mmU\n" % (dt.datetime.strftime(item.evdt, "%Y-%m-%d"),
+                                                      item.e_offset, item.n_offset, item.u_offset));
     return;

@@ -7,7 +7,7 @@ import subprocess
 import numpy as np
 from .. import utilities
 from .io_magnet_unr import get_coordinates_for_unr_stations
-from ..gps_objects import Station_Vel, Timeseries, Offsets
+from ..gps_objects import Station_Vel, Timeseries, Offset
 
 
 def read_pbo_vel_file(infile):
@@ -248,7 +248,7 @@ def parse_earthquake_table_pbo(table):
         day = evdate[4:6];
         year = "20" + year;
         evdt = dt.datetime.strptime(year + month + day, "%Y%m%d");
-        offi = Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=evdt);
+        offi = Offset(e_offset=e_offset, n_offset=n_offset, u_offset=u_offset, evdt=evdt);
         offset_list.append(offi);
     return offset_list;
 
@@ -277,7 +277,7 @@ def parse_antenna_table_pbo(table):
         n_offset = float(words[6]);
         u_offset = float(words[10]);
         evdt = dt.datetime.strptime(yyyy + mm + dd, "%Y%m%d");
-        offi = Offsets(e_offsets=e_offset, n_offsets=n_offset, u_offsets=u_offset, evdts=evdt);
+        offi = Offset(e_offset=e_offset, n_offset=n_offset, u_offset=u_offset, evdt=evdt);
         offset_list.append(offi);
     return offset_list;
 

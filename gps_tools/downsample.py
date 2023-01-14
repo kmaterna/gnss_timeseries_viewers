@@ -9,6 +9,8 @@ import datetime as dt
 
 def subsample_ts_at_points(Data0, dtlist, window_days=30, Se_default=None, Sn_default=None, Su_default=None):
     """
+    Return a ts-object with a smaller number of time series points.
+
     :param Data0: GPS timeseries object
     :param dtlist: list of datetimes for downsampling
     :param window_days: integer

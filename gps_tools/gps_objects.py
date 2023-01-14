@@ -19,7 +19,7 @@ Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 
 
 
 # The namedtuple definition.  Offsets should be in mm. One object per offset. Each field is a single value.
-Offsets = collections.namedtuple("Offsets", ['e_offsets', 'n_offsets', 'u_offsets', 'evdts']);
+Offset = collections.namedtuple("Offsets", ['e_offset', 'n_offset', 'u_offset', 'evdt']);
 
 
 # u, v, w are GRACE model displacements in east, north, and up.

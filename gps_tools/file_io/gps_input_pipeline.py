@@ -1,7 +1,7 @@
-"""Reading inputs for time series files"""
+"""Reading inputs for time series and their associated offset objects"""
 
-from .file_io import io_magnet_unr, io_nota, io_other, io_usgs
-from . import offsets
+from . import io_magnet_unr, io_nota, io_usgs
+from .. import offsets
 
 
 # ----------------------------------------
@@ -39,18 +39,6 @@ def get_usgs(Params, filename, station, refframe, sub_network):
     Earthquakes = get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe, typekey='earthquake');
     return [myData, Offsets, Earthquakes];
 
-def get_gldas(filename):
-    myData = io_nota.read_pbo_hydro_file(filename);
-    return [myData, [], []];
-
-def get_grace(filename):
-    myData = io_other.read_grace(filename);
-    return [myData, [], []];
-
-def get_lsdm(filename):
-    myData = io_other.read_lsdm_file(filename);
-    return [myData, [], []];
-
 
 # THE GUTS --------------------------------------
 def get_unr_offsets(Data0, offsets_file, user_offsets_file):
@@ -68,7 +56,8 @@ def get_unr_earthquakes(Data0, offsets_file, user_offsets_file):
     print("Earthquakes table for station %s:" % Data0.name);
     evdts1 = io_magnet_unr.search_file_for_unr_offsets(Data0.name, offsets_file, mode=2);
     evdts2 = io_magnet_unr.search_file_for_unr_offsets(Data0.name, user_offsets_file, mode=2);
-    UNR_earthquakes = offsets.solve_for_offsets(Data0, evdts1 + evdts2);
+    all_evdts = evdts1 + evdts2;
+    UNR_earthquakes = offsets.solve_for_offsets(Data0, all_evdts);
     offsets.print_offset_object(UNR_earthquakes);
     return UNR_earthquakes;
 

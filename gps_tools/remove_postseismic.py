@@ -57,12 +57,12 @@ def remove_by_model(data_obj, model_obj, starttime1, endtime1, starttime2, endti
     e_offset1 = offsets.fit_single_offset(dtarray, dE_gps, interval1, 20);
     n_offset1 = offsets.fit_single_offset(dtarray, dN_gps, interval1, 20);
     v_offset1 = offsets.fit_single_offset(dtarray, dU_gps, interval1, 20);
-    offsets1 = gps_objects.Offsets(e_offsets=e_offset1, n_offsets=n_offset1, u_offsets=v_offset1, evdts=starttime1);
+    offsets1 = gps_objects.Offset(e_offset=e_offset1, n_offset=n_offset1, u_offset=v_offset1, evdt=starttime1);
     interval2 = [starttime2, endtime2];
     e_offset2 = offsets.fit_single_offset(dtarray, dE_gps, interval2, 20);
     n_offset2 = offsets.fit_single_offset(dtarray, dN_gps, interval2, 20);
     v_offset2 = offsets.fit_single_offset(dtarray, dU_gps, interval2, 20);
-    offsets2 = gps_objects.Offsets(e_offsets=e_offset2, n_offsets=n_offset2, u_offsets=v_offset2, evdts=starttime2);
+    offsets2 = gps_objects.Offset(e_offset=e_offset2, n_offset=n_offset2, u_offset=v_offset2, evdt=starttime2);
     offsets_obj = [offsets1, offsets2];
 
     corrected_data = gps_objects.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=dtarray, dE=dE_gps, dN=dN_gps,

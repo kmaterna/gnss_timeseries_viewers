@@ -29,21 +29,6 @@ def read_kml_polygon(kml_file):
     return polygon_lon, polygon_lat;
 
 
-def remove_blacklist(stations, blacklisted_stations):
-    """
-    :param stations: list of strings
-    :param blacklisted_stations: list of strings
-    :return: list of strings
-    """
-    new_stations = [];
-    for station in stations:
-        if not (station in blacklisted_stations):
-            new_stations.append(station);
-        else:
-            print("Excluding station %s due to blacklist." % station);
-    return new_stations;
-
-
 def float_to_dt(float_time):
     # Example: 2014.194 --> datetime object
     fractional_year = str(1 + int(365.24 * (float_time - np.floor(float_time))));  # something like 004, 204, 321, etc.
