@@ -14,7 +14,7 @@ import gps_tools.utilities
 import numpy as np
 import datetime as dt
 import glob, subprocess
-from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss, vel_functions
+from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss
 from Tectonic_Utils.geodesy import haversine
 import remove_ets_events
 
@@ -61,7 +61,6 @@ def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=
         else:
 
             stations, _ = database.search_stations_by_circle(EQcoords, radius);
-        stations = vel_functions.remove_blacklist_vels(stations, ()); # plumb real blacklist later
         stations = [x.name for x in stations]
 
     return [stations, outdir, time_after_start_date, critical_variance];
@@ -74,7 +73,6 @@ def inputs(station_names, network, refframe):
         [myData, offset_obj, eq_obj] = database.load_station(station_name);
         if not myData:
             continue;
-
         else:
             dataobj_list.append(myData);
             offsetobj_list.append(offset_obj);

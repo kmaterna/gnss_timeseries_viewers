@@ -6,22 +6,22 @@ from . import vel_functions, utilities
 
 def create_station_repo(root_config, refframe, proc_center, subnetwork=None):
     if proc_center == 'cwu':
-        engine = cwu_proc_engine(root_config, refframe);
+        engine = CWU_Proc_Engine(root_config, refframe);
     elif proc_center == 'unr':
-        engine = unr_proc_engine(root_config, refframe);
+        engine = UNR_Proc_Engine(root_config, refframe);
     elif proc_center == 'usgs':
-        engine = usgs_proc_engine(root_config, refframe, subnetwork);
+        engine = USGS_Proc_Engine(root_config, refframe, subnetwork);
     elif proc_center == 'pbo':
-        engine = pbo_proc_engine(root_config, refframe, proc_center);
+        engine = PBO_Proc_Engine(root_config, refframe, proc_center);
     elif proc_center == 'nmt':
-        engine = pbo_proc_engine(root_config, refframe, proc_center);
+        engine = PBO_Proc_Engine(root_config, refframe, proc_center);
     else:
-        print("Error! Invalid choice of network [pick one of pbo/cwu/unr/usgs]");
+        print("Error! Invalid choice of network [pick one of pbo/cwu/unr/usgs/nmt]");
         sys.exit(0);
-    return station_repo(engine)
+    return Station_Repo(engine)
 
 
-class station_repo:
+class Station_Repo:
     # Loads up the general database functionality.
     # Contains one object called proc_engine, and a bunch of services.
 
@@ -81,7 +81,7 @@ class station_repo:
         return [myData, offset_obj, eq_obj];
 
 
-class cwu_proc_engine:
+class CWU_Proc_Engine:
     # specific read/write functions. Each one has a matching load velfield, load station
 
     def __init__(self, root_config, refframe):
@@ -125,7 +125,7 @@ class cwu_proc_engine:
         return filename;
 
 
-class unr_proc_engine:
+class UNR_Proc_Engine:
     # specific read/write functions. Each one has a matching load velfield, load station
 
     def __init__(self, root_config, refframe):
@@ -168,7 +168,7 @@ class unr_proc_engine:
         return vel_filename, coords_file;
 
 
-class usgs_proc_engine:
+class USGS_Proc_Engine:
     # specific read/write functions. Each one has a matching load velfield, load station
 
     def __init__(self, root_config, refframe, subnetwork):
@@ -236,7 +236,7 @@ class usgs_proc_engine:
         return filename;
 
 
-class pbo_proc_engine:
+class PBO_Proc_Engine:
     # specific read/write functions. Each one has a matching load velfield, load station
 
     def __init__(self, root_config, refframe, proccenter):

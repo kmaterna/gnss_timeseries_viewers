@@ -9,9 +9,8 @@ import matplotlib, collections, scipy.ndimage
 import matplotlib.cm as cm
 import datetime as dt
 
-StackParams = collections.namedtuple("StackParams", ['expname', 'proc_center', 'refframe', 'center', 'radius', 'bbox',
-                                                     'stations', 'distances', 'blacklist', 'eqtimes', 'starttime',
-                                                     'endtime', 'labeltime', 'data_config_file', 'outdir', 'outname']);
+StackParams = collections.namedtuple("StackParams", ['expname', 'bbox', 'eqtimes', 'starttime',
+                                                     'endtime', 'labeltime', 'outdir', 'outname']);
 
 
 def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1,
@@ -254,7 +253,7 @@ def configure_beautiful_plots(expname, distances):
     return labeltimes, labels, closest_station, farthest_station;
 
 
-def pygmt_map(dataobj_list, myparams):
+def pygmt_map(dataobj_list, center, outdir, outname):
     """
     Optionally, use pygmt library to make a plot of stations locations
     """
@@ -274,9 +273,9 @@ def pygmt_map(dataobj_list, myparams):
     fig.coast(borders='2', shorelines='0.5p,black');
     fig.text(x=lons, y=lats, text=names, font='15p,Helvetica-Bold,black', offset="0.24i/0.11i");
     fig.plot(x=lons, y=lats, style='c0.1i', color='black', pen='0.5p,black')
-    fig.plot(x=myparams.center[0], y=myparams.center[1], style='a0.1i', color='red', pen='0.5p,red')
-    fig.savefig(myparams.outdir + "/" + myparams.outname + '_map.png');
-    print("Saving map %s" % (myparams.outdir + "/" + myparams.outname + '_map.png') );
+    fig.plot(x=center[0], y=center[1], style='a0.1i', color='red', pen='0.5p,red')
+    fig.savefig(outdir + "/" + outname + '_map.png');
+    print("Saving map %s" % (outdir + "/" + outname + '_map.png') );
     return;
 
 

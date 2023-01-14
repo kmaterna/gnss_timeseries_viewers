@@ -1,5 +1,5 @@
 """
-Functions to operate on velocity-field objects (lists of station-vels)
+Functions to operate on Station-Vel objects, or velocity-field objects (lists of station-vels)
 Future work: Combining two velocity fields in outer combination (inclusive) or inner combination (common stations)
 """
 
@@ -46,12 +46,10 @@ def clean_velfield(velfield, num_years=0.0, max_horiz_sigma=1000, max_vert_sigma
             print('Excluding ' + station.name + ' for large vertical sigma of' + str(
                 station.su) + ' mm/yr') if verbose else 0;
             continue;
-        deltatime = station.last_epoch - station.first_epoch;
-        if deltatime.days <= num_years * 365.24:  # too short time interval, please exclude
+        if spans_shorter_than(station, num_years):  # too short time interval, please exclude
             print('Excluding ' + station.name + 'for time range too short') if verbose else 0;
             continue;
-        if coord_box[0] < station.elon < coord_box[1] and coord_box[2] < station.nlat < coord_box[3]:
-            # The station is within the box of interest.
+        if within_bbox(station, coord_box):  # The station is within the box of interest.
             cleaned_velfield.append(station);
         else:
             print("excluding for outside box of interest: ", station.elon, station.nlat) if verbose else 0;
@@ -96,7 +94,7 @@ def disp_points_to_station_vels(obs_disp_points):
     return station_vel_list;
 
 
-def remove_blacklist_vels(velfield, blacklist, verbose=False, matching_data=None):
+def remove_blacklist_paired_data(velfield, blacklist, verbose=False, matching_data=None):   # ZIP VERSION
     """
     :param velfield: list of StationVels
     :param blacklist: list of strings
@@ -108,13 +106,30 @@ def remove_blacklist_vels(velfield, blacklist, verbose=False, matching_data=None
     if verbose:
         print("Removing blacklist: Starting with %d stations" % len(velfield));
     for i in range(len(velfield)):
-        if velfield[i].name not in blacklist:
+        if survives_blacklist(velfield[i], blacklist):
             cleaned_velfield.append(velfield[i]);
-            if matching_data:
-                cleaned_distances.append(matching_data[i]);
+            cleaned_distances.append(matching_data[i]);
     if verbose:
         print("Removing blacklist: Ending with %d stations" % len(cleaned_velfield));
     return cleaned_velfield, cleaned_distances;
+
+
+def remove_blacklist_vels(velfield, blacklist, verbose=False):   # NON-ZIP VERSION
+    """
+    :param velfield: list of StationVels
+    :param blacklist: list of strings
+    :param verbose: boolean, false
+    :return: list of StationVels
+    """
+    cleaned_velfield = [];
+    if verbose:
+        print("Removing blacklist: Starting with %d stations" % len(velfield));
+    for i in range(len(velfield)):
+        if survives_blacklist(velfield[i], blacklist):
+            cleaned_velfield.append(velfield[i]);
+    if verbose:
+        print("Removing blacklist: Ending with %d stations" % len(cleaned_velfield));
+    return cleaned_velfield;
 
 
 def filter_to_circle(myVelfield, center, radius):
@@ -142,9 +157,8 @@ def filter_to_bounding_box(myVelfield, coord_box):
     """
     close_stations = [];
     for station_vel in myVelfield:
-        if coord_box[0] <= station_vel.elon <= coord_box[1]:
-            if coord_box[2] <= station_vel.nlat <= coord_box[3]:
-                close_stations.append(station_vel);
+        if within_bbox(station_vel, coord_box):
+            close_stations.append(station_vel);
     print("Returning %d stations within box" % (len(close_stations)));
     return close_stations;
 
@@ -215,3 +229,53 @@ def get_bounding_box(velfield, border=0.1):
     lats = [x.nlat for x in velfield]
     bbox = [np.min(lons) - border, np.max(lons) + border, np.min(lats) - border, np.max(lats) + border];
     return bbox;
+
+
+# ---------- PREDICATES ------------- #
+
+def survives_blacklist(station_vel, blacklist):
+    """
+    :param station_vel: a station_vel object
+    :param blacklist: list of strings
+    :return: bool
+    """
+    if station_vel.name in blacklist:
+        return 0;
+    else:
+        return 1;
+
+
+def within_bbox(station_vel, bbox):
+    """
+    :param station_vel: a station_vel object
+    :param bbox: [W, E, S, N] list of 4 floats
+    :return: bool
+    """
+    if bbox[0] <= station_vel.elon <= bbox[1] and bbox[2] <= station_vel.nlat <= bbox[3]:
+        return 1;
+    else:
+        return 0;
+
+def spans_longer_than(station_vel, num_years):
+    """
+    :param station_vel: a station_vel object
+    :param num_years: float, number of years
+    :return: bool
+    """
+    deltatime = station_vel.last_epoch - station_vel.first_epoch;
+    if deltatime.days >= num_years * 365.24:
+        return 1;
+    else:
+        return 0;   # too short time interval
+
+def spans_shorter_than(station_vel, num_years):
+    """
+    :param station_vel: a station_vel object
+    :param num_years: float, number of years
+    :return: bool
+    """
+    deltatime = station_vel.last_epoch - station_vel.first_epoch;
+    if deltatime.days <= num_years * 365.24:
+        return 1;   # too short time interval
+    else:
+        return 0;

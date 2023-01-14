@@ -21,7 +21,6 @@ params = {"data_config_file": "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA
 def driver():
     myparams, database, stations = configure();
     [data, _, eq_list] = database.load_stations(stations);
-    # FOR 2014 earthquake
     offsetpts = gt.offsets.table_offset_to_velfield(data, eq_list, target_date=dt.datetime.strptime("20140310",
                                                                                                     "%Y%m%d"));
     gt.pygmt_plots.simple_pygmt_plot(offsetpts, myparams["outdir"] + "/mtj_vector_map.png",

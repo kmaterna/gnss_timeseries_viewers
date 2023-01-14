@@ -1,36 +1,15 @@
 """
 A function to remove postseismic deformation via existing model time series
-The first model is from Hines et al., JGR, 2016
 """
 import numpy as np
-import os
 from . import offsets, gps_ts_functions, gps_objects
-from .file_io import config_io, io_nota
-
-
-# HELPER FUNCTIONS #
-def get_station_hines(station_name, data_config_file):
-    """
-    Reads a model time series from Hines et al., JGR, 2016 into a gps_object.
-    The time series are stored on disk within a directory in the /contrib part of the GNSS data directory.
-    """
-    system_params = config_io.read_config_file(data_config_file);
-    model_dir = "/Contrib_Data/Remove_postseismic/Hines/Stations/"
-    model_file = system_params["gps_data_dir"] + model_dir + station_name + "_psmodel.pos";
-    # This is stored in general_gps_dir because it's on my system, but may not be on general systems. 
-    if os.path.isfile(model_file):
-        Data0 = io_nota.read_pbo_pos_file(model_file);
-        return Data0;
-    else:
-        print("ERROR: Cannot remove postseismic because file does not exist; file %s" % model_file);
-        return None;
 
 
 def remove_by_model(data_obj, model_obj, starttime1, endtime1, starttime2, endtime2):
     """
     Remove a postseismic transient model from a gps_object,
     using a model time series formatted the same way as a gps_object.
-    starttime and endtime parameters have to do with fixing the edges of the time spanned by the model.
+    starttime and endtime parameters fix the edges of the time spanned by the model.
     """
     if not model_obj:  # if None
         return data_obj;

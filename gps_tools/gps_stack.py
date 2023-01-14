@@ -13,11 +13,12 @@ from .file_io import config_io, io_other
 
 
 def driver(data_config_file, expname, center, radius, proc_center, refframe, outdir, must_include=(None, None)):
-    myparams, database = configure(data_config_file, expname, center, radius, proc_center, refframe, outdir);
-    [dataobj_list, offsetobj_list, eqobj_list] = database.load_stations(myparams.stations);
+    myparams = configure(expname, center, radius, outdir);
 
+    database, stations, distances = build_database(data_config_file, proc_center, refframe, center, radius);
+    [dataobj_list, offsetobj_list, eqobj_list] = database.load_stations(stations);
     [_, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons,
-     sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, myparams.distances, data_config_file,
+     sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_file,
                                  date_range=must_include);
 
     # A series of output options that can be chained together, selected or unselected, etc.
@@ -28,26 +29,27 @@ def driver(data_config_file, expname, center, radius, proc_center, refframe, out
     out_stack.horizontal_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
     out_stack.vertical_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances, myparams);
     out_stack.vertical_filtered_plots(no_offset_objects, sorted_distances, myparams, 'trendsin_');
-    out_stack.pygmt_map(no_offsets_no_trends_no_seasons, myparams);
+    out_stack.pygmt_map(no_offsets_no_trends_no_seasons, center, myparams.outdir, myparams.outname);
     return;
 
 
-def configure(data_config_file, expname, center, radius, proc_center, refframe, outdir):
+def build_database(data_config_file, proc_center, refframe, center, radius):
     # Set up the stacking process
     database = load_gnss.create_station_repo(data_config_file, proc_center=proc_center, refframe=refframe);
     stations, distances = database.search_stations_by_circle(center, radius);
     data_config = config_io.read_config_file(data_config_file);
     blacklist = io_other.read_blacklist(data_config["blacklist"]);
-    stations, distances = vel_functions.remove_blacklist_vels(stations, blacklist, matching_data=distances);
+    stations, distances = vel_functions.remove_blacklist_paired_data(stations, blacklist, matching_data=distances);
+    return database, stations, distances;
 
+
+def configure(expname, center, radius, outdir):
     subprocess.call(["mkdir", "-p", outdir], shell=False);
     outname = expname + "_" + str(center[0]) + "_" + str(center[1]) + "_" + str(radius)
-    myparams = out_stack.StackParams(expname=expname, proc_center=proc_center, refframe=refframe, center=center,
-                                     radius=radius, stations=[x.name for x in stations], bbox=None, distances=distances,
-                                     blacklist=blacklist, outdir=outdir, outname=outname, starttime=None, endtime=None,
-                                     data_config_file=data_config_file, eqtimes=(), labeltime=None);
+    myparams = out_stack.StackParams(expname=expname, bbox=None, outdir=outdir, outname=outname, starttime=None,
+                                     endtime=None, eqtimes=(), labeltime=None);
     out_stack.write_stack_params(myparams);  # for good measure
-    return myparams, database;
+    return myparams;
 
 
 def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_file, date_range):
@@ -63,7 +65,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
     # Detrended objects (or objects with trends and no offsets; depends on what you want.)
     for i in range(len(sorted_objects)):
         if not gps_ts_functions.covers_date_range(sorted_objects[i], date_range[0], date_range[1]):
-            continue;
+            continue;   # For future: is this filter messing up the distances list?
         newobj = gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq', data_config_file);
         detrended_objects.append(newobj);  # still has offsets, doesn't have trends
 
