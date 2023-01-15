@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.path as mpltPath
 from Tectonic_Utils.geodesy import haversine
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
+from Tectonic_Utils.geodesy import fault_vector_functions
 
 
 def basic_clean_stations(velfield, coord_box=(-180, 180, -90, 90), num_years=3.0, max_sigma=2):
@@ -94,7 +95,7 @@ def disp_points_to_station_vels(obs_disp_points):
     return station_vel_list;
 
 
-def remove_blacklist_paired_data(velfield, blacklist, verbose=False, matching_data=None):   # ZIP VERSION
+def remove_blacklist_paired_data(velfield, blacklist, matching_data=None, verbose=False):   # ZIP VERSION
     """
     :param velfield: list of StationVels
     :param blacklist: list of strings
@@ -229,6 +230,19 @@ def get_bounding_box(velfield, border=0.1):
     lats = [x.nlat for x in velfield]
     bbox = [np.min(lons) - border, np.max(lons) + border, np.min(lats) - border, np.max(lats) + border];
     return bbox;
+
+
+# ---------- OPERATIONS ON SINGLE STATION_VEL OBJECTS  ------------- #
+def get_azimuth_degrees(station_vel):
+    """
+    :param station_vel: a station_vel object
+    :return: azimuth, in degrees clockwise from north
+    """
+    if fault_vector_functions.get_vector_magnitude([station_vel.e, station_vel.n]) <= 0.000001:
+        azimuth = 0;
+    else:
+        azimuth = fault_vector_functions.get_strike(station_vel.e, station_vel.n);
+    return azimuth;
 
 
 # ---------- PREDICATES ------------- #

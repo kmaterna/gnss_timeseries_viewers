@@ -34,7 +34,7 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
             emean = 0;  # leave the data un-meaned
         edata = [x + offset - emean for x in edata];
         line_color = custom_cmap.to_rgba(distances[i]);
-        _l1 = axarr[0].plot_date(dataobj_list[i].dtarray, edata, marker='+', markersize=1.5, color=line_color);
+        _l1 = axarr[0].plot_date(dataobj_list[i].dtarray, edata, marker='+', markersize=4.5, color=line_color);
         axarr[0].text(label_date, offset, dataobj_list[i].name, fontsize=9, color=line_color);
     axarr[0].set_xlim(start_time_plot, end_time_plot);
     bottom, top = axarr[0].get_ylim();
@@ -56,7 +56,7 @@ def horizontal_full_ts(dataobj_list, distances, myparams, label="", removemean=1
             nmean = 0;  # leave the data un-meaned
         ndata = [x + offset - nmean for x in ndata];
         line_color = custom_cmap.to_rgba(distances[i]);
-        _l1 = axarr[1].plot_date(dataobj_list[i].dtarray, ndata, marker='+', markersize=1.5, color=line_color);
+        _l1 = axarr[1].plot_date(dataobj_list[i].dtarray, ndata, marker='+', markersize=4.5, color=line_color);
     axarr[1].set_xlim(start_time_plot, end_time_plot);
     bottom, top = axarr[1].get_ylim();
     for i in range(len(myparams.eqtimes)):

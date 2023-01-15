@@ -11,8 +11,9 @@ from scipy import signal
 from scipy.optimize import curve_fit
 from . import lssq_model_errors, utilities
 from .gps_objects import Timeseries as Timeseries
+from Tectonic_Utils.geodesy import insar_vector_functions
 
-# # A line for referencing the namedtuple definition.
+# For reference:
 # Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
 #                                                    'EQtimes']);  # in mm
 
@@ -246,8 +247,22 @@ def remove_constant(Data0, east_offset, north_offset, vert_offset):
 
 
 # FUTURE FEATURES:
-def rotate_data():
-    return;
+def rotate_data(Data0, azimuth):  # should test to make sure this works the way I think it does.
+    """
+    :param Data0: a timeseries object
+    :param azimuth: degrees, CW from north
+    :return: a timeseries object. ts.e is associated with the new azimuth; ts.e is associated with azimuth+90.
+    """
+    newE, newN = [], [];
+    theta = insar_vector_functions.bearing_to_cartesian(azimuth);
+    for i in range(len(Data0.dtarray)):
+        new_position = insar_vector_functions.rotate_vector_by_angle(Data0.dE[i], Data0.dN[i], theta);
+        newE.append(new_position[0]);
+        newN.append(new_position[1]);
+    rotated_ts = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray,
+                            dN=np.array(newN), dE=np.array(newE), dU=Data0.dU,
+                            Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+    return rotated_ts;
 
 
 # -------------------------------------------- #
