@@ -481,14 +481,14 @@ def subsample_in_time(Data0, target_time, window_days=30):
 # -------------------------------------------- #
 
 def covers_date(Data0, include_time):
-    if Data0.dtarray[0] < include_time < Data0.dtarray[1]:
+    if Data0.dtarray[0] < include_time < Data0.dtarray[-1]:
         return 1;
     else:
         return 0;
 
 
 def covers_date_range(Data0, include_time_start, include_time_end):
-    if Data0.dtarray[0] < include_time_start and Data0.dtarray[1] > include_time_end:
+    if Data0.dtarray[0] < include_time_start and Data0.dtarray[-1] > include_time_end:
         return 1;
     else:
         return 0;

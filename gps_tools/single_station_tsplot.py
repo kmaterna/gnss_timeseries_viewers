@@ -70,7 +70,7 @@ def configure(station, offsets_remove, earthquakes_remove, outliers_remove, outl
 def input_data(st_name, datasource, refframe, data_config_file):
     database = load_gnss.create_station_repo(data_config_file, refframe, datasource)
     [myData, offset_obj, eq_obj] = database.load_station(st_name);
-    eqdates = [x.evdts for x in eq_obj];
+    eqdates = [x.evdt for x in eq_obj];
     # First, we embed the data with the eq object metadata (always useful)
     myData = gps_objects.Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray, dN=myData.dN,
                                     dE=myData.dE, dU=myData.dU, Sn=myData.Sn, Se=myData.Se,

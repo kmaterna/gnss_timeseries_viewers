@@ -92,3 +92,33 @@ def map_velocity_profile(velfield, selected_velfield, outname,  vector_scale_inf
 
     fig.savefig(outname);
     return;
+
+
+def map_ts_objects(dataobj_list, outname, center=None):
+    """
+    Plot stations locations, maybe with a star for the center of the search radius
+
+    :param dataobj_list: list of TS objects
+    :param outname: string
+    :param center: [lon, lat], optional
+    """
+    offset = 0.2;
+
+    lons = [x.coords[0] for x in dataobj_list];
+    lats = [x.coords[1] for x in dataobj_list];
+    names = [x.name for x in dataobj_list];
+    region = [min(lons) - offset, max(lons) + offset, min(lats) - offset, max(lats) + offset];
+
+    fig = pygmt.Figure()
+    fig.basemap(region=region, projection="M8i", frame="0.25");
+    # fig.grdimage("@earth_relief_30s",region=region,I="+d");  # takes a while the first time, but faster afterwards
+    fig.coast(shorelines="0.5p,black", land='peachpuff2', water='skyblue', resolution="h");
+    fig.coast(borders='1', shorelines='1.0p,black');
+    fig.coast(borders='2', shorelines='0.5p,black');
+    fig.text(x=lons, y=lats, text=names, font='15p,Helvetica-Bold,black', offset="0.24i/0.11i");
+    fig.plot(x=lons, y=lats, style='c0.1i', color='black', pen='0.5p,black')
+    if center:
+        fig.plot(x=center[0], y=center[1], style='a0.1i', color='red', pen='0.5p,red')
+    fig.savefig(outname);
+    print("Saving map %s" % outname );
+    return;

@@ -29,6 +29,19 @@ def read_kml_polygon(kml_file):
     return polygon_lon, polygon_lat;
 
 
+def write_namedtuple(namedtuple_object, outfilename):
+    """Utility function to serialize any namedtuple object into a files."""
+    print('Writing file %s ' % outfilename);
+    ofile = open(outfilename, 'w');
+    for name, value in zip(namedtuple_object._fields, namedtuple_object):
+        ofile.write(name);
+        ofile.write(": ");
+        ofile.write(str(value));
+        ofile.write("\n");
+    ofile.close();
+    return;
+
+
 def float_to_dt(float_time):
     # Example: 2014.194 --> datetime object
     fractional_year = str(1 + int(365.24 * (float_time - np.floor(float_time))));  # something like 004, 204, 321, etc.
