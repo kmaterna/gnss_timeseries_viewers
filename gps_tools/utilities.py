@@ -1,12 +1,14 @@
 import datetime as dt
 import numpy as np
 import os, sys
-import Tectonic_Utils.read_write.read_kml as read_kml
 
 
 def check_lon_sanity(lon):
     """
-    Make sure longitude is between -180 and +180
+    Ensure longitude is between -180 and +180
+
+    :param lon: float
+    :return: float, longitude between -180 and 180
     """
     if lon > 180:
         lon = lon - 360.0;
@@ -24,13 +26,8 @@ def check_if_file_exists(filename):
     return;
 
 
-def read_kml_polygon(kml_file):
-    [polygon_lon, polygon_lat] = read_kml.read_simple_kml(kml_file);
-    return polygon_lon, polygon_lat;
-
-
 def write_namedtuple(namedtuple_object, outfilename):
-    """Utility function to serialize any namedtuple object into a files."""
+    """Utility function to serialize any generic namedtuple object into a file."""
     print('Writing file %s ' % outfilename);
     ofile = open(outfilename, 'w');
     for name, value in zip(namedtuple_object._fields, namedtuple_object):
@@ -80,6 +77,12 @@ def get_relative_time(datetime_item, origin_dt):
     return relative_time;
 
 
+def reltime_to_dt(relative_time, origin_dt):
+    timedelta = dt.timedelta(days=relative_time);
+    my_date = origin_dt + timedelta;
+    return my_date;
+
+
 def yrnum2datetime(yearnums, starttime):
     """
     Take a set of dates, in decimal years past a certain date, and convert it into normal datetime objects.
@@ -93,16 +96,17 @@ def yrnum2datetime(yearnums, starttime):
 
 
 def get_daily_dtarray(starttime, endtime):
-    # Return a datetime array that spans starttime to endtime with daily intervals
+    """
+    Produce an array of datetimes, spanning starttime to endtime at daily intervals
+
+    :param starttime: datetime object
+    :param endtime: datetime object
+    :return: list of datetime objects
+    """
+
     i = 0;
     dtarray = [starttime];
     while dtarray[-1] < endtime:
         i = i + 1;
         dtarray.append(starttime + dt.timedelta(days=i));
     return dtarray;
-
-
-def reltime_to_dt(relative_time, origin_dt):
-    timedelta = dt.timedelta(days=relative_time);
-    my_date = origin_dt + timedelta;
-    return my_date;

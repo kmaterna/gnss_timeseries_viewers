@@ -80,6 +80,10 @@ def inputs(station_names, network, refframe):
     return [dataobj_list, offsetobj_list, eqobj_list];
 
 
+def add_two_unc_quadrature(unc1, unc2):
+    return np.sqrt(unc1 * unc1 + unc2 * unc2);
+
+
 def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type, time_after_start, critical_variance):
     dt1_start = dt.datetime.strptime(deltat1[0], "%Y%m%d");
     dt1_end = dt.datetime.strptime(deltat1[1], "%Y%m%d");
@@ -134,9 +138,9 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
             days=time_after_start), dt1_end);
         [east_sl_unc2, north_sl_unc2, vert_sl_unc2] = gps_ts_functions.get_slope_unc(newobj, dt2_start + dt.timedelta(
             days=time_after_start), dt2_end);
-        east_dv_unc = gps_ts_functions.add_two_unc_quadrature(east_sl_unc1, east_sl_unc2);
-        north_dv_unc = gps_ts_functions.add_two_unc_quadrature(north_sl_unc1, north_sl_unc2);
-        vert_dv_unc = gps_ts_functions.add_two_unc_quadrature(vert_sl_unc1, vert_sl_unc2);
+        east_dv_unc = add_two_unc_quadrature(east_sl_unc1, east_sl_unc2);
+        north_dv_unc = add_two_unc_quadrature(north_sl_unc1, north_sl_unc2);
+        vert_dv_unc = add_two_unc_quadrature(vert_sl_unc1, vert_sl_unc2);
 
         # When do we ignore stations? When their detrended time series have a large variance.
         if abs(esig0) > critical_variance or abs(nsig0) > critical_variance or abs(esig1) > critical_variance or abs(

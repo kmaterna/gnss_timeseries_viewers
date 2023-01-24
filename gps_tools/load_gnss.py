@@ -2,6 +2,7 @@
 import sys, os
 from .file_io import config_io, io_nota, io_magnet_unr, io_usgs, gps_input_pipeline
 from . import vel_functions, utilities
+import Tectonic_Utils.read_write.read_kml as read_kml
 
 
 def create_station_repo(root_config, refframe, proc_center, subnetwork=None):
@@ -62,7 +63,7 @@ class Station_Repo:
         velfield = self.proc_engine.import_velfield();
         if basic_clean:  # take long-lived stations and stations with low velocity uncertainties
             velfield = vel_functions.basic_clean_stations(velfield);
-        polygon_lon, polygon_lat = utilities.read_kml_polygon(kml_file);
+        [polygon_lon, polygon_lat] = read_kml.read_simple_kml(kml_file);
         close_stations = vel_functions.filter_to_within_polygon(velfield, polygon_lon, polygon_lat);
         return close_stations;
 

@@ -1,33 +1,25 @@
 """
 Toolbox for operating on Timeseries objects.
-Contains functions to map, filter, and reduce generic GPS time series
-    -Ex: remove_nans(Data0)
-    -Ex: get_slope(Data0, starttime=None, endtime=None,missing_fraction=0.6)
+Contains functions to map, filter, reduce, and process generic GPS time series
 """
 
 import numpy as np
 import datetime as dt
 from scipy import signal
-from scipy.optimize import curve_fit
-from . import lssq_model_errors, utilities
+from . import lssq_model_errors, utilities, math_functions
 from .gps_objects import Timeseries as Timeseries
 from Tectonic_Utils.geodesy import insar_vector_functions
 
-# For reference:
-# Timeseries = collections.namedtuple("Timeseries", ['name', 'coords', 'dtarray', 'dN', 'dE', 'dU', 'Sn', 'Se', 'Su',
-#                                                    'EQtimes']);  # in mm
 
 # -------------------------------------------- # 
-# FUNCTIONS THAT TAKE TIME SERIES OBJECTS # 
-# AND RETURN OTHER TIME SERIES OBJECTS # 
+# PROCESS AND RETURN NEW TIME SERIES OBJECTS
 # -------------------------------------------- #
 
 def remove_outliers(Data0, outliers_def):
     medfilt_e = signal.medfilt(Data0.dE, 35);
     medfilt_n = signal.medfilt(Data0.dN, 35);
     medfilt_u = signal.medfilt(Data0.dU, 35);
-    newdt, newdN, newdE, newdU = [], [], [], [];
-    newSe, newSn, newSu = [], [], [];
+    newdt, newdN, newdE, newdU, newSe, newSn, newSu = [], [], [], [], [], [], [];
     for i in range(len(medfilt_e)):
         if abs(Data0.dE[i] - medfilt_e[i]) < outliers_def and abs(Data0.dN[i] - medfilt_n[i]) < outliers_def and abs(
                 Data0.dU[i] - medfilt_u[i]) < outliers_def * 2:
@@ -44,9 +36,13 @@ def remove_outliers(Data0, outliers_def):
 
 
 def impose_time_limits(Data0, starttime, endtime):
-    # Starttime and endtime are datetime objects
-    newdtarray, newdN, newdE, newdU = [], [], [], [];
-    newSe, newSn, newSu = [], [], [];
+    """
+    :param Data0: a Timeseries object
+    :param starttime: datetime object
+    :param endtime:  datetime object
+    :return: a Timeseries object
+    """
+    newdtarray, newdN, newdE, newdU, newSe, newSn, newSu = [], [], [], [], [], [], [];
     for i in range(len(Data0.dN)):
         if starttime <= Data0.dtarray[i] <= endtime:
             newdtarray.append(Data0.dtarray[i]);
@@ -62,9 +58,7 @@ def impose_time_limits(Data0, starttime, endtime):
 
 
 def remove_nans(Data0):
-    idxE = np.isnan(Data0.dE);
-    idxN = np.isnan(Data0.dN);
-    idxU = np.isnan(Data0.dU);
+    idxE, idxN, idxU = np.isnan(Data0.dE), np.isnan(Data0.dN), np.isnan(Data0.dU);
     temp_dates, temp_east, temp_north, temp_vert = [], [], [], [];
     temp_Sn, temp_Se, temp_Su = [], [], [];
     for i in range(len(Data0.dtarray)):
@@ -94,9 +88,9 @@ def detrend_data_by_value(Data0, east_params, north_params, vert_params):
         Data0 = remove_nans(Data0);
     decyear = utilities.get_float_times(Data0.dtarray);
 
-    east_model = linear_annual_semiannual_function(decyear, east_params);
-    north_model = linear_annual_semiannual_function(decyear, north_params);
-    vert_model = linear_annual_semiannual_function(decyear, vert_params);
+    east_model = math_functions.linear_annual_semiannual_function(decyear, east_params);
+    north_model = math_functions.linear_annual_semiannual_function(decyear, north_params);
+    vert_model = math_functions.linear_annual_semiannual_function(decyear, vert_params);
 
     for i in range(len(decyear)):
         east_detrended.append(Data0.dE[i] - (east_model[i]));
@@ -122,9 +116,9 @@ def remove_seasonal_by_value(Data0, east_params, north_params, vert_params):
         Data0 = remove_nans(Data0);
     decyear = utilities.get_float_times(Data0.dtarray);
 
-    east_model = annual_semiannual_only_function(decyear, east_params[1:]);
-    north_model = annual_semiannual_only_function(decyear, north_params[1:]);
-    vert_model = annual_semiannual_only_function(decyear, vert_params[1:]);
+    east_model = math_functions.annual_semiannual_only_function(decyear, east_params[1:]);
+    north_model = math_functions.annual_semiannual_only_function(decyear, north_params[1:]);
+    vert_model = math_functions.annual_semiannual_only_function(decyear, vert_params[1:]);
 
     for i in range(len(decyear)):
         east_detrended.append(Data0.dE[i] - (east_model[i]));
@@ -141,10 +135,8 @@ def pair_gps_model(gps_data, model_data):
     Take two time series objects, and return two paired time series objects.
     It could be that GPS has days that model doesn't, or the other way around.
     """
-    dtarray, dE_gps, dN_gps, dU_gps = [], [], [], [];
-    Se_gps, Sn_gps, Su_gps = [], [], [];
-    dE_model, dN_model, dU_model = [], [], [];
-    Se_model, Sn_model, Su_model = [], [], [];
+    dtarray, dE_gps, dN_gps, dU_gps, Se_gps, Sn_gps, Su_gps = [], [], [], [], [], [], [];
+    dE_model, dN_model, dU_model, Se_model, Sn_model, Su_model = [], [], [], [], [], [];
     gps_data = remove_nans(gps_data);
     model_data = remove_nans(model_data);
     for i in range(len(gps_data.dtarray)):
@@ -176,8 +168,7 @@ def pair_gps_model_keeping_gps(gps_data, model_data):
     Keep all data from the first one.
     Generate a model_data with length that matches the GPS.
     """
-    dtarray, dE_model, dN_model, dU_model = [], [], [], [];
-    Se_model, Sn_model, Su_model = [], [], [];
+    dtarray, dE_model, dN_model, dU_model, Se_model, Sn_model, Su_model = [], [], [], [], [], [], [];
     gps_data = remove_nans(gps_data);
     model_data = remove_nans(model_data);
     for i in range(len(gps_data.dtarray)):
@@ -209,8 +200,7 @@ def get_referenced_data(roving_station_data, base_station_data):
     If there's a starttime, then we will solve for a best-fitting model offset at starttime.
     Used when subtracting models
     """
-    dtarray, dE_gps, dN_gps, dU_gps = [], [], [], [];
-    Se_gps, Sn_gps, Su_gps = [], [], [];
+    dtarray, dE_gps, dN_gps, dU_gps, Se_gps, Sn_gps, Su_gps = [], [], [], [], [], [], [];
     roving_station_data = remove_nans(roving_station_data);
     for i in range(len(roving_station_data.dtarray)):
         if roving_station_data.dtarray[i] in base_station_data.dtarray:
@@ -246,12 +236,25 @@ def remove_constant(Data0, east_offset, north_offset, vert_offset):
     return newData;
 
 
-# FUTURE FEATURES:
+def embed_tsobject_with_eqdates(Data0, eq_obj):
+    """
+    Put eqdates from a list of eq-dates into the timeseries object metadata
+
+    :param Data0: a timeseries object
+    :param eq_obj: a list of Offset objects
+    """
+    eqdates = [x.evdt for x in eq_obj];
+    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=Data0.dN,
+                         dE=Data0.dE, dU=Data0.dU, Sn=Data0.Sn, Se=Data0.Se,
+                         Su=Data0.Su, EQtimes=eqdates);
+    return newData;
+
+
 def rotate_data(Data0, azimuth):  # should test to make sure this works the way I think it does.
     """
-    :param Data0: a timeseries object
+    :param Data0: a Timeseries object
     :param azimuth: degrees, CW from north
-    :return: a timeseries object. ts.e is associated with the new azimuth; ts.e is associated with azimuth+90.
+    :return: a Timeseries object. ts.e is associated with the new azimuth; ts.e is associated with azimuth+90.
     """
     newE, newN = [], [];
     theta = insar_vector_functions.bearing_to_cartesian(azimuth);
@@ -266,8 +269,7 @@ def rotate_data(Data0, azimuth):  # should test to make sure this works the way 
 
 
 # -------------------------------------------- #
-# FUNCTIONS THAT TAKE TIME SERIES OBJECTS #
-# AND RETURN SCALARS OR VALUES # 
+# REDUCE TIME SERIES OBJECTS TO SCALARS OR VALUES
 # -------------------------------------------- # 
 
 def get_slope(Data0, starttime=None, endtime=None, missing_fraction=0.6):
@@ -310,9 +312,7 @@ def get_slope(Data0, starttime=None, endtime=None, missing_fraction=0.6):
     east_coef = np.polyfit(decyear, myeast, 1);
     north_coef = np.polyfit(decyear, mynorth, 1);
     vert_coef = np.polyfit(decyear, myup, 1);
-    east_slope = east_coef[0];
-    north_slope = north_coef[0];
-    vert_slope = vert_coef[0];
+    east_slope, north_slope, vert_slope = east_coef[0], north_coef[0], vert_coef[0];
 
     # How bad is the fit to the line?
     east_trend = [east_coef[0] * x + east_coef[1] for x in decyear];
@@ -377,9 +377,9 @@ def get_linear_annual_semiannual(Data0, starttime=None, endtime=None, critical_l
         return [east_params, north_params, up_params];
 
     decyear = utilities.get_float_times(mydtarray);
-    east_params_unordered = invert_linear_annual_semiannual(decyear, myeast);
-    north_params_unordered = invert_linear_annual_semiannual(decyear, mynorth);
-    vert_params_unordered = invert_linear_annual_semiannual(decyear, myup);
+    east_params_unordered = math_functions.invert_linear_annual_semiannual(decyear, myeast);
+    north_params_unordered = math_functions.invert_linear_annual_semiannual(decyear, mynorth);
+    vert_params_unordered = math_functions.invert_linear_annual_semiannual(decyear, myup);
 
     # The definition for returning parameters:
     # slope, a2(cos), a1(sin), s2, s1.
@@ -395,10 +395,8 @@ def get_linear_annual_semiannual(Data0, starttime=None, endtime=None, critical_l
 
 def get_means(Data0, starttime=None, endtime=None):
     """
-    Return average value of time series between starttime and endtime
-    Can be used to set offsets for plotting, etc.
+    Return average value of the time series between starttime and endtime
     """
-
     # Defensive programming
     error_flag, starttime, endtime = basic_defensive_programming(Data0, starttime, endtime);
     if error_flag:
@@ -418,7 +416,7 @@ def get_means(Data0, starttime=None, endtime=None):
 
 
 def get_gap_fraction(Data0):
-    """Return the fraction of the time series that is missing. """
+    """Compute the fraction of the time series that is not present. """
     starttime = Data0.dtarray[0];
     endtime = Data0.dtarray[-1];
     delta = endtime - starttime;
@@ -427,20 +425,15 @@ def get_gap_fraction(Data0):
     return 1 - (days_present/total_possible_days);
 
 
-def get_logfunction(Data0, eqtime):
+def get_logfunction_params(Data0, eqtime):
     """
-    y = B + Alog(1+t/tau);
+    y = B + Alog(1+t/tau), t is in decyear
     Useful for postseismic transients.
-    Should match construct-function function.
-    t is in decyear
     """
-    def func(t, a, b, tau):
-        return b + a * np.log(1 + t / tau);
-
     float_times = utilities.get_relative_times(Data0.dtarray, eqtime);  # in days
-    e_params, ecov = curve_fit(func, float_times, Data0.dE);
-    n_params, ecov = curve_fit(func, float_times, Data0.dN);
-    u_params, ecov = curve_fit(func, float_times, Data0.dU);
+    e_params, ecov = math_functions.invert_log_function(float_times, Data0.dE);
+    n_params, ecov = math_functions.invert_log_function(float_times, Data0.dN);
+    u_params, ecov = math_functions.invert_log_function(float_times, Data0.dU);
     return [e_params, n_params, u_params];
 
 
@@ -477,7 +470,7 @@ def subsample_in_time(Data0, target_time, window_days=30):
 
 
 # -------------------------------------------- #
-# MISCELLANEOUS FUNCTIONS: PREDICATES
+#              PREDICATES
 # -------------------------------------------- #
 
 def covers_date(Data0, include_time):
@@ -495,7 +488,7 @@ def covers_date_range(Data0, include_time_start, include_time_end):
 
 
 # -------------------------------------------- #
-# MISCELLANEOUS FUNCTIONS: MATH OPERATIONS
+#           DEFENSIVE PROGRAMMING
 # -------------------------------------------- #
 
 def basic_defensive_programming(Data0, starttime, endtime):
@@ -527,83 +520,3 @@ def basic_defensive_programming(Data0, starttime, endtime):
         error_flag = 1;
 
     return error_flag, starttime_proper, endtime_proper;
-
-
-def invert_linear_annual_semiannual(decyear, data):
-    """
-    Take a time series and fit a best-fitting linear least squares equation:
-    GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F;
-    Here we also solve for a linear trend as well.
-    """
-    design_matrix = [];
-    w = 2 * np.pi / 1.0;
-    for t in decyear:
-        design_matrix.append([np.cos(w * t), np.sin(w * t), np.cos(2 * w * t), np.sin(2 * w * t), t, 1]);
-    design_matrix = np.array(design_matrix);
-    params = np.dot(np.linalg.inv(np.dot(design_matrix.T, design_matrix)), np.dot(design_matrix.T, data));
-    return params;
-
-
-def add_two_unc_quadrature(unc1, unc2):
-    return np.sqrt(unc1 * unc1 + unc2 * unc2);
-
-
-# -------------------------------------------- #
-# FUNCTIONS THAT TAKE PARAMETERS
-# AND RETURN Y=F(X) ARRAYS
-# -------------------------------------------- # 
-
-
-def linear_annual_semiannual_function(decyear, fit_params):
-    """
-    Given curve parameters and a set of observation times, build the function y = f(x).
-    Model consists of GPS_V = E*t + Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt);
-    """
-    model_def = [];
-    w = 2 * np.pi / 1.0;
-    for t in decyear:
-        model_def.append(fit_params[0] * t + (fit_params[1] * np.cos(w * t)) + (fit_params[2] * np.sin(w * t)) + (
-                fit_params[3] * np.cos(2 * w * t)) + (fit_params[4] * np.sin(2 * w * t)));
-    return model_def;
-
-
-def annual_semiannual_only_function(decyear, fit_params):
-    """
-    Given curve parameters and a set of observation times, build the function y = f(x).
-    Model consists of GPS_V = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt);
-    """
-    model_def = [];
-    w = 2 * np.pi / 1.0;
-    for t in decyear:
-        model_def.append(
-            (fit_params[0] * np.cos(w * t)) + (fit_params[1] * np.sin(w * t)) + (fit_params[2] * np.cos(2 * w * t)) + (
-                    fit_params[3] * np.sin(2 * w * t)));
-    return model_def;
-
-
-def annual_only_function(decyear, fit_params):
-    """
-    Given curve parameters and a set of observation times, build the function y = f(x).
-    Model consists of GPS_V = Acos(wt) + Bsin(wt);
-    """
-    model_def = [];
-    w = 2 * np.pi / 1.0;
-    for t in decyear:
-        model_def.append((fit_params[0] * np.cos(w * t)) + (fit_params[1] * np.sin(w * t)));
-    return model_def;
-
-
-def construct_log_function(decday, fit_params):
-    """
-    Function has functional form:
-    y = b + a*np.log(1+t/tau);
-    fit params = [a, b, tau];
-    The x axis is the same as the get_log_function()
-    """
-    a = fit_params[0];
-    b = fit_params[1];
-    tau = fit_params[2];
-    model_def = [];
-    for i in range(len(decday)):
-        model_def.append(b + a * np.log(1 + decday[i] / tau));
-    return model_def;

@@ -1,4 +1,11 @@
-"""A set of functions that take TimeSeries objects and return other TimeSeries objects"""
+"""A set of functions that take TimeSeries objects and return other TimeSeries objects
+
+Non-Inclusive List of seasonal removal options:
+   lssq: fits seasonals and linear trend by least squares inversion.
+  notch: removes the 1-year and 6-month components by notch filter.
+  grace: uses GRACE loading model interpolated between monthly points where available, and linear inversion where not.
+    stl: uses a pre-computed look-up table for STL time series.
+"""
 import numpy as np
 import datetime as dt
 import glob, os, sys, subprocess

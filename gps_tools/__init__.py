@@ -11,3 +11,4 @@ from . import gps_objects
 from . import vel_functions
 from . import downsample
 from . import load_gnss
+from . import math_functions

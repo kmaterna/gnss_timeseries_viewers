@@ -1,28 +1,18 @@
 """
 Make a basic python plot of single-station position time series with corrections optional.
-Types of seasonal options:
-   lssq: fits seasonals and linear trend by least squares inversion.
-  notch: removes the 1-year and 6-month components by notch filter.
-  grace: uses GRACE loading model interpolated between monthly points where available, and linear inversion where not.
-    stl: uses a pre-computed look-up table for STL time series.
 """
+
 import matplotlib.pyplot as plt
-import collections
-from . import gps_objects as gps_objects
+import subprocess
 from . import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss
 
-# Parameters for controlling plotting
-Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove', 'outliers_def',
-                                                   'earthquakes_remove', 'offsets_remove', 'seasonals_remove',
-                                                   'seasonals_type', 'datasource', 'refframe', 'data_config_file']);
 
-
-def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0,
-                        starttime=None, endtime=None, outliers_def=15,
-                        seasonals_type='lssq', datasource='cwu', refframe='NA',
-                        data_config_file="data_config.txt", outdir="single_plots/"):
+def view_single_station(station_name, data_config_file, offsets_remove=1, earthquakes_remove=0, outliers_remove=0,
+                        seasonals_remove=0, starttime=None, endtime=None, outliers_def=15,
+                        seasonals_type='lssq', datasource='cwu', refframe='NA', outdir=""):
     """
     :param station_name: string
+    :param data_config_file: string
     :param offsets_remove: bool, default True
     :param earthquakes_remove: bool, default False
     :param outliers_remove: bool, default False
@@ -33,75 +23,72 @@ def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, ou
     :param seasonals_type: string, default 'lssq'
     :param datasource: string, default cwu
     :param refframe: string, default NA
-    :param data_config_file: string
     :param outdir: string
     """
-    MyParams = configure(station_name, offsets_remove, earthquakes_remove, outliers_remove, outliers_def,
-                         seasonals_remove, seasonals_type, datasource, refframe, data_config_file);
-    [myData, offset_obj, eq_obj] = input_data(MyParams.station, MyParams.datasource, MyParams.refframe,
-                                              MyParams.data_config_file);
-    [updatedData, detrended] = compute(myData, offset_obj, eq_obj, MyParams, starttime, endtime);
-    single_ts_plot(updatedData, detrended, MyParams, outdir);
+    db_params = config_db(station_name, datasource, refframe);
+    plot_params = config_view(offsets_remove, earthquakes_remove, outliers_remove, outliers_def, seasonals_remove,
+                              seasonals_type, starttime, endtime);
+    [myData, offset_obj, eq_obj] = input_data(station_name, data_config_file, db_params);
+    [updatedData, detrended] = compute(data_config_file, myData, offset_obj, eq_obj, plot_params);
+    single_ts_plot(updatedData, detrended, plot_params, db_params, outdir);
 
 
-# -------------- CONFIGURE ------------ # 
-def configure(station, offsets_remove, earthquakes_remove, outliers_remove, outliers_def,
-              seasonals_remove, seasonals_type, datasource, refframe, data_config_file):
+# -------------- CONFIGURE ------------ #
+def config_db(station, datasource, refframe):
+    database_params = {"station": station, 'datasource': datasource, 'refframe': refframe};
+    print("\n---------- VIEWING GNSS TIMESERIES ------------");
+    print("Database Parameters: station = %s, dattasource = %s, refframe = %s " % (station, datasource, refframe));
+    return database_params;
+
+
+def config_view(offsets_remove, earthquakes_remove, outliers_remove, outliers_def, seasonals_remove, seasonals_type,
+                starttime, endtime):
     """
     outliers_def : mm away from median filter.
-    refframe : itrf or nam
     offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove : booleans
     seasonals type : lssq, nldas, gldas, grace, lsdm, shasta, stl, notch
-    datasource : unr, cwu, pbo, nmt, usgs
     """
-    MyParams = Parameters(station=station, outliers_remove=outliers_remove, outliers_def=outliers_def,
-                          earthquakes_remove=earthquakes_remove,
-                          offsets_remove=offsets_remove, seasonals_remove=seasonals_remove,
-                          seasonals_type=seasonals_type,
-                          datasource=datasource, refframe=refframe, data_config_file=data_config_file);
-    print("------- %s --------" % station);
-    print(
-        "Viewing station %s, earthquakes_remove=%d, outliers_remove=%d, seasonals_remove=%d, datasource=%s, refframe=%s"
-        % (station, earthquakes_remove, outliers_remove, seasonals_remove, datasource, refframe));
-    return MyParams;
+    view_params = locals();  # package all provided arguments into a dictionary
+    print("Viewing Parameters: earthquakes_remove = %d, outliers_remove = %d, seasonals_remove = %d"
+          % (earthquakes_remove, outliers_remove, seasonals_remove));
+    print("----------------------------------");
+    return view_params;
 
 
 # ----------- INPUTS ---------------- # 
-def input_data(st_name, datasource, refframe, data_config_file):
-    database = load_gnss.create_station_repo(data_config_file, refframe, datasource)
+def input_data(st_name, data_config_file, db_params):
+    database = load_gnss.create_station_repo(data_config_file, db_params['refframe'], db_params['datasource']);
     [myData, offset_obj, eq_obj] = database.load_station(st_name);
-    eqdates = [x.evdt for x in eq_obj];
-    # First, we embed the data with the eq object metadata (always useful)
-    myData = gps_objects.Timeseries(name=myData.name, coords=myData.coords, dtarray=myData.dtarray, dN=myData.dN,
-                                    dE=myData.dE, dU=myData.dU, Sn=myData.Sn, Se=myData.Se,
-                                    Su=myData.Su, EQtimes=eqdates);
+    myData = gps_ts_functions.embed_tsobject_with_eqdates(myData, eq_obj);  # embed data with eq object metadata
     return [myData, offset_obj, eq_obj];
 
 
 # -------------- COMPUTE ------------ # 
-def compute(myData, offset_obj, eq_obj, MyParams, starttime, endtime):
-    if starttime is None:
-        starttime = myData.dtarray[0];
-    if endtime is None:
-        endtime = myData.dtarray[-1];
-    newData = gps_ts_functions.impose_time_limits(myData, starttime, endtime);
-    if MyParams.offsets_remove == 1:  # Remove offsets and antenna changes
+def compute(data_config_file, myData, offset_obj, eq_obj, plot_params):
+    if plot_params["starttime"] is None:
+        plot_params["starttime"] = myData.dtarray[0];
+    if plot_params["endtime"] is None:
+        plot_params["endtime"] = myData.dtarray[-1];
+    newData = gps_ts_functions.impose_time_limits(myData, plot_params["starttime"], plot_params["endtime"]);
+    if plot_params["offsets_remove"]:  # Remove offsets and antenna changes
         newData = offsets.remove_offsets(newData, offset_obj);
-    if MyParams.outliers_remove == 1:  # Remove outliers
-        newData = gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
-    if MyParams.earthquakes_remove == 1:  # Remove earthquakes
+    if plot_params["outliers_remove"]:  # Remove outliers
+        newData = gps_ts_functions.remove_outliers(newData, plot_params["outliers_def"]);
+    if plot_params["earthquakes_remove"]:  # Remove earthquakes
         newData = offsets.remove_offsets(newData, eq_obj);
-    trend_out = gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove, MyParams.seasonals_type,
-                                                        MyParams.data_config_file);
+    trend_out = gps_seasonal_removals.make_detrended_ts(newData, plot_params["seasonals_remove"],
+                                                        plot_params["seasonals_type"], data_config_file);
     return [newData, trend_out];
 
 
 # -------------- OUTPUTS ------------ # 
-def single_ts_plot(ts_obj, detrended, MyParams, outdir):
+def single_ts_plot(ts_obj, detrended, plot_params, db_params, outdir):
+    title, savename = get_figure_name(plot_params, db_params, outdir);
     label_fontsize = 18;
 
     # The major figure
     dpival = 500;
+    # noinspection PyTypeChecker
     [_, axarr] = plt.subplots(3, 1, sharex=True, figsize=(10, 7), dpi=dpival);
     axarr[0].plot_date(ts_obj.dtarray, ts_obj.dE, color='blue', markeredgecolor='black', markersize=1.5);
     axarr[0].grid(linestyle='--', linewidth=0.5);
@@ -140,63 +127,61 @@ def single_ts_plot(ts_obj, detrended, MyParams, outdir):
     ax3.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[2].tick_params(labelsize=label_fontsize);
 
-    title, savename = get_figure_name(MyParams, outdir);
     axarr[0].set_title(title, fontsize=label_fontsize + 2);
     plt.savefig(savename, dpi=dpival);
     print("Saving figure as %s " % savename)
     return;
 
 
-def get_figure_name(MyParams, outdir):
+def get_figure_name(plot_params, db_params, outdir):
     """
-    Things that might go into the name:
-    1. Station
-    2. Earthquakes removed
-    3. Outliers removed
-    4. Seasonals removed
-    5. Datasource
-    6. Refframe
+    Things that might go into the filename and title: Station, Offsets/outliers/seasonals, Datasource and Refframe
     """
 
-    savename = outdir + MyParams.station;
-    title = MyParams.station;
+    savename = outdir + db_params["station"];
+    title = db_params["station"];
+    if outdir != '':
+        subprocess.call(['mkdir', '-p', outdir], shell=False);
 
-    title = title + ', ' + MyParams.datasource + ' ' + MyParams.refframe
-    if MyParams.earthquakes_remove == 0 and MyParams.offsets_remove == 0 and MyParams.seasonals_remove == 0:
+    title = title + ', ' + db_params["datasource"] + ' ' + db_params["refframe"];
+    if plot_params["earthquakes_remove"] == 0 and plot_params["offsets_remove"] == 0 and \
+            plot_params["seasonals_remove"] == 0:
         title = title + ', unaltered';
-    if MyParams.earthquakes_remove:
+    if plot_params["earthquakes_remove"]:
         savename = savename + "_noeq";
         title = title + ', no earthquakes'
-    if MyParams.seasonals_remove:  # If we are removing seasonals:
+    if plot_params["seasonals_remove"]:  # If we are removing seasonals:
         savename = savename + "_noseasons";
         title = title + ', no seasonals'
-        if MyParams.seasonals_type == "lssq":
+        if plot_params["seasonals_type"] == "lssq":
             savename = savename + "_lssq"
             title = title + ' by least squares'
-        if MyParams.seasonals_type == "notch":
+        elif plot_params["seasonals_type"] == "notch":
             savename = savename + "_notch"
             title = title + ' by notch filter'
-        if MyParams.seasonals_type == "grace":
+        elif plot_params["seasonals_type"] == "grace":
             savename = savename + "_grace"
             title = title + ' by GRACE model'
-        if MyParams.seasonals_type == "stl":
+        elif plot_params["seasonals_type"] == "stl":
             savename = savename + "_stl"
             title = title + ' by STL'
-        if MyParams.seasonals_type == "nldas":
+        elif plot_params["seasonals_type"] == "nldas":
             savename = savename + "_nldas";
             title = title + ' by NLDAS'
-        if MyParams.seasonals_type == "gldas":
+        elif plot_params["seasonals_type"] == "gldas":
             savename = savename + "_gldas";
             title = title + ' by GLDAS'
-        if MyParams.seasonals_type == "lsdm":
+        elif plot_params["seasonals_type"] == "lsdm":
             savename = savename + "_lsdm";
             title = title + ' by LSDM'
-        if MyParams.seasonals_type == "shasta":
+        elif plot_params["seasonals_type"] == "shasta":
             savename = savename + "_shasta";
             title = title + ' by Shasta';
-        if MyParams.seasonals_type == "oroville":
+        elif plot_params["seasonals_type"] == "oroville":
             savename = savename + "_oroville";
             title = title + ' by Oroville';
-    savename = savename + '_' + MyParams.datasource + '_' + MyParams.refframe;
+        else:
+            print("Error! Type of seasonal removal not recognized.");
+    savename = savename + '_' + db_params["datasource"] + '_' + db_params["refframe"];
     savename = savename + "_ts.png";
     return title, savename;
