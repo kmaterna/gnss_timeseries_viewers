@@ -105,7 +105,7 @@ def plot_profile_in_distance(x_distance, vel_parallel, vel_perp, fault_xlocation
         for item in fault_xlocations:
             top, bottom = [-10, 65];
             plt.plot([item, item], [top, bottom], '--', color='black');  # fault edges
-    plt.ylim([-10, 60]);
+    plt.ylim([-10, 59.9]);
     plt.xlim([-150, 251]);
 
     # SAF experiment:
@@ -116,16 +116,17 @@ def plot_profile_in_distance(x_distance, vel_parallel, vel_perp, fault_xlocation
     low_slip_rate_model = [saf_model0, maa_model0, bsf_model0]
 
     saf_model1 = (fault_xlocations[0], 15, 20);
-    maa_model1 = (fault_xlocations[1], 23, 20);
-    bsf_model1 = (fault_xlocations[2], 20, 20);
+    maa_model1 = (fault_xlocations[1], 22, 20);
+    bsf_model1 = (fault_xlocations[2], 12, 20);
     high_slip_rate_model = [saf_model1, maa_model1, bsf_model1]
 
     xs, ys = arctan_model(-150, 250, 8, low_slip_rate_model);   # low slip rate case
-    plt.plot(xs, ys, color='turquoise', linewidth=2, label='small slip rate (24, 12, 6)');
+    plt.plot(xs, ys, color='turquoise', linewidth=2, label='Elastic slip rates (24, 12, 6)');
 
     xs, ys = arctan_model(-150, 250, 8, high_slip_rate_model);   # high slip rate case
-    plt.plot(xs, ys, color='purple', linewidth=2, label='large slip rate (15, 23, 20)');
+    plt.plot(xs, ys, color='purple', linewidth=2, label='VE slip rates (15, 22, 12)');
 
-    plt.legend();
+    plt.legend(fontsize=16);
+    plt.title("Elastic half-space (arctangent) modeling, Point Arena profile", fontsize=20);
     plt.savefig("profile_in_distance.png");
     return;
