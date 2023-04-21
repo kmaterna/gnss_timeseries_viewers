@@ -7,7 +7,7 @@ Viewing a stack of stations
 """
 
 import subprocess
-from . import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss, vel_functions, pygmt_plots
+from . import gps_seasonal_removals, offsets, load_gnss, vel_functions, pygmt_plots
 from . import outputs_gps_stacks as out_stack
 from .file_io import config_io, io_other
 import datetime as dt
@@ -80,7 +80,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
         # Remove the steps earthquakes
         newobj = offsets.remove_offsets(sorted_objects[i], sorted_offsets[i]);
         newobj = offsets.remove_offsets(newobj, sorted_eqs[i]);
-        newobj = gps_ts_functions.remove_outliers(newobj, 20);  # 20mm outlier definition
+        newobj = newobj.remove_outliers(20);  # 20mm outlier definition
 
         # The detrended TS without earthquakes
         stage1obj = gps_seasonal_removals.make_detrended_ts(newobj, 0, 'lssq', data_config_file);

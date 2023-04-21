@@ -71,7 +71,7 @@ def compute(myData, offset_obj, eq_obj, MyParams, ets_intervals):
     if MyParams.offsets_remove == 1:  # Remove offsets and antenna changes
         newData = offsets.remove_offsets(newData, offset_obj);
     if MyParams.outliers_remove == 1:  # Remove outliers
-        newData = gps_ts_functions.remove_outliers(newData, MyParams.outliers_def);
+        newData = newData.remove_outliers(MyParams.outliers_def);
     if MyParams.earthquakes_remove == 1:  # Remove earthquakes
         newData = offsets.remove_offsets(newData, eq_obj);
     trend_out_uncorrected = gps_seasonal_removals.make_detrended_ts(newData, MyParams.seasonals_remove,

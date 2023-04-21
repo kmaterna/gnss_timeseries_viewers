@@ -1,8 +1,7 @@
 """
 Toolbox that operates on Timeseries objects to deal with antenna offsets and earthquake offsets.
 """
-import gps_tools.gps_ts_functions
-import gps_tools.vel_functions
+from . import gps_ts_functions, vel_functions
 import numpy as np
 import datetime as dt
 
@@ -41,8 +40,8 @@ def remove_offsets(Data0, offsets_obj):
         newN.append(tempN);
         newU.append(tempU);
 
-    newData = gps_tools.gps_ts_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN, dE=newE,
-                                                    dU=newU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+    newData = gps_ts_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN, dE=newE,
+                                          dU=newU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
     return newData;
 
 
@@ -158,9 +157,9 @@ def package_offset_as_StationVel(ts_object, offset):
     :param offset: an offset object
     :return: a StationVel
     """
-    newobj = gps_tools.vel_functions.Station_Vel(name=ts_object.name, nlat=ts_object.coords[1], elon=ts_object.coords[0],
-                                                 n=offset.n_offset, e=offset.e_offset, u=offset.u_offset, sn=0, se=0, su=0,
-                                                 first_epoch='', last_epoch='', meas_type='');
+    newobj = vel_functions.Station_Vel(name=ts_object.name, nlat=ts_object.coords[1], elon=ts_object.coords[0],
+                                       n=offset.n_offset, e=offset.e_offset, u=offset.u_offset, sn=0, se=0, su=0,
+                                       first_epoch='', last_epoch='', meas_type='');
     return newobj;
 
 

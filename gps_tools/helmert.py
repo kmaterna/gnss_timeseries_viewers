@@ -109,10 +109,9 @@ def postproc_after_helmert(xyz_velfield, multiplier=100):
 
         enu_vel, enu_cov = geo_conv.xyz2enu(xyz_vel, llh_origin_simple, ecov);  # covariances go here
 
-        new_station_vel = vel_functions.Station_Vel(name=item.name, elon=lonlat[0][0], nlat=lonlat[0][1], e=enu_vel[0][0],
-                                                    n=enu_vel[0][1], u=enu_vel[0][2], se=enu_cov[0][0], sn=enu_cov[1][1],
-                                                    su=enu_cov[2][2], first_epoch=0, last_epoch=0, refframe=0,
-                                                    proccenter=0, subnetwork=0, survey=0, meas_type=None);
+        new_station_vel = vel_functions.Station_Vel(name=item.name, elon=lonlat[0][0], nlat=lonlat[0][1],
+                                                    e=enu_vel[0][0], n=enu_vel[0][1], u=enu_vel[0][2], se=enu_cov[0][0],
+                                                    sn=enu_cov[1][1], su=enu_cov[2][2], first_epoch=0, last_epoch=0);
         enu_station_list.append(new_station_vel);
     return enu_station_list;
 

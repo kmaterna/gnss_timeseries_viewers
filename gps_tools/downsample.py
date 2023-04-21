@@ -1,7 +1,6 @@
 """
 Tools to down-sample GNSS time series in time
 """
-import gps_tools.gps_ts_functions
 from . import gps_ts_functions
 import matplotlib.pyplot as plt
 import datetime as dt
@@ -21,16 +20,15 @@ def subsample_ts_at_points(Data0, dtlist, window_days=30, Se_default=None, Sn_de
     """
     dE, dN, dU, Se, Sn, Su = [], [], [], [], [], [];
     for day in dtlist:
-        sample_pos = gps_ts_functions.subsample_in_time(Data0, day, window_days);
+        sample_pos = Data0.subsample_in_time(day, window_days);
         dE.append(sample_pos[0]);
         dN.append(sample_pos[1]);
         dU.append(sample_pos[2]);
         Se.append(Se_default);
         Sn.append(Sn_default);
         Su.append(Su_default);
-    downsampled_object = gps_tools.gps_ts_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=dtlist,
-                                                               dE=dE, dN=dN,
-                                                               dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=Data0.EQtimes);
+    downsampled_object = gps_ts_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=dtlist, dE=dE, dN=dN,
+                                                     dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=Data0.EQtimes);
     return downsampled_object;
 
 

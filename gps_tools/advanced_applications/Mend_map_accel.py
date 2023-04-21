@@ -128,16 +128,21 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, deltat1, deltat2, fit_type
         noeq_objects.append(newobj);
 
         # Get the pre-event and post-event velocities (earthquakes removed)
-        [east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, _usig0] = gps_ts_functions.get_slope(
-            newobj, starttime=dt1_start + dt.timedelta(days=time_after_start), endtime=dt1_end);
-        [east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, _usig1] = gps_ts_functions.get_slope(
-            newobj, starttime=dt2_start + dt.timedelta(days=time_after_start), endtime=dt2_end);
+        starttime = dt1_start + dt.timedelta(days=time_after_start)
+        [east_slope_before, north_slope_before, vert_slope_before, esig0, nsig0, _usig0] = newobj.get_slope(starttime,
+                                                                                                            dt1_end,
+                                                                                                            0.6);
+        starttime1 = dt2_start + dt.timedelta(days=time_after_start)
+        [east_slope_after, north_slope_after, vert_slope_after, esig1, nsig1, _usig1] = newobj.get_slope(starttime1,
+                                                                                                         dt2_end, 0.6);
 
         # Get the uncertainties on the velocity-change estimate
-        [east_sl_unc1, north_sl_unc1, vert_sl_unc1] = gps_ts_functions.get_slope_unc(newobj, dt1_start + dt.timedelta(
-            days=time_after_start), dt1_end);
-        [east_sl_unc2, north_sl_unc2, vert_sl_unc2] = gps_ts_functions.get_slope_unc(newobj, dt2_start + dt.timedelta(
-            days=time_after_start), dt2_end);
+        starttime2 = dt1_start + dt.timedelta(
+            days=time_after_start)
+        [east_sl_unc1, north_sl_unc1, vert_sl_unc1] = newobj.get_slope_unc(starttime2, dt1_end);
+        starttime3 = dt2_start + dt.timedelta(
+            days=time_after_start)
+        [east_sl_unc2, north_sl_unc2, vert_sl_unc2] = newobj.get_slope_unc(starttime3, dt2_end);
         east_dv_unc = add_two_unc_quadrature(east_sl_unc1, east_sl_unc2);
         north_dv_unc = add_two_unc_quadrature(north_sl_unc1, north_sl_unc2);
         vert_dv_unc = add_two_unc_quadrature(vert_sl_unc1, vert_sl_unc2);
@@ -267,10 +272,15 @@ def grace_compute(dt1_start, dt1_end, dt2_start, dt2_end, dataobject_list):
     for i in range(len(dataobject_list)):
         # Just fit the best line.
         # # Get the pre-event and post-event velocities
-        [east_slope_before, north_slope_before, vert_slope_before, _esig0, _nsig0, _usig0] = gps_ts_functions.get_slope(
-            dataobject_list[i], starttime=dt1_start + dt.timedelta(days=period_after_start_date), endtime=dt1_end);
-        [east_slope_after, north_slope_after, vert_slope_after, _esig1, _nsig1, _usig1] = gps_ts_functions.get_slope(
-            dataobject_list[i], starttime=dt2_start + dt.timedelta(days=period_after_start_date), endtime=dt2_end);
+        data_ = dataobject_list[i]
+        starttime = dt1_start + dt.timedelta(days=period_after_start_date)
+        [east_slope_before, north_slope_before, vert_slope_before, _esig0, _nsig0, _usig0] = data_.get_slope(starttime,
+                                                                                                             dt1_end,
+                                                                                                             0.6);
+        data_1 = dataobject_list[i]
+        starttime1 = dt2_start + dt.timedelta(days=period_after_start_date)
+        [east_slope_after, north_slope_after, vert_slope_after, _esig1, _nsig1, _usig1] = data_1.get_slope(starttime1,
+                                                                                                           dt2_end, 0.6);
         east_slope_obj.append([east_slope_before, east_slope_after]);
         north_slope_obj.append([north_slope_before, north_slope_after]);
         vert_slope_obj.append([vert_slope_before, vert_slope_after]);

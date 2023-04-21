@@ -4,7 +4,7 @@ Make a basic python plot of single-station position time series with corrections
 
 import matplotlib.pyplot as plt
 import subprocess
-from . import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss
+from . import gps_seasonal_removals, offsets, load_gnss
 
 
 def view_single_station(station_name, data_config_file, offsets_remove=1, earthquakes_remove=0, outliers_remove=0,
@@ -59,7 +59,7 @@ def config_view(offsets_remove, earthquakes_remove, outliers_remove, outliers_de
 def input_data(st_name, data_config_file, db_params):
     database = load_gnss.create_station_repo(data_config_file, db_params['refframe'], db_params['datasource']);
     [myData, offset_obj, eq_obj] = database.load_station(st_name);
-    myData = gps_ts_functions.embed_tsobject_with_eqdates(myData, eq_obj);  # embed data with eq object metadata
+    myData = myData.embed_tsobject_with_eqdates(eq_obj);  # embed data with eq object metadata
     return [myData, offset_obj, eq_obj];
 
 
@@ -69,11 +69,14 @@ def compute(data_config_file, myData, offset_obj, eq_obj, plot_params):
         plot_params["starttime"] = myData.dtarray[0];
     if plot_params["endtime"] is None:
         plot_params["endtime"] = myData.dtarray[-1];
-    newData = gps_ts_functions.impose_time_limits(myData, plot_params["starttime"], plot_params["endtime"]);
+    starttime = plot_params["starttime"]
+    endtime = plot_params["endtime"]
+    newData = myData.impose_time_limits(starttime, endtime);
     if plot_params["offsets_remove"]:  # Remove offsets and antenna changes
         newData = offsets.remove_offsets(newData, offset_obj);
     if plot_params["outliers_remove"]:  # Remove outliers
-        newData = gps_ts_functions.remove_outliers(newData, plot_params["outliers_def"]);
+        outliers_def = plot_params["outliers_def"]
+        newData = newData.remove_outliers(outliers_def);
     if plot_params["earthquakes_remove"]:  # Remove earthquakes
         newData = offsets.remove_offsets(newData, eq_obj);
     trend_out = gps_seasonal_removals.make_detrended_ts(newData, plot_params["seasonals_remove"],

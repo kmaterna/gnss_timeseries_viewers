@@ -59,7 +59,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list):
         # Remove the steps earthquakes
         newobj = offsets.remove_offsets(dataobj_list[i], offsetobj_list[i]);
         newobj = offsets.remove_offsets(newobj, eqobj_list[i]);
-        [east_slope, north_slope, vert_slope, _east_std, _north_std, _vert_std] = gps_ts_functions.get_slope(newobj);
+        [east_slope, north_slope, vert_slope, _east_std, _north_std, _vert_std] = newobj.get_slope(None, None, 0.6);
         east_slope_list.append(east_slope)
         north_slope_list.append(north_slope)
         vert_slope_list.append(vert_slope)
