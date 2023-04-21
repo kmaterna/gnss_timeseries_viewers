@@ -63,7 +63,7 @@ def read_unr_vel_file(infile, coordinate_file):
     return myVelfield;
 
 
-def read_UNR_magnet_ts_file(filename, coordinates_file):
+def read_UNR_magnet_ts_file(filename, coordinates_file) -> Timeseries:
     """
     Read time series file from the MAGNET/MIDAS website, looking up coordinates from associated file.
     Returns a TimeSeries object.

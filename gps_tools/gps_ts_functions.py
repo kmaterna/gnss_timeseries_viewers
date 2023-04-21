@@ -12,7 +12,7 @@ from Tectonic_Utils.geodesy import insar_vector_functions
 
 class Timeseries:
     # The classic timeseries internal object!
-    def __init__(self, name, coords, dtarray, dN, dE, dU, Sn, Se, Su, EQtimes):
+    def __init__(self, name, coords, dtarray, dN, dE, dU, Sn, Se, Su, EQtimes=()):
         self.name = name;
         self.coords = coords;
         self.dtarray = dtarray;  # 1d array of datetime objects
@@ -514,9 +514,6 @@ def remove_nans(Data0: Timeseries):
 def remove_constant(Data0: Timeseries, east_offset=0, north_offset=0, vert_offset=0):
     return Data0.remove_constant(east_offset, north_offset, vert_offset);
 
-def embed_tsobject_with_eqdates(Data0: Timeseries, eq_obj):
-    return Data0.embed_tsobject_with_eqdates(eq_obj);
-
 def detrend_data_by_value(Data0: Timeseries, east_params, north_params, vert_params):
     return Data0.detrend_data_by_value(east_params, north_params, vert_params);
 
@@ -534,9 +531,3 @@ def get_linear_annual_semiannual(Data0: Timeseries, starttime=None, endtime=None
 
 def get_means(Data0: Timeseries, starttime=None, endtime=None):
     return Data0.get_means(starttime, endtime);
-
-def get_logfunction_params(Data0: Timeseries, eqtime):
-    return Data0.get_logfunction_params(eqtime);
-
-def get_values_at_date(Data0: Timeseries, selected_date, num_days=10):
-    return Data0.get_values_at_date(selected_date, num_days);

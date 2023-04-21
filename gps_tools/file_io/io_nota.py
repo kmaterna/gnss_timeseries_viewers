@@ -118,7 +118,7 @@ def read_gamit_velfile(infile):
     return myVelfield;
 
 
-def read_pbo_pos_file(filename):
+def read_pbo_pos_file(filename) -> Timeseries:
     """
     :param filename: string, name of .pos file
     :returns: TimeSeries object
@@ -143,7 +143,7 @@ def read_pbo_pos_file(filename):
     return myData;
 
 
-def read_pbo_hydro_file(filename, coords_file=None):
+def read_pbo_hydro_file(filename, coords_file=None) -> Timeseries:
     """
     Read hydrology files like NLDAS, GLDAS, etc. In normal pipeline, it is guaranteed to be given a real file.
     Optional: to look up the coordinates of this station, then provide the name of a UNR-style metadata file.

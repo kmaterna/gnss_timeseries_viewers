@@ -89,7 +89,7 @@ def read_usgs_velfile(infile, cache_file):
     return myVelField;
 
 
-def read_USGS_ts_file(filename):
+def read_USGS_ts_file(filename) -> Timeseries:
     """
     :param filename: string, name of .rneu file for GNSS time series
     :returns: TimeSeries object

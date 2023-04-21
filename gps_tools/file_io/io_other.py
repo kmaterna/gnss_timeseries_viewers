@@ -9,7 +9,7 @@ from gps_tools.vel_functions import Station_Vel
 from gps_tools.gps_ts_functions import Timeseries
 
 
-def read_lsdm_file(filename, coords_file=None):
+def read_lsdm_file(filename, coords_file=None) -> Timeseries:
     """
     Read hydrology files from LSDM German loading product
     Optional: to look up the coordinates of this station, then provide the name of a UNR-style metadata file.
@@ -38,12 +38,11 @@ def read_lsdm_file(filename, coords_file=None):
     Se = 0.2 * np.ones(np.shape(dE));
     Sn = 0.2 * np.ones(np.shape(dN));
     Su = 0.2 * np.ones(np.shape(dU));
-    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
-                        EQtimes=[]);
+    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su);
     return myData;
 
 
-def read_grace(filename):
+def read_grace(filename) -> Timeseries:
     """
     Read GRACE model into a GPS-style time series object.
 
@@ -64,7 +63,7 @@ def read_grace(filename):
     grace_t = [i + dt.timedelta(days=15) for i in grace_t];
     S = np.zeros(np.shape(u));
     GRACE_TS = Timeseries(name=station_name, coords=[lon[0], lat[0]], dtarray=grace_t, dE=u, dN=v, dU=w, Se=S, Sn=S,
-                          Su=S, EQtimes=[]);
+                          Su=S);
     return GRACE_TS;
 
 
@@ -162,7 +161,7 @@ def read_blacklist(blacklist_file):
     return blacklist;
 
 
-def read_lake_loading_ts(infile):
+def read_lake_loading_ts(infile) -> Timeseries:
     """
     :param infile: string, filename
     :returns: a TimeSeries object
@@ -171,5 +170,5 @@ def read_lake_loading_ts(infile):
         'names': ('d', 'u', 'v', 'w'), 'formats': ('U10', np.float, np.float, np.float)});
     dtarray = [dt.datetime.strptime(x, "%Y-%m-%d") for x in dtstrings];
     S = np.zeros(np.shape(u));
-    loading_defo = Timeseries(name='', coords=[], dtarray=dtarray, dE=u, dN=v, dU=w, Sn=S, Se=S, Su=S, EQtimes=[]);
+    loading_defo = Timeseries(name='', coords=[], dtarray=dtarray, dE=u, dN=v, dU=w, Sn=S, Se=S, Su=S);
     return loading_defo;
