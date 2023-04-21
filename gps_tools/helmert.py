@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.optimize
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
-from . import gps_objects, vel_functions
+from . import vel_functions
 
 
 def create_Helmert_and_apply(sys_A_common_vels, sys_B_common_vels):
@@ -47,10 +47,10 @@ def prepare_velocities_for_helmert_trans(velfield, multiplier=100):
         x_special_pos = item.x_pos + multiplier * item.x_rate;
         y_special_pos = item.y_pos + multiplier * item.y_rate;
         z_special_pos = item.z_pos + multiplier * item.z_rate;
-        newobj = gps_objects.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos, z_pos=item.z_pos,
-                                             x_rate=x_special_pos, y_rate=y_special_pos, z_rate=z_special_pos,
-                                             x_sigma=item.x_sigma, y_sigma=item.y_sigma, z_sigma=item.z_sigma,
-                                             first_epoch=item.first_epoch, last_epoch=item.last_epoch);
+        newobj = vel_functions.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos, z_pos=item.z_pos,
+                                               x_rate=x_special_pos, y_rate=y_special_pos, z_rate=z_special_pos,
+                                               x_sigma=item.x_sigma, y_sigma=item.y_sigma, z_sigma=item.z_sigma,
+                                               first_epoch=item.first_epoch, last_epoch=item.last_epoch);
         special_pos_objects.append(newobj);
     return special_pos_objects;
 
@@ -109,10 +109,10 @@ def postproc_after_helmert(xyz_velfield, multiplier=100):
 
         enu_vel, enu_cov = geo_conv.xyz2enu(xyz_vel, llh_origin_simple, ecov);  # covariances go here
 
-        new_station_vel = gps_objects.Station_Vel(name=item.name, elon=lonlat[0][0], nlat=lonlat[0][1], e=enu_vel[0][0],
-                                                  n=enu_vel[0][1], u=enu_vel[0][2], se=enu_cov[0][0], sn=enu_cov[1][1],
-                                                  su=enu_cov[2][2], first_epoch=0, last_epoch=0, refframe=0,
-                                                  proccenter=0, subnetwork=0, survey=0, meas_type=None);
+        new_station_vel = vel_functions.Station_Vel(name=item.name, elon=lonlat[0][0], nlat=lonlat[0][1], e=enu_vel[0][0],
+                                                    n=enu_vel[0][1], u=enu_vel[0][2], se=enu_cov[0][0], sn=enu_cov[1][1],
+                                                    su=enu_cov[2][2], first_epoch=0, last_epoch=0, refframe=0,
+                                                    proccenter=0, subnetwork=0, survey=0, meas_type=None);
         enu_station_list.append(new_station_vel);
     return enu_station_list;
 
@@ -147,11 +147,11 @@ def Apply_Helmert_Transformation(xyz_velfieldA, Helmert_params):
         ecov = np.diag(xyz_stds);  # a 3x3 np array matrix with covariances on the diagonal
         sigma_B = np.dot(np.dot(scaled_H_Matrix, ecov), scaled_H_Matrix.T);  # Transform sigmas
         sigma_B = np.multiply(sigma_B, np.square(s_mult));
-        newobj = gps_objects.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos, z_pos=item.z_pos,
-                                             x_rate=position_in_B[0][0], y_rate=position_in_B[0][1],
-                                             z_rate=position_in_B[0][2], x_sigma=sigma_B[0][0], y_sigma=sigma_B[1][1],
-                                             z_sigma=sigma_B[2][2],
-                                             first_epoch=item.first_epoch, last_epoch=item.last_epoch);
+        newobj = vel_functions.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos, z_pos=item.z_pos,
+                                               x_rate=position_in_B[0][0], y_rate=position_in_B[0][1],
+                                               z_rate=position_in_B[0][2], x_sigma=sigma_B[0][0], y_sigma=sigma_B[1][1],
+                                               z_sigma=sigma_B[2][2],
+                                               first_epoch=item.first_epoch, last_epoch=item.last_epoch);
         xyz_velfieldB.append(newobj);
     return xyz_velfieldB;
 

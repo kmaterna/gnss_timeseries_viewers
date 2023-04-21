@@ -7,11 +7,27 @@ import numpy as np
 import datetime as dt
 from scipy import signal
 from . import lssq_model_errors, utilities, math_functions
-from .gps_objects import Timeseries as Timeseries
 from Tectonic_Utils.geodesy import insar_vector_functions
 
 
-# -------------------------------------------- # 
+class Timeseries:
+    # The classic timeseries internal object!
+    def __init__(self, name, coords, dtarray, dN, dE, dU, Sn, Se, Su, EQtimes):
+        self.name = name;
+        self.coords = coords;
+        self.dtarray = dtarray;  # 1d array of datetime objects
+        self.dN = dN;  # 1d arrays in mm
+        self.dE = dE;
+        self.dU = dU;
+        self.Sn = Sn;  # 1d arrays in mm
+        self.Se = Se;
+        self.Su = Su;
+        self.EQtimes = EQtimes;
+
+
+
+
+# -------------------------------------------- #
 # PROCESS AND RETURN NEW TIME SERIES OBJECTS
 # -------------------------------------------- #
 
@@ -30,7 +46,7 @@ def remove_outliers(Data0, outliers_def):
             newSe.append(Data0.Se[i]);
             newSn.append(Data0.Sn[i]);
             newSu.append(Data0.Su[i]);
-    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdt, dN=np.array(newdN), 
+    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=newdt, dN=np.array(newdN),
                          dE=np.array(newdE), dU=np.array(newdU), Sn=newSn, Se=newSe, Su=newSu, EQtimes=Data0.EQtimes);
     return newData;
 

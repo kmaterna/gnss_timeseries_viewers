@@ -1,8 +1,10 @@
 """
 A function to remove postseismic deformation via existing model time series
 """
+import gps_tools.gps_ts_functions
+import gps_tools.offsets
 import numpy as np
-from . import offsets, gps_ts_functions, gps_objects
+from . import offsets, gps_ts_functions
 
 
 def remove_by_model(data_obj, model_obj, starttime1, endtime1, starttime2, endtime2):
@@ -36,15 +38,15 @@ def remove_by_model(data_obj, model_obj, starttime1, endtime1, starttime2, endti
     e_offset1 = offsets.fit_single_offset(dtarray, dE_gps, interval1, 20);
     n_offset1 = offsets.fit_single_offset(dtarray, dN_gps, interval1, 20);
     v_offset1 = offsets.fit_single_offset(dtarray, dU_gps, interval1, 20);
-    offsets1 = gps_objects.Offset(e_offset=e_offset1, n_offset=n_offset1, u_offset=v_offset1, evdt=starttime1);
+    offsets1 = gps_tools.offsets.Offset(e_offset=e_offset1, n_offset=n_offset1, u_offset=v_offset1, evdt=starttime1);
     interval2 = [starttime2, endtime2];
     e_offset2 = offsets.fit_single_offset(dtarray, dE_gps, interval2, 20);
     n_offset2 = offsets.fit_single_offset(dtarray, dN_gps, interval2, 20);
     v_offset2 = offsets.fit_single_offset(dtarray, dU_gps, interval2, 20);
-    offsets2 = gps_objects.Offset(e_offset=e_offset2, n_offset=n_offset2, u_offset=v_offset2, evdt=starttime2);
+    offsets2 = gps_tools.offsets.Offset(e_offset=e_offset2, n_offset=n_offset2, u_offset=v_offset2, evdt=starttime2);
     offsets_obj = [offsets1, offsets2];
 
-    corrected_data = gps_objects.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=dtarray, dE=dE_gps, dN=dN_gps,
-                                            dU=dU_gps, Se=Data0.Se, Sn=Data0.Sn, Su=Data0.Su, EQtimes=Data0.EQtimes);
+    corrected_data = gps_tools.gps_ts_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=dtarray, dE=dE_gps, dN=dN_gps,
+                                                           dU=dU_gps, Se=Data0.Se, Sn=Data0.Sn, Su=Data0.Su, EQtimes=Data0.EQtimes);
     corrected_data = offsets.remove_offsets(corrected_data, offsets_obj);
     return corrected_data;

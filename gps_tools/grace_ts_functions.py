@@ -1,8 +1,23 @@
 # GRACE FUNCTIONS
 import numpy as np
 import matplotlib.pyplot as plt
-from . import utilities, gps_objects
+from . import utilities
 from .file_io import io_other as io_other
+
+
+class Paired_TS:
+    # Pairing a GRACE and GNSS time series.
+    def __init__(self, dtarray, north, east, vert, N_err, E_err, V_err, u, v, w):
+        self.dtarray = dtarray;
+        self.north = north;  # GNSS model displacements in east, north, and up.
+        self.east = east;
+        self.vert = vert;
+        self.N_err = N_err;
+        self.E_err = E_err;
+        self.V_err = V_err;
+        self.u = u;
+        self.v = v;
+        self.w = w;   # u, v, w are GRACE model displacements in east, north, and up.
 
 
 def pair_GPSGRACE(GPS_TS, GRACE_TS):
@@ -25,8 +40,8 @@ def pair_GPSGRACE(GPS_TS, GRACE_TS):
     grace_u = np.interp(decyear, grace_decyear, GRACE_TS.dE);
     grace_v = np.interp(decyear, grace_decyear, GRACE_TS.dN);
     grace_w = np.interp(decyear, grace_decyear, GRACE_TS.dU);
-    my_paired_ts = gps_objects.Paired_TS(dtarray=dtarray, north=north_gps, east=east_gps, vert=vert_gps, N_err=N_err,
-                                         E_err=E_err, V_err=V_err, u=grace_u, v=grace_v, w=grace_w);
+    my_paired_ts = Paired_TS(dtarray=dtarray, north=north_gps, east=east_gps, vert=vert_gps, N_err=N_err,
+                             E_err=E_err, V_err=V_err, u=grace_u, v=grace_v, w=grace_w);
     return my_paired_ts;
 
 

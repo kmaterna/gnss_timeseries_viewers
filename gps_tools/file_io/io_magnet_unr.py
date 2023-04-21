@@ -5,7 +5,8 @@ import datetime as dt
 import subprocess, sys
 import numpy as np
 from .. import utilities
-from ..gps_objects import Station_Vel, Timeseries
+from gps_tools.vel_functions import Station_Vel
+from gps_tools.gps_ts_functions import Timeseries
 
 
 def read_unr_vel_file(infile, coordinate_file):

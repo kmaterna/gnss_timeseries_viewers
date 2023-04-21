@@ -3,12 +3,13 @@
 # We plot the vertical time series with and without the common mode term.
 
 import gps_tools.file_io.io_nota
+import gps_tools.gps_ts_functions
 import numpy as np
 import scipy.ndimage
 import collections, subprocess
 import datetime as dt
 from GNSS_TimeSeries_Viewers.gps_tools import gps_seasonal_removals, \
-    offsets, outputs_gps_stacks, gps_objects, load_gnss, vel_functions
+    offsets, outputs_gps_stacks, load_gnss, vel_functions
 import pygmt
 
 Parameters = collections.namedtuple("Parameters",
@@ -101,9 +102,9 @@ def define_common_mode(detrended_objects):
         cm_de.append(get_common_mode_from_list(data_array_dE[i, :]))
         cm_du.append(get_common_mode_from_list(data_array_dU[i, :]))
     sigmas = np.array([1 for _i in cm_dn]);
-    common_mode_obj = gps_objects.Timeseries(name='como', coords=[-115, 32], dtarray=np.array(total_dtarray),
-                                             dN=np.array(cm_dn), dE=np.array(cm_de), dU=np.array(cm_du),
-                                             Se=sigmas, Sn=sigmas, Su=sigmas, EQtimes=[]);
+    common_mode_obj = gps_tools.gps_ts_functions.Timeseries(name='como', coords=[-115, 32], dtarray=np.array(total_dtarray),
+                                                            dN=np.array(cm_dn), dE=np.array(cm_de), dU=np.array(cm_du),
+                                                            Se=sigmas, Sn=sigmas, Su=sigmas, EQtimes=[]);
     return common_mode_obj;
 
 
@@ -131,9 +132,9 @@ def remove_cm_from_object(data_object, cm_object):
             cmr_dU.append(data_object.dU[i] - cm_value);
 
     sigmas = np.array([1 for _i in cmr_dU]);
-    cmr_object = gps_objects.Timeseries(name=data_object.name, coords=data_object.coords, dtarray=data_object.dtarray,
-                                        dN=np.array(cmr_dN), dE=np.array(cmr_dE), dU=np.array(cmr_dU),
-                                        Se=sigmas, Sn=sigmas, Su=sigmas, EQtimes=data_object.EQtimes);
+    cmr_object = gps_tools.gps_ts_functions.Timeseries(name=data_object.name, coords=data_object.coords, dtarray=data_object.dtarray,
+                                                       dN=np.array(cmr_dN), dE=np.array(cmr_dE), dU=np.array(cmr_dU),
+                                                       Se=sigmas, Sn=sigmas, Su=sigmas, EQtimes=data_object.EQtimes);
     return cmr_object;
 
 

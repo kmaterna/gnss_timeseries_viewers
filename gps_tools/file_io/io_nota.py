@@ -7,7 +7,9 @@ import subprocess
 import numpy as np
 from .. import utilities
 from .io_magnet_unr import get_coordinates_for_unr_stations
-from ..gps_objects import Station_Vel, Timeseries, Offset
+from gps_tools.vel_functions import Station_Vel
+from gps_tools.gps_ts_functions import Timeseries
+from gps_tools.offsets import Offset
 
 
 def read_pbo_vel_file(infile):

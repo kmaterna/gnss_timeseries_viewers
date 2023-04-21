@@ -1,9 +1,19 @@
 """
 Toolbox that operates on Timeseries objects to deal with antenna offsets and earthquake offsets.
 """
-from . import gps_objects as gps_objects
+import gps_tools.gps_ts_functions
+import gps_tools.vel_functions
 import numpy as np
 import datetime as dt
+
+
+class Offset:
+    # Defining the offset as a class
+    def __init__(self, e_offset, n_offset, u_offset, evdt):
+        self.e_offset = e_offset;  # in mm.  Each field is a single value.
+        self.n_offset = n_offset;  # in mm
+        self.u_offset = u_offset;  # in mm
+        self.evdt = evdt;   # datetime object
 
 
 def remove_offsets(Data0, offsets_obj):
@@ -31,8 +41,8 @@ def remove_offsets(Data0, offsets_obj):
         newN.append(tempN);
         newU.append(tempU);
 
-    newData = gps_objects.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN, dE=newE,
-                                     dU=newU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
+    newData = gps_tools.gps_ts_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN, dE=newE,
+                                                    dU=newU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes);
     return newData;
 
 
@@ -90,7 +100,7 @@ def solve_for_offsets(ts_object, offset_time_intervals, num_days=10):
         e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [interval[0], interval[1]], num_days);
         n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [interval[0], interval[1]], num_days);
         u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [interval[0], interval[1]], num_days);
-        newobj = gps_objects.Offset(e_offset=e_offset, n_offset=n_offset, u_offset=u_offset, evdt=interval[0]);
+        newobj = Offset(e_offset=e_offset, n_offset=n_offset, u_offset=u_offset, evdt=interval[0]);
         Offset_obj.append(newobj);
     return Offset_obj;
 
@@ -148,10 +158,9 @@ def package_offset_as_StationVel(ts_object, offset):
     :param offset: an offset object
     :return: a StationVel
     """
-    newobj = gps_objects.Station_Vel(name=ts_object.name, nlat=ts_object.coords[1], elon=ts_object.coords[0],
-                                     n=offset.n_offset, e=offset.e_offset, u=offset.u_offset, sn=0, se=0, su=0,
-                                     first_epoch='', last_epoch='', refframe='',
-                                     proccenter='', subnetwork='', survey='', meas_type='');
+    newobj = gps_tools.vel_functions.Station_Vel(name=ts_object.name, nlat=ts_object.coords[1], elon=ts_object.coords[0],
+                                                 n=offset.n_offset, e=offset.e_offset, u=offset.u_offset, sn=0, se=0, su=0,
+                                                 first_epoch='', last_epoch='', meas_type='');
     return newobj;
 
 

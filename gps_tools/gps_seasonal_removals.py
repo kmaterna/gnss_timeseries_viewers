@@ -6,10 +6,11 @@ Non-Inclusive List of seasonal removal options:
   grace: uses GRACE loading model interpolated between monthly points where available, and linear inversion where not.
     stl: uses a pre-computed look-up table for STL time series.
 """
+import gps_tools.gps_ts_functions
 import numpy as np
 import datetime as dt
 import glob, os, sys, subprocess
-from . import gps_ts_functions, notch_filter, grace_ts_functions, gps_objects, utilities
+from . import gps_ts_functions, notch_filter, grace_ts_functions, utilities
 from .file_io import io_nota, io_other, config_io
 
 
@@ -143,12 +144,12 @@ def remove_seasonals_by_notch(Data):
         dU_detrended[i] = dU_filt[i] - vert_coef * decyear[i] - (dU_filt[0] - vert_coef * decyear[0]);
         dU_trended[i] = dU_filt[i];
 
-    detrended = gps_objects.Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_detrended,
-                                       dE=dE_detrended, dU=dU_detrended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su,
-                                       EQtimes=Data.EQtimes);
-    trended = gps_objects.Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_trended,
-                                     dE=dE_trended, dU=dU_trended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su,
-                                     EQtimes=Data.EQtimes);
+    detrended = gps_tools.gps_ts_functions.Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_detrended,
+                                                      dE=dE_detrended, dU=dU_detrended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su,
+                                                      EQtimes=Data.EQtimes);
+    trended = gps_tools.gps_ts_functions.Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_trended,
+                                                    dE=dE_trended, dU=dU_trended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su,
+                                                    EQtimes=Data.EQtimes);
     return detrended, trended;
 
 
@@ -166,8 +167,8 @@ def remove_seasonals_by_STL(Data, STL_dir):
                                                                 'formats': ('U8', np.float, np.float, np.float,
                                                                             np.float, np.float, np.float)});
         final_dtarray = [dt.datetime.strptime(x, "%Y%m%d") for x in dtstrings];
-        Data = gps_objects.Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=dN,
-                                      dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=Data.EQtimes);
+        Data = gps_tools.gps_ts_functions.Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=dN,
+                                                     dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=Data.EQtimes);
 
     else:  # ELSE: WE NEED TO RECOMPUTE
         print("Warning! STL not found for %s" % Data.name);
@@ -228,9 +229,9 @@ def remove_seasonals_by_STL(Data, STL_dir):
         final_Su = np.array(final_Su);
 
         # Return data
-        Data = gps_objects.Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=final_dN,
-                                      dE=final_dE, dU=final_dU, Sn=final_Sn, Se=final_Se, Su=final_Su,
-                                      EQtimes=Data.EQtimes);
+        Data = gps_tools.gps_ts_functions.Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=final_dN,
+                                                     dE=final_dE, dU=final_dU, Sn=final_Sn, Se=final_Se, Su=final_Su,
+                                                     EQtimes=Data.EQtimes);
 
         # Write the file so that we don't recompute it next time.
         output_stl(Data, STL_dir);
@@ -348,12 +349,12 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
     for i in range(len(dU_filt)):
         dU_detrended[i] = (dU_filt[i] - vert_coef * decyear[i]) - (dU_filt[0] - vert_coef * decyear[0]);
 
-    corrected_object = gps_objects.Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray,
-                                              dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se,
-                                              Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
-    trended = gps_objects.Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray,
-                                     dE=dE_filt, dN=dN_filt, dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn,
-                                     Su=gps_data.Su, EQtimes=gps_data.EQtimes);
+    corrected_object = gps_tools.gps_ts_functions.Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray,
+                                                             dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se,
+                                                             Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
+    trended = gps_tools.gps_ts_functions.Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray,
+                                                    dE=dE_filt, dN=dN_filt, dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn,
+                                                    Su=gps_data.Su, EQtimes=gps_data.EQtimes);
     return corrected_object, trended;
 
 
@@ -398,12 +399,12 @@ def remove_seasonals_by_german_load(Data, lsdm_dir):
     for i in range(len(dU_filt)):
         dU_detrended[i] = (dU_filt[i] - vert_coef * decyear[i]) - (dU_filt[0] - vert_coef * decyear[0]);
 
-    detrended = gps_objects.Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray,
-                                       dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se,
-                                       Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
-    trended = gps_objects.Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray,
-                                     dE=dE_filt, dN=dN_filt, dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn,
-                                     Su=gps_data.Su, EQtimes=gps_data.EQtimes);
+    detrended = gps_tools.gps_ts_functions.Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray,
+                                                      dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se,
+                                                      Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes);
+    trended = gps_tools.gps_ts_functions.Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray,
+                                                    dE=dE_filt, dN=dN_filt, dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn,
+                                                    Su=gps_data.Su, EQtimes=gps_data.EQtimes);
     return detrended, trended;
 
 
@@ -440,20 +441,20 @@ def remove_seasonals_by_lakes(Data, lakes_dir, lake_name):
     for i in range(len(dU)):
         dU_detrended[i] = (dU[i] - vert_coef * decyear[i]) - (dU[0] - vert_coef * decyear[0]);
 
-    corrected_object = gps_objects.Timeseries(name=Data.name, coords=Data.coords, dtarray=GPS_paired.dtarray,
-                                              dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=GPS_paired.Se,
-                                              Sn=GPS_paired.Sn, Su=GPS_paired.Su, EQtimes=Data.EQtimes);
-    trended = gps_objects.Timeseries(name=Data.name, coords=Data.coords, dtarray=GPS_paired.dtarray, dE=dE, dN=dN,
-                                     dU=dU, Se=GPS_paired.Se, Sn=GPS_paired.Sn, Su=GPS_paired.Su,
-                                     EQtimes=Data.EQtimes);
+    corrected_object = gps_tools.gps_ts_functions.Timeseries(name=Data.name, coords=Data.coords, dtarray=GPS_paired.dtarray,
+                                                             dE=dE_detrended, dN=dN_detrended, dU=dU_detrended, Se=GPS_paired.Se,
+                                                             Sn=GPS_paired.Sn, Su=GPS_paired.Su, EQtimes=Data.EQtimes);
+    trended = gps_tools.gps_ts_functions.Timeseries(name=Data.name, coords=Data.coords, dtarray=GPS_paired.dtarray, dE=dE, dN=dN,
+                                                    dU=dU, Se=GPS_paired.Se, Sn=GPS_paired.Sn, Su=GPS_paired.Su,
+                                                    EQtimes=Data.EQtimes);
     return corrected_object, trended;
 
 
 def get_wimpy_object(Data):
     placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
-    wimpyObj = gps_objects.Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder,
-                                      dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su,
-                                      EQtimes=Data.EQtimes);
+    wimpyObj = gps_tools.gps_ts_functions.Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder,
+                                                     dE=placeholder, dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su,
+                                                     EQtimes=Data.EQtimes);
     return wimpyObj;
 
 
@@ -502,10 +503,10 @@ def remove_seasonals_by_GRACE(Data, grace_dir):
     for i in range(len(dU_filt)):
         dU_detrended[i] = (dU_filt[i] - vert_coef * decyear[i]) - (dU_filt[0] - vert_coef * decyear[0]);
 
-    detrended = gps_objects.Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray,
-                                       dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=my_paired_ts.N_err,
-                                       Se=my_paired_ts.E_err, Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
-    trended = gps_objects.Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_filt,
-                                     dE=dE_filt, dU=dU_filt, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err,
-                                     Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
+    detrended = gps_tools.gps_ts_functions.Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray,
+                                                      dN=dN_detrended, dE=dE_detrended, dU=dU_detrended, Sn=my_paired_ts.N_err,
+                                                      Se=my_paired_ts.E_err, Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
+    trended = gps_tools.gps_ts_functions.Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_filt,
+                                                    dE=dE_filt, dU=dU_filt, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err,
+                                                    Su=my_paired_ts.V_err, EQtimes=Data.EQtimes);
     return detrended, trended;  # 0 = successful completion

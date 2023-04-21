@@ -2,14 +2,108 @@
 Functions to operate on Station-Vel objects, or velocity-field objects (lists of station-vels)
 Future work: Combining two velocity fields in outer combination (inclusive) or inner combination (common stations)
 """
-
-from . import gps_objects as gps_objects
+from gps_tools import utilities
 import numpy as np
 import matplotlib.path as mpltPath
 from Tectonic_Utils.geodesy import haversine
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
 from Tectonic_Utils.geodesy import fault_vector_functions
 
+
+class Station_Vel:
+    def __init__(self, name, nlat, elon, n, e, u, sn, se, su, first_epoch, last_epoch,
+                 refframe=None, proccenter=None, subnetwork=None, survey=None, meas_type='gnss'):
+        self.name = name;
+        self.nlat = nlat;
+        self.elon = utilities.check_lon_sanity(elon);  # -180 < lon < 180, used for velfields
+        self.n = n;  # in mm/yr
+        self.e = e;  # in mm/yr
+        self.u = u;  # in mm/yr
+        self.sn = sn;
+        self.se = se;
+        self.su = su;
+        self.first_epoch = first_epoch;
+        self.last_epoch = last_epoch;
+        self.refframe = refframe;
+        self.proccenter = proccenter;
+        self.subnetwork = subnetwork;
+        self.survey = survey;
+        self.meas_type = meas_type;
+
+    # ---------- PREDICATES ------------- #
+
+    def spans_shorter_than(self, num_years):
+        """
+        :param num_years: float, number of years
+        :return: bool
+        """
+        deltatime = self.last_epoch - self.first_epoch;
+        if deltatime.days <= num_years * 365.24:
+            return 1;   # too short time interval
+        else:
+            return 0;
+
+    def spans_longer_than(self, num_years):
+        """
+        :param num_years: float, number of years
+        :return: bool
+        """
+        deltatime = self.last_epoch - self.first_epoch;
+        if deltatime.days >= num_years * 365.24:
+            return 1;
+        else:
+            return 0;   # too short time interval
+
+    def within_bbox(self, bbox):
+        """
+        :param bbox: [W, E, S, N] list of 4 floats
+        :return: bool
+        """
+        if bbox[0] <= self.elon <= bbox[1] and bbox[2] <= self.nlat <= bbox[3]:
+            return 1;
+        else:
+            return 0;
+
+    def survives_blacklist(self, blacklist):
+        """
+        :param blacklist: list of strings
+        :return: bool
+        """
+        if self.name in blacklist:
+            return 0;
+        else:
+            return 1;
+
+    def get_azimuth_degrees(self):
+        """
+        :return: azimuth of velocity or offset, in degrees clockwise from north
+        """
+        if fault_vector_functions.get_vector_magnitude([self.e, self.n]) <= 0.000001:
+            azimuth = 0;
+        else:
+            azimuth = fault_vector_functions.get_strike(self.e, self.n);
+        return azimuth;
+
+
+class Station_Vel_XYZ:
+    # Station_Vel_XYZ are in m/yr (under consideration), with XYZ as ECEF position in meters. Used for velocities.
+    def __init__(self, name, x_pos, y_pos, z_pos, x_rate, y_rate, z_rate, x_sigma, y_sigma, z_sigma,
+                 first_epoch, last_epoch):
+        self.name = name;
+        self.x_pos = x_pos;
+        self.y_pos = y_pos;
+        self.z_pos = z_pos;
+        self.x_rate = x_rate;
+        self.y_rate = y_rate;
+        self.z_rate = z_rate;
+        self.x_sigma = x_sigma;
+        self.y_sigma = y_sigma;
+        self.z_sigma = z_sigma;
+        self.first_epoch = first_epoch;
+        self.last_epoch = last_epoch;
+
+
+# ---------- BASIC FUNCTIONS ON VELFIELDS ------------- #
 
 def basic_clean_stations(velfield, coord_box=(-180, 180, -90, 90), num_years=3.0, max_sigma=2):
     velfield = clean_velfield(velfield, num_years, max_sigma, max_sigma * 3, coord_box);
@@ -47,10 +141,10 @@ def clean_velfield(velfield, num_years=0.0, max_horiz_sigma=1000, max_vert_sigma
             print('Excluding ' + station.name + ' for large vertical sigma of' + str(
                 station.su) + ' mm/yr') if verbose else 0;
             continue;
-        if spans_shorter_than(station, num_years):  # too short time interval, please exclude
+        if station.spans_shorter_than(num_years):  # too short time interval, please exclude
             print('Excluding ' + station.name + 'for time range too short') if verbose else 0;
             continue;
-        if within_bbox(station, coord_box):  # The station is within the box of interest.
+        if station.within_bbox(coord_box):  # The station is within the box of interest.
             cleaned_velfield.append(station);
         else:
             print("excluding for outside box of interest: ", station.elon, station.nlat) if verbose else 0;
@@ -86,11 +180,10 @@ def disp_points_to_station_vels(obs_disp_points):
     """
     station_vel_list = [];
     for item in obs_disp_points:
-        new_obj = gps_objects.Station_Vel(nlat=item.lat, elon=item.lon, name=item.name, n=item.dN_obs * 1000,
-                                          e=item.dE_obs * 1000, u=item.dU_obs * 1000, sn=item.Sn_obs * 1000,
-                                          se=item.Se_obs * 1000, su=item.Su_obs * 1000, meas_type=item.meas_type,
-                                          first_epoch=item.starttime, last_epoch=item.endtime,
-                                          refframe=item.refframe, proccenter=None, subnetwork=None, survey=None);
+        new_obj = Station_Vel(nlat=item.lat, elon=item.lon, name=item.name, n=item.dN_obs * 1000,
+                              e=item.dE_obs * 1000, u=item.dU_obs * 1000, sn=item.Sn_obs * 1000,
+                              se=item.Se_obs * 1000, su=item.Su_obs * 1000, meas_type=item.meas_type,
+                              first_epoch=item.starttime, last_epoch=item.endtime, refframe=item.refframe);
         station_vel_list.append(new_obj);
     return station_vel_list;
 
@@ -107,7 +200,7 @@ def remove_blacklist_paired_data(velfield, blacklist, matching_data=None, verbos
     if verbose:
         print("Removing blacklist: Starting with %d stations" % len(velfield));
     for i in range(len(velfield)):
-        if survives_blacklist(velfield[i], blacklist):
+        if velfield[i].survives_blacklist(blacklist):
             cleaned_velfield.append(velfield[i]);
             cleaned_distances.append(matching_data[i]);
     if verbose:
@@ -126,7 +219,7 @@ def remove_blacklist_vels(velfield, blacklist, verbose=False):   # NON-ZIP VERSI
     if verbose:
         print("Removing blacklist: Starting with %d stations" % len(velfield));
     for i in range(len(velfield)):
-        if survives_blacklist(velfield[i], blacklist):
+        if velfield[i].survives_blacklist(blacklist):
             cleaned_velfield.append(velfield[i]);
     if verbose:
         print("Removing blacklist: Ending with %d stations" % len(cleaned_velfield));
@@ -158,7 +251,7 @@ def filter_to_bounding_box(myVelfield, coord_box):
     """
     close_stations = [];
     for station_vel in myVelfield:
-        if within_bbox(station_vel, coord_box):
+        if station_vel.within_bbox(coord_box):
             close_stations.append(station_vel);
     print("Returning %d stations within box" % (len(close_stations)));
     return close_stations;
@@ -209,11 +302,11 @@ def convert_enu_velfield_to_xyz(velfield):
         enu_vel = 0.001 * np.array([[item.e, item.n, item.u], ]);  # velocity in m
         ecov = np.diag(enu_stds);  # a 3x3 np array matrix with covariances on the diagonal
         xyz_vel, xyz_cov = geo_conv.enu2xyz(enu_vel, llh_origin_simple, ecov);
-        newobj = gps_objects.Station_Vel_XYZ(name=item.name, x_pos=xyz_pos[0][0], y_pos=xyz_pos[0][1],
-                                             z_pos=xyz_pos[0][2], x_rate=xyz_vel[0][0], y_rate=xyz_vel[0][1],
-                                             z_rate=xyz_vel[0][2], x_sigma=xyz_cov[0][0], y_sigma=xyz_cov[1][1],
-                                             z_sigma=xyz_cov[2][2], first_epoch=item.first_epoch,
-                                             last_epoch=item.last_epoch);
+        newobj = Station_Vel_XYZ(name=item.name, x_pos=xyz_pos[0][0], y_pos=xyz_pos[0][1],
+                                 z_pos=xyz_pos[0][2], x_rate=xyz_vel[0][0], y_rate=xyz_vel[0][1],
+                                 z_rate=xyz_vel[0][2], x_sigma=xyz_cov[0][0], y_sigma=xyz_cov[1][1],
+                                 z_sigma=xyz_cov[2][2], first_epoch=item.first_epoch,
+                                 last_epoch=item.last_epoch);
         xyz_objects.append(newobj);
     return xyz_objects;
 
@@ -230,66 +323,3 @@ def get_bounding_box(velfield, border=0.1):
     lats = [x.nlat for x in velfield]
     bbox = [np.min(lons) - border, np.max(lons) + border, np.min(lats) - border, np.max(lats) + border];
     return bbox;
-
-
-# ---------- OPERATIONS ON SINGLE STATION_VEL OBJECTS  ------------- #
-def get_azimuth_degrees(station_vel):
-    """
-    :param station_vel: a station_vel object
-    :return: azimuth, in degrees clockwise from north
-    """
-    if fault_vector_functions.get_vector_magnitude([station_vel.e, station_vel.n]) <= 0.000001:
-        azimuth = 0;
-    else:
-        azimuth = fault_vector_functions.get_strike(station_vel.e, station_vel.n);
-    return azimuth;
-
-
-# ---------- PREDICATES ------------- #
-
-def survives_blacklist(station_vel, blacklist):
-    """
-    :param station_vel: a station_vel object
-    :param blacklist: list of strings
-    :return: bool
-    """
-    if station_vel.name in blacklist:
-        return 0;
-    else:
-        return 1;
-
-
-def within_bbox(station_vel, bbox):
-    """
-    :param station_vel: a station_vel object
-    :param bbox: [W, E, S, N] list of 4 floats
-    :return: bool
-    """
-    if bbox[0] <= station_vel.elon <= bbox[1] and bbox[2] <= station_vel.nlat <= bbox[3]:
-        return 1;
-    else:
-        return 0;
-
-def spans_longer_than(station_vel, num_years):
-    """
-    :param station_vel: a station_vel object
-    :param num_years: float, number of years
-    :return: bool
-    """
-    deltatime = station_vel.last_epoch - station_vel.first_epoch;
-    if deltatime.days >= num_years * 365.24:
-        return 1;
-    else:
-        return 0;   # too short time interval
-
-def spans_shorter_than(station_vel, num_years):
-    """
-    :param station_vel: a station_vel object
-    :param num_years: float, number of years
-    :return: bool
-    """
-    deltatime = station_vel.last_epoch - station_vel.first_epoch;
-    if deltatime.days <= num_years * 365.24:
-        return 1;   # too short time interval
-    else:
-        return 0;
