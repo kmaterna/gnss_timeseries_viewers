@@ -5,9 +5,9 @@ File to read and write data from USGS formats
 import datetime as dt
 import glob, os, sys, subprocess
 import numpy as np
-from gps_tools.vel_functions import Station_Vel
-from gps_tools.gps_ts_functions import Timeseries
-from gps_tools.offsets import Offset
+from ..vel_functions import Station_Vel
+from ..gps_ts_functions import Timeseries
+from ..offsets import Offset
 
 
 def usgs_vel_file_from_tsfile(infile):

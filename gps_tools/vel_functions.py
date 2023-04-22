@@ -2,7 +2,7 @@
 Functions to operate on Station-Vel objects, or velocity-field objects (lists of station-vels)
 Future work: Combining two velocity fields in outer combination (inclusive) or inner combination (common stations)
 """
-from gps_tools import utilities
+from . import utilities
 import numpy as np
 import matplotlib.path as mpltPath
 from Tectonic_Utils.geodesy import haversine

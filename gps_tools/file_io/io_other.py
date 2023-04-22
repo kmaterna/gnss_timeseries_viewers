@@ -5,8 +5,8 @@ File to read and write data from miscellaneous formats
 import datetime as dt
 import numpy as np
 from .io_magnet_unr import get_coordinates_for_unr_stations
-from gps_tools.vel_functions import Station_Vel
-from gps_tools.gps_ts_functions import Timeseries
+from ..vel_functions import Station_Vel
+from ..gps_ts_functions import Timeseries
 
 
 def read_lsdm_file(filename, coords_file=None) -> Timeseries:
