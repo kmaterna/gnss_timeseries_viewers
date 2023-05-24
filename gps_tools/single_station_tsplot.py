@@ -5,6 +5,7 @@ Make a basic python plot of single-station position time series with corrections
 import matplotlib.pyplot as plt
 import subprocess
 from . import gps_seasonal_removals, offsets, load_gnss
+import datetime as dt
 
 
 def view_single_station(station_name, data_config_file, offsets_remove=1, earthquakes_remove=0, outliers_remove=0,
@@ -85,8 +86,22 @@ def compute(data_config_file, myData, offset_obj, eq_obj, plot_params):
 
 
 # -------------- OUTPUTS ------------ # 
-def single_ts_plot(ts_obj, detrended, plot_params, db_params, outdir):
-    title, savename = get_figure_name(plot_params, db_params, outdir);
+def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, outdir="", title=None, savename=None,
+                   buffer_days=0):
+    """
+    :param ts_obj: a TimeSeries object
+    :param detrended: another TimeSeries object, optional
+    :param plot_params: dictionary, can be used to set the filename and title of the resulting plot
+    :param db_params: dictionary, can be used to set the filename and title of the resulting plot
+    :param outdir: string, default current directory
+    :param title: string, optional, can be used to override default title
+    :param savename: string, optional, can be used to override default destination
+    :param buffer_days: number of days to buffer the plot on both ends, default 0
+    """
+    if not title:
+        title, _ = get_figure_name(plot_params, db_params);
+    if not savename:
+        _, savename = get_figure_name(plot_params, db_params, outdir);
     label_fontsize = 18;
 
     # The major figure
@@ -99,10 +114,11 @@ def single_ts_plot(ts_obj, detrended, plot_params, db_params, outdir):
     bottom, top = axarr[0].get_ylim();
     for i in range(len(ts_obj.EQtimes)):
         axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=0.5);
-    ax1 = axarr[0].twinx();
-    ax1.plot_date(detrended.dtarray, detrended.dE, marker='D', markersize=1.0, color='red');
-    ax1.set_ylabel('detrended (mm)', fontsize=label_fontsize - 2, color='red');
-    ax1.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
+    if detrended:
+        ax1 = axarr[0].twinx();
+        ax1.plot_date(detrended.dtarray, detrended.dE, marker='D', markersize=1.0, color='red');
+        ax1.set_ylabel('detrended (mm)', fontsize=label_fontsize - 2, color='red');
+        ax1.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[0].tick_params(labelsize=label_fontsize);
 
     axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN, color='blue', markeredgecolor='black', markersize=1.5);
@@ -111,10 +127,11 @@ def single_ts_plot(ts_obj, detrended, plot_params, db_params, outdir):
     bottom, top = axarr[1].get_ylim();
     for i in range(len(ts_obj.EQtimes)):
         axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=0.5);
-    ax2 = axarr[1].twinx();
-    ax2.plot_date(detrended.dtarray, detrended.dN, marker='D', markersize=1.0, color='red');
-    ax2.set_ylabel('detrended (mm)', fontsize=label_fontsize - 2, color='red');
-    ax2.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
+    if detrended:
+        ax2 = axarr[1].twinx();
+        ax2.plot_date(detrended.dtarray, detrended.dN, marker='D', markersize=1.0, color='red');
+        ax2.set_ylabel('detrended (mm)', fontsize=label_fontsize - 2, color='red');
+        ax2.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[1].tick_params(labelsize=label_fontsize);
 
     axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU, color='blue', markeredgecolor='black', markersize=1.5);
@@ -123,22 +140,25 @@ def single_ts_plot(ts_obj, detrended, plot_params, db_params, outdir):
     bottom, top = axarr[2].get_ylim();
     for i in range(len(ts_obj.EQtimes)):
         axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=0.5);
-    ax3 = axarr[2].twinx();
-    ax3.plot_date(detrended.dtarray, detrended.dU, marker='D', markersize=1.0, color='red');
-    ax3.set_ylabel('detrended (mm)', fontsize=label_fontsize - 2, color='red');
-    axarr[2].set_xlim([min(ts_obj.dtarray), max(ts_obj.dtarray)]);
-    ax3.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
+    if detrended:
+        ax3 = axarr[2].twinx();
+        ax3.plot_date(detrended.dtarray, detrended.dU, marker='D', markersize=1.0, color='red');
+        ax3.set_ylabel('detrended (mm)', fontsize=label_fontsize - 2, color='red');
+        ax3.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
+    axarr[2].set_xlim([min(ts_obj.dtarray)-dt.timedelta(days=buffer_days),
+                       max(ts_obj.dtarray) + dt.timedelta(days=buffer_days)]);
     axarr[2].tick_params(labelsize=label_fontsize);
 
     axarr[0].set_title(title, fontsize=label_fontsize + 2);
-    plt.savefig(savename, dpi=dpival);
+    plt.savefig(savename, dpi=dpival, bbox_inches='tight');
     print("Saving figure as %s " % savename)
     return;
 
 
-def get_figure_name(plot_params, db_params, outdir):
+def get_figure_name(plot_params, db_params, outdir=""):
     """
-    Things that might go into the filename and title: Station, Offsets/outliers/seasonals, Datasource and Refframe
+    Building filename and title strings: Metadata like station, offsets/outliers/seasonals, Datasource and Refframe.
+    Title and Filename are programmatically linked.
     """
 
     savename = outdir + db_params["station"];
