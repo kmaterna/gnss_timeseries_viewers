@@ -102,18 +102,23 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
         title, _ = get_figure_name(plot_params, db_params);
     if not savename:
         _, savename = get_figure_name(plot_params, db_params, outdir);
-    label_fontsize = 18;
 
     # The major figure
     dpival = 500;
+    label_fontsize = 18;
+    markersize = 3.0;
+    rotation = 0;
+    grid_linewidth = 0.5;
+    eq_linewidth = 0.5;
+
     # noinspection PyTypeChecker
     [_, axarr] = plt.subplots(3, 1, sharex=True, figsize=(10, 7), dpi=dpival);
-    axarr[0].plot_date(ts_obj.dtarray, ts_obj.dE, color='blue', markeredgecolor='black', markersize=1.5);
-    axarr[0].grid(linestyle='--', linewidth=0.5);
+    axarr[0].plot_date(ts_obj.dtarray, ts_obj.dE, color='blue', markeredgecolor='black', markersize=markersize);
+    axarr[0].grid(linestyle='--', linewidth=grid_linewidth);
     axarr[0].set_ylabel('east (mm)', fontsize=label_fontsize);
     bottom, top = axarr[0].get_ylim();
     for i in range(len(ts_obj.EQtimes)):
-        axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=0.5);
+        axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth);
     if detrended:
         ax1 = axarr[0].twinx();
         ax1.plot_date(detrended.dtarray, detrended.dE, marker='D', markersize=1.0, color='red');
@@ -121,12 +126,12 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
         ax1.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[0].tick_params(labelsize=label_fontsize);
 
-    axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN, color='blue', markeredgecolor='black', markersize=1.5);
-    axarr[1].grid(linestyle='--', linewidth=0.5);
+    axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN, color='blue', markeredgecolor='black', markersize=markersize);
+    axarr[1].grid(linestyle='--', linewidth=grid_linewidth);
     axarr[1].set_ylabel('north (mm)', fontsize=label_fontsize);
     bottom, top = axarr[1].get_ylim();
     for i in range(len(ts_obj.EQtimes)):
-        axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=0.5);
+        axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth);
     if detrended:
         ax2 = axarr[1].twinx();
         ax2.plot_date(detrended.dtarray, detrended.dN, marker='D', markersize=1.0, color='red');
@@ -134,12 +139,12 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
         ax2.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[1].tick_params(labelsize=label_fontsize);
 
-    axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU, color='blue', markeredgecolor='black', markersize=1.5);
-    axarr[2].grid(linestyle='--', linewidth=0.5);
+    axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU, color='blue', markeredgecolor='black', markersize=markersize);
+    axarr[2].grid(linestyle='--', linewidth=grid_linewidth);
     axarr[2].set_ylabel('vertical (mm)', fontsize=label_fontsize);
     bottom, top = axarr[2].get_ylim();
     for i in range(len(ts_obj.EQtimes)):
-        axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=0.5);
+        axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth);
     if detrended:
         ax3 = axarr[2].twinx();
         ax3.plot_date(detrended.dtarray, detrended.dU, marker='D', markersize=1.0, color='red');
@@ -147,7 +152,7 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
         ax3.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[2].set_xlim([min(ts_obj.dtarray)-dt.timedelta(days=buffer_days),
                        max(ts_obj.dtarray) + dt.timedelta(days=buffer_days)]);
-    axarr[2].tick_params(labelsize=label_fontsize);
+    axarr[2].tick_params(labelsize=label_fontsize, rotation=rotation);
 
     axarr[0].set_title(title, fontsize=label_fontsize + 2);
     plt.savefig(savename, dpi=dpival, bbox_inches='tight');
