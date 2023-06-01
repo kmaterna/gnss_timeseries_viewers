@@ -87,7 +87,7 @@ def compute(data_config_file, myData, offset_obj, eq_obj, plot_params):
 
 # -------------- OUTPUTS ------------ # 
 def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, outdir="", title=None, savename=None,
-                   buffer_days=0):
+                   buffer_days=0, label_rotation=0):
     """
     :param ts_obj: a TimeSeries object
     :param detrended: another TimeSeries object, optional
@@ -97,6 +97,7 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
     :param title: string, optional, can be used to override default title
     :param savename: string, optional, can be used to override default destination
     :param buffer_days: number of days to buffer the plot on both ends, default 0
+    :param label_rotation: rotation parameter for text on x-axis
     """
     if not title:
         title, _ = get_figure_name(plot_params, db_params);
@@ -107,7 +108,6 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
     dpival = 500;
     label_fontsize = 18;
     markersize = 3.0;
-    rotation = 0;
     grid_linewidth = 0.5;
     eq_linewidth = 0.5;
 
@@ -152,7 +152,7 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
         ax3.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[2].set_xlim([min(ts_obj.dtarray)-dt.timedelta(days=buffer_days),
                        max(ts_obj.dtarray) + dt.timedelta(days=buffer_days)]);
-    axarr[2].tick_params(labelsize=label_fontsize, rotation=rotation);
+    axarr[2].tick_params(labelsize=label_fontsize, rotation=label_rotation);
 
     axarr[0].set_title(title, fontsize=label_fontsize + 2);
     plt.savefig(savename, dpi=dpival, bbox_inches='tight');
