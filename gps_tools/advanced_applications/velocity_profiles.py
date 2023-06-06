@@ -1,5 +1,5 @@
 """ Profiles using pygmt """
-import gps_tools.vel_functions
+from .. import vel_functions
 from Tectonic_Utils.geodesy import haversine, insar_vector_functions
 import numpy as np
 import pygmt
@@ -44,11 +44,11 @@ def project_onto_perpendicular_profile(velfield, startcoord, endcoord, width, ve
     # Pack up the selected stations in the profile
     selected_stations = [];
     for i in range(len(retval[0])):
-        newstation = gps_tools.vel_functions.Station_Vel(name='', elon=retval[0][i], nlat=retval[1][i], e=retval[2][i],
-                                                         n=retval[3][i], u=0, proccenter=velfield[0].proccenter,
-                                                         refframe=velfield[0].refframe, subnetwork=velfield[0].subnetwork, se=0,
-                                                         sn=0, su=0, first_epoch=None, last_epoch=None, meas_type='gnss',
-                                                         survey=False);
+        newstation = vel_functions.Station_Vel(name='', elon=retval[0][i], nlat=retval[1][i], e=retval[2][i],
+                                               n=retval[3][i], u=0, proccenter=velfield[0].proccenter,
+                                               refframe=velfield[0].refframe, subnetwork=velfield[0].subnetwork, se=0,
+                                               sn=0, su=0, first_epoch=None, last_epoch=None, meas_type='gnss',
+                                               survey=False);
         selected_stations.append(newstation);
 
     select_east = np.array(retval[2]);   # first column = east velocity
@@ -127,6 +127,6 @@ def plot_profile_in_distance(x_distance, vel_parallel, vel_perp, fault_xlocation
     plt.plot(xs, ys, color='purple', linewidth=2, label='VE slip rates (15, 22, 12)');
 
     plt.legend(fontsize=16);
-    plt.title("Elastic half-space (arctangent) modeling, Point Arena profile", fontsize=20);
+    plt.title("Elastic half-space modeling using arctangent functions", fontsize=20);
     plt.savefig("profile_in_distance.png");
     return;

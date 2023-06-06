@@ -19,16 +19,16 @@ class Station_Vel:
         self.n = n;  # in mm/yr
         self.e = e;  # in mm/yr
         self.u = u;  # in mm/yr
-        self.sn = sn;
-        self.se = se;
-        self.su = su;
-        self.first_epoch = first_epoch;
-        self.last_epoch = last_epoch;
-        self.refframe = refframe;
-        self.proccenter = proccenter;
-        self.subnetwork = subnetwork;
-        self.survey = survey;
-        self.meas_type = meas_type;
+        self.sn = sn;  # in mm/yr
+        self.se = se;  # in mm/yr
+        self.su = su;  # in mm/yr
+        self.first_epoch = first_epoch;  # not optional
+        self.last_epoch = last_epoch;  # not optional
+        self.refframe = refframe;  # optional, default None
+        self.proccenter = proccenter;  # optional, default None
+        self.subnetwork = subnetwork;  # optional, default None
+        self.survey = survey;  # optional, default False
+        self.meas_type = meas_type;  # optional, default 'gnss'
 
     # ---------- PREDICATES ------------- #
 
