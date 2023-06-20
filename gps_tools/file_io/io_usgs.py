@@ -181,3 +181,16 @@ def query_usgs_network_name(station_name, gps_ts_dir):
             network_list.append(item);
     print("")
     return network_list;
+
+def read_usgs_highrate_file(filename):
+    """  time format 2023/05/10 00:05:00
+    :param filename: string, name of file
+    :return: Timeseries object
+    """
+    dta, N, E, U = np.loadtxt(filename, usecols=(0, 2, 3, 4), delimiter=',', unpack=True, skiprows=1,
+                              dtype={'names': ('dts', 'dN', 'dE', 'dU'), 'formats': ('U20', float, float, float)});
+    dtarray = [dt.datetime.strptime(x, '%Y/%m/%d %H:%M:%S') for x in dta];
+    myData = Timeseries(name="", coords=None, dtarray=dtarray,
+                        dN=np.multiply(N, 1000), dE=np.multiply(E, 1000), dU=np.multiply(U, 1000),
+                        Sn=[], Se=[], Su=[], EQtimes=[]);
+    return myData;
