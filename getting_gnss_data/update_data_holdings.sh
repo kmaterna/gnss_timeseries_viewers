@@ -1,5 +1,5 @@
 #!/bin/bash
-# Updating all data holdings as of November 2022.
+# Updating all data holdings as of June 2023.
 # for USGS, be in an environment that has pandas
 # for CWU, be in an environment that has "pip install earthscope-cli"
 # Call this script from the parent directory where GNSS data is locally stored (ex: GPS_POS_DATA/)
@@ -10,10 +10,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # UPDATE CWU/PBO POS, OFFSET, EVENT, AND VELOCITY DATA
 # First, enable your es sso token with 'es sso login' (expires every day?)
+# THIS WILL TAKE A WHILE, and it will look like it's not working at first, but it will be working.
+# Breadth first search
 mkdir -p PBO_Data
 mkdir -p PBO_Data/Time_Series/
 cd PBO_Data/Time_Series/
-wget -N --recursive --no-directories --no-parent --accept "*cwu.final_nam14.pos,*cwu.final_igs14.pos" -e robots=off --header "authorization: Bearer $(es sso access --token)" https://data.unavco.org/archive/gnss/products/position/
+wget --recursive --no-directories --no-parent -N --accept="*.cwu.final_nam14.pos,*.cwu.final_igs14.pos" -e robots=off --level=2 --verbose --header "authorization: Bearer $(es sso access --token)" https://data.unavco.org/archive/gnss/products/position/
 cd ../../
 
 mkdir -p PBO_Data/PBO_Event_Files/
@@ -36,7 +38,7 @@ cd ../../
 
 # UPDATE UNR DATA: OFFSETS, COORDINATES, AND TIME SERIES
 # VELOCITIES get updated manually with the datestamp and #URL placed on the first line. 
-unr_coords_cache_file="UNR_coords_nov2022.txt"   # update this with the datestamp
+unr_coords_cache_file="UNR_coords_jun2023.txt"   # update this with the datestamp
 mkdir -p UNR_Data/
 mkdir -p UNR_Data/Offsets/
 cd UNR_Data/Offsets/
