@@ -6,6 +6,7 @@ Contains functions to map, filter, reduce, and process generic GPS time series
 import numpy as np
 import datetime as dt
 from scipy import signal
+import sys
 from . import lssq_model_errors, utilities, math_functions
 from Tectonic_Utils.geodesy import insar_vector_functions
 
@@ -23,6 +24,9 @@ class Timeseries:
         self.Se = Se;
         self.Su = Su;
         self.EQtimes = EQtimes;
+        if len(dtarray) == 0:  # zero-length timeseries throws error
+            print("Error: length of dtarray is 0 for station %s. No timeseries created." % self.name);
+            sys.exit(0);
 
     # -------------------------------------------- #
     #              PREDICATES
@@ -39,6 +43,25 @@ class Timeseries:
             return 1;
         else:
             return 0;
+
+    def has_incompatible_subwindow(self, starttime_desired, endtime_desired):
+        """
+        Check for nasty things that disturb the calculation of slopes from sub-windowed timeseries,
+        such as an incompatible window requested.
+        """
+        if endtime_desired < self.get_starttime():
+            print("Error: end time before start of array for station %s. Returning Nan" % self.name);
+            return 1;
+        if starttime_desired > self.get_endtime():
+            print("Error: start time after end of array for station %s. Returning Nan" % self.name);
+            return 1;
+        if starttime_desired >= endtime_desired:
+            print("Error! Starttime after endtime for station %s " % self.name);
+            return 1;
+        if self.get_starttime() == self.get_endtime():
+            print("Error: Timeseries has length 1");
+            return 1;
+        return 0;
 
     # -------------------------------------------- #
     # PROCESSES THAT RETURN NEW TIME SERIES OBJECTS
@@ -198,15 +221,27 @@ class Timeseries:
     # REDUCE TIME SERIES OBJECTS TO SCALARS OR VALUES
     # -------------------------------------------- #
 
+    def get_starttime(self):
+        return self.dtarray[0];
+
+    def get_endtime(self):
+        return self.dtarray[-1];
+
+    def get_time_range(self):
+        return self.get_starttime(), self.get_endtime();
+
     def get_slope(self, starttime=None, endtime=None, missing_fraction=0.6):
         """
         Model data with a best-fit y = mx + b.
         Returns six numbers: e_slope, n_slope, v_slope, e_std, n_std, v_std
         """
+        if starttime is None:
+            starttime = self.get_starttime();
+        if endtime is None:
+            endtime = self.get_endtime();
 
         # Defensive programming
-        error_flag, starttime, endtime = basic_defensive_programming(self, starttime, endtime);
-        if error_flag:
+        if self.has_incompatible_subwindow(starttime, endtime):
             print("Basic defensive programming failed. Returning nans for slopes");
             return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
 
@@ -268,8 +303,12 @@ class Timeseries:
         Return average value of the time series between starttime and endtime
         """
         # Defensive programming
-        error_flag, starttime, endtime = basic_defensive_programming(self, starttime, endtime);
-        if error_flag:
+        if starttime is None:
+            starttime = self.get_starttime();
+        if endtime is None:
+            endtime = self.get_endtime();
+
+        if self.has_incompatible_subwindow(starttime, endtime):
             return [np.nan, np.nan, np.nan];
         self.remove_nans();  # Cut to desired window, and remove nans
         self.impose_time_limits(starttime, endtime);
@@ -330,10 +369,13 @@ class Timeseries:
         The critical_len parameter allows us to switch this function for both GPS and GRACE time series in GPS format
         Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F;
         """
+        if starttime is None:
+            starttime = self.get_starttime();
+        if endtime is None:
+            endtime = self.get_endtime();
 
         # Defensive programming
-        error_flag, starttime, endtime = basic_defensive_programming(self, starttime, endtime);
-        if error_flag:
+        if self.has_incompatible_subwindow(starttime, endtime):
             east_params = [np.nan, 0, 0, 0, 0];
             north_params = [np.nan, 0, 0, 0, 0];
             vert_params = [np.nan, 0, 0, 0, 0];
@@ -367,43 +409,6 @@ class Timeseries:
                        vert_params_unordered[2], vert_params_unordered[3]];
 
         return [east_params, north_params, vert_params];
-
-
-# -------------------------------------------- #
-#           DEFENSIVE PROGRAMMING
-# -------------------------------------------- #
-
-def basic_defensive_programming(Data0, starttime, endtime):
-    """
-    Check for all sorts of nasty things that disturb the calculation of slopes, etc.
-    """
-    error_flag = 0;
-
-    if len(Data0.dtarray) == 0:
-        print("Error: length of dtarray is 0 for station %s. " % Data0.name);
-        error_flag = 1;
-        return error_flag, starttime, endtime;
-
-    if starttime is None:
-        starttime = Data0.dtarray[0];
-    if endtime is None:
-        endtime = Data0.dtarray[-1];
-
-    starttime_proper, endtime_proper = starttime, endtime;
-
-    if starttime < Data0.dtarray[0]:
-        starttime_proper = Data0.dtarray[0];
-    if endtime > Data0.dtarray[-1]:
-        endtime_proper = Data0.dtarray[-1];
-
-    if endtime < Data0.dtarray[0]:
-        print("Error: end time before start of array for station %s. Returning Nan" % Data0.name);
-        error_flag = 1;
-    if starttime > Data0.dtarray[-1]:
-        print("Error: start time after end of array for station %s. Returning Nan" % Data0.name);
-        error_flag = 1;
-
-    return error_flag, starttime_proper, endtime_proper;
 
 
 # -------------------------------------------- #
