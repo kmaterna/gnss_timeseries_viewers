@@ -13,28 +13,31 @@ from .file_io import config_io, io_other
 import datetime as dt
 
 
-def driver(data_config_file, expname, center, radius, proc_center, refframe, outdir):
+def driver(data_config_file, expname, center, radius, proc_center, refframe, outdir,
+           starttime=dt.datetime.strptime("20050505", "%Y%m%d"), endtime=None):
     outname = configure(expname, center, radius, outdir);
 
     database, stations, distances = build_database(data_config_file, proc_center, refframe, center, radius);
     [dataobj_list, offsetobj_list, eqobj_list] = database.load_stations(stations);
     [_, _, no_offsets_no_trends, no_offsets_no_trends_no_seasons,
      sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_file);
-    start = dt.datetime.strptime("20050505", "%Y%m%d")
 
     # A series of output options that can be chained together, selected or unselected, etc.
     out_stack.horizontal_full_ts(no_offsets_no_trends, sorted_distances, outname=outdir+"/"+outname+'_TS_noeq.png',
-                                 start_time_plot=start);
+                                 start_time_plot=starttime, end_time_plot=endtime);
     out_stack.horizontal_full_ts(no_offsets_no_trends_no_seasons, sorted_distances,
-                                 outname=outdir + "/" + outname + '_TS_noeq_noseasons.png', start_time_plot=start);
+                                 outname=outdir + "/" + outname + '_TS_noeq_noseasons.png',
+                                 start_time_plot=starttime, end_time_plot=endtime);
     out_stack.vertical_full_ts(no_offsets_no_trends_no_seasons, sorted_distances,
-                               outname=outdir + "/" + outname + '_TS_vertical.png', start_time_plot=start);
+                               outname=outdir + "/" + outname + '_TS_vertical.png',
+                               start_time_plot=starttime, end_time_plot=endtime);
 
     out_stack.horizontal_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances,
-                                        outname=outdir + "/" + outname + '_TS_horiz_filt.png', start_time_plot=start);
+                                        outname=outdir + "/" + outname + '_TS_horiz_filt.png',
+                                        start_time_plot=starttime, end_time_plot=endtime);
     out_stack.vertical_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances,
                                       outname=outdir + "/" + outname + '_TS_vert_detrended_filt.png',
-                                      start_time_plot=start);
+                                      start_time_plot=starttime, end_time_plot=endtime);
 
     pygmt_plots.map_ts_objects(dataobj_list, outdir+"/"+outname+'_map.png', center=center);
     return;

@@ -187,6 +187,7 @@ def read_usgs_highrate_file(filename):
     :param filename: string, name of file
     :return: Timeseries object
     """
+    print("Reading %s" % filename);
     dta, N, E, U = np.loadtxt(filename, usecols=(0, 2, 3, 4), delimiter=',', unpack=True, skiprows=1,
                               dtype={'names': ('dts', 'dN', 'dE', 'dU'), 'formats': ('U20', float, float, float)});
     dtarray = [dt.datetime.strptime(x, '%Y/%m/%d %H:%M:%S') for x in dta];

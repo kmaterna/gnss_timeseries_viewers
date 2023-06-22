@@ -4,6 +4,7 @@ File to read and write data from miscellaneous formats
 """
 import datetime as dt
 import numpy as np
+import pandas
 from .io_magnet_unr import get_coordinates_for_unr_stations
 from ..vel_functions import Station_Vel
 from ..gps_ts_functions import Timeseries
@@ -172,3 +173,20 @@ def read_lake_loading_ts(infile) -> Timeseries:
     S = np.zeros(np.shape(u));
     loading_defo = Timeseries(name='', coords=[], dtarray=dtarray, dE=u, dN=v, dU=w, Sn=S, Se=S, Su=S);
     return loading_defo;
+
+
+def read_creepmeter(filename) -> Timeseries:
+    """
+    Read an excel file for creep-meter timeseries such as those from the Imperial Valley.
+
+    :param filename: string, filename
+    :return: a TimeSeries object
+    """
+    print("Reading file %s " % filename);
+    df = pandas.read_excel(filename, sheet_name=0)
+    ts = df['UTC'].values;
+    dtarray = [pandas.to_datetime(x) for x in ts];
+    displacement = df['dextral'].values.tolist();
+    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement,
+                                 dN=(), dU=(), Sn=(), Se=(), Su=());
+    return creepmeter_data;

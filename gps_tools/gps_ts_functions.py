@@ -241,7 +241,7 @@ class Timeseries:
             endtime = self.get_endtime();
 
         # Defensive programming
-        if self.has_incompatible_subwindow(starttime, endtime):
+        if self.has_incompatible_subwindow(starttime_desired=starttime, endtime_desired=endtime):
             print("Basic defensive programming failed. Returning nans for slopes");
             return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
 
@@ -308,7 +308,7 @@ class Timeseries:
         if endtime is None:
             endtime = self.get_endtime();
 
-        if self.has_incompatible_subwindow(starttime, endtime):
+        if self.has_incompatible_subwindow(starttime_desired=starttime, endtime_desired=endtime):
             return [np.nan, np.nan, np.nan];
         self.remove_nans();  # Cut to desired window, and remove nans
         self.impose_time_limits(starttime, endtime);
@@ -375,7 +375,7 @@ class Timeseries:
             endtime = self.get_endtime();
 
         # Defensive programming
-        if self.has_incompatible_subwindow(starttime, endtime):
+        if self.has_incompatible_subwindow(starttime_desired=starttime, endtime_desired=endtime):
             east_params = [np.nan, 0, 0, 0, 0];
             north_params = [np.nan, 0, 0, 0, 0];
             vert_params = [np.nan, 0, 0, 0, 0];
