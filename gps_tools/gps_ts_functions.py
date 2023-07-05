@@ -6,6 +6,7 @@ Contains functions to map, filter, reduce, and process generic GPS time series
 import numpy as np
 import datetime as dt
 from scipy import signal
+import scipy
 import sys
 from . import lssq_model_errors, utilities, math_functions
 from Tectonic_Utils.geodesy import insar_vector_functions
@@ -168,6 +169,18 @@ class Timeseries:
                                 dN=np.array(newN), dE=np.array(newE), dU=self.dU,
                                 Sn=self.Sn, Se=self.Se, Su=self.Su, EQtimes=self.EQtimes);
         return rotated_ts;
+
+    def median_filter_data(self, size):
+        """
+        :param size: integer, window size for median filter
+        :return: a Timeseries object
+        """
+        udata = scipy.ndimage.median_filter(self.dE, size=size);
+        vdata = scipy.ndimage.median_filter(self.dN, size=size);
+        wdata = scipy.ndimage.median_filter(self.dU, size=size);
+        filtered_ts = Timeseries(dtarray=self.dtarray, dE=udata, dN=vdata, dU=wdata, coords=self.coords,
+                                 name=self.name, Se=self.Se, Sn=self.Sn, Su=self.Su, EQtimes=self.EQtimes);
+        return filtered_ts;
 
     def detrend_data_by_value(self, east_params, north_params, vert_params):
         if sum(np.isnan(east_params)) > 0 or sum(np.isnan(north_params)) > 0 or sum(np.isnan(vert_params)) > 0:

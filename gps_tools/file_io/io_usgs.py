@@ -193,5 +193,5 @@ def read_usgs_highrate_file(filename):
     dtarray = [dt.datetime.strptime(x, '%Y/%m/%d %H:%M:%S') for x in dta];
     myData = Timeseries(name="", coords=None, dtarray=dtarray,
                         dN=np.multiply(N, 1000), dE=np.multiply(E, 1000), dU=np.multiply(U, 1000),
-                        Sn=[], Se=[], Su=[], EQtimes=[]);
+                        Sn=np.zeros(np.shape(N)), Se=np.zeros(np.shape(E)), Su=np.zeros(np.shape(U)), EQtimes=[]);
     return myData;
