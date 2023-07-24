@@ -13,7 +13,7 @@ import json
 
 def write_params(outfile, param_dict):
     with open(outfile, 'w') as fp:
-        json.dump(param_dict, fp)
+        json.dump(param_dict, fp, indent=4)
     return;
 
 

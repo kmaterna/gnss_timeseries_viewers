@@ -13,10 +13,10 @@ from .file_io import config_io, io_other
 import datetime as dt
 
 
-def driver(data_config_file, expname, center, radius, proc_center, refframe, outdir,
+def driver(data_config, expname, center, radius, proc_center, refframe, outdir,
            starttime=dt.datetime.strptime("20050505", "%Y%m%d"), endtime=None):
     """
-    :param data_config_file: string, path to data config file
+    :param data_config: string, path to data config file
     :param expname: string, used in outdir name
     :param center: (lon, lat)
     :param radius: float, km
@@ -28,30 +28,32 @@ def driver(data_config_file, expname, center, radius, proc_center, refframe, out
     """
     outname = configure(expname, center, radius, outdir);
 
-    database, stations, distances = build_database(data_config_file, proc_center, refframe, center, radius);
+    database, stations, distances = build_database(data_config, proc_center, refframe, center, radius);
     [dataobj_list, offsetobj_list, eqobj_list] = database.load_stations(stations);
-    [_, _, no_offsets_no_trends, no_offsets_no_trends_no_seasons,
-     sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_file);
+    param_dict = pack_params(data_config, expname, center, radius, proc_center, refframe, outdir, starttime, endtime, stations);   # for tracking metadata
+    [detr, _, no_offsets_detr, no_offsets_detr_deseas, sorted_distances] = compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config);
 
     # A series of output options that can be chained together, selected or unselected, etc.
-    out_stack.horizontal_full_ts(no_offsets_no_trends, sorted_distances, outname=outdir+"/"+outname+'_TS_noeq.png',
+    out_stack.horizontal_full_ts(detr, sorted_distances, outname=outdir+"/"+outname+'_TS.png',
                                  start_time_plot=starttime, end_time_plot=endtime);
-    out_stack.horizontal_full_ts(no_offsets_no_trends_no_seasons, sorted_distances,
+    out_stack.horizontal_full_ts(no_offsets_detr, sorted_distances, outname=outdir+"/"+outname+'_TS_noeq.png',
+                                 start_time_plot=starttime, end_time_plot=endtime);
+    out_stack.horizontal_full_ts(no_offsets_detr_deseas, sorted_distances,
                                  outname=outdir + "/" + outname + '_TS_noeq_noseasons.png',
                                  start_time_plot=starttime, end_time_plot=endtime);
-    out_stack.vertical_full_ts(no_offsets_no_trends_no_seasons, sorted_distances,
+    out_stack.vertical_full_ts(no_offsets_detr_deseas, sorted_distances,
                                outname=outdir + "/" + outname + '_TS_vertical.png',
                                start_time_plot=starttime, end_time_plot=endtime);
 
-    out_stack.horizontal_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances,
+    out_stack.horizontal_filtered_plots(no_offsets_detr_deseas, sorted_distances,
                                         outname=outdir + "/" + outname + '_TS_horiz_filt.png',
                                         start_time_plot=starttime, end_time_plot=endtime);
-    out_stack.vertical_filtered_plots(no_offsets_no_trends_no_seasons, sorted_distances,
+    out_stack.vertical_filtered_plots(no_offsets_detr_deseas, sorted_distances,
                                       outname=outdir + "/" + outname + '_TS_vert_detrended_filt.png',
                                       start_time_plot=starttime, end_time_plot=endtime);
 
     pygmt_plots.map_ts_objects(dataobj_list, outdir+"/"+outname+'_map.png', center=center);
-    out_stack.write_params(outfile=outdir+"/stack_params.txt", param_dict={"expname": expname});
+    out_stack.write_params(outfile=outdir+"/"+outname+"_stack_params.txt", param_dict=param_dict);
     return;
 
 
@@ -78,17 +80,17 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
     sorted_eqs = [x for _, x in sorted(zip(latitudes_list, eqobj_list))];  # the raw, sorted data.
     sorted_distances = [x for _, x in sorted(zip(latitudes_list, distances))];  # the sorted distances.
 
-    detrended_objects, no_offset_objects = [], [];
-    no_offsets_no_trends, no_offsets_no_trends_no_seasons = [], [];
+    detr_objs, no_offset_objs, no_offsets_detr, no_offsets_detr_deseas = [], [], [], [];
 
     # Detrended objects (or objects with trends and no offsets; depends on what you want.)
     for i in range(len(sorted_objects)):
         newobj = gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq', data_config_file);
-        detrended_objects.append(newobj);  # still has offsets, doesn't have trends
+        newobj = newobj.remove_outliers(20);  # 20mm outlier definition
+        detr_objs.append(newobj);  # still has offsets, doesn't have trends
 
         newobj = offsets.remove_offsets(sorted_objects[i], sorted_offsets[i]);
         newobj = offsets.remove_offsets(newobj, sorted_eqs[i]);
-        no_offset_objects.append(newobj);  # still has trends, doesn't have offsets
+        no_offset_objs.append(newobj);  # still has trends, doesn't have offsets
 
     # # Objects with no earthquakes or seasonals
     for i in range(len(sorted_objects)):
@@ -99,11 +101,27 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
 
         # The detrended TS without earthquakes
         stage1obj = gps_seasonal_removals.make_detrended_ts(newobj, 0, 'lssq', data_config_file);
-        no_offsets_no_trends.append(stage1obj);
+        no_offsets_detr.append(stage1obj);
 
         # The detrended TS without earthquakes or seasonals
         stage2obj = gps_seasonal_removals.make_detrended_ts(stage1obj, 1, 'lssq', data_config_file);
-        no_offsets_no_trends_no_seasons.append(stage2obj);
+        no_offsets_detr_deseas.append(stage2obj);
 
-    return [detrended_objects, no_offset_objects, no_offsets_no_trends, no_offsets_no_trends_no_seasons,
-            sorted_distances];
+    return [detr_objs, no_offset_objs, no_offsets_detr, no_offsets_detr_deseas, sorted_distances];
+
+def pack_params(data_config_file, expname, center, radius, proc_center, refframe, outdir, starttime, endtime, stations):
+    if starttime:
+        starttime = dt.datetime.strftime(starttime, "%Y-%m-%d");
+    if endtime:
+        endtime = dt.datetime.strftime(endtime, "%Y-%m-%d");
+    param_dict = {"data_config_file": data_config_file,
+                  "expname": expname,
+                  "center": center,
+                  "radius": radius,
+                  "proc_center": proc_center,
+                  "refframe": refframe,
+                  "outdir": outdir,
+                  "starttime": starttime,
+                  "endtime": endtime,
+                  "stations": stations}
+    return param_dict;
