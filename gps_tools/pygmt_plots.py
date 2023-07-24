@@ -116,9 +116,9 @@ def map_ts_objects(dataobj_list, outname, center=None):
     fig.coast(borders='1', shorelines='1.0p,black');
     fig.coast(borders='2', shorelines='0.5p,black');
     fig.text(x=lons, y=lats, text=names, font='15p,Helvetica-Bold,black', offset="0.24i/0.11i");
-    fig.plot(x=lons, y=lats, style='c0.1i', color='black', pen='0.5p,black')
+    fig.plot(x=lons, y=lats, style='c0.1i', fill='black', pen='0.5p,black')
     if center:
-        fig.plot(x=center[0], y=center[1], style='a0.1i', color='red', pen='0.5p,red')
+        fig.plot(x=center[0], y=center[1], style='a0.1i', fill='red', pen='0.5p,red')
     fig.savefig(outname);
     print("Saving map %s" % outname );
     return;

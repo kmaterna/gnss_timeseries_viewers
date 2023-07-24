@@ -37,7 +37,7 @@ cd ../../
 
 
 # UPDATE UNR DATA: OFFSETS, COORDINATES, AND TIME SERIES
-# VELOCITIES get updated manually with the datestamp and #URL placed on the first line. 
+# VELOCITIES get updated manually with the datestamp and #URL placed on the first line.
 unr_coords_cache_file="UNR_coords_jun2023.txt"   # update this with the datestamp
 mkdir -p UNR_Data/
 mkdir -p UNR_Data/Offsets/
@@ -49,7 +49,7 @@ cd UNR_Data/
 wget http://geodesy.unr.edu/NGLStationPages/DataHoldings.txt -O $unr_coords_cache_file
 cd ../
 
-# Get time series from the stations in cache file.  
+# Get time series from the stations in cache file.
 mkdir -p UNR_Data/Time_Series/
 cd UNR_Data/Time_Series/
 python $DIR/get_unr_time_series.py ../$unr_coords_cache_file

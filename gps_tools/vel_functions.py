@@ -74,6 +74,8 @@ class Station_Vel:
         else:
             return 1;
 
+    # ---------- CALCULATIONS ON VEL OBJECTS ------------- #
+
     def get_azimuth_degrees(self):
         """
         :return: azimuth of velocity or offset, in degrees clockwise from north
@@ -83,6 +85,13 @@ class Station_Vel:
         else:
             azimuth = fault_vector_functions.get_strike(self.e, self.n);
         return azimuth;
+
+    def get_distance_to_point(self, point):
+        """
+        :param point: (lon, lat)
+        :return: distance in km
+        """
+        return haversine.distance((self.nlat, self.elon), (point[1], point[0]));
 
 
 class Station_Vel_XYZ:
@@ -186,26 +195,6 @@ def disp_points_to_station_vels(obs_disp_points):
                               first_epoch=item.starttime, last_epoch=item.endtime, refframe=item.refframe);
         station_vel_list.append(new_obj);
     return station_vel_list;
-
-
-def remove_blacklist_paired_data(velfield, blacklist, matching_data=None, verbose=False):   # ZIP VERSION
-    """
-    :param velfield: list of StationVels
-    :param blacklist: list of strings
-    :param verbose: boolean, false
-    :param matching_data: a vector of things that go with each station, like epicentral distance
-    :return: list of StationVels, list of matching data
-    """
-    cleaned_velfield, cleaned_distances = [], [];
-    if verbose:
-        print("Removing blacklist: Starting with %d stations" % len(velfield));
-    for i in range(len(velfield)):
-        if velfield[i].survives_blacklist(blacklist):
-            cleaned_velfield.append(velfield[i]);
-            cleaned_distances.append(matching_data[i]);
-    if verbose:
-        print("Removing blacklist: Ending with %d stations" % len(cleaned_velfield));
-    return cleaned_velfield, cleaned_distances;
 
 
 def remove_blacklist_vels(velfield, blacklist, verbose=False):   # NON-ZIP VERSION

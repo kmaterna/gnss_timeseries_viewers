@@ -8,6 +8,13 @@ import matplotlib.pyplot as plt
 import matplotlib, scipy.ndimage
 import matplotlib.cm as cm
 import datetime as dt
+import json
+
+
+def write_params(outfile, param_dict):
+    with open(outfile, 'w') as fp:
+        json.dump(param_dict, fp)
+    return;
 
 
 def horizontal_full_ts(dataobj_list, distances, outname, removemean=1, start_time_plot=None,

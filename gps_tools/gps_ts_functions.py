@@ -9,7 +9,7 @@ from scipy import signal
 import scipy
 import sys
 from . import lssq_model_errors, utilities, math_functions
-from Tectonic_Utils.geodesy import insar_vector_functions
+from Tectonic_Utils.geodesy import insar_vector_functions, haversine
 
 
 class Timeseries:
@@ -242,6 +242,13 @@ class Timeseries:
 
     def get_time_range(self):
         return self.get_starttime(), self.get_endtime();
+
+    def get_distance_to_point(self, point):
+        """
+        :param point: (lon, lat)
+        :return: distance in km
+        """
+        return haversine.distance((self.coords[1], self.coords[0]), (point[1], point[0]));
 
     def get_slope(self, starttime=None, endtime=None, missing_fraction=0.6):
         """

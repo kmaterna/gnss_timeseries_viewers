@@ -15,6 +15,17 @@ import datetime as dt
 
 def driver(data_config_file, expname, center, radius, proc_center, refframe, outdir,
            starttime=dt.datetime.strptime("20050505", "%Y%m%d"), endtime=None):
+    """
+    :param data_config_file: string, path to data config file
+    :param expname: string, used in outdir name
+    :param center: (lon, lat)
+    :param radius: float, km
+    :param proc_center: string
+    :param refframe: string
+    :param outdir: string
+    :param starttime: dt.datetime
+    :param endtime: dt.datetime
+    """
     outname = configure(expname, center, radius, outdir);
 
     database, stations, distances = build_database(data_config_file, proc_center, refframe, center, radius);
@@ -40,17 +51,18 @@ def driver(data_config_file, expname, center, radius, proc_center, refframe, out
                                       start_time_plot=starttime, end_time_plot=endtime);
 
     pygmt_plots.map_ts_objects(dataobj_list, outdir+"/"+outname+'_map.png', center=center);
+    out_stack.write_params(outfile=outdir+"/stack_params.txt", param_dict={"expname": expname});
     return;
 
 
 def build_database(data_config_file, proc_center, refframe, center, radius):
-    # Set up the stacking process
+    # Set up the stacking process, return list of desired stations by name
     database = load_gnss.create_station_repo(data_config_file, proc_center=proc_center, refframe=refframe);
-    stations, distances = database.search_stations_by_circle(center, radius, basic_clean=True);
+    station_names, _ = database.search_stations_by_circle(center, radius, basic_clean=True);
     data_config = config_io.read_config_file(data_config_file);
     blacklist = io_other.read_blacklist(data_config["blacklist"]);
-    stations, distances = vel_functions.remove_blacklist_paired_data(stations, blacklist, matching_data=distances);
-    return database, [x.name for x in stations], distances;
+    station_names = vel_functions.remove_blacklist_vels(station_names, blacklist);
+    return database, [x.name for x in station_names], [x.get_distance_to_point(center) for x in station_names];
 
 
 def configure(expname, center, radius, outdir):
