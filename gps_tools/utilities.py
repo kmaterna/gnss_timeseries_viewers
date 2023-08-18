@@ -39,6 +39,12 @@ def write_namedtuple(namedtuple_object, outfilename):
     return;
 
 
+def add_in_quadrature(x1, y1):
+    """Add two numbers in quadrature for propagating uncertainties through an addition/subtraction."""
+    result = np.sqrt(np.square(x1) + np.square(y1));
+    return result;
+
+
 def float_to_dt(float_time):
     # Example: 2014.194 --> datetime object
     fractional_year = str(1 + int(365.24 * (float_time - np.floor(float_time))));  # something like 004, 204, 321, etc.

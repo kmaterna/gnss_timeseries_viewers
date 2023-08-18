@@ -7,7 +7,7 @@ Viewing a stack of stations
 """
 
 import subprocess
-from . import gps_seasonal_removals, offsets, load_gnss, vel_functions, pygmt_plots
+from . import gps_seasonal_removals, offsets, load_gnss, vel_functions, pygmt_plots, utilities
 from . import outputs_gps_stacks as out_stack
 from .file_io import config_io, io_other
 import datetime as dt
@@ -30,8 +30,10 @@ def driver(data_config, expname, center, radius, proc_center, refframe, outdir,
 
     database, stations, distances = build_database(data_config, proc_center, refframe, center, radius);
     [dataobj_list, offsetobj_list, eqobj_list] = database.load_stations(stations);
-    param_dict = pack_params(data_config, expname, center, radius, proc_center, refframe, outdir, starttime, endtime, stations);   # for tracking metadata
-    [detr, _, no_offsets_detr, no_offsets_detr_deseas, distances] = compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config);
+    param_dict = pack_params(data_config, expname, center, radius, proc_center, refframe, outdir,
+                             starttime, endtime, stations);   # for tracking metadata
+    [detr, _, no_offsets_detr, no_offsets_detr_deseas, distances] = compute(dataobj_list, offsetobj_list, eqobj_list,
+                                                                            distances, data_config);
 
     # A series of output options that can be chained together, selected or unselected, etc.
     out_stack.horizontal_full_ts(detr, distances, outname=outdir+"/"+outname+'_TS.png', start_time_plot=starttime,
@@ -122,3 +124,25 @@ def pack_params(data_config_file, expname, center, radius, proc_center, refframe
                   "endtime": endtime,
                   "stations": stations}
     return param_dict;
+
+
+def extract_stack_displacements(data_obj_list, starttime, endtime, num_days=3):
+    """
+    Extract displacements between starttime and endtime from a stack of Timeseries objects.
+    Return as a list of Station_Vel objects.
+    Uncertainties on the displacements are also computed by added in quadrature.
+    """
+    displacements = [];
+    for ts in data_obj_list:
+        e1, n1, u1 = ts.get_values_at_date(starttime, num_days=num_days);
+        e2, n2, u2 = ts.get_values_at_date(endtime, num_days=num_days);
+        se1, sn1, su1 = ts.get_uncertainties_at_date(starttime, num_days);
+        se2, sn2, su2 = ts.get_uncertainties_at_date(endtime, num_days);
+        newpt = vel_functions.Station_Vel(elon=ts.coords[0], nlat=ts.coords[1],
+                                          e=(e2-e1), n=(n2-n1), u=(u2-u1),
+                                          se=utilities.add_in_quadrature(se1, se2),
+                                          sn=utilities.add_in_quadrature(sn1, sn2),
+                                          su=utilities.add_in_quadrature(su1, su2),
+                                          first_epoch=starttime, last_epoch=endtime, name=ts.name);
+        displacements.append(newpt);
+    return displacements;

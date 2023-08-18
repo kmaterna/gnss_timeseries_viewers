@@ -366,6 +366,23 @@ class Timeseries:
             [e_value, n_value, u_value] = [np.nan, np.nan, np.nan];
         return e_value, n_value, u_value;
 
+    def get_uncertainties_at_date(self, selected_date, num_days):
+        """
+        Uncertainties on the average displacements are computed multiplying by 2/(sqrt(n)) because
+        we approximate it as ~2x larger than uncorrelated noise.
+        GPS uncertainties are underestimated by factors of 2-11 if time-correlated noise is not considered.
+        Hackl [2011]; Johnson and Agnew [1995]; Zhang et al. [1997]; Mao et al. [1999]; Williams et al. [2004]
+        """
+        Se, Sn, Su = np.nan, np.nan, np.nan;
+        if selected_date in self.dtarray:
+            idx = self.dtarray.index(selected_date);
+            Se = self.Se[idx] * (2 / np.sqrt(num_days));
+            Sn = self.Sn[idx] * (2 / np.sqrt(num_days));
+            Su = self.Su[idx] * (2 / np.sqrt(num_days));
+        else:
+            print("Error: requested date %s not found in dtarray" % dt.datetime.strftime(selected_date, "%Y-%m-%d"));
+        return Se, Sn, Su;
+
     def subsample_in_time(self, target_time, window_days=30):
         """
         Downsample TS: return position corresponding a given time by averaging over a month around target date.
