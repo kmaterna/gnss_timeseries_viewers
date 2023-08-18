@@ -318,9 +318,13 @@ class Timeseries:
         Usigma = np.sqrt(covm[0][0]);
         return [Esigma, Nsigma, Usigma];
 
-    def get_means(self, starttime=None, endtime=None):
+    def get_mean_position(self, starttime=None, endtime=None):
         """
-        Return average value of the time series between starttime and endtime
+        Compute average value of the time series between starttime and endtime
+
+        :param starttime: dt.datetime object, default is the start of the timeseries
+        :param endtime: dt.datetime object, default is the end of the timeseries
+        :returns: [E, N, U] list of floats
         """
         # Defensive programming
         if starttime is None:
@@ -333,6 +337,57 @@ class Timeseries:
         self.remove_nans();  # Cut to desired window, and remove nans
         self.impose_time_limits(starttime, endtime);
         return [np.nanmean(self.dE), np.nanmean(self.dN), np.nanmean(self.dU)];
+
+    def get_values_at_date(self, selected_date, num_days=10):
+        """
+        At a selected date, extract east, north, and up values at that date, with a forward-looking averaging window.
+        """
+        if selected_date in self.dtarray:
+            [e_value, n_value, u_value] = self.get_mean_position(starttime=selected_date,
+                                                                 endtime=selected_date+dt.timedelta(days=num_days));
+        else:
+            print("Error: requested date %s not found in dtarray" % dt.datetime.strftime(selected_date, "%Y-%m-%d"));
+            [e_value, n_value, u_value] = [np.nan, np.nan, np.nan];
+        return e_value, n_value, u_value;
+
+    def subsample_in_time(self, target_time, window_days=30):
+        """
+        Downsample the position corresponding a given date by averaging over a two-sided window around target date.
+        Almost the same as the get_values_at_date(), just with two-sided averaging window.
+
+        :param target_time: dt.datetime object
+        :param window_days: int, length of two-sided window in days
+        :returns: E0, N0, U0
+        """
+        dE_start, dN_start, dU_start = [], [], [];
+        for i in range(len(self.dtarray)):
+            if abs((self.dtarray[i] - target_time).days) < window_days:
+                dE_start.append(self.dE[i]);
+                dN_start.append(self.dN[i]);
+                dU_start.append(self.dU[i]);
+        if len(dE_start) > 2:
+            E0, N0, U0 = np.nanmean(dE_start), np.nanmean(dN_start), np.nanmean(dU_start);
+        else:
+            E0, N0, U0 = np.nan, np.nan, np.nan;
+        return E0, N0, U0;
+
+    def get_uncertainties_for_avg_position(self, selected_date, num_days):
+        """
+        Uncertainties on the average displacements are computed multiplying by 2/(sqrt(n)) because
+        we approximate it as ~2x larger than uncorrelated noise.
+        GPS uncertainties are underestimated by factors of 2-11 if time-correlated noise is not considered.
+        Hackl [2011]; Johnson and Agnew [1995]; Zhang et al. [1997]; Mao et al. [1999]; Williams et al. [2004].
+        Still a work in progress.
+        """
+        Se, Sn, Su = np.nan, np.nan, np.nan;
+        if selected_date in self.dtarray:
+            idx = self.dtarray.index(selected_date);
+            Se = self.Se[idx] * (2 / np.sqrt(num_days));
+            Sn = self.Sn[idx] * (2 / np.sqrt(num_days));
+            Su = self.Su[idx] * (2 / np.sqrt(num_days));
+        else:
+            print("Error: requested date %s not found in dtarray" % dt.datetime.strftime(selected_date, "%Y-%m-%d"));
+        return Se, Sn, Su;
 
     def get_gap_fraction(self):
         """Compute the fraction of the time series that is not present. """
@@ -347,6 +402,9 @@ class Timeseries:
         """
         y = B + Alog(1+t/tau), t is in decyear
         Useful for postseismic transients.
+
+        :param eqtime: dt.datetime object
+        :returns: [list of e_params, list of n_params, list of u_params]
         """
         float_times = utilities.get_relative_times(self.dtarray, eqtime);  # in days
         e_params, ecov = math_functions.invert_log_function(float_times, self.dE);
@@ -354,57 +412,15 @@ class Timeseries:
         u_params, ecov = math_functions.invert_log_function(float_times, self.dU);
         return [e_params, n_params, u_params];
 
-    def get_values_at_date(self, selected_date, num_days=10):
-        """ At a selected date, pull out the east, north, and up values at that date. """
-        if selected_date in self.dtarray:
-            idx = self.dtarray.index(selected_date);
-            e_value = np.nanmean(self.dE[idx:idx + num_days]);
-            n_value = np.nanmean(self.dN[idx:idx + num_days]);
-            u_value = np.nanmean(self.dU[idx:idx + num_days]);
-        else:
-            print("Error: requested date %s not found in dtarray" % dt.datetime.strftime(selected_date, "%Y-%m-%d"));
-            [e_value, n_value, u_value] = [np.nan, np.nan, np.nan];
-        return e_value, n_value, u_value;
-
-    def get_uncertainties_at_date(self, selected_date, num_days):
-        """
-        Uncertainties on the average displacements are computed multiplying by 2/(sqrt(n)) because
-        we approximate it as ~2x larger than uncorrelated noise.
-        GPS uncertainties are underestimated by factors of 2-11 if time-correlated noise is not considered.
-        Hackl [2011]; Johnson and Agnew [1995]; Zhang et al. [1997]; Mao et al. [1999]; Williams et al. [2004]
-        """
-        Se, Sn, Su = np.nan, np.nan, np.nan;
-        if selected_date in self.dtarray:
-            idx = self.dtarray.index(selected_date);
-            Se = self.Se[idx] * (2 / np.sqrt(num_days));
-            Sn = self.Sn[idx] * (2 / np.sqrt(num_days));
-            Su = self.Su[idx] * (2 / np.sqrt(num_days));
-        else:
-            print("Error: requested date %s not found in dtarray" % dt.datetime.strftime(selected_date, "%Y-%m-%d"));
-        return Se, Sn, Su;
-
-    def subsample_in_time(self, target_time, window_days=30):
-        """
-        Downsample TS: return position corresponding a given time by averaging over a month around target date.
-        Almost the same as the function above, just with a little smarter window-handling for gaps.
-        return E0, N0, U0
-        """
-        dE_start, dN_start, dU_start = [], [], [];
-        for i in range(len(self.dtarray)):
-            if abs((self.dtarray[i] - target_time).days) < window_days:
-                dE_start.append(self.dE[i]);
-                dN_start.append(self.dN[i]);
-                dU_start.append(self.dU[i]);
-        if len(dE_start) > 2:
-            E0, N0, U0 = np.nanmean(dE_start), np.nanmean(dN_start), np.nanmean(dU_start);
-        else:
-            E0, N0, U0 = np.nan, np.nan, np.nan;
-        return E0, N0, U0;
-
     def get_linear_annual_semiannual(self, starttime=None, endtime=None, critical_len=365):
         """
         The critical_len parameter allows us to switch this function for both GPS and GRACE time series in GPS format
         Model the data with a best-fit GPS = Acos(wt) + Bsin(wt) + Ccos(2wt) + Dsin(2wt) + E*t + F;
+
+        :param starttime: dt.datetime object, default start of time series
+        :param endtime: dt.datetime object, default end of time series
+        :param critical_len: int, minimum duration of time series in days
+        :returns: [list of e_params, list of n_params, list of u_params]
         """
         if starttime is None:
             starttime = self.get_starttime();
@@ -571,5 +587,5 @@ def get_slope_unc(dataObj: Timeseries, starttime, endtime):
 def get_linear_annual_semiannual(Data0: Timeseries, starttime=None, endtime=None, critical_len=365):
     return Data0.get_linear_annual_semiannual(starttime, endtime, critical_len);
 
-def get_means(Data0: Timeseries, starttime=None, endtime=None):
-    return Data0.get_means(starttime, endtime);
+def get_mean_position(Data0: Timeseries, starttime=None, endtime=None):
+    return Data0.get_mean_position(starttime, endtime);
