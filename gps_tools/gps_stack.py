@@ -142,5 +142,4 @@ def write_stack_pos_files(data_obj_list, outdir, outname):
     os.makedirs(outdir+'/TS_'+outname, exist_ok=True);
     for item in data_obj_list:
         io_nota.write_pbo_pos_file(item, outdir+'/TS_'+outname+'/'+item.name+'_detrended.pos');
-        test = io_nota.read_pbo_pos_file(outdir+'/TS_'+outname+'/'+item.name+'_detrended.pos');
     return;

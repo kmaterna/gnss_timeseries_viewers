@@ -64,6 +64,12 @@ class Timeseries:
             return 1;
         return 0;
 
+    def is_within_bbox(self, bbox):
+        if bbox[0] <= self.coords[0] <= bbox[1] and bbox[2] <= self.coords[1] <= bbox[3]:
+            return 1;
+        else:
+            return 0;
+
     # -------------------------------------------- #
     # PROCESSES THAT RETURN NEW TIME SERIES OBJECTS
     # -------------------------------------------- #

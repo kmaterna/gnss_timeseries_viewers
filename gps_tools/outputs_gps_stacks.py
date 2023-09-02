@@ -46,7 +46,7 @@ def horizontal_full_ts(dataobj_list, distances, outname, removemean=1, start_tim
         axarr[0].plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
     axarr[0].tick_params(axis='x', labelrotation=40)
     axarr[0].set_ylabel("East (mm)");
-    axarr[0].set_title("East GPS Time Series")
+    axarr[0].set_title("East GNSS Time Series")
     axarr[0].grid(True)
 
     # North
@@ -64,7 +64,7 @@ def horizontal_full_ts(dataobj_list, distances, outname, removemean=1, start_tim
     for i in range(len(eqtimes)):
         axarr[1].plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
     axarr[1].set_ylabel("North (mm)");
-    axarr[1].set_title("North GPS Time Series")
+    axarr[1].set_title("North GNSS Time Series")
     axarr[1].grid(True)
     axarr[1].tick_params(axis='x', labelrotation=40)
 
@@ -103,7 +103,7 @@ def vertical_full_ts(dataobj_list, distances, outname, removemean=1, start_time_
     for i in range(len(eqtimes)):
         plt.gca().plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
     plt.gca().set_ylabel("Vertical (mm)");
-    plt.gca().set_title("Vertical GPS Time Series")
+    plt.gca().set_title("Vertical GNSS Time Series")
     plt.gca().grid(True)
 
     custom_cmap.set_array(range(int(vmin), int(vmax)));
@@ -138,7 +138,7 @@ def horizontal_filtered_plots(dataobj_list, distances, outname, start_time_plot=
     for i in range(len(eqtimes)):
         axarr[0].plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k');
     axarr[0].set_ylabel("Filtered East (mm)");
-    axarr[0].set_title("Filtered GPS Time Series")
+    axarr[0].set_title("Filtered GNSS Time Series")
     axarr[0].grid(True)
 
     for i in range(len(dataobj_list)):
@@ -188,7 +188,7 @@ def vertical_filtered_plots(dataobj_list, distances, outname, start_time_plot=No
     for i in range(len(eqtimes)):
         plt.gca().plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k');
     plt.gca().set_ylabel("Filtered Vertical (mm)");
-    plt.gca().set_title("Filtered Vertical GPS Time Series")
+    plt.gca().set_title("Filtered Vertical GNSS Time Series")
     plt.gca().grid(True)
 
     custom_cmap.set_array(range(int(vmin), int(vmax)));
