@@ -84,7 +84,8 @@ class Timeseries:
                 newSn.append(self.Sn[i]);
                 newSu.append(self.Su[i]);
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=newdt, dN=np.array(newdN), dE=np.array(newdE),
-                             dU=np.array(newdU), Sn=newSn, Se=newSe, Su=newSu, EQtimes=self.EQtimes);
+                             dU=np.array(newdU), Sn=np.array(newSn), Se=np.array(newSe), Su=np.array(newSu),
+                             EQtimes=self.EQtimes);
         return newData;
 
     def impose_time_limits(self, starttime, endtime):
@@ -104,8 +105,8 @@ class Timeseries:
                 newSn.append(self.Sn[i]);
                 newSu.append(self.Su[i]);
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=newdtarray, dN=np.array(newdN),
-                             dE=np.array(newdE), dU=np.array(newdU), Sn=newSn, Se=newSe, Su=newSu,
-                             EQtimes=self.EQtimes);
+                             dE=np.array(newdE), dU=np.array(newdU), Sn=np.array(newSn), Se=np.array(newSe),
+                             Su=np.array(newSu), EQtimes=self.EQtimes);
         return newData;
 
     def remove_nans(self):
@@ -125,8 +126,8 @@ class Timeseries:
                     temp_Sn.append(self.Sn[i]);
                     temp_Su.append(self.Su[i]);
             newData = Timeseries(name=self.name, coords=self.coords, dtarray=temp_dates, dN=np.array(temp_north),
-                                 dE=np.array(temp_east), dU=np.array(temp_vert),
-                                 Sn=temp_Sn, Se=temp_Se, Su=temp_Su, EQtimes=self.EQtimes);
+                                 dE=np.array(temp_east), dU=np.array(temp_vert), Sn=np.array(temp_Sn),
+                                 Se=np.array(temp_Se), Su=np.array(temp_Su), EQtimes=self.EQtimes);
         return newData;
 
     def remove_constant(self, east_offset=0, north_offset=0, vert_offset=0):
@@ -189,23 +190,23 @@ class Timeseries:
 
         # Parameters Format: slope, a2(cos), a1(sin), s2, s1.
         east_detrended, north_detrended, vert_detrended = [], [], [];
-        self.remove_nans();
-        decyear = utilities.get_float_times(self.dtarray);
+        data = self.remove_nans();
+        decyear = utilities.get_float_times(data.dtarray);
 
         east_model = math_functions.linear_annual_semiannual_function(decyear, east_params);
         north_model = math_functions.linear_annual_semiannual_function(decyear, north_params);
         vert_model = math_functions.linear_annual_semiannual_function(decyear, vert_params);
 
         for i in range(len(decyear)):
-            east_detrended.append(self.dE[i] - (east_model[i]));
-            north_detrended.append(self.dN[i] - (north_model[i]));
-            vert_detrended.append(self.dU[i] - (vert_model[i]));
+            east_detrended.append(data.dE[i] - (east_model[i]));
+            north_detrended.append(data.dN[i] - (north_model[i]));
+            vert_detrended.append(data.dU[i] - (vert_model[i]));
         east_detrended = [x - east_detrended[0] for x in east_detrended];
         north_detrended = [x - north_detrended[0] for x in north_detrended];
         vert_detrended = [x - vert_detrended[0] for x in vert_detrended];
-        newData = Timeseries(name=self.name, coords=self.coords, dtarray=self.dtarray, dN=north_detrended,
-                             dE=east_detrended, dU=vert_detrended, Sn=self.Sn, Se=self.Se, Su=self.Su,
-                             EQtimes=self.EQtimes);
+        newData = Timeseries(name=self.name, coords=self.coords, dtarray=data.dtarray, dN=north_detrended,
+                             dE=east_detrended, dU=vert_detrended, Sn=data.Sn, Se=data.Se, Su=data.Su,
+                             EQtimes=data.EQtimes);
         return newData;
 
     def remove_seasonal_by_value(self, east_params, north_params, vert_params):
@@ -214,20 +215,20 @@ class Timeseries:
         Parameters Format: slope, a2(cos), a1(sin), s2, s1.
         """
         east_detrended, north_detrended, vert_detrended = [], [], [];
-        self.remove_nans();
-        decyear = utilities.get_float_times(self.dtarray);
+        data = self.remove_nans();
+        decyear = utilities.get_float_times(data.dtarray);
 
         east_model = math_functions.annual_semiannual_only_function(decyear, east_params[1:]);
         north_model = math_functions.annual_semiannual_only_function(decyear, north_params[1:]);
         vert_model = math_functions.annual_semiannual_only_function(decyear, vert_params[1:]);
 
         for i in range(len(decyear)):
-            east_detrended.append(self.dE[i] - (east_model[i]));
-            north_detrended.append(self.dN[i] - (north_model[i]));
-            vert_detrended.append(self.dU[i] - (vert_model[i]));
-        newData = Timeseries(name=self.name, coords=self.coords, dtarray=self.dtarray, dN=north_detrended,
-                             dE=east_detrended, dU=vert_detrended, Sn=self.Sn, Se=self.Se, Su=self.Su,
-                             EQtimes=self.EQtimes);
+            east_detrended.append(data.dE[i] - (east_model[i]));
+            north_detrended.append(data.dN[i] - (north_model[i]));
+            vert_detrended.append(data.dU[i] - (vert_model[i]));
+        newData = Timeseries(name=self.name, coords=self.coords, dtarray=data.dtarray, dN=north_detrended,
+                             dE=east_detrended, dU=vert_detrended, Sn=data.Sn, Se=data.Se, Su=data.Su,
+                             EQtimes=data.EQtimes);
         return newData;
 
     # -------------------------------------------- #
@@ -266,39 +267,39 @@ class Timeseries:
             return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
 
         # Cut to desired window, and remove nans
-        self.remove_nans();
-        self.impose_time_limits(starttime, endtime);
+        data = self.remove_nans();
+        data = data.impose_time_limits(starttime, endtime);
 
         # More defensive programming
-        if len(self.dtarray) <= 2:
-            print("ERROR: no time array for station %s. Returning Nan" % self.name);
+        if len(data.dtarray) <= 2:
+            print("ERROR: no time array for station %s. Returning Nan" % data.name);
             return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
-        time_duration = self.dtarray[-1] - self.dtarray[0];
+        time_duration = data.dtarray[-1] - data.dtarray[0];
         if time_duration.days < 270:
             print(
-                "ERROR: using <<<1 year of data to estimate parameters for station %s. Returning Nan" % self.name);
+                "ERROR: using <<<1 year of data to estimate parameters for station %s. Returning Nan" % data.name);
             return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
-        if len(self.dE) < time_duration.days * missing_fraction:
+        if len(data.dE) < time_duration.days * missing_fraction:
             print(
-                "ERROR: Most of the data is missing to estimate parameters for station %s. Returning Nan" % self.name);
+                "ERROR: Most of the data is missing to estimate parameters for station %s. Returning Nan" % data.name);
             return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan];
 
         # doing the inversion here, since it's only one line.
-        decyear = utilities.get_float_times(self.dtarray);
-        east_coef = np.polyfit(decyear, self.dE, 1);
-        north_coef = np.polyfit(decyear, self.dN, 1);
-        vert_coef = np.polyfit(decyear, self.dU, 1);
+        decyear = utilities.get_float_times(data.dtarray);
+        east_coef = np.polyfit(decyear, data.dE, 1);
+        north_coef = np.polyfit(decyear, data.dN, 1);
+        vert_coef = np.polyfit(decyear, data.dU, 1);
         east_slope, north_slope, vert_slope = east_coef[0], north_coef[0], vert_coef[0];
 
         # How bad is the fit to the line?
         east_trend = [east_coef[0] * x + east_coef[1] for x in decyear];
-        east_detrended = [self.dE[i] - east_trend[i] for i in range(len(self.dE))];
+        east_detrended = [data.dE[i] - east_trend[i] for i in range(len(data.dE))];
         east_std = np.std(east_detrended);
         north_trend = [north_coef[0] * x + north_coef[1] for x in decyear];
-        north_detrended = [self.dN[i] - north_trend[i] for i in range(len(self.dN))];
+        north_detrended = [data.dN[i] - north_trend[i] for i in range(len(data.dN))];
         north_std = np.std(north_detrended);
         vert_trend = [vert_coef[0] * x + vert_coef[1] for x in decyear];
-        vert_detrended = [self.dU[i] - vert_trend[i] for i in range(len(self.dU))];
+        vert_detrended = [data.dU[i] - vert_trend[i] for i in range(len(data.dU))];
         vert_std = np.std(vert_detrended);
 
         return [east_slope, north_slope, vert_slope, east_std, north_std, vert_std];
@@ -308,13 +309,13 @@ class Timeseries:
         Calculate Allan Variance of Rates.
         slope is returned as params[0]
         """
-        self.impose_time_limits(starttime, endtime);
-        x = utilities.get_float_times(self.dtarray);
-        params, covm = lssq_model_errors.AVR(x, self.dE, self.Se, verbose=0);
+        data = self.impose_time_limits(starttime, endtime);
+        x = utilities.get_float_times(data.dtarray);
+        params, covm = lssq_model_errors.AVR(x, data.dE, data.Se, verbose=0);
         Esigma = np.sqrt(covm[0][0]);
-        params, covm = lssq_model_errors.AVR(x, self.dN, self.Sn, verbose=0);
+        params, covm = lssq_model_errors.AVR(x, data.dN, data.Sn, verbose=0);
         Nsigma = np.sqrt(covm[0][0]);
-        params, covm = lssq_model_errors.AVR(x, self.dU, self.Su, verbose=0);
+        params, covm = lssq_model_errors.AVR(x, data.dU, data.Su, verbose=0);
         Usigma = np.sqrt(covm[0][0]);
         return [Esigma, Nsigma, Usigma];
 
@@ -334,9 +335,9 @@ class Timeseries:
 
         if self.has_incompatible_subwindow(starttime_desired=starttime, endtime_desired=endtime):
             return [np.nan, np.nan, np.nan];
-        self.remove_nans();  # Cut to desired window, and remove nans
-        self.impose_time_limits(starttime, endtime);
-        return [np.nanmean(self.dE), np.nanmean(self.dN), np.nanmean(self.dU)];
+        data = self.remove_nans();  # Cut to desired window, and remove nans
+        data = data.impose_time_limits(starttime, endtime);
+        return [np.nanmean(data.dE), np.nanmean(data.dN), np.nanmean(data.dU)];
 
     def get_values_at_date(self, selected_date, num_days=10):
         """
@@ -435,22 +436,22 @@ class Timeseries:
             return [east_params, north_params, vert_params];
 
         # Cut to desired window, and remove nans
-        self.remove_nans();
-        self.impose_time_limits(starttime, endtime);
+        x = self.remove_nans();
+        x = x.impose_time_limits(starttime, endtime);
 
-        duration = self.dtarray[-1] - self.dtarray[0];
+        duration = x.dtarray[-1] - x.dtarray[0];
         if duration.days < critical_len:
             print(
-                "ERROR: using less than 1 year of data to estimate params for station %s. Returning Nan" % self.name);
+                "ERROR: using less than 1 year of data to estimate params for station %s. Returning Nan" % x.name);
             east_params = [np.nan, 0, 0, 0, 0];
             north_params = [np.nan, 0, 0, 0, 0];
             up_params = [np.nan, 0, 0, 0, 0];
             return [east_params, north_params, up_params];
 
-        decyear = utilities.get_float_times(self.dtarray);
-        east_params_unordered = math_functions.invert_linear_annual_semiannual(decyear, self.dE);
-        north_params_unordered = math_functions.invert_linear_annual_semiannual(decyear, self.dN);
-        vert_params_unordered = math_functions.invert_linear_annual_semiannual(decyear, self.dU);
+        decyear = utilities.get_float_times(x.dtarray);
+        east_params_unordered = math_functions.invert_linear_annual_semiannual(decyear, x.dE);
+        north_params_unordered = math_functions.invert_linear_annual_semiannual(decyear, x.dN);
+        vert_params_unordered = math_functions.invert_linear_annual_semiannual(decyear, x.dU);
 
         # The definition for returning parameters:
         # slope, a2(cos), a1(sin), s2, s1.

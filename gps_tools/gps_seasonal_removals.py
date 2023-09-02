@@ -80,7 +80,7 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file, 
 
 
 def remove_seasonals_by_lssq(Data):
-    [east_params, north_params, up_params] = Data.get_linear_annual_semiannual(None, None, 365);
+    [east_params, north_params, up_params] = Data.get_linear_annual_semiannual();
     trend_out = Data.detrend_data_by_value(east_params, north_params, up_params);
     trend_in = Data.remove_seasonal_by_value(east_params, north_params, up_params);
     return trend_out, trend_in;

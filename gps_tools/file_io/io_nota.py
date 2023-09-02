@@ -200,32 +200,6 @@ def write_pbo_pos_file(ts_object, filename, comment=""):
     return;
 
 
-def restrict_pbo_vel_file(infile, outfile, coord_box):
-    """
-    Copying format of pbo velocities, let's make a restricted dataset.
-    In the ideal case, this function should be multiple functions (READ, FILTER, WRITE), or possibly not exist.
-    It strikes me as a little lazy.
-    """
-    ifile = open(infile, 'r');
-    ofile = open(outfile, 'w');
-    start = 0;
-    for line in ifile:
-        if start == 1:
-            nlat = float(line[97:111]);
-            elon = float(line[112:127]);
-            elon = utilities.check_lon_sanity(elon);
-            if coord_box[0] <= elon <= coord_box[1] and coord_box[2] <= nlat <= coord_box[3]:
-                ofile.write(line);
-        if start == 0:
-            ofile.write(line);
-        if line.split()[0][0] == '*':
-            start = 1;
-            continue;
-    ifile.close();
-    ofile.close();
-    return;
-
-
 def parse_earthquake_table_pbo(table):
     """
     Separate a table (from a grep result) into lists of Earthquake Offsets for PBO/NOTA

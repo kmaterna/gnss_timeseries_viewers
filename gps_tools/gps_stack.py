@@ -14,7 +14,7 @@ import datetime as dt
 
 
 def driver(data_config, expname, center, radius, proc_center, refframe, outdir,
-           starttime=dt.datetime.strptime("20050505", "%Y%m%d"), endtime=None):
+           starttime=dt.datetime.strptime("20050505", "%Y%m%d"), endtime=None, write_pos_files=False):
     """
     :param data_config: string, path to data config file
     :param expname: string, used in outdir name
@@ -25,6 +25,7 @@ def driver(data_config, expname, center, radius, proc_center, refframe, outdir,
     :param outdir: string
     :param starttime: dt.datetime
     :param endtime: dt.datetime
+    :param write_pos_files: boolean to decide whether to write output files
     """
     outname = configure(expname, center, radius, outdir);
 
