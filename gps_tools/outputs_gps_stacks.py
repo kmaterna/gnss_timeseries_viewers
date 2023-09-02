@@ -9,11 +9,13 @@ import matplotlib, scipy
 import matplotlib.cm as cm
 import datetime as dt
 import json
+from .gps_ts_functions import get_starttime, get_endtime
 
 
 def write_params(outfile, param_dict):
+    print("Writing stack parameters in %s " % outfile);
     with open(outfile, 'w') as fp:
-        json.dump(param_dict, fp, indent=4)
+        json.dump(param_dict, fp, indent=4, default=str)
     return;
 
 
@@ -216,34 +218,6 @@ def get_plot_params(ts_objects_list, start_time_plot, end_time_plot, label_date,
     if start_time_plot > end_time_plot:
         raise ValueError("Error! Start time of plot is after end time. You likely have an error.");
     return start_time_plot, end_time_plot, label_date, vmin, vmax;
-
-
-def get_starttime_endtime(ts_objects_list):
-    return get_starttime(ts_objects_list), get_endtime(ts_objects_list);
-
-
-def get_starttime(ts_objects_list):
-    """
-    :param ts_objects_list: a list of ts objects
-    :return: earliest time of any ts object
-    """
-    starttime = dt.datetime.strptime('2050-01-01', "%Y-%m-%d");  # crazy guess
-    for item in ts_objects_list:
-        if item.dtarray[0] < starttime:
-            starttime = item.dtarray[0];
-    return starttime;
-
-
-def get_endtime(ts_objects_list):
-    """
-    :param ts_objects_list: a list of ts objects
-    :return: latest time of any ts object
-    """
-    endtime = dt.datetime.strptime('1950-01-01', "%Y-%m-%d");  # crazy guess
-    for item in ts_objects_list:
-        if item.dtarray[-1] > endtime:
-            endtime = item.dtarray[-1];
-    return endtime;
 
 
 def get_labeltime(starttime, endtime, fraction=1/10):

@@ -21,7 +21,7 @@ class Tests(unittest.TestCase):
         database = load_gnss.create_station_repo(config_file, proc_center='cwu', refframe='ITRF');
         database.import_full_velfield();
         [myData, _, _] = database.load_station("P496");
-        myData.remove_nans();  # testing a computational function
+        myData = myData.remove_nans();  # testing a computational function
         _slopes = myData.get_slope();
 
     def test_pbo_database(self):

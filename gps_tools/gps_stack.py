@@ -5,11 +5,11 @@ Viewing a stack of stations
   Step 3: Compute: Remove outliers, earthquakes, and trend from the data.
   Step 4: Plot in order of increasing latitude, colored by how close they are to the central point
 """
-
+import os
 import subprocess
 from . import gps_seasonal_removals, offsets, load_gnss, vel_functions, pygmt_plots, utilities
 from . import outputs_gps_stacks as out_stack
-from .file_io import config_io, io_other
+from .file_io import config_io, io_other, io_nota
 import datetime as dt
 
 
@@ -33,6 +33,7 @@ def driver(data_config, expname, center, radius, proc_center, refframe, outdir,
     [dataobj_list, offsetobj_list, eqobj_list] = database.load_stations(stations);
     param_dict = pack_params(data_config, expname, center, radius, proc_center, refframe, outdir,
                              starttime, endtime, stations);   # for tracking metadata
+    out_stack.write_params(outfile=outdir + "/" + outname + "_stack_params.txt", param_dict=param_dict);
     [detr, _, no_offsets_detr, no_offsets_detr_deseas, distances] = compute(dataobj_list, offsetobj_list, eqobj_list,
                                                                             distances, data_config);
 
@@ -53,7 +54,8 @@ def driver(data_config, expname, center, radius, proc_center, refframe, outdir,
                                       start_time_plot=starttime, end_time_plot=endtime);
 
     pygmt_plots.map_ts_objects(dataobj_list, outdir+"/"+outname+'_map.png', center=center);
-    out_stack.write_params(outfile=outdir+"/"+outname+"_stack_params.txt", param_dict=param_dict);
+    if write_pos_files:
+        write_stack_pos_files(detr, outdir, outname);
     return no_offsets_detr_deseas;
 
 
@@ -73,6 +75,10 @@ def configure(expname, center, radius, outdir):
     return outname;
 
 
+def pack_params(data_config_file, expname, center, radius, proc_center, refframe, outdir, starttime, endtime, stations):
+    return locals();
+
+
 def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_file):
     latitudes_list = [i.coords[1] for i in dataobj_list];
     sorted_objects = [x for _, x in sorted(zip(latitudes_list, dataobj_list))];  # the raw, sorted data.
@@ -86,6 +92,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
     for i in range(len(sorted_objects)):
         newobj = gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq', data_config_file);
         newobj = newobj.remove_outliers(20);  # 20mm outlier definition
+        newobj = offsets.remove_offsets(newobj, sorted_offsets[i]);  # mechanical offsets
         detr_objs.append(newobj);  # still has offsets, doesn't have trends
 
         newobj = offsets.remove_offsets(sorted_objects[i], sorted_offsets[i]);
@@ -109,23 +116,6 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
 
     return [detr_objs, no_offset_objs, no_offsets_detr, no_offsets_detr_deseas, sorted_distances];
 
-def pack_params(data_config_file, expname, center, radius, proc_center, refframe, outdir, starttime, endtime, stations):
-    if starttime:
-        starttime = dt.datetime.strftime(starttime, "%Y-%m-%d");
-    if endtime:
-        endtime = dt.datetime.strftime(endtime, "%Y-%m-%d");
-    param_dict = {"data_config_file": data_config_file,
-                  "expname": expname,
-                  "center": center,
-                  "radius": radius,
-                  "proc_center": proc_center,
-                  "refframe": refframe,
-                  "outdir": outdir,
-                  "starttime": starttime,
-                  "endtime": endtime,
-                  "stations": stations}
-    return param_dict;
-
 
 def extract_stack_displacements(data_obj_list, starttime, endtime, num_days=3):
     """
@@ -146,3 +136,11 @@ def extract_stack_displacements(data_obj_list, starttime, endtime, num_days=3):
                                           first_epoch=starttime, last_epoch=endtime, name=ts.name);
         displacements.append(newpt);
     return displacements;
+
+
+def write_stack_pos_files(data_obj_list, outdir, outname):
+    os.makedirs(outdir+'/TS_'+outname, exist_ok=True);
+    for item in data_obj_list:
+        io_nota.write_pbo_pos_file(item, outdir+'/TS_'+outname+'/'+item.name+'_detrended.pos');
+        test = io_nota.read_pbo_pos_file(outdir+'/TS_'+outname+'/'+item.name+'_detrended.pos');
+    return;

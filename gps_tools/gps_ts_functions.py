@@ -590,3 +590,34 @@ def get_linear_annual_semiannual(Data0: Timeseries, starttime=None, endtime=None
 
 def get_mean_position(Data0: Timeseries, starttime=None, endtime=None):
     return Data0.get_mean_position(starttime, endtime);
+
+# -------------------------------------------- #
+# FUNCTIONS ON LISTS OF TS OBJECTS
+# -------------------------------------------- #
+
+def get_starttime(ts_objects_list):
+    """
+    :param ts_objects_list: a list of ts objects
+    :return: earliest time of any ts object
+    """
+    starttime = dt.datetime.strptime('2050-01-01', "%Y-%m-%d");  # crazy guess
+    for item in ts_objects_list:
+        if item.dtarray[0] < starttime:
+            starttime = item.dtarray[0];
+    return starttime;
+
+
+def get_endtime(ts_objects_list):
+    """
+    :param ts_objects_list: a list of ts objects
+    :return: latest time of any ts object
+    """
+    endtime = dt.datetime.strptime('1950-01-01', "%Y-%m-%d");  # crazy guess
+    for item in ts_objects_list:
+        if item.dtarray[-1] > endtime:
+            endtime = item.dtarray[-1];
+    return endtime;
+
+
+def get_starttime_endtime(ts_objects_list):
+    return get_starttime(ts_objects_list), get_endtime(ts_objects_list);
