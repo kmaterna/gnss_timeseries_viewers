@@ -190,3 +190,19 @@ def read_creepmeter(filename) -> Timeseries:
     creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement,
                                  dN=(), dU=(), Sn=(), Se=(), Su=());
     return creepmeter_data;
+
+def read_creepmeter2(filename) -> Timeseries:
+    """
+    Read an excel file for creep-meter timeseries such as those from the Imperial Valley.
+
+    :param filename: string, filename
+    :return: a TimeSeries object
+    """
+    print("Reading file %s " % filename);
+    df = pandas.read_excel(filename, sheet_name=0)
+    ts = df['date'].values;
+    dtarray = [pandas.to_datetime(x) for x in ts];
+    displacement = df['slip'].values.tolist();
+    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement,
+                                 dN=(), dU=(), Sn=(), Se=(), Su=());
+    return creepmeter_data;
