@@ -136,7 +136,7 @@ class Timeseries:
                                  Se=np.array(temp_Se), Su=np.array(temp_Su), EQtimes=self.EQtimes);
         return newData;
 
-    def remove_constant(self, east_offset=0, north_offset=0, vert_offset=0):
+    def remove_constant(self, east_offset=0.0, north_offset=0.0, vert_offset=0.0):
         """Subtract a constant number from each data array in a time series object
 
         :param east_offset: a scalar, in mm
@@ -149,6 +149,16 @@ class Timeseries:
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=self.dtarray,
                              dN=np.array(temp_north), dE=np.array(temp_east), dU=np.array(temp_vert),
                              Sn=self.Sn, Se=self.Se, Su=self.Su, EQtimes=self.EQtimes);
+        return newData;
+
+    def set_zero_mean(self):
+        """
+        Subtract a constant such that each of dE, dN, and dU have zero mean.
+        """
+        east0 = float(np.nanmean(self.dE));
+        north0 = float(np.nanmean(self.dN));
+        vert0 = float(np.nanmean(self.dU));
+        newData = self.remove_constant(east_offset=east0, north_offset=north0, vert_offset=vert0);
         return newData;
 
     def embed_tsobject_with_eqdates(self, eq_obj):
@@ -627,3 +637,43 @@ def get_endtime(ts_objects_list):
 
 def get_starttime_endtime(ts_objects_list):
     return get_starttime(ts_objects_list), get_endtime(ts_objects_list);
+
+
+def filter_to_station_subset(ts_objects_list, desired_station_list):
+    """
+    :param ts_objects_list: list of Timeseries objects
+    :param desired_station_list: list of strings
+    :return: list of Timeseries objects
+    """
+    return [x for x in ts_objects_list if x.name in desired_station_list];
+
+
+def get_mean_ts(list_of_ts_objects):
+    """
+    Take a number of timeseries objects and create a new one that's the mean of the originals.
+    """
+    list_of_ts_objects = [x.set_zero_mean() for x in list_of_ts_objects];
+    starttime = get_starttime(list_of_ts_objects);
+    endtime = get_endtime(list_of_ts_objects);
+    dtarray, dE_mean, dN_mean, dU_mean, Se_mean, Sn_mean, Su_mean = [], [], [], [], [], [], [];
+    target_date = starttime;
+    while target_date < endtime:
+        dtarray.append(target_date);
+        east_vals, north_vals, up_vals = [], [], [];
+        for station in list_of_ts_objects:
+            if target_date in station.dtarray:
+                e_value, n_value, u_value = station.get_values_at_date(target_date, num_days=1);
+                east_vals.append(e_value);
+                north_vals.append(n_value);
+                up_vals.append(u_value);
+        dE_mean.append(np.nanmean(east_vals));
+        dN_mean.append(np.nanmean(north_vals));
+        dU_mean.append(np.nanmean(up_vals));
+        Se_mean.append(np.nanstd(east_vals));
+        Sn_mean.append(np.nanstd(north_vals));
+        Su_mean.append(np.nanstd(up_vals));
+        target_date = target_date + dt.timedelta(days=1);
+    avg_ts = Timeseries(name='mean', coords=(np.nan, np.nan), dtarray=dtarray,
+                        dE=np.array(dE_mean), dN=np.array(dN_mean), dU=np.array(dU_mean), Se=np.array(Se_mean),
+                        Sn=np.array(Sn_mean), Su=np.array(Su_mean), EQtimes=list_of_ts_objects[0].EQtimes);
+    return avg_ts;
