@@ -1,0 +1,8 @@
+[data-config]
+
+gps_ts_dir = Time_Series/
+offsets_file = Offsets/UNR_steps_2022.txt
+user_offsets_file = Offsets/UNR_userdefined_offsets.txt
+velocities_nam = Velocities/midas.NA_sept2022.txt
+velocities_itrf = Velocities/midas.IGS14_sept2022.txt
+coords_file = Metadata/UNR_coords_sept2022.txt

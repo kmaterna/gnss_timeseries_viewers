@@ -1,0 +1,14 @@
+# Example Config file for GPS Time Series Analysis stream, including velocities, time series, and offsets
+#############################################
+# 
+[py-config]
+
+gps_data_dir = /Users/Path/to/../GPS_POS_Data/
+blacklist = /Users/Path/to/../GPS_POS_DATA/Blacklist/blacklist.txt
+
+pbo_config = /Users/Path/to/../GPS_POS_DATA/Earthscope_Data/pbo_config.txt
+cwu_config = /Users/Path/to/../GPS_POS_DATA/Earthscope_Data/cwu_config.txt
+nmt_config = /Users/Path/to/../GPS_POS_DATA/Earthscope_Data/nmt_config.txt
+unr_config = /Users/Path/to/../GPS_POS_DATA/UNR_Data/unr_config.txt
+usgs_config = /Users/Path/to/../GPS_POS_DATA/USGS_Data/usgs_config.txt
+hydro_config = /Users/Path/to/../GPS_POS_DATA/Hydro/hydro_config.txt
