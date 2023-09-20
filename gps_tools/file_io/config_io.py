@@ -33,7 +33,8 @@ def read_config_file(infile):
         if 'config' in key:
             database_name = key.split('_')[0];
             one_dictionary = read_one_database_config(config_section[key], 'data-config');
-            one_dictionary['directory'] = os.path.join('/', *param_dict[key].split('/')[0:-1])+'/';  # WORK IN PROGRESS
+            head, _ = os.path.split(param_dict[key]);
+            one_dictionary['directory'] = os.path.join(head, "");  #  add trailing slash
             param_dict[database_name] = one_dictionary;
     return param_dict;
 

@@ -3,7 +3,7 @@ Make a basic python plot of single-station position time series with corrections
 """
 
 import matplotlib.pyplot as plt
-import subprocess
+import os
 from . import gps_seasonal_removals, offsets, load_gnss
 import datetime as dt
 
@@ -170,7 +170,7 @@ def get_figure_name(plot_params, db_params, outdir=""):
     savename = outdir + db_params["station"];
     title = db_params["station"];
     if outdir != '':
-        subprocess.call(['mkdir', '-p', outdir], shell=False);
+        os.makedirs(outdir, exist_ok=True)
 
     title = title + ', ' + db_params["datasource"] + ' ' + db_params["refframe"];
     if plot_params["earthquakes_remove"] == 0 and plot_params["offsets_remove"] == 0 and \
