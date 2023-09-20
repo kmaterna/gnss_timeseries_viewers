@@ -200,6 +200,12 @@ class Timeseries:
         return filtered_ts;
 
     def detrend_data_by_value(self, east_params, north_params, vert_params):
+        """
+        :param east_params: list of floats [slope, a2(cos), a1(sin), s2(cos) s2(sin)]
+        :param north_params: list of floats [slope, a2(cos), a1(sin), s2(cos) s2(sin)]
+        :param vert_params: list of floats [slope, a2(cos), a1(sin), s2(cos) s2(sin)]
+        :return: a detrended Timeseries object
+        """
         if sum(np.isnan(east_params)) > 0 or sum(np.isnan(north_params)) > 0 or sum(np.isnan(vert_params)) > 0:
             print("ERROR: Your input slope values contain nan!");
             return self;
@@ -223,6 +229,18 @@ class Timeseries:
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=data.dtarray, dN=north_detrended,
                              dE=east_detrended, dU=vert_detrended, Sn=data.Sn, Se=data.Se, Su=data.Su,
                              EQtimes=data.EQtimes);
+        return newData;
+
+    def simple_detrend(self, starttime=None, endtime=None):
+        """
+        The simplest de-trending option just based upon the linear slope from starttime to endttime.
+
+        :param starttime: dt.datetime
+        :param endtime: dt.datetime
+        :return: a Timeseries object
+        """
+        [e_slope, n_slope, u_slope, _, _, _] = self.get_slope(starttime=starttime, endtime=endtime);
+        newData = self.detrend_data_by_value([e_slope, 0, 0, 0, 0], [n_slope, 0, 0, 0, 0], [u_slope, 0, 0, 0, 0]);
         return newData;
 
     def remove_seasonal_by_value(self, east_params, north_params, vert_params):
