@@ -114,41 +114,44 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
 
     # noinspection PyTypeChecker
     [_, axarr] = plt.subplots(3, 1, sharex=True, figsize=(10, 7), dpi=dpival);
-    axarr[0].plot_date(ts_obj.dtarray, ts_obj.dE, color='blue', markeredgecolor='black', markersize=markersize);
+    axarr[0].plot(ts_obj.dtarray, ts_obj.dE, color='blue', markeredgecolor='black', marker='.', markersize=markersize,
+                  linestyle='');
     axarr[0].grid(linestyle='--', linewidth=grid_linewidth);
     axarr[0].set_ylabel('east (mm)', fontsize=label_fontsize);
     bottom, top = axarr[0].get_ylim();
     for i in range(len(ts_obj.EQtimes)):
-        axarr[0].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth);
+        axarr[0].plot([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth);
     if detrended:
         ax1 = axarr[0].twinx();
-        ax1.plot_date(detrended.dtarray, detrended.dE, marker='D', markersize=1.0, color='red');
+        ax1.plot(detrended.dtarray, detrended.dE, marker='D', markersize=1.0, color='red', linestyle='');
         ax1.set_ylabel(detrended_label+' (mm)', fontsize=label_fontsize - 2, color='red');
         ax1.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[0].tick_params(labelsize=label_fontsize);
 
-    axarr[1].plot_date(ts_obj.dtarray, ts_obj.dN, color='blue', markeredgecolor='black', markersize=markersize);
+    axarr[1].plot(ts_obj.dtarray, ts_obj.dN, color='blue', markeredgecolor='black', marker='.', markersize=markersize,
+                  linestyle='');
     axarr[1].grid(linestyle='--', linewidth=grid_linewidth);
     axarr[1].set_ylabel('north (mm)', fontsize=label_fontsize);
     bottom, top = axarr[1].get_ylim();
     for i in range(len(ts_obj.EQtimes)):
-        axarr[1].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth);
+        axarr[1].plot([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth);
     if detrended:
         ax2 = axarr[1].twinx();
-        ax2.plot_date(detrended.dtarray, detrended.dN, marker='D', markersize=1.0, color='red');
+        ax2.plot(detrended.dtarray, detrended.dN, marker='D', markersize=1.0, color='red', linestyle='');
         ax2.set_ylabel(detrended_label+' (mm)', fontsize=label_fontsize - 2, color='red');
         ax2.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[1].tick_params(labelsize=label_fontsize);
 
-    axarr[2].plot_date(ts_obj.dtarray, ts_obj.dU, color='blue', markeredgecolor='black', markersize=markersize);
+    axarr[2].plot(ts_obj.dtarray, ts_obj.dU, color='blue', markeredgecolor='black', marker='.', markersize=markersize,
+                  linestyle='');
     axarr[2].grid(linestyle='--', linewidth=grid_linewidth);
     axarr[2].set_ylabel('vertical (mm)', fontsize=label_fontsize);
     bottom, top = axarr[2].get_ylim();
     for i in range(len(ts_obj.EQtimes)):
-        axarr[2].plot_date([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth);
+        axarr[2].plot([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth);
     if detrended:
         ax3 = axarr[2].twinx();
-        ax3.plot_date(detrended.dtarray, detrended.dU, marker='D', markersize=1.0, color='red');
+        ax3.plot(detrended.dtarray, detrended.dU, marker='D', markersize=1.0, color='red', linestyle='');
         ax3.set_ylabel(detrended_label+' (mm)', fontsize=label_fontsize - 2, color='red');
         ax3.tick_params(labelcolor='red', labelsize=label_fontsize, axis='both')
     axarr[2].set_xlim([min(ts_obj.dtarray)-dt.timedelta(days=buffer_days),

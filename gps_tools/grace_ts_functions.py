@@ -48,9 +48,9 @@ def pair_GPSGRACE(GPS_TS, GRACE_TS):
 def plot_grace(station_name, filename, out_dir):
     grace_ts = io_other.read_grace(filename);
     plt.figure();
-    plt.plot_date(grace_ts.dtarray, grace_ts.u, '-b');
-    plt.plot_date(grace_ts.dtarray, grace_ts.v, '-g');
-    plt.plot_date(grace_ts.dtarray, grace_ts.w, '-r');
+    plt.plot(grace_ts.dtarray, grace_ts.dE, '-b');
+    plt.plot(grace_ts.dtarray, grace_ts.dN, '-g');
+    plt.plot(grace_ts.dtarray, grace_ts.dU, '-r');
     plt.legend(['east', 'north', 'vertical']);
     plt.grid(True);
     plt.xlabel('Time');

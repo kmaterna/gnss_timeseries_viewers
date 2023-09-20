@@ -60,7 +60,7 @@ def download_usgs_velocity_tables(network, base_directory, outfile):
     df_list = pd.read_html(requests.get(url).content)
     print("Reading %d tables on website %s " % (len(df_list), url) );
     if len(df_list) == 3:
-        subprocess.call(['mkdir', '-p', base_directory], shell=False);
+        os.makedirs(base_directory, exist_ok=True);
         print("Assuming they follow the pattern NAM, ITRF2008, Filtered");
 
         # NORTH AMERICA
@@ -107,7 +107,7 @@ def download_usgs_offset_tables(network, base_directory, outfile):
         return;
     print("Reading %d tables on website %s " % (len(df_list), url) );
     if len(df_list) == 3:
-        subprocess.call(['mkdir', '-p', base_directory], shell=False);
+        os.makedirs(base_directory, exist_ok=True);
         print("Assuming they follow the pattern NAM, ITRF2008, Filtered");
 
         # NORTH AMERICA
@@ -151,7 +151,7 @@ def download_usgs_ts_file(station, network, ts_base_directory):
     They will be organized by network, as they are in the USGS database
     """
     directory_name = ts_base_directory + network + '/';
-    subprocess.call(['mkdir', '-p', directory_name], shell=False);
+    os.makedirs(directory_name, exist_ok=True);
     url_name = base_url + 'data/networks/' + network + '/' + station.lower() + '/nafixed/' + station.lower() + '.rneu'
     subprocess.call(["wget", url_name, '-O', directory_name+station.lower()+'_NAfixed.rneu'], shell=False);
     url_name = base_url + 'data/networks/' + network + '/' + station.lower() + '/itrf2008/' + station.lower() + '.rneu'

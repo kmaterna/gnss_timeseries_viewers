@@ -6,7 +6,6 @@ Viewing a stack of stations
   Step 4: Plot in order of increasing latitude, colored by how close they are to the central point
 """
 import os
-import subprocess
 from . import gps_seasonal_removals, offsets, load_gnss, vel_functions, pygmt_plots, utilities
 from . import outputs_gps_stacks as out_stack
 from .file_io import config_io, io_other, io_nota
@@ -70,7 +69,7 @@ def build_database(data_config_file, proc_center, refframe, center, radius):
 
 
 def configure(expname, center, radius, outdir):
-    subprocess.call(["mkdir", "-p", outdir], shell=False);
+    os.makedirs(outdir, exist_ok=True);
     outname = expname + "_" + str(center[0]) + "_" + str(center[1]) + "_" + str(radius)
     return outname;
 

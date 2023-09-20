@@ -34,7 +34,7 @@ def read_config_file(infile):
             database_name = key.split('_')[0];
             one_dictionary = read_one_database_config(config_section[key], 'data-config');
             head, _ = os.path.split(param_dict[key]);
-            one_dictionary['directory'] = os.path.join(head, "");  #  add trailing slash
+            one_dictionary['directory'] = os.path.join(head, "");  # add trailing slash
             param_dict[database_name] = one_dictionary;
     return param_dict;
 

@@ -38,12 +38,12 @@ def horizontal_full_ts(dataobj_list, distances, outname, removemean=1, start_tim
             emean = 0;  # leave the data un-meaned
         edata = [x + offset - emean for x in edata];
         line_color = custom_cmap.to_rgba(distances[i]);
-        _l1 = axarr[0].plot_date(dataobj_list[i].dtarray, edata, marker='+', markersize=4.5, color=line_color);
+        _l1 = axarr[0].plot(dataobj_list[i].dtarray, edata, marker='+', markersize=4.5, color=line_color);
         axarr[0].text(label_date, offset, dataobj_list[i].name, fontsize=9, color=line_color);
     axarr[0].set_xlim(start_plot, end_plot);
     bottom, top = axarr[0].get_ylim();
     for i in range(len(eqtimes)):
-        axarr[0].plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
+        axarr[0].plot([eqtimes[i], eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
     axarr[0].tick_params(axis='x', labelrotation=40)
     axarr[0].set_ylabel("East (mm)");
     axarr[0].set_title("East GNSS Time Series")
@@ -58,11 +58,11 @@ def horizontal_full_ts(dataobj_list, distances, outname, removemean=1, start_tim
             nmean = 0;  # leave the data un-meaned
         ndata = [x + offset - nmean for x in ndata];
         line_color = custom_cmap.to_rgba(distances[i]);
-        _l1 = axarr[1].plot_date(dataobj_list[i].dtarray, ndata, marker='+', markersize=4.5, color=line_color);
+        _l1 = axarr[1].plot(dataobj_list[i].dtarray, ndata, marker='+', markersize=4.5, color=line_color);
     axarr[1].set_xlim(start_plot, end_plot);
     bottom, top = axarr[1].get_ylim();
     for i in range(len(eqtimes)):
-        axarr[1].plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
+        axarr[1].plots([eqtimes[i], eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
     axarr[1].set_ylabel("North (mm)");
     axarr[1].set_title("North GNSS Time Series")
     axarr[1].grid(True)
@@ -95,13 +95,13 @@ def vertical_full_ts(dataobj_list, distances, outname, removemean=1, start_time_
             umean = 0;  # leave the data un-meaned
         udata = [x + offset - umean for x in udata];
         line_color = custom_cmap.to_rgba(distances[i]);
-        _l1 = plt.gca().plot_date(dataobj_list[i].dtarray, udata, marker='+', markersize=1.5, color=line_color);
+        _l1 = plt.gca().plot(dataobj_list[i].dtarray, udata, marker='+', markersize=1.5, color=line_color);
         plt.gca().text(label_date, offset, dataobj_list[i].name, fontsize=9, color=line_color);
     plt.gca().set_xlim(start_plot, end_plot);
     plt.gca().tick_params(axis='x', labelrotation=40)
     bottom, top = plt.gca().get_ylim();
     for i in range(len(eqtimes)):
-        plt.gca().plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
+        plt.gca().plot([eqtimes[i], eqtimes[i]], [bottom, top], '--k', linewidth=0.75);
     plt.gca().set_ylabel("Vertical (mm)");
     plt.gca().set_title("Vertical GNSS Time Series")
     plt.gca().grid(True)
@@ -136,7 +136,7 @@ def horizontal_filtered_plots(dataobj_list, distances, outname, start_time_plot=
     axarr[0].set_xlim(start_plot, end_plot);
     bottom, top = axarr[0].get_ylim();
     for i in range(len(eqtimes)):
-        axarr[0].plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k');
+        axarr[0].plot([eqtimes[i], eqtimes[i]], [bottom, top], '--k');
     axarr[0].set_ylabel("Filtered East (mm)");
     axarr[0].set_title("Filtered GNSS Time Series")
     axarr[0].grid(True)
@@ -151,7 +151,7 @@ def horizontal_filtered_plots(dataobj_list, distances, outname, start_time_plot=
     axarr[1].set_xlim(start_plot, end_plot);
     bottom, top = axarr[1].get_ylim();
     for i in range(len(eqtimes)):
-        axarr[1].plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k');
+        axarr[1].plot([eqtimes[i], eqtimes[i]], [bottom, top], '--k');
     axarr[1].set_ylabel("Filtered North (mm)");
     axarr[1].grid(True)
 
@@ -186,7 +186,7 @@ def vertical_filtered_plots(dataobj_list, distances, outname, start_time_plot=No
     plt.gca().set_xlim(start_plot, end_plot);
     bottom, top = plt.gca().get_ylim();
     for i in range(len(eqtimes)):
-        plt.gca().plot_date([eqtimes[i], eqtimes[i]], [bottom, top], '--k');
+        plt.gca().plot([eqtimes[i], eqtimes[i]], [bottom, top], '--k');
     plt.gca().set_ylabel("Filtered Vertical (mm)");
     plt.gca().set_title("Filtered Vertical GNSS Time Series")
     plt.gca().grid(True)
