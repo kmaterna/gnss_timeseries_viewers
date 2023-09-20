@@ -33,8 +33,7 @@ def read_config_file(infile):
         if 'config' in key:
             database_name = key.split('_')[0];
             one_dictionary = read_one_database_config(config_section[key], 'data-config');
-            one_dictionary['directory'] = "/".join(param_dict[key].split('/')[0:-1])+'/';  # the directory for data
-            # one_dictionary['directory'] = os.path.join(list(param_dict[key].split('/')[0:-1]));  # WORK IN PROGRESS
+            one_dictionary['directory'] = os.path.join('/', *param_dict[key].split('/')[0:-1])+'/';  # WORK IN PROGRESS
             param_dict[database_name] = one_dictionary;
     return param_dict;
 

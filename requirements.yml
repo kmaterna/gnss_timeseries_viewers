@@ -1,0 +1,25 @@
+# create environment : conda env create -f requirements.yml
+# update dependencies: conda env update -f requirements.yml
+# remove environment : conda env remove -n gnss
+# enter  environment : conda activate gnss
+# exit   environment : conda deactivate
+name: gnss
+channels:
+ - conda-forge
+ - anaconda
+ - defaults
+dependencies:
+ - python>=3.9
+ - matplotlib
+ - numpy
+ - scipy
+ - gmt
+ - pygmt
+ - pandas
+ - pip
+ - netCDF4
+ - html5lib
+ - beautifulsoup4
+ - pip:
+    - Tectonic-Utils
+    - earthscope-cli

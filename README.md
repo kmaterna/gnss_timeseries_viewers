@@ -7,21 +7,20 @@ This library contains a set of tools to read GNSS time series and velocities, re
 ## Dependencies and Installation
 For full functionality, this library requires the Python packages listed in requirements.txt. 
 You can create a new Conda environment using requirements.txt, or you can manually ensure that you have each of those libraries installed.
-If you're manually creating the environment, don't forget the pip libraries: [Tectonic-Utils](https://github.com/kmaterna/Tectonic_Utils), 
-and the [Earthscope CLI](https://gitlab.com/earthscope/public/earthscope-cli) for downloading Earthscope time series after 2023. 
-For the mapping utility, I use the [pygmt](https://github.com/GenericMappingTools/pygmt) library.
+If doing manual setup, don't forget the pip libraries: [Tectonic-Utils](https://github.com/kmaterna/Tectonic_Utils), 
+and the [Earthscope CLI](https://gitlab.com/earthscope/public/earthscope-cli) for downloading Earthscope time series.
 
-Git clone this library onto your local machine and add the parent directory storing "GNSS_TimeSeries_Viewers" on your $PYTHONPATH. 
+Git clone this library onto your local machine and add the parent directory containing "GNSS_TimeSeries_Viewers" on your $PYTHONPATH. 
 
 
 ## Accessing Prerequisite GNSS Data
-This library requires a local copy of GNSS time series, velocities, steps, offsets, and/or hydrological loading models from 
-at least one GNSS database in their online-provided formats. Each one is slightly different.  The file ```getting_gnss_data/metadata.txt``` describes some of how to locate and download these files.
+This library requires you to create a local copy of your desired GNSS time series, velocities, steps, offsets, and/or hydrological loading models from 
+at least one GNSS database. Each GNSS data source is slightly different.  The file ```getting_gnss_data/metadata.txt``` describes how to locate and download these files.
 Remember that Earthscope now requires a log-in and the Earthscope-CLI for wget access.  
  
 
 The script ```getting_gnss_data/update_data_holdings.sh``` now automates the download of many repositories locally, which might take 
-a few hours (and ~10Gb) if you're downloading every time series from every processing center.  See specific scripts for individual databases.  
+a few hours (and ~10Gb) if you're downloading every time series from every processing center.  See specific scripts for individual databases that you might want.  
 
 ## Configuration
 
@@ -68,7 +67,7 @@ usgs_config = /Users/Path/to/../GPS_POS_DATA/USGS_Data/usgs_config.txt
 hydro_config = /Users/Path/to/../GPS_POS_DATA/Hydro/hydro_config.txt
 ```
 
-and each of the inner config files reflect what is inside each database (see templates in the ```examples/``` directory). 
+Each of the inner config files contain relative filepaths to each database (see templates in the ```examples/``` directory). 
 Please follow a similar templates for your own system. The path to the ```config.txt``` file will be passed into the library each time you use it.
 
 
