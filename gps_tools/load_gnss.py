@@ -199,7 +199,7 @@ class USGS_Proc_Engine:
             network_list = io_usgs.query_usgs_network_name(station_name, self.file_params['usgs']['directory'] +
                                                            self.file_params['usgs']['gps_ts_dir']);
             if len(network_list) == 1:
-                self.subnetwork = network_list[0].split('/')[-1];
+                self.subnetwork = os.path.split(network_list[0])[1];
             else:
                 print("ERROR! User must select one sub-network for USGS time series. Exiting. ");
                 sys.exit(1);

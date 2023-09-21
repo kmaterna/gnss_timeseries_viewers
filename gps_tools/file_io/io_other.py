@@ -4,7 +4,7 @@ File to read and write data from miscellaneous formats
 """
 import datetime as dt
 import numpy as np
-import pandas
+import pandas, os
 from .io_magnet_unr import get_coordinates_for_unr_stations
 from ..vel_functions import Station_Vel
 from ..gps_ts_functions import Timeseries
@@ -21,7 +21,7 @@ def read_lsdm_file(filename, coords_file=None) -> Timeseries:
     """
     print("Reading %s" % filename);
     dtarray = [];
-    station_name = filename.split('/')[-1][0:4];
+    station_name = os.path.split(filename)[1][0:4];
     if coords_file is not None:
         [lon, lat] = get_coordinates_for_unr_stations([station_name], coords_file);  # format [lat, lon]
         coords = [lon[0], lat[0]];
@@ -51,7 +51,7 @@ def read_grace(filename) -> Timeseries:
     :returns: TimeSeries object
     """
     print("Reading %s" % filename);
-    station_name = filename.split('/')[-1];  # this is the local name of the file
+    station_name = os.path.split(filename)[1];  # this is the local name of the file
     station_name = station_name.split('_')[1];  # this is the four-character name
     [dts, lon, lat, _, u, v, w] = np.loadtxt(filename, usecols=range(0, 7),
                                              dtype={'names': ('dts', 'lon', 'lat', 'elev', 'u', 'v', 'w'),

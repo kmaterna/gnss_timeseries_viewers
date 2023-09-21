@@ -135,7 +135,7 @@ def read_pbo_pos_file(filename) -> Timeseries:
     Sn = [i * 1000.0 for i in Sn];
     Se = [i * 1000.0 for i in Se];
     Su = [i * 1000.0 for i in Su];
-    specific_file = filename.split('/')[-1];
+    _, specific_file = os.path.split(filename);
     dtarray = [dt.datetime.strptime(str(int(i)), "%Y%m%d") for i in yyyymmdd];
     myData = Timeseries(name=specific_file[0:4], coords=[Elong, Nlat[0]], dtarray=dtarray, dN=dN, dE=dE, dU=dU,
                         Sn=Sn, Se=Se, Su=Su, EQtimes=[]);
@@ -156,7 +156,7 @@ def read_pbo_hydro_file(filename, coords_file=None) -> Timeseries:
     """
     print("Reading %s" % filename);
     dtarray = [];
-    station_name = filename.split('/')[-1][0:4];  # first 4 characters of filename
+    station_name = os.path.split(filename)[1][0:4];  # first 4 characters of filename
     station_name = station_name.upper();
     if coords_file is not None:
         [lon, lat] = get_coordinates_for_unr_stations([station_name], coords_file);  # format [lat, lon]

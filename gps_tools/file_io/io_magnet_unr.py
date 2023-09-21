@@ -2,7 +2,7 @@
 File to read and write data from Magnet / University of Nevada Reno formats
 """
 import datetime as dt
-import subprocess, sys
+import subprocess, sys, os
 import numpy as np
 from .. import utilities
 from ..vel_functions import Station_Vel
@@ -79,7 +79,7 @@ def read_UNR_magnet_ts_file(filename, coordinates_file) -> Timeseries:
                                                            'formats': ('U7', float, float, float,
                                                                        float, float, float)});
 
-    station_name = filename.split('/')[-1][0:4];  # the first four characters of the filename
+    station_name = os.path.split(filename)[1][0:4]  # the first four characters of the filename
     dtarray = [dt.datetime.strptime(x, '%y%b%d') for x in datestrs];  # has format 07SEP19
     dN = [i * 1000.0 for i in dN];
     dE = [i * 1000.0 for i in dE];
