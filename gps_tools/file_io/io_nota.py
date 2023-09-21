@@ -3,6 +3,7 @@
 File to read and write data from Network of the Americas / Plate Boundary Observatory formats
 """
 import datetime as dt
+import os.path
 import subprocess
 import numpy as np
 from .. import utilities
@@ -216,14 +217,12 @@ def parse_earthquake_table_pbo(table):
         if len(item) == 0:
             continue;  # if we're at the end, move on.
         words = item.split();
-        filename = words[0];
-        e_offset, n_offset, u_offset = float(words[3]), float(words[4]), float(words[8]);  # in mm
-        evdate = filename.split('/')[-1];
-        evdate = evdate[4:10];
-        year = evdate[0:2];
+        filename = words[-1];
+        e_offset, n_offset, u_offset = float(words[2]), float(words[3]), float(words[7]);  # in mm
+        evdate = filename[4:10];
+        year = "20" + evdate[0:2];
         month = evdate[2:4];
         day = evdate[4:6];
-        year = "20" + year;
         evdt = dt.datetime.strptime(year + month + day, "%Y%m%d");
         offi = Offset(e_offset=e_offset, n_offset=n_offset, u_offset=u_offset, evdt=evdt);
         offset_list.append(offi);
@@ -244,15 +243,11 @@ def parse_antenna_table_pbo(table):
     for line in table_rows:
         if "EQ" in line:
             continue;
-        else:
-            print(line);
         if len(line) == 0:
             continue;  # if we're at the end, move on.
         words = line.split();
         yyyy, mm, dd = words[1], words[2], words[3];
-        e_offset = float(words[8]);  # in mm
-        n_offset = float(words[6]);
-        u_offset = float(words[10]);
+        e_offset, n_offset, u_offset = float(words[8]), float(words[6]), float(words[10]);  # in mm
         evdt = dt.datetime.strptime(yyyy + mm + dd, "%Y%m%d");
         offi = Offset(e_offset=e_offset, n_offset=n_offset, u_offset=u_offset, evdt=evdt);
         offset_list.append(offi);
@@ -260,21 +255,17 @@ def parse_antenna_table_pbo(table):
 
 
 def search_files_for_nota_offsets(station_name, offset_dir, file_pattern):
-    """Grep offsets table from the files in PBO/NOTA. File Pattern is something like cwu*kalts.evt  """
+    """Find offsets in tables from PBO/NOTA. File pattern is something like cwu*kalts.evt or cwu*.off"""
     try:
-        #table = subprocess.check_output("grep " + station_name + " " + offset_dir + file_pattern, shell=True);
-        #grep and wildcard filenames don't work on windows by default, so this is a workaround
-        #note that this also skips header lines and just takes the first file meeting the wildcard requirements
-        file_name = glob.glob(offset_dir+file_pattern)[0]
-        with open(file_name,'r') as offset_file:
-            table = ''
-            for line in offset_file:
-                if line[0] == ' ': #excludes header lines (all data lines seem to start with a space)
-                    if station_name in line:
-                        table+line
+        file_names = glob.glob(offset_dir+file_pattern)   # replacing grep with native python code for windows compat.
+        table = '';
+        for file in file_names:
+            with open(file, 'r') as offset_file:
+                for line in offset_file:
+                    if line[0] == ' ':  # excludes header lines (all data lines seem to start with a space)
+                        if station_name in line and len(line) > 0:
+                            line = line.strip('\n') + ' ' + os.path.split(file)[1] + '\n';  # place the filename there
+                            table = table + line
     except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
         table = []
-    #if len(table) > 0:
-        #table = table.decode();  # needed when switching to python 3
-    # not needed with new strings
     return table;
