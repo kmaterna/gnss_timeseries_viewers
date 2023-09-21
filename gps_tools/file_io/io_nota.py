@@ -10,6 +10,7 @@ from .io_magnet_unr import get_coordinates_for_unr_stations
 from ..vel_functions import Station_Vel
 from ..gps_ts_functions import Timeseries
 from ..offsets import Offset
+import glob
 
 
 def read_pbo_vel_file(infile):
@@ -261,9 +262,19 @@ def parse_antenna_table_pbo(table):
 def search_files_for_nota_offsets(station_name, offset_dir, file_pattern):
     """Grep offsets table from the files in PBO/NOTA. File Pattern is something like cwu*kalts.evt  """
     try:
-        table = subprocess.check_output("grep " + station_name + " " + offset_dir + file_pattern, shell=True);
+        #table = subprocess.check_output("grep " + station_name + " " + offset_dir + file_pattern, shell=True);
+        #grep and wildcard filenames don't work on windows by default, so this is a workaround
+        #note that this also skips header lines and just takes the first file meeting the wildcard requirements
+        file_name = glob.glob(offset_dir+file_pattern)[0]
+        with open(file_name,'r') as offset_file:
+            table = ''
+            for line in offset_file:
+                if line[0] == ' ': #excludes header lines (all data lines seem to start with a space)
+                    if station_name in line:
+                        table+line
     except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
-        table = [];
-    if len(table) > 0:
-        table = table.decode();  # needed when switching to python 3
+        table = []
+    #if len(table) > 0:
+        #table = table.decode();  # needed when switching to python 3
+    # not needed with new strings
     return table;
