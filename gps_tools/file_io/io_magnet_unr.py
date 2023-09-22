@@ -2,7 +2,7 @@
 File to read and write data from Magnet / University of Nevada Reno formats
 """
 import datetime as dt
-import subprocess, sys, os
+import sys, os, re
 import numpy as np
 from .. import utilities
 from ..vel_functions import Station_Vel
@@ -176,11 +176,10 @@ def search_file_for_unr_offsets(station_name, offsets_file, mode=2):
     :param mode: int
     :returns: list of datetimes
     """
-    try:
-        table = subprocess.check_output(
-            "grep -E '" + station_name + "  [0-9]{2}[A-Z]{3}[0-9]{2}  "+str(mode)+"' " + offsets_file, shell=True);
-        table = table.decode();  # needed when switching to python 3
-    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
-        table = [];
+    with open(offsets_file, 'r') as file:
+        data = file.read()
+    pattern = r''+str(station_name)+'  [0-9]{2}[A-Z]{3}[0-9]{2}  ' + str(mode)
+    matches = re.findall(pattern, data)
+    table = '\n'.join(matches);
     evdts = parse_table_unr(table);
     return evdts;
