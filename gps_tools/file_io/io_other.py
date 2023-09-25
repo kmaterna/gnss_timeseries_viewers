@@ -188,7 +188,8 @@ def read_creepmeter(filename) -> Timeseries:
     dtarray = [pandas.to_datetime(x) for x in ts];
     displacement = df['dextral'].values.tolist();
     creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement,
-                                 dN=(), dU=(), Sn=(), Se=(), Su=());
+                                 dN=np.zeros(np.shape(displacement)), dU=np.zeros(np.shape(displacement)),
+                                 Sn=(), Se=(), Su=());
     return creepmeter_data;
 
 def read_creepmeter2(filename) -> Timeseries:
@@ -204,5 +205,18 @@ def read_creepmeter2(filename) -> Timeseries:
     dtarray = [pandas.to_datetime(x) for x in ts];
     displacement = df['slip'].values.tolist();
     creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement,
-                                 dN=(), dU=(), Sn=(), Se=(), Su=());
+                                 dN=np.zeros(np.shape(displacement)), dU=np.zeros(np.shape(displacement)),
+                                 Sn=(), Se=(), Su=());
     return creepmeter_data;
+
+
+def write_gmt_ts_file(ts_data, outfile):
+    """Write a time series object into a format that GMT can subsequently plot."""
+    print("Writing file %s " % outfile);
+    with open(outfile, 'w') as ofile:
+        for i in range(len(ts_data.dtarray)):
+            ofile.write("%s %f %f %f\n" % (dt.datetime.strftime(ts_data.dtarray[i], "%Y-%m-%dT%H-%M-%S"),
+                                           ts_data.dE[i],
+                                           ts_data.dN[i],
+                                           ts_data.dU[i]) );
+    return;
