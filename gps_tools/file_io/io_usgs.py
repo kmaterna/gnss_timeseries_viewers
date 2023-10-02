@@ -3,7 +3,7 @@
 File to read and write data from USGS formats
 """
 import datetime as dt
-import glob, os, sys, subprocess
+import glob, os, sys, re, subprocess
 import numpy as np
 from ..vel_functions import Station_Vel
 from ..gps_ts_functions import Timeseries
@@ -15,12 +15,12 @@ def usgs_vel_file_from_tsfile(infile):
     Network parsing and plumbing
     We assume a parallel directory above TS directory with a bunch of Velocity files, from which we derive coordinates
     """
-    usgs_network = infile.split('/')[-2];
-    usgs_directory = '';
-    for i in range(len(infile.split('/')) - 3):
-        usgs_directory = usgs_directory + infile.split('/')[i];
-        usgs_directory = usgs_directory + '/'
-    network_vel_file = usgs_directory + 'Velocities/' + usgs_network + '/NAM_' + usgs_network + '_vels.txt';
+    print("Infile is %s" % infile);
+    usgs_network = os.path.split(os.path.split(infile)[0])[1];  # the parent directory
+    head, _ = os.path.split(infile);
+    head, _ = os.path.split(head);
+    usgs_directory, _ = os.path.split(head);
+    network_vel_file = os.path.join(usgs_directory, 'Velocities', usgs_network, 'NAM_' + usgs_network + '_vels.txt');
     return network_vel_file;
 
 
@@ -31,7 +31,7 @@ def usgs_network_from_velfile(velfile):
     :param velfile: string, filename
     :returns: string, string, bool
     """
-    usgs_network = velfile.split('/')[-1][0:-9];
+    usgs_network = os.path.split(velfile)[1][0:-9];
     if usgs_network[0:4] == 'NAM_':
         usgs_network = usgs_network[4:];
         usgs_refframe = 'NAM';
@@ -160,6 +160,13 @@ def search_file_for_usgs_offsets(station_name, filename):
         table = [];
     if len(table) > 0:
         table = table.decode();  # needed when switching to python 3
+    # with open(filename, 'r') as file:
+    #     data = file.read()
+    # pattern = r''+str(station_name)
+    # matches = re.findall(pattern, data)  # Currently only gets the name of the station, not the entire line.
+    # print(matches)
+    # table = '\n'.join(matches);
+    print(table)
     return table;
 
 
@@ -173,10 +180,10 @@ def query_usgs_network_name(station_name, gps_ts_dir):
     :returns: list of strings
     """
     network_list = [];
-    directories = glob.glob(gps_ts_dir+"/*");
+    directories = glob.glob(os.path.join(gps_ts_dir, "")+"*");
     print("Querying for station %s in USGS sub-networks... " % station_name);
     for item in directories:
-        if os.path.isfile(item+'/'+station_name.lower()+'_NAfixed.rneu'):
+        if os.path.isfile(os.path.join(item, station_name.lower()+'_NAfixed.rneu')):
             print("Found %s in %s" % (station_name, item) );
             network_list.append(item);
     print("")
