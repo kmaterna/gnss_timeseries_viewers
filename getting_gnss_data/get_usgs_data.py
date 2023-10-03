@@ -45,10 +45,10 @@ Networks_ignored = ['Alaska',
                     'JuanDeFuca',
                     'LKY2',
                     'Pacific']
-vel_base_directory = "Velocities/"   # where will velocity files live on the local machine? 
-ts_base_directory = "Time_Series/"   # where will time series files live on the local machine? 
-offsets_directory = "Offsets/"       # where will the offsets live on the local machine? 
-usgs_cache_file = "Metadata/usgs_station_cache.txt"  # cache file is necessary for storing coords and start/end times
+vel_base_directory = os.path.join("Velocities", "")   # where will velocity files live on the local machine?
+ts_base_directory = os.path.join("Time_Series", "")   # where will time series files live on the local machine?
+offsets_directory = os.path.join("Offsets", "")       # where will the offsets live on the local machine?
+usgs_cache_file = os.path.join("Metadata", "usgs_station_cache.txt")  # cache necessary for coords/start/end times
 
 
 def download_usgs_velocity_tables(network, base_directory, outfile):
@@ -150,7 +150,7 @@ def download_usgs_ts_file(station, network, ts_base_directory):
     Download some time series files from USGS in NA and ITRF2008
     They will be organized by network, as they are in the USGS database
     """
-    directory_name = ts_base_directory + network + '/';
+    directory_name = os.path.join(ts_base_directory + network, "");
     os.makedirs(directory_name, exist_ok=True);
     url_name = base_url + 'data/networks/' + network + '/' + station.lower() + '/nafixed/' + station.lower() + '.rneu'
     subprocess.call(["wget", url_name, '-O', directory_name+station.lower()+'_NAfixed.rneu'], shell=False);
@@ -165,18 +165,17 @@ def get_usgs_network_directory_from_velfile(infile):
     We assume a parallel directory above the Velocity directory with a bunch of TS files
     From which we can derive startdate and enddate
     """
-    usgs_network = infile.split('/')[-1][0:-9];
-    print(usgs_network);
+    usgs_network = os.path.split(infile)[1][0:-9];
     if usgs_network[0:4] == 'NAM_':
         usgs_network = usgs_network[4:];
     if usgs_network[0:5] == 'ITRF_':
         usgs_network = usgs_network[5:];
-    usgs_directory = '';
-    for i in range(len(infile.split('/')) - 3):
-        usgs_directory = usgs_directory + infile.split('/')[i];
-        usgs_directory = usgs_directory + '/';
-    network_ts_directory = usgs_directory + 'Time_Series/' + usgs_network + '/'
-    total_vel_directory = usgs_directory + 'Velocities/' + usgs_network + '/'
+    head, _ = os.path.split(infile);
+    head, _ = os.path.split(head);
+    head, _ = os.path.split(head);
+    usgs_directory = os.path.join(head, "");
+    network_ts_directory = os.path.join(usgs_directory, 'Time_Series', usgs_network, "");
+    total_vel_directory = os.path.join(usgs_directory, 'Velocities', usgs_network, "");
     return network_ts_directory, total_vel_directory;
 
 
@@ -184,14 +183,14 @@ def cache_usgs_start_endtimes():
     print("Writing network cache %s " % usgs_cache_file );
     ofile = open(usgs_cache_file, 'w');
     for network in networks:
-        velfile = vel_base_directory + network + '/NAM_' + network + '_vels.txt';
+        velfile = os.path.join(vel_base_directory + network, 'NAM_' + network + '_vels.txt');
         network_ts_directory, _ = get_usgs_network_directory_from_velfile(velfile);
 
         [names, lon, lat] = np.loadtxt(velfile, skiprows=3, usecols=(0, 1, 2), unpack=True, dtype={'names': (
                 'name', 'lon', 'lat'), 'formats': ('U4', float, float)});
         # Populating the first_epoch and last_epoch with information from the associated time series directory.
         for i in range(len(names)):
-            ts_filename = network_ts_directory + '/' + names[i] + '_NAfixed.rneu';
+            ts_filename = os.path.join(network_ts_directory, names[i] + '_NAfixed.rneu');
             dates = np.loadtxt(ts_filename, unpack=True, usecols=(0,),
                                dtype={'names': ('dtstrs',), 'formats': ('U8',)}, ndmin=1);
             if len(dates) == 0:   # for the rare empty file
@@ -207,21 +206,21 @@ def cache_usgs_start_endtimes():
 # THE SUB-DRIVERS
 def download_usgs_offsets():
     for network in networks:
-        directory_name = offsets_directory + network + '/';
+        directory_name = os.path.join(offsets_directory + network, '');
         download_usgs_offset_tables(network, directory_name, outfile=network+'_offsets.txt');
     return;
 
 
 def download_usgs_velocities():
     for network in networks:
-        directory_name = vel_base_directory + network + '/';
+        directory_name = os.path.join(vel_base_directory + network, '');
         download_usgs_velocity_tables(network, directory_name, outfile=network+"_vels.txt");    
     return;
 
 
 def download_usgs_time_series():
     for network in networks:
-        velfile = vel_base_directory + network + '/ITRF_' + network + '_vels.txt';
+        velfile = os.path.join(vel_base_directory + network, 'ITRF_' + network + '_vels.txt');
         if os.path.isfile(velfile):
             name = np.loadtxt(velfile, skiprows=3, usecols=(0,), unpack=True, dtype={'names': ('name',),
                                                                                      'formats': ('U4',)})
