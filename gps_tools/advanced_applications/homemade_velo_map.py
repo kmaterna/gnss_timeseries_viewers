@@ -7,8 +7,8 @@
 
 
 import numpy as np
-import collections, subprocess
-from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, offsets, load_gnss, vel_functions
+import collections, os
+from GNSS_TimeSeries_Viewers.gps_tools import offsets, load_gnss, vel_functions
 import pygmt
 
 Parameters = collections.namedtuple("Parameters",
@@ -43,7 +43,7 @@ def configure():
     stations, _ = vel_functions.remove_blacklist_vels(stations, blacklist);
 
     outdir = expname + "_" + proc_center
-    subprocess.call(["mkdir", "-p", outdir], shell=False);
+    os.makedirs(outdir, exist_ok=True);
     outname = expname + "_" + str(center[0]) + "_" + str(center[1]) + "_" + str(radius)
     myparams = Parameters(expname=expname, proc_center=proc_center, refframe=refframe, center=center, radius=radius,
                           stations=[x.name for x in stations], outdir=outdir, outname=outname,

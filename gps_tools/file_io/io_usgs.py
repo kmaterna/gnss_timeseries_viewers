@@ -3,7 +3,7 @@
 File to read and write data from USGS formats
 """
 import datetime as dt
-import glob, os, sys, re, subprocess
+import glob, os, sys
 import numpy as np
 from ..vel_functions import Station_Vel
 from ..gps_ts_functions import Timeseries
@@ -154,19 +154,14 @@ def search_file_for_usgs_offsets(station_name, filename):
     :param filename: string, a filename
     :returns: string, a block of text
     """
-    try:
-        table = subprocess.check_output("grep " + station_name + " " + filename, shell=True);
-    except subprocess.CalledProcessError:  # if we have no earthquakes in the event files...
-        table = [];
-    if len(table) > 0:
-        table = table.decode();  # needed when switching to python 3
-    # with open(filename, 'r') as file:
-    #     data = file.read()
-    # pattern = r''+str(station_name)
-    # matches = re.findall(pattern, data)  # Currently only gets the name of the station, not the entire line.
-    # print(matches)
-    # table = '\n'.join(matches);
-    print(table)
+    with open(filename, 'r') as file:
+        data = file.read()
+    lines = data.split('\n');
+    matches = [];
+    for line in lines:
+        if station_name in line:
+            matches.append(line);
+    table = '\n'.join(matches);
     return table;
 
 

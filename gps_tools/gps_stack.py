@@ -32,27 +32,28 @@ def driver(data_config, expname, center, radius, proc_center, refframe, outdir,
     [dataobj_list, offsetobj_list, eqobj_list] = database.load_stations(stations);
     param_dict = pack_params(data_config, expname, center, radius, proc_center, refframe, outdir,
                              starttime, endtime, stations);   # for tracking metadata
-    out_stack.write_params(outfile=outdir + "/" + outname + "_stack_params.txt", param_dict=param_dict);
+    out_stack.write_params(outfile=os.path.join(outdir, outname + "_stack_params.txt"), param_dict=param_dict);
     [detr, _, no_offsets_detr, no_offsets_detr_deseas, distances] = compute(dataobj_list, offsetobj_list, eqobj_list,
                                                                             distances, data_config);
 
     # A series of output options that can be chained together, selected or unselected, etc.
-    out_stack.horizontal_full_ts(detr, distances, outname=outdir+"/"+outname+'_TS.png', start_time_plot=starttime,
-                                 end_time_plot=endtime);
-    out_stack.horizontal_full_ts(no_offsets_detr, distances, outname=outdir+"/"+outname+'_TS_noeq.png',
+    out_stack.horizontal_full_ts(detr, distances, outname=os.path.join(outdir, outname+'_TS.png'),
+                                 start_time_plot=starttime, end_time_plot=endtime);
+    out_stack.horizontal_full_ts(no_offsets_detr, distances, outname=os.path.join(outdir, outname+'_TS_noeq.png'),
                                  start_time_plot=starttime, end_time_plot=endtime);
     out_stack.horizontal_full_ts(no_offsets_detr_deseas, distances, start_time_plot=starttime, end_time_plot=endtime,
-                                 outname=outdir + "/" + outname + '_TS_noeq_noseasons.png');
+                                 outname=os.path.join(outdir, outname + '_TS_noeq_noseasons.png'));
     out_stack.vertical_full_ts(no_offsets_detr_deseas, distances, start_time_plot=starttime, end_time_plot=endtime,
-                               outname=outdir + "/" + outname + '_TS_vertical.png');
+                               outname=os.path.join(outdir, outname + '_TS_vertical.png'));
 
     out_stack.horizontal_filtered_plots(no_offsets_detr_deseas, distances, start_time_plot=starttime,
-                                        outname=outdir + "/" + outname + '_TS_horiz_filt.png', end_time_plot=endtime);
+                                        outname=os.path.join(outdir, outname + '_TS_horiz_filt.png'),
+                                        end_time_plot=endtime);
     out_stack.vertical_filtered_plots(no_offsets_detr_deseas, distances,
-                                      outname=outdir + "/" + outname + '_TS_vert_detrended_filt.png',
+                                      outname=os.path.join(outdir, outname + '_TS_vert_detrended_filt.png'),
                                       start_time_plot=starttime, end_time_plot=endtime);
 
-    pygmt_plots.map_ts_objects(dataobj_list, outdir+"/"+outname+'_map.png', center=center);
+    pygmt_plots.map_ts_objects(dataobj_list, os.path.join(outdir, outname+'_map.png'), center=center);
     if write_pos_files:
         write_stack_pos_files(detr, outdir, outname);
     return no_offsets_detr_deseas;
@@ -138,7 +139,7 @@ def extract_stack_displacements(data_obj_list, starttime, endtime, num_days=3):
 
 
 def write_stack_pos_files(data_obj_list, outdir, outname):
-    os.makedirs(outdir+'/TS_'+outname, exist_ok=True);
+    os.makedirs(os.path.join(outdir, 'TS_'+outname), exist_ok=True);
     for item in data_obj_list:
-        io_nota.write_pbo_pos_file(item, outdir+'/TS_'+outname+'/'+item.name+'_detrended.pos');
+        io_nota.write_pbo_pos_file(item, os.path.join(outdir, 'TS_'+outname, item.name+'_detrended.pos'));
     return;

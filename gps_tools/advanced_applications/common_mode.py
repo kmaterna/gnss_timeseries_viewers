@@ -6,7 +6,7 @@ import gps_tools.file_io.io_nota
 import gps_tools.gps_ts_functions
 import numpy as np
 import scipy.ndimage
-import collections, subprocess
+import collections, os
 import datetime as dt
 from GNSS_TimeSeries_Viewers.gps_tools import gps_seasonal_removals, \
     offsets, outputs_gps_stacks, load_gnss, vel_functions
@@ -56,7 +56,7 @@ def configure():
     stations, _ = vel_functions.remove_blacklist_vels(stations, blacklist);
 
     outdir = expname + "_" + proc_center
-    subprocess.call(["mkdir", "-p", outdir], shell=False);
+    os.makedirs(outdir, exist_ok=True);
     outname = expname + "_" + str(center[0]) + "_" + str(center[1]) + "_" + str(radius)
     myparams = Parameters(data_config=data_config_file,
                           expname=expname, proc_center=proc_center, refframe=refframe, center=center, radius=radius,
@@ -207,7 +207,7 @@ def pygmt_map(ts_objects, myparams, deltas):
 
 
 def write_cm_object(common_mode, myparams):
-    filename = myparams.outdir + "/" + myparams.outname + "_common_mode.pos";
+    filename = os.path.join(myparams.outdir, myparams.outname + "_common_mode.pos");
     print("Writing common_mode into %s " % filename)
     comment = myparams.stations;  # right now this is all stations, not just the ones that were used.
     gps_tools.file_io.io_nota.write_pbo_pos_file(common_mode, filename, comment);

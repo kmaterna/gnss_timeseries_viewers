@@ -4,7 +4,7 @@
 
 import numpy as np
 import scipy.ndimage
-import collections, subprocess
+import collections, subprocess, os
 import datetime as dt
 from GNSS_TimeSeries_Viewers.gps_tools import outputs_gps_stacks
 from gps_tools.gps_ts_functions import Timeseries
@@ -25,9 +25,9 @@ def movie_driver(ts_objects, distances, myparams):
 
 
 def configure_movie(myparams):
-    outdir_lower = myparams.outdir + "/" + myparams.expname + "_" + str(myparams.center[0]) + "_" + str(
-        myparams.center[1]) + "_" + str(myparams.radius)
-    subprocess.call(["mkdir", "-p", outdir_lower], shell=False);
+    outdir_lower = os.path.join(myparams.outdir, + myparams.expname + "_" + str(myparams.center[0]) + "_" + str(
+        myparams.center[1]) + "_" + str(myparams.radius))
+    os.makedirs(outdir_lower, exist_ok=True);
     myparams = Parameters(expname=myparams.expname, proc_center=myparams.proc_center, refframe=myparams.refframe,
                           center=myparams.center, radius=myparams.radius, stations=myparams.stations,
                           distances=myparams.distances, blacklist=myparams.blacklist, outdir=outdir_lower,
@@ -103,9 +103,9 @@ def interval_downsample(dtarray, dE, dN, dU, dt_downsample):
 
 
 def write_outputs(objects, myparams):
-    outfile0 = myparams.outdir + "/temp.txt";
-    outfile1 = myparams.outdir + "/data_out.txt";
-    outfile2 = myparams.outdir + "/dates_out.txt";
+    outfile0 = os.path.join(myparams.outdir, "temp.txt");
+    outfile1 = os.path.join(myparams.outdir, "data_out.txt");
+    outfile2 = os.path.join(myparams.outdir, "dates_out.txt");
 
     unique_dates = [];
     ofile = open(outfile0, 'w');  # write the displacement at each station at each day.

@@ -204,11 +204,12 @@ class USGS_Proc_Engine:
                 print("ERROR! User must select one sub-network for USGS time series. Exiting. ");
                 sys.exit(1);
         if self.refframe == "NA":
-            filename = self.file_params["usgs"]["directory"]+self.file_params["usgs"]["gps_ts_dir"]+self.subnetwork + \
-                       '/' + station_name.lower() + "_NAfixed.rneu";
+            filename = os.path.join(self.file_params["usgs"]["directory"] +
+                                    self.file_params["usgs"]["gps_ts_dir"]+self.subnetwork,
+                                    station_name.lower() + "_NAfixed.rneu");
         elif self.refframe == "ITRF":
-            filename = self.file_params["usgs"]["directory"]+self.file_params["usgs"]["gps_ts_dir"]+self.subnetwork + \
-                       '/' + station_name.lower() + "_ITRF2008.rneu";
+            filename = os.path.join(self.file_params["usgs"]["directory"]+self.file_params["usgs"]["gps_ts_dir"] +
+                                    self.subnetwork, station_name.lower() + "_ITRF2008.rneu");
         else:
             print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
         utilities.check_if_file_exists(filename);
@@ -226,11 +227,11 @@ class USGS_Proc_Engine:
             print("Error! Must provide sub-network for USGS velocity field");
             sys.exit(0);
         if self.refframe == 'NA':
-            filename = self.file_params["usgs"]['directory'] + self.file_params["usgs"]["vel_dir"] +\
-                       self.subnetwork + '/NAM_' + self.subnetwork + '_vels.txt';
+            filename = os.path.join(self.file_params["usgs"]['directory'] + self.file_params["usgs"]["vel_dir"] +
+                                    self.subnetwork, 'NAM_' + self.subnetwork + '_vels.txt');
         elif self.refframe == 'ITRF':
-            filename = self.file_params["usgs"]['directory'] + self.file_params["usgs"]["vel_dir"] + \
-                       self.subnetwork + '/ITRF_' + self.subnetwork + '_vels.txt';
+            filename = os.path.join(self.file_params["usgs"]['directory'] + self.file_params["usgs"]["vel_dir"] +
+                                    self.subnetwork, 'ITRF_' + self.subnetwork + '_vels.txt');
         else:
             print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again"); sys.exit(1);
         utilities.check_if_file_exists(filename);

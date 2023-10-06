@@ -13,8 +13,8 @@ import gps_tools.file_io.io_other
 import gps_tools.utilities
 import numpy as np
 import datetime as dt
-import glob, subprocess
-from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss
+import glob, subprocess, os
+from GNSS_TimeSeries_Viewers.gps_tools import gps_seasonal_removals, offsets, load_gnss
 from Tectonic_Utils.geodesy import haversine
 import remove_ets_events
 
@@ -35,7 +35,7 @@ def driver(EQcoords, size, network, refframe, fit_type, deltat1, deltat2, expnam
 
 def configure(EQcoords, fit_type, overall_size, network, refframe, station_list=()):
     outdir = network + "_" + fit_type + "_" + refframe;
-    subprocess.call('mkdir -p ' + outdir, shell=True);
+    os.makedirs(outdir, exist_ok=True);
     if network == 'nldas' or network == 'gldas' or network == 'noah025' or network == 'lsdm':
         network = 'pbo';  # This is just for finding which stations we will search for.
 
@@ -210,7 +210,7 @@ def vert_adjust_by_reference_stations(names, coords, slope_obj):
 
 def outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, outdir, expname, fit_type, network, refframe,
             deltat1, deltat2, time_after_start_date, critical_variance):
-    basename = outdir + '/' + expname;
+    basename = os.path.join(outdir, expname);
     ofile1 = open(basename + '.txt', 'w');
     ofile1.write("# %s network in %s refframe with %s seasonal removal\n" % (network, refframe, fit_type));
     ofile1.write("# %d days gap after EQtime, %s mm/yr maximum variance\n" % (time_after_start_date, critical_variance))
@@ -224,7 +224,7 @@ def outputs(noeq_objects, east_slope_obj, north_slope_obj, vert_slope_obj, outdi
     ofile1.close();
 
     # Here we call the GMT master script, if we want.
-    subprocess.call("./master_plotting.sh " + outdir + "/ " + expname, shell=True);
+    subprocess.call("./master_plotting.sh " + os.path.join(outdir, expname), shell=True);
     return;
 
 
@@ -280,7 +280,7 @@ def grace_compute(dt1_start, dt1_end, dt2_start, dt2_end, dataobject_list):
         data_1 = dataobject_list[i]
         starttime1 = dt2_start + dt.timedelta(days=period_after_start_date)
         [east_slope_after, north_slope_after, vert_slope_after, _esig1, _nsig1, _usig1] = data_1.get_slope(starttime1,
-                                                                                                           dt2_end, 0.6);
+                                                                                                           dt2_end, 0.6)
         east_slope_obj.append([east_slope_before, east_slope_after]);
         north_slope_obj.append([north_slope_before, north_slope_after]);
         vert_slope_obj.append([vert_slope_before, vert_slope_after]);
