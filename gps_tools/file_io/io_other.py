@@ -162,6 +162,16 @@ def read_blacklist(blacklist_file) -> list:
     return blacklist;
 
 
+def write_stl(Data, filename):
+    ofile = open(filename, 'w');
+    for i in range(len(Data.dtarray)):
+        timestamp = dt.datetime.strftime(Data.dtarray[i], "%Y%m%d");
+        ofile.write("%s %f %f %f %f %f %f\n" % (
+            timestamp, Data.dE[i], Data.dN[i], Data.dU[i], Data.Se[i], Data.Sn[i], Data.Su[i]));
+    ofile.close();
+    return;
+
+
 def read_lake_loading_ts(infile) -> Timeseries:
     """
     :param infile: string, filename

@@ -64,8 +64,8 @@ def invert_log_function(decyear, data_array):
     """
     def func(t, a, b, tau):
         return b + a * np.log(1 + t / tau);
-    fit_params, cov = curve_fit(func, decyear, data_array);
-    return fit_params;
+    response = curve_fit(func, decyear, data_array);
+    return response[0];
 
 
 def invert_linear_annual_semiannual(decyear, data_array):
