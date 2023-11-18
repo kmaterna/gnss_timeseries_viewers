@@ -6,11 +6,14 @@ This library contains a set of tools to read GNSS time series and velocities, re
 
 ## Dependencies and Installation
 For full functionality, this library requires the Python packages listed in requirements.txt. 
-You can create a new Conda environment using requirements.txt, or you can manually ensure that you have each of those libraries installed.
-If doing manual setup, don't forget the pip libraries: [Tectonic-Utils](https://github.com/kmaterna/Tectonic_Utils), 
+You can use pip for package management, you can create a new Conda environment using requirements.txt, or you can manually ensure that you have each of those libraries installed.
+If doing manual setup, don't forget the following libraries: [Tectonic-Utils](https://github.com/kmaterna/Tectonic_Utils), 
 and the [Earthscope CLI](https://gitlab.com/earthscope/public/earthscope-cli) for downloading Earthscope time series.
 
-Git clone this library onto your local machine.  From the top-level directory, run ```pip install .``` .
+As an example of the pip workflow:
+
+1. Git clone this library onto your local machine.  
+2. From the top-level directory, run ```pip install .``` 
 
 
 ## Accessing Prerequisite GNSS Data
@@ -128,12 +131,12 @@ Earthquake table for station P511:
 Removing seasonals by lssq method.
 Saving figure as P511_noseasons_lssq_cwu_NA_ts.jpg 
 ```
-![GNSS_TS](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/examples_and_configs/example_pngs/P511_noseasons_lssq_cwu_NA_ts.jpg)
+![GNSS_TS](https://github.com/kmaterna/GNSS_TimeSeries_Viewers/blob/master/examples/example_pngs/P511_noseasons_lssq_cwu_NA_ts.jpg)
 
 ### Example 3: A GNSS Stack
 We can also plot a list of GNSS time series as a stack.  An example is shown below for stations in the northern San Francisco Bay Area. The parameters can be set in ```example_driver_stack.py```.  You can select which kinds of plots you want, whether it's vertical, horizontal, filtered, earthquakes removed, etc.
-![GNSS_TS](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/examples_and_configs/example_pngs/NBay_-122.0_38.0_40_TS_noeq.png)
+![GNSS_TS](https://github.com/kmaterna/GNSS_TimeSeries_Viewers/blob/master/examples/example_pngs/NBay_-122.0_38.0_40_TS_noeq.png)
 
-If you have the pygmt library installed, you can make a simple map of the stations in your region:
-![map](https://github.com/kmaterna/Mendocino_Geodesy/blob/master/examples_and_configs/example_pngs/NBay_-122.0_38.0_40_map.png)
+You can make a simple map of the stations in your region:
+![map](https://github.com/kmaterna/GNSS_TimeSeries_Viewers/blob/master/examples/example_pngs/NBay_-122.0_38.0_40_map.png)
 
