@@ -5,15 +5,15 @@ This library contains a set of tools to read GNSS time series and velocities, re
 
 
 ## Dependencies and Installation
-For full functionality, this library requires the Python packages listed in requirements.txt. 
-You can use pip for package management, you can create a new Conda environment using requirements.txt, or you can manually ensure that you have each of those libraries installed.
-If doing manual setup, don't forget the following libraries: [Tectonic-Utils](https://github.com/kmaterna/Tectonic_Utils), 
-and the [Earthscope CLI](https://gitlab.com/earthscope/public/earthscope-cli) for downloading Earthscope time series.
-
-As an example of the pip workflow:
+The easiest way to install this repository is to use pip. An example of the pip workflow:
 
 1. Git clone this library onto your local machine.  
-2. From the top-level directory, run ```pip install .``` 
+2. From the top-level directory, in your preferred Python environment, run ```pip install .``` 
+
+This library requires the Python packages listed in requirements.txt. 
+If not using pip, you can alternately create a new Conda environment using requirements.txt, or you can manually ensure that you have each of those libraries installed.
+Don't forget the following libraries: [Tectonic_Utils](https://github.com/kmaterna/Tectonic_Utils), 
+and the [Earthscope CLI](https://gitlab.com/earthscope/public/earthscope-cli) for downloading Earthscope time series.
 
 
 ## Accessing Prerequisite GNSS Data
