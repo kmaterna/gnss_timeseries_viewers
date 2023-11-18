@@ -1,8 +1,9 @@
 
-import unittest
-import GNSS_TimeSeries_Viewers.gps_tools.load_gnss as load_gnss
+import unittest, os
+import gnss_timeseries_viewers.gps_tools.load_gnss as load_gnss
 
-config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))  # 4 dirs up
+config_file = os.path.join(base_dir, 'GEOPHYS_DATA', 'GPS_POS_DATA', 'config.txt');
 
 class Tests(unittest.TestCase):
 

@@ -8,7 +8,7 @@
 
 import numpy as np
 import collections, os
-from GNSS_TimeSeries_Viewers.gps_tools import offsets, load_gnss, vel_functions
+from gnss_timeseries_viewers.gps_tools import offsets, load_gnss, vel_functions
 import pygmt
 
 Parameters = collections.namedtuple("Parameters",
@@ -31,7 +31,8 @@ def configure():
     center = [-115.5, 33];
     expname = 'SSGF';
     radius = 80;
-    data_config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt";
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))  # 5 dirs
+    data_config_file = os.path.join(base_dir, 'GEOPHYS_DATA', 'GPS_POS_DATA', 'config.txt');
     blacklist = ["P340", "P316", "P170", "P158", "TRND", "P203", "BBDM", "KBRC", "RYAN", "BEAT", "CAEC",
                  "MEXI"];  # This is global, just keeps growing
 

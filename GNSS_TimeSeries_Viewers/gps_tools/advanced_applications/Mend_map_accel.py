@@ -9,15 +9,16 @@
 # Feature: verticals and horizontals at the same time, making two output plots
 # Feature: feed seasonal type as parameter, and include that in the output_file name
 # This lets us run several experiments.
-import GNSS_TimeSeries_Viewers.gps_tools.file_io.io_other
+import gnss_timeseries_viewers.gps_tools.file_io.io_other
 import numpy as np
 import datetime as dt
 import glob, subprocess, os
-from GNSS_TimeSeries_Viewers.gps_tools import gps_seasonal_removals, offsets, load_gnss
+from gnss_timeseries_viewers.gps_tools import gps_seasonal_removals, offsets, load_gnss
 from Tectonic_Utils.geodesy import haversine
 import remove_ets_events
 
-data_config = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt";
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))  # 5 dirs up
+data_config = os.path.join(base_dir, 'GEOPHYS_DATA', 'GPS_POS_DATA', 'config.txt');
 
 
 def driver(EQcoords, size, network, refframe, fit_type, deltat1, deltat2, expname, station_list=()):
@@ -259,7 +260,7 @@ def grace_configure(deltat1, deltat2, grace_dir, outfile_name):
 def grace_inputs(file_list):
     dataobj_list = [];
     for item in file_list:
-        grace_ts = GNSS_TimeSeries_Viewers.gps_tools.file_io.io_other.read_grace(item);
+        grace_ts = gnss_timeseries_viewers.gps_tools.file_io.io_other.read_grace(item);
         dataobj_list.append(grace_ts);
     return [dataobj_list];
 

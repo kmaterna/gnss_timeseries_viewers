@@ -1,16 +1,18 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 # See earthquake offsets at stations
 # Determine the stations in the radius.  Then identify their offsets.
 
 import os
 import datetime as dt
-from GNSS_TimeSeries_Viewers.gps_tools import offsets, pygmt_plots, load_gnss
-import GNSS_TimeSeries_Viewers.gps_tools.file_io.io_other as io_other
+from gnss_timeseries_viewers.gps_tools import offsets, pygmt_plots, load_gnss
+import gnss_timeseries_viewers.gps_tools.file_io.io_other as io_other
 
 # CONFIG PARAMETERS FOR THIS EXPERIMENT #
-params = {"data_config_file": "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt",
-          "center": [-124.0, 41.15],
+# Point to the GNSS data config file with local paths
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))  # 5 dirs up
+data_config_file = os.path.join(base_dir, 'GEOPHYS_DATA', 'GPS_POS_DATA', 'config.txt');
+params = {"center": [-124.0, 41.15],
           "expname": 'MTJ_2014',
           "radius": 200,  # in km
           "proc_center": 'cwu',
@@ -30,7 +32,7 @@ def driver():
 
 
 def configure():
-    database = load_gnss.create_station_repo(params['data_config_file'], proc_center=params["proc_center"],
+    database = load_gnss.create_station_repo(data_config_file, proc_center=params["proc_center"],
                                              refframe=params['refframe']);
     stations, _ = database.search_stations_by_circle(params['center'], params['radius']);
     outdir = params["expname"] + "_" + params["proc_center"]

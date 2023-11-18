@@ -3,9 +3,11 @@
 Example driver for stacked time series viewing. 
 """
 
-from GNSS_TimeSeries_Viewers.gps_tools import gps_stack
+import os
+from gnss_timeseries_viewers.gps_tools import gps_stack
 
-data_config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))  # 5 dirs up
+data_config_file = os.path.join(base_dir, 'GEOPHYS_DATA', 'GPS_POS_DATA', 'config.txt');
 expname = 'NBay';
 center = [-122.0, 38.0];  # lon, lat
 radius = 30;  # km

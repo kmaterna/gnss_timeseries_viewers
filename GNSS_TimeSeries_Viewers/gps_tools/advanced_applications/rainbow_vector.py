@@ -128,7 +128,7 @@ def plotting_function(dataobj_list, _sorted_distances, params):
     # axarr[1][1].set_xlim([-115.8, -115.2]);
 
     axarr[1][1].axis('off')
-    im = plt.imread('/Users/kmaterna/Documents/B_Research/Mendocino_Geodesy/ts_viewing/exp_minus_hines/map.png');
+    im = plt.imread('../../../../../Mendocino_Geodesy/ts_viewing/exp_minus_hines/map.png');
     newax = fig.add_axes([0.52, 0.07, 0.4, 0.4], zorder=10);
     newax.imshow(im);
     newax.axis('off');

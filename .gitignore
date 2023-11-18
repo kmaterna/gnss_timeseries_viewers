@@ -2,6 +2,7 @@
 *.pdf
 *.eps
 *.pyc
+*.pos
 *.grd
 .idea/*
 ts_viewer/*

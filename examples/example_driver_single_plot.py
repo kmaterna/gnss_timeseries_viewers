@@ -3,11 +3,12 @@
 Example driver for individual time series viewing. 
 """
 
-import sys
-from GNSS_TimeSeries_Viewers.gps_tools import single_station_tsplot
+import sys, os
+from gnss_timeseries_viewers.gps_tools import single_station_tsplot
 
 station = "P325"
-data_config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt"
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))  # 5 dirs up
+data_config_file = os.path.join(base_dir, 'GEOPHYS_DATA', 'GPS_POS_DATA', 'config.txt');
 
 if len(sys.argv) >= 2:
     station = sys.argv[1];  # you can type in the name of a station in the run string (if you want)

@@ -3,15 +3,16 @@
 import matplotlib.pyplot as plt
 import collections
 import datetime as dt
-import subprocess
-from GNSS_TimeSeries_Viewers.gps_tools import gps_seasonal_removals, offsets, load_gnss
-from GNSS_TimeSeries_Viewers.gps_tools.gps_ts_functions import Timeseries
+import subprocess, os
+from gnss_timeseries_viewers.gps_tools import gps_seasonal_removals, offsets, load_gnss
+from gnss_timeseries_viewers.gps_tools.gps_ts_functions import Timeseries
 
 # For reference of how this gets returned from the read functions.
 Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove', 'outliers_def', 'offset_num_days',
                                                    'earthquakes_remove', 'offsets_remove', 'seasonals_remove',
                                                    'seasonals_type', 'datasource', 'refframe', 'data_config']);
-data_config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt";
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))  # 5 dirs up
+data_config_file = os.path.join(base_dir, 'GEOPHYS_DATA', 'GPS_POS_DATA', 'config.txt');
 
 def view_single_station(station_name, offsets_remove=1, earthquakes_remove=0, outliers_remove=0, seasonals_remove=0,
                         seasonals_type='lssq', datasource='pbo', refframe='NA'):

@@ -2,13 +2,13 @@
 # We save that as a time series format
 # We plot the vertical time series with and without the common mode term.
 
-import GNSS_TimeSeries_Viewers.gps_tools.file_io.io_nota as io_nota
-from GNSS_TimeSeries_Viewers.gps_tools.gps_ts_functions import Timeseries
+import gnss_timeseries_viewers.gps_tools.file_io.io_nota as io_nota
+from gnss_timeseries_viewers.gps_tools.gps_ts_functions import Timeseries
 import numpy as np
 import scipy.ndimage
 import collections, os
 import datetime as dt
-from GNSS_TimeSeries_Viewers.gps_tools import gps_seasonal_removals, \
+from gnss_timeseries_viewers.gps_tools import gps_seasonal_removals, \
     offsets, outputs_gps_stacks, load_gnss, vel_functions
 import pygmt
 
@@ -43,7 +43,8 @@ def configure():
     center = [-115.5, 32.85];
     expname = 'SSGF';
     radius = 30;
-    data_config_file = "/Users/kmaterna/Documents/B_Research/GEOPHYS_DATA/GPS_POS_DATA/config.txt";
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+    data_config_file = os.path.join(base_dir, 'GEOPHYS_DATA', 'GPS_POS_DATA', 'config.txt');
     blacklist = ["P316", "P170", "P158", "TRND", "P203", "BBDM", "KBRC", "RYAN", "BEAT", "CAEC", "MEXI", "BOMG",
                  "FSHB"];  # This is global, just keeps growing
     # center=[-115.5, 33]; expname='SSGF'; radius = 40;

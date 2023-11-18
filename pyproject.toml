@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "GNSS_TimeSeries_Viewers"
+name = "gnss_timeseries_viewers"
 version = "0.1.0"
 description = "Useful GNSS timeseries tools: reading PBO and UNR, getting slopes and seasonal terms and offsets, plotting stacks, and more"
 authors = ["Kathryn Materna <kmaterna@berkeley.edu>"]

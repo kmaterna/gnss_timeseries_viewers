@@ -1,7 +1,7 @@
 # Take a velocity (or list of velocities) in one reference frame, 
 # And rotate them into a second reference frame using the Euler Pole of 
 # that reference frame transformation.
-from GNSS_TimeSeries_Viewers.gps_tools.file_io import io_other, io_nota
+from gnss_timeseries_viewers.gps_tools.file_io import io_other, io_nota
 import numpy as np
 import matplotlib.pyplot as plt
 import collections
