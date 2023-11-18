@@ -18,11 +18,11 @@ and the [Earthscope CLI](https://gitlab.com/earthscope/public/earthscope-cli) fo
 
 ## Accessing Prerequisite GNSS Data
 This library requires you to create a local copy of your desired GNSS time series, velocities, steps, offsets, and/or hydrological loading models from 
-at least one GNSS database. Each GNSS data source is slightly different.  The file ```GNSS_TimeSeries_Viewers/getting_gnss_data/metadata.txt``` describes how to locate and download these files.
+at least one GNSS database. Each GNSS data source is slightly different.  The file ```gnss_timeseries_viewers/getting_gnss_data/metadata.txt``` describes how to locate and download these files.
 Remember that Earthscope now requires a log-in and the Earthscope-CLI for wget access.  
  
 
-The script ```GNSS_TimeSeries_Viewers/getting_gnss_data/update_data_holdings.sh``` now automates the download of many repositories locally, which might take 
+The script ```gnss_timeseries_viewers/getting_gnss_data/update_data_holdings.sh``` now automates the download of many repositories locally, which might take 
 a few hours (and ~10Gb) if you're downloading every time series from every processing center.  See specific scripts for individual databases that you might want.  
 
 ## Configuration
@@ -103,7 +103,7 @@ I'm happy to discuss and work together on this code. To contribute, you can subm
 ### Example 1: How many stations within a region?
 Using one function, we can figure out which stations in the PBO newtwork are within a certain radius or region. In this example, we read the PBO stations and return any within 100 km of a chosen coordinate.
 ```bash
-example $ example_driver_find_within_radius.py 
+example $ python example_driver_find_within_radius.py 
 Reading /Users/path/to/Velocity_Files/NAM08_pbovelfile_feb2018.txt
 Returning 26 stations that are within 100.000 km of center -122.0000, 40.0000
 ['ORVB', 'P270', 'P272', 'P333', 'P334', 'P335', 'P336', 'P337', 'P339', 'P341', 'P344', 'P345', 'P346', 
@@ -114,7 +114,7 @@ Returning 26 stations that are within 100.000 km of center -122.0000, 40.0000
 ### Example 2: Single GNSS Time Series
 As another example, we plot the PBO time series of P511, a station in Southern California with seasonal terms and antenna changes removed but earthquakes still left in. One possible usage of one driver is illustrated and its command-line outputs are shown.
 ```bash
-example $ example_driver_single_plot.py P511
+example $ python example_driver_single_plot.py P511
 ------- P511 --------
 Viewing station P511, earthquakes_remove=0, outliers_remove=1, seasonals_remove=1, datasource=cwu, refframe=NA
 
