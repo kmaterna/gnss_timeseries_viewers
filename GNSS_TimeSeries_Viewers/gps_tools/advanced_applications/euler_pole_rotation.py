@@ -1,8 +1,7 @@
 # Take a velocity (or list of velocities) in one reference frame, 
 # And rotate them into a second reference frame using the Euler Pole of 
 # that reference frame transformation.
-import gps_tools.file_io.io_nota
-import gps_tools.file_io.io_other
+from GNSS_TimeSeries_Viewers.gps_tools.file_io import io_other, io_nota
 import numpy as np
 import matplotlib.pyplot as plt
 import collections
@@ -134,8 +133,8 @@ if __name__ == "__main__":
     # A test situation, converting ITRF into NA
     # [input_file, output_file, euler_pole] = configure();
     [input_file, output_file, euler_pole] = configure_SNGV();
-    [vels] = gps_tools.file_io.io_nota.read_pbo_vel_file(input_file);
+    [vels] = io_nota.read_pbo_vel_file(input_file);
     new_vels = compute_euler_pole_rotation(vels, euler_pole);
     # gps_tools.file_io.io_other.write_humanread_vel_file(new_vels, output_file);
-    gps_tools.file_io.io_other.write_gmt_velfile(new_vels, output_file);
+    io_other.write_gmt_velfile(new_vels, output_file);
     plot_na_itrf(vels, new_vels);

@@ -1,12 +1,11 @@
 # Remove data during ETS times
 # Estimate offsets during those times.
-import gps_tools.offsets
 import matplotlib.pyplot as plt
 import collections
 import datetime as dt
 import subprocess
-from GNSS_TimeSeries_Viewers.gps_tools import gps_ts_functions, gps_seasonal_removals, offsets, load_gnss
-from gps_tools.gps_ts_functions import Timeseries
+from GNSS_TimeSeries_Viewers.gps_tools import gps_seasonal_removals, offsets, load_gnss
+from GNSS_TimeSeries_Viewers.gps_tools.gps_ts_functions import Timeseries
 
 # For reference of how this gets returned from the read functions.
 Parameters = collections.namedtuple("Parameters", ['station', 'outliers_remove', 'outliers_def', 'offset_num_days',
@@ -122,8 +121,7 @@ def remove_characteristic_ETS(ts_obj, ets_intervals):
     # for i in range(len(evdts)):  # A nice sanity check
     # print(str(evdts[i])+" %f" % (n_offsets[i]) );
     # --> This is not refactored yet for lists of offsets. Will break.
-    offset_obj = gps_tools.offsets.Offset(e_offset=e_offsets, n_offset=n_offsets, u_offset=u_offsets,
-                                          evdt=evdts);
+    offset_obj = offsets.Offset(e_offset=e_offsets, n_offset=n_offsets, u_offset=u_offsets, evdt=evdts);
 
     ts_obj_fix = offsets.remove_offsets(ts_obj_gaps, offset_obj);
     ts_obj_new = Timeseries(name=ts_obj.name, coords=ts_obj.coords, dtarray=ts_obj_fix.dtarray, dE=ts_obj_fix.dE,
@@ -171,8 +169,7 @@ def remove_ETS_times(ts_obj, ets_intervals, offset_num_days):
     # for i in range(len(evdts)):  # A nice sanity check
     # print(str(evdts[i])+" %f" % (n_offsets[i]) );
     # --> This is not refactored yet for lists of offsets. Will break.
-    offset_obj = gps_tools.offsets.Offset(e_offset=e_offsets, n_offset=n_offsets, u_offset=u_offsets,
-                                          evdt=evdts);
+    offset_obj = offsets.Offset(e_offset=e_offsets, n_offset=n_offsets, u_offset=u_offsets, evdt=evdts);
     # print("Mean east offset: %.3f mm" % (np.mean(e_offsets) ));
     # print("Mean north offset: %.3f mm" % (np.mean(n_offsets) ));
     # print("Mean vert offset: %.3f mm" % (np.mean(u_offsets) ));

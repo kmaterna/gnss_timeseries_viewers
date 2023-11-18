@@ -7,7 +7,7 @@ import scipy.ndimage
 import collections, subprocess, os
 import datetime as dt
 from GNSS_TimeSeries_Viewers.gps_tools import outputs_gps_stacks
-from gps_tools.gps_ts_functions import Timeseries
+from GNSS_TimeSeries_Viewers.gps_tools.gps_ts_functions import Timeseries
 
 Parameters = collections.namedtuple("Parameters",
                                     ['expname', 'proc_center', 'refframe', 'center', 'radius', 'stations', 'distances',

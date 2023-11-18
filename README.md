@@ -10,16 +10,16 @@ You can create a new Conda environment using requirements.txt, or you can manual
 If doing manual setup, don't forget the pip libraries: [Tectonic-Utils](https://github.com/kmaterna/Tectonic_Utils), 
 and the [Earthscope CLI](https://gitlab.com/earthscope/public/earthscope-cli) for downloading Earthscope time series.
 
-Git clone this library onto your local machine and add the parent directory containing "GNSS_TimeSeries_Viewers" on your $PYTHONPATH. 
+Git clone this library onto your local machine.  From the top-level directory, run ```pip install .``` .
 
 
 ## Accessing Prerequisite GNSS Data
 This library requires you to create a local copy of your desired GNSS time series, velocities, steps, offsets, and/or hydrological loading models from 
-at least one GNSS database. Each GNSS data source is slightly different.  The file ```getting_gnss_data/metadata.txt``` describes how to locate and download these files.
+at least one GNSS database. Each GNSS data source is slightly different.  The file ```GNSS_TimeSeries_Viewers/getting_gnss_data/metadata.txt``` describes how to locate and download these files.
 Remember that Earthscope now requires a log-in and the Earthscope-CLI for wget access.  
  
 
-The script ```getting_gnss_data/update_data_holdings.sh``` now automates the download of many repositories locally, which might take 
+The script ```GNSS_TimeSeries_Viewers/getting_gnss_data/update_data_holdings.sh``` now automates the download of many repositories locally, which might take 
 a few hours (and ~10Gb) if you're downloading every time series from every processing center.  See specific scripts for individual databases that you might want.  
 
 ## Configuration

@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "GNSS_TimeSeries_Viewers"
+version = "0.1.0"
+description = "Useful GNSS timeseries tools: reading PBO and UNR, getting slopes and seasonal terms and offsets, plotting stacks, and more"
+authors = ["Kathryn Materna <kmaterna@berkeley.edu>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/kmaterna/GNSS_TimeSeries_Viewers"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+numpy = "^1.20"
+scipy = ">=1.10"
+netCDF4 = "*"
+matplotlib = ">=3.4"
+pygmt = ">0.8"
+pandas = "*"
+html5lib = "*"
+beautifulsoup4 = "*"
+Tectonic-Utils = "^0.1.0"
+earthscope-cli = "*"
+
+
+[build-system]
+requires = ["poetry-core", "setuptools", "wheel"]
+build-backend = "poetry.core.masonry.api"
