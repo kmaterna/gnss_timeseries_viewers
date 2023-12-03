@@ -125,13 +125,13 @@ def table_offset_to_velfield(ts_obj_list, offset_obj_list, target_date):
     :param target_date: datetime object
     :returns: list of StationVels
     """
-    offsetpts = [];
+    offsetpts = []
     for i in range(len(offset_obj_list)):
         offseti = filter_offset_list_to_date(offset_obj_list[i], target_date)
         tsi = ts_obj_list[i]
         if offseti is not None:
             offsetpts.append(package_offset_as_StationVel(tsi, offseti))
-    print("Found %d look-up-table offsets, %s" % (len(offsetpts), dt.datetime.strftime(target_date, "%Y-%m-%d")));
+    print("Found %d look-up-table offsets, %s" % (len(offsetpts), dt.datetime.strftime(target_date, "%Y-%m-%d")))
     return offsetpts
 
 

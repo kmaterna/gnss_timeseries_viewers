@@ -17,26 +17,26 @@ def read_config_file(infile):
     :returns: dictionary, which may contain other dictionaries
     """
     if not os.path.isfile(infile):
-        print("Error! Data Config file %s not found on your machine. Must fix!" % infile);
-        sys.exit(1);
+        print("Error! Data Config file %s not found on your machine. Must fix!" % infile)
+        sys.exit(1)
 
     # Read the all important config file.
     config = configparser.ConfigParser()
     config.optionxform = str  # make the config file case-sensitive
-    config.read(infile);
-    config_section = config["py-config"];
+    config.read(infile)
+    config_section = config["py-config"]
 
     # Create a default dictionary so we can tolerate a config file with less-complete fields
-    param_dict = collections.defaultdict(lambda: "Key Not Present In Config");   # dictionary of dictionaries
+    param_dict = collections.defaultdict(lambda: "Key Not Present In Config")   # dictionary of dictionaries
     for key in config_section.keys():
-        param_dict[key] = config_section[key];
+        param_dict[key] = config_section[key]
         if 'config' in key:
-            database_name = key.split('_')[0];
-            one_dictionary = read_one_database_config(config_section[key], 'data-config');
-            head, _ = os.path.split(param_dict[key]);
-            one_dictionary['directory'] = os.path.join(head, "");  # add trailing slash
-            param_dict[database_name] = one_dictionary;
-    return param_dict;
+            database_name = key.split('_')[0]
+            one_dictionary = read_one_database_config(config_section[key], 'data-config')
+            head, _ = os.path.split(param_dict[key])
+            one_dictionary['directory'] = os.path.join(head, "")  # add trailing slash
+            param_dict[database_name] = one_dictionary
+    return param_dict
 
 
 def read_one_database_config(configfile, sectionname):
@@ -47,6 +47,6 @@ def read_one_database_config(configfile, sectionname):
     """
     config = configparser.ConfigParser()
     config.optionxform = str  # make the config file case-sensitive
-    config.read(configfile);
-    config_dictionary = dict(config[sectionname]);
-    return config_dictionary;
+    config.read(configfile)
+    config_dictionary = dict(config[sectionname])
+    return config_dictionary

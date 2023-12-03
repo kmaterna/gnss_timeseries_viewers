@@ -19,28 +19,28 @@ def read_lsdm_file(filename, coords_file=None) -> Timeseries:
     :param coords_file: optional, string, file where you can look up the station's coordinates
     :returns: TimeSeries object
     """
-    print("Reading %s" % filename);
-    dtarray = [];
-    station_name = os.path.split(filename)[1][0:4];
+    print("Reading %s" % filename)
+    dtarray = []
+    station_name = os.path.split(filename)[1][0:4]
     if coords_file is not None:
-        [lon, lat] = get_coordinates_for_unr_stations([station_name], coords_file);  # format [lat, lon]
-        coords = [lon[0], lat[0]];
+        [lon, lat] = get_coordinates_for_unr_stations([station_name], coords_file)  # format [lat, lon]
+        coords = [lon[0], lat[0]]
     else:
-        coords = [None, None];  # can return an object without meaningful coordinates if not asked for them.
+        coords = [None, None]  # can return an object without meaningful coordinates if not asked for them.
     [dts, dU, dN, dE] = np.loadtxt(filename, usecols=(0, 1, 2, 3), dtype={'names': ('dts', 'dN', 'dE', 'dU'),
                                                                           'formats': (
                                                                               'U10', float, float, float)},
-                                   skiprows=3, delimiter=',', unpack=True);
+                                   skiprows=3, delimiter=',', unpack=True)
     for i in range(len(dts)):
-        dtarray.append(dt.datetime.strptime(dts[i][0:10], "%Y-%m-%d"));
-    dN = [i * 1000.0 for i in dN];
-    dE = [i * 1000.0 for i in dE];
-    dU = [i * 1000.0 for i in dU];
-    Se = 0.2 * np.ones(np.shape(dE));
-    Sn = 0.2 * np.ones(np.shape(dN));
-    Su = 0.2 * np.ones(np.shape(dU));
-    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su);
-    return myData;
+        dtarray.append(dt.datetime.strptime(dts[i][0:10], "%Y-%m-%d"))
+    dN = [i * 1000.0 for i in dN]
+    dE = [i * 1000.0 for i in dE]
+    dU = [i * 1000.0 for i in dU]
+    Se = 0.2 * np.ones(np.shape(dE))
+    Sn = 0.2 * np.ones(np.shape(dN))
+    Su = 0.2 * np.ones(np.shape(dU))
+    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su)
+    return myData
 
 
 def read_grace(filename) -> Timeseries:
@@ -50,47 +50,47 @@ def read_grace(filename) -> Timeseries:
     :param filename: string, name of file
     :returns: TimeSeries object
     """
-    print("Reading %s" % filename);
-    station_name = os.path.split(filename)[1];  # this is the local name of the file
-    station_name = station_name.split('_')[1];  # this is the four-character name
+    print("Reading %s" % filename)
+    station_name = os.path.split(filename)[1]  # this is the local name of the file
+    station_name = station_name.split('_')[1]  # this is the four-character name
     [dts, lon, lat, _, u, v, w] = np.loadtxt(filename, usecols=range(0, 7),
                                              dtype={'names': ('dts', 'lon', 'lat', 'elev', 'u', 'v', 'w'),
                                                     'formats': (
-                                                        'U11', float, float, float, float, float, float)}, unpack=True);
+                                                        'U11', float, float, float, float, float, float)}, unpack=True)
     # In the file, datetime is format 01-Jan-2012_31-Jan-2012.
     # We take start date and add 15 days to put the GRACE at center of bin.
     # There will be only one point per month, generally speaking
-    grace_t = [dt.datetime.strptime(x, "%d-%b-%Y") for x in dts];
-    grace_t = [i + dt.timedelta(days=15) for i in grace_t];
-    S = np.zeros(np.shape(u));
+    grace_t = [dt.datetime.strptime(x, "%d-%b-%Y") for x in dts]
+    grace_t = [i + dt.timedelta(days=15) for i in grace_t]
+    S = np.zeros(np.shape(u))
     GRACE_TS = Timeseries(name=station_name, coords=[lon[0], lat[0]], dtarray=grace_t, dE=u, dN=v, dU=w, Se=S, Sn=S,
-                          Su=S);
-    return GRACE_TS;
+                          Su=S)
+    return GRACE_TS
 
 
 def read_humanread_vel_file(infile):
     """
     Reading velfield file with format:
-    lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
+    lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n")
 
     :param infile: string, filename
     :returns: list of StationVel objects
     """
-    myVelfield = [];
-    print("Reading %s" % infile);
-    ifile = open(infile, 'r');
+    myVelfield = []
+    print("Reading %s" % infile)
+    ifile = open(infile, 'r')
     for line in ifile:
         if line.split()[0] == '#':
-            continue;
-        temp = line.split();
+            continue
+        temp = line.split()
         new_station = Station_Vel(name=temp[10], elon=float(temp[0]), nlat=float(temp[1]), e=float(temp[2]),
                                   n=float(temp[3]), u=float(temp[4]), se=float(temp[5]), sn=float(temp[6]),
                                   su=float(temp[7]), first_epoch=dt.datetime.strptime(temp[8], "%Y%m%d"),
                                   last_epoch=dt.datetime.strptime(temp[9], "%Y%m%d"), refframe='',
-                                  proccenter='', subnetwork='', survey=False, meas_type='gnss');
-        myVelfield.append(new_station);
-    ifile.close();
-    return myVelfield;
+                                  proccenter='', subnetwork='', survey=False, meas_type='gnss')
+        myVelfield.append(new_station)
+    ifile.close()
+    return myVelfield
 
 
 def write_humanread_vel_file(myVelfield, outfile):
@@ -98,18 +98,18 @@ def write_humanread_vel_file(myVelfield, outfile):
     :param myVelfield: list of StationVel objects
     :param outfile: string, filename
     """
-    print("writing human-readable velfile %s" % outfile);
-    ofile = open(outfile, 'w');
+    print("writing human-readable velfile %s" % outfile)
+    ofile = open(outfile, 'w')
     ofile.write(
-        "# Fmt: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n");
+        "# Fmt: lon(deg) lat(deg) e(mm) n(mm) u(mm) Se(mm) Sn(mm) Su(mm) first_dt(yyyymmdd) last_dt(yyyymmdd) name\n")
     for station_vel in myVelfield:
-        first_epoch = dt.datetime.strftime(station_vel.first_epoch, '%Y%m%d');
-        last_epoch = dt.datetime.strftime(station_vel.last_epoch, '%Y%m%d');
+        first_epoch = dt.datetime.strftime(station_vel.first_epoch, '%Y%m%d')
+        last_epoch = dt.datetime.strftime(station_vel.last_epoch, '%Y%m%d')
         ofile.write("%f %f %f %f %f %f %f %f %s %s %s\n" % (
             station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.u, station_vel.se,
-            station_vel.sn, station_vel.su, first_epoch, last_epoch, station_vel.name));
-    ofile.close();
-    return;
+            station_vel.sn, station_vel.su, first_epoch, last_epoch, station_vel.name))
+    ofile.close()
+    return
 
 
 def write_stationvel_file(myVelfield, outfile, metadata=None):
@@ -118,18 +118,18 @@ def write_stationvel_file(myVelfield, outfile, metadata=None):
     :param outfile: string, filename
     :param metadata: string, optional, used for header
     """
-    print("writing human-readable velfile in station-vel format, %s" % outfile);
-    ofile = open(outfile, 'w');
+    print("writing human-readable velfile in station-vel format, %s" % outfile)
+    ofile = open(outfile, 'w')
     ofile.write(
-        "# Format: lon(deg) lat(deg) VE(mm) VN(mm) VU(mm) SE(mm) SN(mm) SU(mm) name(optional)\n");
+        "# Format: lon(deg) lat(deg) VE(mm) VN(mm) VU(mm) SE(mm) SN(mm) SU(mm) name(optional)\n")
     if metadata:
-        ofile.write("# derived from metadata: %s\n" % metadata);
+        ofile.write("# derived from metadata: %s\n" % metadata)
     for station_vel in myVelfield:
         ofile.write("%f %f %f %f %f %f %f %f %s\n" % (
             station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.u, station_vel.se,
-            station_vel.sn, station_vel.su, station_vel.name));
-    ofile.close();
-    return;
+            station_vel.sn, station_vel.su, station_vel.name))
+    ofile.close()
+    return
 
 
 def write_gmt_velfile(myVelfield, outfile):
@@ -137,15 +137,15 @@ def write_gmt_velfile(myVelfield, outfile):
     :param myVelfield: list of StationVel objects
     :param outfile: string, filename
     """
-    print("Writing gmt velfile %s" % outfile);
-    ofile = open(outfile, 'w');
-    ofile.write("# Format: lon(deg) lat(deg) e(mm) n(mm) Se(mm) Sn(mm) 0 0 1 name\n");
+    print("Writing gmt velfile %s" % outfile)
+    ofile = open(outfile, 'w')
+    ofile.write("# Format: lon(deg) lat(deg) e(mm) n(mm) Se(mm) Sn(mm) 0 0 1 name\n")
     for station_vel in myVelfield:
         ofile.write("%f %f %f %f %f %f 0 0 1 %s\n" % (
             station_vel.elon, station_vel.nlat, station_vel.e, station_vel.n, station_vel.se,
-            station_vel.sn, station_vel.name));
-    ofile.close();
-    return;
+            station_vel.sn, station_vel.name))
+    ofile.close()
+    return
 
 
 def read_blacklist(blacklist_file) -> list:
@@ -159,17 +159,17 @@ def read_blacklist(blacklist_file) -> list:
         blacklist_all = f.readlines()
         for line in blacklist_all:
             blacklist.append(line.split()[0])
-    return blacklist;
+    return blacklist
 
 
 def write_stl(Data, filename):
-    ofile = open(filename, 'w');
+    ofile = open(filename, 'w')
     for i in range(len(Data.dtarray)):
-        timestamp = dt.datetime.strftime(Data.dtarray[i], "%Y%m%d");
+        timestamp = dt.datetime.strftime(Data.dtarray[i], "%Y%m%d")
         ofile.write("%s %f %f %f %f %f %f\n" % (
-            timestamp, Data.dE[i], Data.dN[i], Data.dU[i], Data.Se[i], Data.Sn[i], Data.Su[i]));
-    ofile.close();
-    return;
+            timestamp, Data.dE[i], Data.dN[i], Data.dU[i], Data.Se[i], Data.Sn[i], Data.Su[i]))
+    ofile.close()
+    return
 
 
 def read_lake_loading_ts(infile) -> Timeseries:
@@ -178,11 +178,11 @@ def read_lake_loading_ts(infile) -> Timeseries:
     :returns: a TimeSeries object
     """
     [dtstrings, u, v, w] = np.loadtxt(infile, usecols=(0, 4, 5, 6), unpack=True, dtype={
-        'names': ('d', 'u', 'v', 'w'), 'formats': ('U10', np.float, np.float, np.float)});
-    dtarray = [dt.datetime.strptime(x, "%Y-%m-%d") for x in dtstrings];
-    S = np.zeros(np.shape(u));
-    loading_defo = Timeseries(name='', coords=[], dtarray=dtarray, dE=u, dN=v, dU=w, Sn=S, Se=S, Su=S);
-    return loading_defo;
+        'names': ('d', 'u', 'v', 'w'), 'formats': ('U10', np.float, np.float, np.float)})
+    dtarray = [dt.datetime.strptime(x, "%Y-%m-%d") for x in dtstrings]
+    S = np.zeros(np.shape(u))
+    loading_defo = Timeseries(name='', coords=[], dtarray=dtarray, dE=u, dN=v, dU=w, Sn=S, Se=S, Su=S)
+    return loading_defo
 
 
 def read_creepmeter(filename) -> Timeseries:
@@ -192,15 +192,16 @@ def read_creepmeter(filename) -> Timeseries:
     :param filename: string, filename
     :return: a TimeSeries object
     """
-    print("Reading file %s " % filename);
+    print("Reading file %s " % filename)
     df = pandas.read_excel(filename, sheet_name=0)
-    ts = df['UTC'].values;
-    dtarray = [pandas.to_datetime(x) for x in ts];
-    displacement = df['dextral'].values.tolist();
+    ts = df['UTC'].values
+    dtarray = [pandas.to_datetime(x) for x in ts]
+    displacement = df['dextral'].values.tolist()
     creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement,
                                  dN=np.zeros(np.shape(displacement)), dU=np.zeros(np.shape(displacement)),
-                                 Sn=(), Se=(), Su=());
-    return creepmeter_data;
+                                 Sn=np.zeros(np.shape(displacement)), Se=np.zeros(np.shape(displacement)),
+                                 Su=np.zeros(np.shape(displacement)))
+    return creepmeter_data
 
 def read_creepmeter2(filename) -> Timeseries:
     """
@@ -209,15 +210,15 @@ def read_creepmeter2(filename) -> Timeseries:
     :param filename: string, filename
     :return: a TimeSeries object
     """
-    print("Reading file %s " % filename);
+    print("Reading file %s " % filename)
     df = pandas.read_excel(filename, sheet_name=0)
-    ts = df['date'].values;
-    dtarray = [pandas.to_datetime(x) for x in ts];
-    displacement = df['slip'].values.tolist();
+    ts = df['date'].values
+    dtarray = [pandas.to_datetime(x) for x in ts]
+    displacement = df['slip'].values.tolist()
     creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement,
                                  dN=np.zeros(np.shape(displacement)), dU=np.zeros(np.shape(displacement)),
-                                 Sn=(), Se=(), Su=());
-    return creepmeter_data;
+                                 Sn=(), Se=(), Su=())
+    return creepmeter_data
 
 
 def read_mit_hr_fig(filename_dt, filename_e, filename_n) -> Timeseries:
@@ -227,25 +228,26 @@ def read_mit_hr_fig(filename_dt, filename_e, filename_n) -> Timeseries:
     :param filename_n: string, filename of high-rate .fig file produced at MIT
     :return: a TimeSeries object
     """
-    print("Reading file %s " % filename_dt);
-    e = np.loadtxt(filename_e, unpack=True);
-    n = np.loadtxt(filename_n, unpack=True);
-    dtarray = [];
+    print("Reading file %s " % filename_dt)
+    e = np.loadtxt(filename_e, unpack=True)
+    n = np.loadtxt(filename_n, unpack=True)
+    dtarray = []
     with open(filename_dt, 'r') as f:
         for line in f:
             if len(line.split()) > 1:
-                dtarray.append(dt.datetime.strptime(line.split()[0]+' '+line.split()[1], '%d-%b-%Y %H:%M:%S'));
-    hr_data = Timeseries(name='P503', coords=[], dtarray=dtarray, dE=e, dN=n, dU='', Se='', Sn='', Su='');
-    return hr_data;
+                dtarray.append(dt.datetime.strptime(line.split()[0]+' '+line.split()[1], '%d-%b-%Y %H:%M:%S'))
+    hr_data = Timeseries(name='P503', coords=[], dtarray=dtarray, dE=e, dN=n, dU=np.zeros(np.shape(n)),
+                         Se=np.zeros(np.shape(n)), Sn=np.zeros(np.shape(n)), Su=np.zeros(np.shape(n)))
+    return hr_data
 
 
 def write_gmt_ts_file(ts_data, outfile):
     """Write a time series object into a format that GMT can subsequently plot."""
-    print("Writing file %s " % outfile);
+    print("Writing file %s " % outfile)
     with open(outfile, 'w') as ofile:
         for i in range(len(ts_data.dtarray)):
             ofile.write("%s %f %f %f\n" % (dt.datetime.strftime(ts_data.dtarray[i], "%Y-%m-%dT%H-%M-%S"),
                                            ts_data.dE[i],
                                            ts_data.dN[i],
-                                           ts_data.dU[i]) );
-    return;
+                                           ts_data.dU[i]) )
+    return

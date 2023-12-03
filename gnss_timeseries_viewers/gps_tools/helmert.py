@@ -15,20 +15,20 @@ def create_Helmert_and_apply(sys_A_common_vels, sys_B_common_vels):
     :return: 7 Helmert params,
     """
     if len(sys_A_common_vels) != len(sys_B_common_vels):
-        raise ValueError("Error! You are estimating a Helmert transformation between two non-matching vectors.");
+        raise ValueError("Error! You are estimating a Helmert transformation between two non-matching vectors.")
     # Preparing for Estimating Helmert Transformation
     print("BEFORE HELMERT:", vel_functions.velocity_misfit_function(sys_A_common_vels, sys_B_common_vels),
-          "mm RMS misfit");
-    sysA_posform_xyz = prepare_velocities_for_helmert_trans(sys_A_common_vels);
-    sysB_posform_xyz = prepare_velocities_for_helmert_trans(sys_B_common_vels);
+          "mm RMS misfit")
+    sysA_posform_xyz = prepare_velocities_for_helmert_trans(sys_A_common_vels)
+    sysB_posform_xyz = prepare_velocities_for_helmert_trans(sys_B_common_vels)
     # ESTIMATING/APPLYING THE HELMERT TRANSFORMATION
-    Hparams = get_Helmert_parameters(sysB_posform_xyz, sysA_posform_xyz);
-    sysB_postH = Apply_Helmert_Transformation(sysB_posform_xyz, Hparams);
+    Hparams = get_Helmert_parameters(sysB_posform_xyz, sysA_posform_xyz)
+    sysB_postH = Apply_Helmert_Transformation(sysB_posform_xyz, Hparams)
     # converting back to ENU
-    B_enu_in_A = postproc_after_helmert(sysB_postH);
-    A_enu_in_A = postproc_after_helmert(sysA_posform_xyz);
-    print("AFTER HELMERT:", vel_functions.velocity_misfit_function(A_enu_in_A, B_enu_in_A), "mm RMS misfit");
-    return Hparams, A_enu_in_A, B_enu_in_A;
+    B_enu_in_A = postproc_after_helmert(sysB_postH)
+    A_enu_in_A = postproc_after_helmert(sysA_posform_xyz)
+    print("AFTER HELMERT:", vel_functions.velocity_misfit_function(A_enu_in_A, B_enu_in_A), "mm RMS misfit")
+    return Hparams, A_enu_in_A, B_enu_in_A
 
 
 def prepare_velocities_for_helmert_trans(velfield, multiplier=100):
@@ -41,18 +41,18 @@ def prepare_velocities_for_helmert_trans(velfield, multiplier=100):
     This is going to be used for helmert transformation of positions into a new reference frame.
     Multiplier is the number of years for velocities, to avoid floating point and rounding errors
     """
-    velfield_xyz = vel_functions.convert_enu_velfield_to_xyz(velfield);  # convert to xyz
-    special_pos_objects = [];
+    velfield_xyz = vel_functions.convert_enu_velfield_to_xyz(velfield)  # convert to xyz
+    special_pos_objects = []
     for item in velfield_xyz:
-        x_special_pos = item.x_pos + multiplier * item.x_rate;
-        y_special_pos = item.y_pos + multiplier * item.y_rate;
-        z_special_pos = item.z_pos + multiplier * item.z_rate;
+        x_special_pos = item.x_pos + multiplier * item.x_rate
+        y_special_pos = item.y_pos + multiplier * item.y_rate
+        z_special_pos = item.z_pos + multiplier * item.z_rate
         newobj = vel_functions.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos, z_pos=item.z_pos,
                                                x_rate=x_special_pos, y_rate=y_special_pos, z_rate=z_special_pos,
                                                x_sigma=item.x_sigma, y_sigma=item.y_sigma, z_sigma=item.z_sigma,
-                                               first_epoch=item.first_epoch, last_epoch=item.last_epoch);
-        special_pos_objects.append(newobj);
-    return special_pos_objects;
+                                               first_epoch=item.first_epoch, last_epoch=item.last_epoch)
+        special_pos_objects.append(newobj)
+    return special_pos_objects
 
 
 def get_Helmert_parameters(xyz_velfieldA, xyz_velfieldB):
@@ -65,29 +65,29 @@ def get_Helmert_parameters(xyz_velfieldA, xyz_velfieldB):
     """
 
     def fun(v):
-        vecA, vecB = [], [];
-        [Cx, Cy, Cz, s, Rx, Ry, Rz] = [*v];
-        s_mult = 1 + s * 1e-6;
+        vecA, vecB = [], []
+        [Cx, Cy, Cz, s, Rx, Ry, Rz] = [*v]
+        s_mult = 1 + s * 1e-6
         for i in range(len(xyz_velfieldA)):
-            newobs = np.array([xyz_velfieldB[i].x_rate, xyz_velfieldB[i].y_rate, xyz_velfieldB[i].z_rate]);
+            newobs = np.array([xyz_velfieldB[i].x_rate, xyz_velfieldB[i].y_rate, xyz_velfieldB[i].z_rate])
             transformed_Aobs_x = Cx + s_mult * (xyz_velfieldA[i].x_rate - Rz * xyz_velfieldA[i].y_rate +
-                                                Ry * xyz_velfieldA[i].z_rate);
+                                                Ry * xyz_velfieldA[i].z_rate)
             transformed_Aobs_y = Cy + s_mult * (Rz * xyz_velfieldA[i].x_rate + xyz_velfieldA[i].y_rate -
-                                                Rx * xyz_velfieldA[i].z_rate);
+                                                Rx * xyz_velfieldA[i].z_rate)
             transformed_Aobs_z = Cz + s_mult * (-Ry * xyz_velfieldA[i].x_rate + Rx * xyz_velfieldA[i].y_rate +
-                                                xyz_velfieldA[i].z_rate);
-            transformed_obsA = np.array([transformed_Aobs_x, transformed_Aobs_y, transformed_Aobs_z]);
-            vecB = np.concatenate((vecB, newobs), axis=0);
-            vecA = np.concatenate((vecA, transformed_obsA), axis=0);
-        residuals = np.subtract(vecB, vecA);
-        return residuals;
+                                                xyz_velfieldA[i].z_rate)
+            transformed_obsA = np.array([transformed_Aobs_x, transformed_Aobs_y, transformed_Aobs_z])
+            vecB = np.concatenate((vecB, newobs), axis=0)
+            vecA = np.concatenate((vecA, transformed_obsA), axis=0)
+        residuals = np.subtract(vecB, vecA)
+        return residuals
 
-    Htrans_starting_guess = np.array([0, 0, 0, 1, 0, 0, 0]);
+    Htrans_starting_guess = np.array([0, 0, 0, 1, 0, 0, 0])
     # solve nonlinear least squares problem!
-    response = scipy.optimize.least_squares(fun, Htrans_starting_guess, loss='soft_l1');
-    Htrans_optimal = response.x;  # the 7 parameters of the Helmert transformation.
-    print(Htrans_optimal);
-    return Htrans_optimal;
+    response = scipy.optimize.least_squares(fun, Htrans_starting_guess, loss='soft_l1')
+    Htrans_optimal = response.x  # the 7 parameters of the Helmert transformation.
+    print(Htrans_optimal)
+    return Htrans_optimal
 
 
 def postproc_after_helmert(xyz_velfield, multiplier=100):
@@ -96,24 +96,24 @@ def postproc_after_helmert(xyz_velfield, multiplier=100):
     Multiplier is the number of years for velocities, to avoid floating point and rounding errors
     Return a normal velfield in ENU
     """
-    enu_station_list = [];
+    enu_station_list = []
     for item in xyz_velfield:
-        res_vel_x = (item.x_rate - item.x_pos) / multiplier;  # converting back into position and velocity
-        res_vel_y = (item.y_rate - item.y_pos) / multiplier;
-        res_vel_z = (item.z_rate - item.z_pos) / multiplier;
-        lonlat = geo_conv.xyz2llh(np.array([[item.x_pos, item.y_pos, item.z_pos], ]));
-        llh_origin_simple = np.array([lonlat[0][0], lonlat[0][1], 0]);  # simpler numpy array
-        xyz_vel = 1000 * np.array([[res_vel_x, res_vel_y, res_vel_z], ]);  # now in mm
-        xyz_stds = 1000 * np.array([item.x_sigma, item.y_sigma, item.z_sigma]);  # now in mm
-        ecov = np.diag(xyz_stds);  # a 3x3 np array matrix with covariances on the diagonal
+        res_vel_x = (item.x_rate - item.x_pos) / multiplier  # converting back into position and velocity
+        res_vel_y = (item.y_rate - item.y_pos) / multiplier
+        res_vel_z = (item.z_rate - item.z_pos) / multiplier
+        lonlat = geo_conv.xyz2llh(np.array([[item.x_pos, item.y_pos, item.z_pos], ]))
+        llh_origin_simple = np.array([lonlat[0][0], lonlat[0][1], 0])  # simpler numpy array
+        xyz_vel = 1000 * np.array([[res_vel_x, res_vel_y, res_vel_z], ])  # now in mm
+        xyz_stds = 1000 * np.array([item.x_sigma, item.y_sigma, item.z_sigma])  # now in mm
+        ecov = np.diag(xyz_stds)  # a 3x3 np array matrix with covariances on the diagonal
 
-        enu_vel, enu_cov = geo_conv.xyz2enu(xyz_vel, llh_origin_simple, ecov);  # covariances go here
+        enu_vel, enu_cov = geo_conv.xyz2enu(xyz_vel, llh_origin_simple, ecov)  # covariances go here
 
         new_station_vel = vel_functions.Station_Vel(name=item.name, elon=lonlat[0][0], nlat=lonlat[0][1],
                                                     e=enu_vel[0][0], n=enu_vel[0][1], u=enu_vel[0][2], se=enu_cov[0][0],
-                                                    sn=enu_cov[1][1], su=enu_cov[2][2], first_epoch=0, last_epoch=0);
-        enu_station_list.append(new_station_vel);
-    return enu_station_list;
+                                                    sn=enu_cov[1][1], su=enu_cov[2][2], first_epoch=0, last_epoch=0)
+        enu_station_list.append(new_station_vel)
+    return enu_station_list
 
 
 def Apply_Helmert_Transformation(xyz_velfieldA, Helmert_params):
@@ -128,31 +128,31 @@ def Apply_Helmert_Transformation(xyz_velfieldA, Helmert_params):
     :type Helmert_params: list
     :returns: xyz_velfieldB, list of Station_Vel_XZY objects in primed reference frame
     """
-    xyz_velfieldB = [];
-    [Cx, Cy, Cz, s, Rx, Ry, Rz] = [*Helmert_params];
-    s_mult = 1 + s * 1e-6;
+    xyz_velfieldB = []
+    [Cx, Cy, Cz, s, Rx, Ry, Rz] = [*Helmert_params]
+    s_mult = 1 + s * 1e-6
     H_Matrix = np.array([[1, -Rz, Ry],
                          [Rz, 1, -Rx],
-                         [-Ry, Rx, 1]]);
-    scaled_H_Matrix = np.multiply(H_Matrix, s_mult);
-    translation_vector = np.array([[Cx, Cy, Cz]]);
+                         [-Ry, Rx, 1]])
+    scaled_H_Matrix = np.multiply(H_Matrix, s_mult)
+    translation_vector = np.array([[Cx, Cy, Cz]])
     for item in xyz_velfieldA:
         # We store raw coordinates in x_pos, and velocity-considered coordinates in x_rate
-        position_in_A = np.array([[item.x_rate, item.y_rate, item.z_rate]]);  # We use rate for transformed position
-        position_in_B = np.dot(scaled_H_Matrix, position_in_A.T);  # Performing rotation/scaling transformation
-        position_in_B = np.add(position_in_B, translation_vector.T);  # adding translation transformation
-        position_in_B = position_in_B.T;
-        xyz_stds = np.array([item.x_sigma, item.y_sigma, item.z_sigma]);
-        ecov = np.diag(xyz_stds);  # a 3x3 np array matrix with covariances on the diagonal
-        sigma_B = np.dot(np.dot(scaled_H_Matrix, ecov), scaled_H_Matrix.T);  # Transform sigmas
-        sigma_B = np.multiply(sigma_B, np.square(s_mult));
+        position_in_A = np.array([[item.x_rate, item.y_rate, item.z_rate]])  # We use rate for transformed position
+        position_in_B = np.dot(scaled_H_Matrix, position_in_A.T)  # Performing rotation/scaling transformation
+        position_in_B = np.add(position_in_B, translation_vector.T)  # adding translation transformation
+        position_in_B = position_in_B.T
+        xyz_stds = np.array([item.x_sigma, item.y_sigma, item.z_sigma])
+        ecov = np.diag(xyz_stds)  # a 3x3 np array matrix with covariances on the diagonal
+        sigma_B = np.dot(np.dot(scaled_H_Matrix, ecov), scaled_H_Matrix.T)  # Transform sigmas
+        sigma_B = np.multiply(sigma_B, np.square(s_mult))
         newobj = vel_functions.Station_Vel_XYZ(name=item.name, x_pos=item.x_pos, y_pos=item.y_pos, z_pos=item.z_pos,
                                                x_rate=position_in_B[0][0], y_rate=position_in_B[0][1],
                                                z_rate=position_in_B[0][2], x_sigma=sigma_B[0][0], y_sigma=sigma_B[1][1],
                                                z_sigma=sigma_B[2][2],
-                                               first_epoch=item.first_epoch, last_epoch=item.last_epoch);
-        xyz_velfieldB.append(newobj);
-    return xyz_velfieldB;
+                                               first_epoch=item.first_epoch, last_epoch=item.last_epoch)
+        xyz_velfieldB.append(newobj)
+    return xyz_velfieldB
 
 
 def write_helmert_params(Hparams, filename):
@@ -160,17 +160,17 @@ def write_helmert_params(Hparams, filename):
     :param Hparams: list of floats, seven params, [Cx, Cy, Cz, s, Rx, Ry, Rz]
     :param filename: string, filename
     """
-    print("Writing %s " % filename);
-    ofile = open(filename, 'w');
-    ofile.write("Cx: %e\n" % Hparams[0]);
-    ofile.write("Cy: %e\n" % Hparams[1]);
-    ofile.write("Cz: %e\n" % Hparams[2]);
-    ofile.write("s: %e\n" % Hparams[3]);
-    ofile.write("Rx: %e\n" % Hparams[4]);
-    ofile.write("Ry: %e\n" % Hparams[5]);
-    ofile.write("Rz: %e\n" % Hparams[6]);
-    ofile.close();
-    return;
+    print("Writing %s " % filename)
+    ofile = open(filename, 'w')
+    ofile.write("Cx: %e\n" % Hparams[0])
+    ofile.write("Cy: %e\n" % Hparams[1])
+    ofile.write("Cz: %e\n" % Hparams[2])
+    ofile.write("s: %e\n" % Hparams[3])
+    ofile.write("Rx: %e\n" % Hparams[4])
+    ofile.write("Ry: %e\n" % Hparams[5])
+    ofile.write("Rz: %e\n" % Hparams[6])
+    ofile.close()
+    return
 
 
 """
