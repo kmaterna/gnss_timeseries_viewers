@@ -221,15 +221,20 @@ def read_creepmeter2(filename) -> Timeseries:
     return creepmeter_data
 
 
-def read_mit_hr_fig(filename_dt, filename_e, filename_n) -> Timeseries:
+def read_mit_hr_fig(filename_dt, filename_e, filename_n, is_six_hour=False) -> Timeseries:
     """
     :param filename_dt: string, filename of high-rate .fig file produced at MIT
     :param filename_e: string, filename of high-rate .fig file produced at MIT
     :param filename_n: string, filename of high-rate .fig file produced at MIT
+    :param is_six_hour: bool
     :return: a TimeSeries object
     """
     print("Reading file %s " % filename_dt)
-    e = np.loadtxt(filename_e, unpack=True)
+    if is_six_hour:
+        e, se = np.loadtxt(filename_e, unpack=True, usecols=(2, 3))
+    else:
+        e = np.loadtxt(filename_e, unpack=True)
+        se = np.zeros(np.shape(e))
     n = np.loadtxt(filename_n, unpack=True)
     dtarray = []
     with open(filename_dt, 'r') as f:
@@ -237,7 +242,7 @@ def read_mit_hr_fig(filename_dt, filename_e, filename_n) -> Timeseries:
             if len(line.split()) > 1:
                 dtarray.append(dt.datetime.strptime(line.split()[0]+' '+line.split()[1], '%d-%b-%Y %H:%M:%S'))
     hr_data = Timeseries(name='P503', coords=[], dtarray=dtarray, dE=e, dN=n, dU=np.zeros(np.shape(n)),
-                         Se=np.zeros(np.shape(n)), Sn=np.zeros(np.shape(n)), Su=np.zeros(np.shape(n)))
+                         Se=se, Sn=np.zeros(np.shape(n)), Su=np.zeros(np.shape(n)))
     return hr_data
 
 
