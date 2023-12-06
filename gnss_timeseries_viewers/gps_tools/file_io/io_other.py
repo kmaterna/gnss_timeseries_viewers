@@ -246,6 +246,42 @@ def read_mit_hr_fig(filename_dt, filename_e, filename_n, is_six_hour=False) -> T
     return hr_data
 
 
+def read_uw_kinematic(filename) -> Timeseries:
+    """
+    Reading the data produced by UW for every 30 minutes of GNSS high-rate time series
+
+    :param filename: string
+    :return:  Timeseries
+    """
+    print("Reading file %s " % filename)
+    dtvals, e, n, u = np.loadtxt(filename, usecols=(0, 1, 2, 3), unpack=True)
+    dtarray = []
+    for item in dtvals:
+        day_of_month = int(np.floor(item))
+        fractional_day = item - day_of_month
+        seconds_after_midnight = fractional_day * (24 * 60 * 60)
+        hours_after_midnight = int(np.floor(seconds_after_midnight / (60 * 60)))
+        hours_string = define_hours_string(hours_after_midnight)
+        if seconds_after_midnight > hours_after_midnight * 60 * 60 + 1000:
+            minutes_string = '45'
+        else:
+            minutes_string = '15'
+        newdatetime = dt.datetime.strptime('2023-05-'+str(day_of_month) + 'T' +
+                                           hours_string+':'+minutes_string+':00', '%Y-%m-%dT%H:%M:%S')
+        dtarray.append(newdatetime)
+    hr_data = Timeseries(name='P503', coords=[], dtarray=dtarray, dE=e, dN=n, dU=u, Se=np.zeros(np.shape(e)),
+                         Sn=np.zeros(np.shape(n)), Su=np.zeros(np.shape(u)))
+    return hr_data
+
+
+def define_hours_string(hours_int):
+    if hours_int <= 9:
+        hours_string = '0' + str(hours_int)
+    else:
+        hours_string = str(hours_int)
+    return hours_string;
+
+
 def write_gmt_ts_file(ts_data, outfile):
     """Write a time series object into a format that GMT can subsequently plot."""
     print("Writing file %s " % outfile)
