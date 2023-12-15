@@ -22,7 +22,7 @@ def write_params(outfile, param_dict):
 def horizontal_full_ts(dataobj_list, distances, outname, removemean=1, start_time_plot=None,
                        end_time_plot=None, label_date=None, vmin=None, vmax=None, spacing=15, eqtimes=()):
 
-    [_f, axarr] = plt.subplots(1, 2, sharex='all', sharey='all', figsize=(10, 8), dpi=300)
+    [fig, axarr] = plt.subplots(1, 2, sharex='all', sharey='all', figsize=(10, 8), dpi=300)
     start_plot, end_plot, label_date, vmin, vmax = get_plot_params(dataobj_list, start_time_plot, end_time_plot,
                                                                    label_date, vmin, vmax, distances)
 
@@ -69,7 +69,7 @@ def horizontal_full_ts(dataobj_list, distances, outname, removemean=1, start_tim
     axarr[1].tick_params(axis='x', labelrotation=40)
 
     custom_cmap.set_array(range(int(vmin), int(vmax)))
-    cb = plt.colorbar(custom_cmap)
+    cb = fig.colorbar(custom_cmap, ax=plt.gca(), location='right')
     cb.set_label('Kilometers from center')
 
     plt.savefig(outname)
@@ -80,7 +80,7 @@ def horizontal_full_ts(dataobj_list, distances, outname, removemean=1, start_tim
 
 def vertical_full_ts(dataobj_list, distances, outname, removemean=1, start_time_plot=None,
                      end_time_plot=None, label_date=None, vmin=None, vmax=None, spacing=40, eqtimes=()):
-    plt.figure(figsize=(6, 8), dpi=160)
+    fig = plt.figure(figsize=(6, 8), dpi=160)
     start_plot, end_plot, label_date, vmin, vmax = get_plot_params(dataobj_list, start_time_plot, end_time_plot,
                                                                    label_date, vmin, vmax, distances)
 
@@ -107,7 +107,7 @@ def vertical_full_ts(dataobj_list, distances, outname, removemean=1, start_time_
     plt.gca().grid(True)
 
     custom_cmap.set_array(range(int(vmin), int(vmax)))
-    cb = plt.colorbar(custom_cmap)
+    cb = fig.colorbar(custom_cmap, ax=plt.gca())
     cb.set_label('Kilometers from center')
 
     plt.savefig(outname)
@@ -163,7 +163,7 @@ def horizontal_filtered_plots(dataobj_list, distances, outname, start_time_plot=
 
 def vertical_filtered_plots(dataobj_list, distances, outname, start_time_plot=None, end_time_plot=None,
                             label_date=None, vmin=None, vmax=None, spacing=1.6, offset=-10, eqtimes=()):
-    plt.figure(figsize=(15, 8), dpi=160)
+    fig = plt.figure(figsize=(15, 8), dpi=160)
     start_plot, end_plot, label_date, vmin, vmax = get_plot_params(dataobj_list, start_time_plot, end_time_plot,
                                                                    label_date, vmin, vmax, distances)
 
@@ -192,7 +192,7 @@ def vertical_filtered_plots(dataobj_list, distances, outname, start_time_plot=No
     plt.gca().grid(True)
 
     custom_cmap.set_array(range(int(vmin), int(vmax)))
-    cb = plt.colorbar(custom_cmap)
+    cb = fig.colorbar(custom_cmap, ax=plt.gca())
     cb.set_label('Kilometers from center')
 
     plt.savefig(outname)
