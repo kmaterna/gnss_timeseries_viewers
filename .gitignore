@@ -7,3 +7,4 @@
 .idea/*
 ts_viewer/*
 build/*
+*.DS_Store
