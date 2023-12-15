@@ -293,6 +293,10 @@ class Timeseries:
         """
         Model data with a best-fit y = mx + b.
         Returns six numbers: e_slope, n_slope, v_slope, e_std, n_std, v_std
+
+        :param starttime: dt datetime
+        :param endtime: dt datetime
+        :param missing_fraction: float between 0 and 1
         """
         if starttime is None:
             starttime = self.get_starttime()
