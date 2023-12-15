@@ -15,7 +15,7 @@ from .file_io import io_nota, io_other, config_io
 
 
 def make_detrended_ts(Data: Timeseries, seasonals_remove: bool, seasonals_type: str,
-                      data_config_file: str, remove_trend=1):
+                      data_config_file: str, remove_trend=True):
     """
     Generate a detrended and/or seasonally-removed time series. Seasonal fitting and de-trending in one function.
     There are several options for the seasonal removal (least-squares, notch filter, grace, etc.)
@@ -23,7 +23,7 @@ def make_detrended_ts(Data: Timeseries, seasonals_remove: bool, seasonals_type: 
 
     Params = config_io.read_config_file(data_config_file)
 
-    if seasonals_remove == 0:
+    if not seasonals_remove:
         print("Not removing seasonals.")
         [east_vel, north_vel, up_vel, _, _, _] = Data.get_slope(missing_fraction=0.6)
         east_params = [east_vel, 0, 0, 0, 0]   # Fit params definition: slope, a2(cos), a1(sin), s2, s1.
@@ -70,7 +70,7 @@ def make_detrended_ts(Data: Timeseries, seasonals_remove: bool, seasonals_type: 
             print("Exiting!\n")
             sys.exit(1)
 
-    if remove_trend == 0:
+    if not remove_trend:
         return trend_in
     else:
         return trend_out

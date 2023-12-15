@@ -44,7 +44,7 @@ def linear_fitting_menke(x, y, sig, verbose=1):
     for i in range(len(params)):
         try:
             error.append(np.absolute(covm[i][i]) ** 0.5)
-        except:
+        except ValueError:
             error.append(0.00)
     perr = np.array(error)
     if verbose:
@@ -71,12 +71,12 @@ def fit_curvefit(x, y, sig, verbose=1):
 
     # The function we are curve fitting
 
-    pfit, pcov = optimize.curve_fit(f, x, y, sigma=sig, absolute_sigma=True, epsfcn=0.0001)
+    pfit, pcov, _, _, _ = optimize.curve_fit(f, x, y, sigma=sig, absolute_sigma=True, epsfcn=0.0001, full_output=True)
     error = []
     for i in range(len(pfit)):
         try:
             error.append(np.absolute(pcov[i][i]) ** 0.5)
-        except:
+        except ValueError:
             error.append(0.00)
     perr = np.array(error)
 

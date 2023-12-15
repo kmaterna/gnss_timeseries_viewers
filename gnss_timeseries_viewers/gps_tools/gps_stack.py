@@ -90,7 +90,7 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
 
     # Detrended objects (or objects with trends and no offsets depends on what you want.)
     for i in range(len(sorted_objects)):
-        newobj = gps_seasonal_removals.make_detrended_ts(sorted_objects[i], 0, 'lssq', data_config_file)
+        newobj = gps_seasonal_removals.make_detrended_ts(sorted_objects[i], False, 'lssq', data_config_file)
         newobj = newobj.remove_outliers(20)  # 20mm outlier definition
         newobj = offsets.remove_offsets(newobj, sorted_offsets[i])  # mechanical offsets
         detr_objs.append(newobj)  # still has offsets, doesn't have trends
@@ -107,11 +107,11 @@ def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_fil
         newobj = newobj.remove_outliers(20)  # 20mm outlier definition
 
         # The detrended TS without earthquakes
-        stage1obj = gps_seasonal_removals.make_detrended_ts(newobj, 0, 'lssq', data_config_file)
+        stage1obj = gps_seasonal_removals.make_detrended_ts(newobj, False, 'lssq', data_config_file)
         no_offsets_detr.append(stage1obj)
 
         # The detrended TS without earthquakes or seasonals
-        stage2obj = gps_seasonal_removals.make_detrended_ts(stage1obj, 1, 'lssq', data_config_file)
+        stage2obj = gps_seasonal_removals.make_detrended_ts(stage1obj, True, 'lssq', data_config_file)
         no_offsets_detr_deseas.append(stage2obj)
 
     return [detr_objs, no_offset_objs, no_offsets_detr, no_offsets_detr_deseas, sorted_distances]

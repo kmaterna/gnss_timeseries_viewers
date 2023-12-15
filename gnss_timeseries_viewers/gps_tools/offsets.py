@@ -52,7 +52,7 @@ def remove_offsets(Data0: Timeseries, offsets_list: list, verbose=False):
     return newData
 
 
-def fit_single_offset(dtarray: list, data: list, interval: list, offset_num_days: int):
+def fit_single_offset(dtarray, data, interval: list, offset_num_days: int):
     """
     Solve for an offset at a given time in one component of data, like east
     Offset can be calculated at a day or an interval (day is just repeated twice.)

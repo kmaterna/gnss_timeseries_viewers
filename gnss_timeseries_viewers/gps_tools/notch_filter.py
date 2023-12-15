@@ -57,7 +57,7 @@ def notchfilt(x, fs, fn, Bn, filtfiltopt=True):
 def notch_filter_example():
     # The same as Paul/Sang-Ho's example for plotting the results of the notch filter.
     #
-    N = 5e4;  # number of samples
+    N = int(5e4);  # number of samples
     dt = 1;  # sampling interval (sec)
     t = np.arange(0, N, dt);
     fs = 1.0 / dt;  # sampling frequency (Hz)
