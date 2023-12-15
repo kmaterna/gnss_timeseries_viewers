@@ -37,48 +37,48 @@ class Timeseries:
     #              PREDICATES
     # -------------------------------------------- #
 
-    def covers_date(self, include_time):
+    def covers_date(self, include_time: dt.datetime) -> bool:
         if self.dtarray[0] < include_time < self.dtarray[-1]:
-            return 1
+            return True
         else:
-            return 0
+            return False
 
-    def covers_date_range(self, include_time_start, include_time_end):
+    def covers_date_range(self, include_time_start: dt.datetime, include_time_end: dt.datetime) -> bool:
         if self.dtarray[0] < include_time_start and self.dtarray[-1] > include_time_end:
-            return 1
+            return True
         else:
-            return 0
+            return False
 
-    def has_incompatible_subwindow(self, starttime_desired, endtime_desired):
+    def has_incompatible_subwindow(self, starttime_desired: dt.datetime, endtime_desired: dt.datetime) -> bool:
         """
         Check for nasty things that disturb the calculation of slopes from sub-windowed timeseries,
         such as an incompatible window requested.
         """
         if endtime_desired < self.get_starttime():
             print("Error: end time before start of array for station %s. Returning Nan" % self.name)
-            return 1
+            return True
         if starttime_desired > self.get_endtime():
             print("Error: start time after end of array for station %s. Returning Nan" % self.name)
-            return 1
+            return True
         if starttime_desired >= endtime_desired:
             print("Error! Starttime after endtime for station %s " % self.name)
-            return 1
+            return True
         if self.get_starttime() == self.get_endtime():
             print("Error: Timeseries has length 1")
-            return 1
-        return 0
+            return True
+        return False
 
-    def is_within_bbox(self, bbox):
+    def is_within_bbox(self, bbox) -> bool:
         if bbox[0] <= self.coords[0] <= bbox[1] and bbox[2] <= self.coords[1] <= bbox[3]:
-            return 1
+            return True
         else:
-            return 0
+            return False
 
     # -------------------------------------------- #
     # PROCESSES THAT RETURN NEW TIME SERIES OBJECTS
     # -------------------------------------------- #
 
-    def remove_outliers(self, outliers_def):
+    def remove_outliers(self, outliers_def: float):
         medfilt_e = signal.medfilt(self.dE, 35)
         medfilt_n = signal.medfilt(self.dN, 35)
         medfilt_u = signal.medfilt(self.dU, 35)
@@ -98,7 +98,7 @@ class Timeseries:
                              EQtimes=self.EQtimes)
         return newData
 
-    def impose_time_limits(self, starttime, endtime):
+    def impose_time_limits(self, starttime: dt.datetime, endtime: dt.datetime):
         """
         :param starttime: datetime object
         :param endtime:  datetime object
@@ -175,7 +175,7 @@ class Timeseries:
                              Su=self.Su, EQtimes=eqdates)
         return newData
 
-    def rotate_data(self, azimuth):  # should test to make sure this works the way I think it does.
+    def rotate_data(self, azimuth: float):  # should test to make sure this works the way I think it does.
         """
         :param azimuth: degrees, CW from north
         :return: a Timeseries object. ts.e is associated with the new azimuth ts.e is associated with azimuth+90.
@@ -191,7 +191,7 @@ class Timeseries:
                                 Sn=self.Sn, Se=self.Se, Su=self.Su, EQtimes=self.EQtimes)
         return rotated_ts
 
-    def median_filter_data(self, size):
+    def median_filter_data(self, size: int):
         """
         :param size: integer, window size for median filter
         :return: a Timeseries object
@@ -273,16 +273,16 @@ class Timeseries:
     # REDUCE TIME SERIES OBJECTS TO SCALARS OR VALUES
     # -------------------------------------------- #
 
-    def get_starttime(self):
+    def get_starttime(self) -> dt.datetime:
         return self.dtarray[0]
 
-    def get_endtime(self):
+    def get_endtime(self) -> dt.datetime:
         return self.dtarray[-1]
 
-    def get_time_range(self):
+    def get_time_range(self) -> (dt.datetime, dt.datetime):
         return self.get_starttime(), self.get_endtime()
 
-    def get_distance_to_point(self, point):
+    def get_distance_to_point(self, point) -> float:
         """
         :param point: (lon, lat)
         :return: distance in km
@@ -346,7 +346,7 @@ class Timeseries:
 
         return [east_slope, north_slope, vert_slope, east_std, north_std, vert_std]
 
-    def get_slope_unc(self, starttime, endtime):
+    def get_slope_unc(self, starttime: dt.datetime, endtime: dt.datetime):
         """
         Calculate Allan Variance of Rates.
         slope is returned as params[0]
@@ -381,7 +381,7 @@ class Timeseries:
         data = data.impose_time_limits(starttime, endtime)
         return [np.nanmean(data.dE), np.nanmean(data.dN), np.nanmean(data.dU)]
 
-    def get_values_at_date(self, selected_date, num_days=10):
+    def get_values_at_date(self, selected_date: dt.datetime, num_days=10):
         """
         At a selected date, extract east, north, and up values at that date, with a forward-looking averaging window.
         """
@@ -393,7 +393,7 @@ class Timeseries:
             [e_value, n_value, u_value] = [np.nan, np.nan, np.nan]
         return e_value, n_value, u_value
 
-    def subsample_in_time(self, target_time, window_days=30):
+    def subsample_in_time(self, target_time: dt.datetime, window_days=30):
         """
         Downsample the position corresponding a given date by averaging over a two-sided window around target date.
         Almost the same as the get_values_at_date(), just with two-sided averaging window.
@@ -414,7 +414,7 @@ class Timeseries:
             E0, N0, U0 = np.nan, np.nan, np.nan
         return E0, N0, U0
 
-    def get_uncertainties_for_avg_position(self, selected_date, num_days):
+    def get_uncertainties_for_avg_position(self, selected_date: dt.datetime, num_days: int):
         """
         Uncertainties on the average displacements are computed multiplying by 2/(sqrt(n)) because
         we approximate it as ~2x larger than uncorrelated noise.
@@ -432,7 +432,7 @@ class Timeseries:
             print("Error: requested date %s not found in dtarray" % dt.datetime.strftime(selected_date, "%Y-%m-%d"))
         return Se, Sn, Su
 
-    def get_gap_fraction(self):
+    def get_gap_fraction(self) -> float:
         """Compute the fraction of the time series that is not present. """
         starttime = self.dtarray[0]
         endtime = self.dtarray[-1]
@@ -441,7 +441,7 @@ class Timeseries:
         days_present = len(self.dtarray)
         return 1 - (days_present / total_possible_days)
 
-    def get_logfunction_params(self, eqtime):
+    def get_logfunction_params(self, eqtime: dt.datetime):
         """
         y = B + Alog(1+t/tau), t is in decyear
         Useful for postseismic transients.

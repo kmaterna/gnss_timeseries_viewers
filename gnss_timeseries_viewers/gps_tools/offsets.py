@@ -1,7 +1,8 @@
 """
 Toolbox that operates on Timeseries objects to deal with antenna offsets and earthquake offsets.
 """
-from . import gps_ts_functions, vel_functions
+from . import vel_functions
+from .gps_ts_functions import Timeseries
 import numpy as np
 import datetime as dt
 
@@ -14,8 +15,11 @@ class Offset:
         self.n_offset = n_offset  # in mm
         self.u_offset = u_offset  # in mm
 
+    def __str__(self):
+        return f'{dt.datetime.strftime(self.evdt, "%Y-%m-%d")}, {self.e_offset} mmE, ' \
+               f'{self.n_offset} mmN, {self.u_offset} mmU\n'
 
-def remove_offsets(Data0, offsets_list, verbose=False):
+def remove_offsets(Data0: Timeseries, offsets_list: list, verbose=False):
     """
     :param Data0: timeseries object
     :param offsets_list: list of Offset objects
@@ -43,12 +47,12 @@ def remove_offsets(Data0, offsets_list, verbose=False):
         newN.append(tempN)
         newU.append(tempU)
 
-    newData = gps_ts_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN, dE=newE,
-                                          dU=newU, Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes)
+    newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN, dE=newE, dU=newU,
+                         Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes)
     return newData
 
 
-def fit_single_offset(dtarray, data, interval, offset_num_days):
+def fit_single_offset(dtarray: list, data: list, interval: list, offset_num_days: int):
     """
     Solve for an offset at a given time in one component of data, like east
     Offset can be calculated at a day or an interval (day is just repeated twice.)
@@ -84,7 +88,7 @@ def fit_single_offset(dtarray, data, interval, offset_num_days):
     return offset
 
 
-def solve_for_offsets(ts_object, offset_time_intervals, num_days=10):
+def solve_for_offsets(ts_object: Timeseries, offset_time_intervals: list, num_days=10):
     """
     Solve for all E/N/U offsets at given times. Necessary for UNR data.
 
@@ -154,7 +158,7 @@ def manual_offset_to_velfield(ts_obj_list, first_epoch, last_epoch, num_days=10)
     return offsetpts
 
 
-def package_offset_as_StationVel(ts_object, offset):
+def package_offset_as_StationVel(ts_object: Timeseries, offset: Offset):
     """
     :param ts_object: a timeseries object
     :param offset: an offset object
@@ -162,12 +166,11 @@ def package_offset_as_StationVel(ts_object, offset):
     """
     newobj = vel_functions.Station_Vel(name=ts_object.name, nlat=ts_object.coords[1], elon=ts_object.coords[0],
                                        n=offset.n_offset, e=offset.e_offset, u=offset.u_offset, sn=0, se=0, su=0,
-                                       first_epoch='', last_epoch='', meas_type='')
+                                       first_epoch='', last_epoch='')
     return newobj
 
 
 def print_offset_object(Offset_obj):
     for item in Offset_obj:
-        print("%s: %.4f mmE, %.4f mmN, %.4f mmU\n" % (dt.datetime.strftime(item.evdt, "%Y-%m-%d"),
-                                                      item.e_offset, item.n_offset, item.u_offset))
+        print(item)
     return

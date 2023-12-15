@@ -5,7 +5,7 @@ from . import vel_functions, utilities
 import Tectonic_Utils.read_write.read_kml as read_kml
 
 
-def create_station_repo(root_config, refframe, proc_center, subnetwork=None):
+def create_station_repo(root_config: str, refframe: str, proc_center: str, subnetwork=None):
     if proc_center == 'cwu':
         engine = CWU_Proc_Engine(root_config, refframe)
     elif proc_center == 'unr':
@@ -34,7 +34,7 @@ class Station_Repo:
         velfield = self.proc_engine.import_velfield()
         return velfield
 
-    def search_stations_by_circle(self, center, radius, basic_clean=False):
+    def search_stations_by_circle(self, center, radius: float, basic_clean=False):
         """
         :param center: list, [lon, lat]
         :param radius: float, km
@@ -85,7 +85,7 @@ class Station_Repo:
 class CWU_Proc_Engine:
     # specific read/write functions. Each one has a matching load velfield, load station
 
-    def __init__(self, root_config, refframe):
+    def __init__(self, root_config: str, refframe: str):
         self.root_config = root_config   # string
         self.refframe = refframe  # string
         self.file_params = config_io.read_config_file(self.root_config)
@@ -98,12 +98,12 @@ class CWU_Proc_Engine:
         myVelocities = io_nota.read_pbo_vel_file_format(filename)
         return myVelocities
 
-    def import_station(self, station): 
+    def import_station(self, station: str):
         filename = self.pre_screen_ts_datasource_paths(station)
         [myData, offset_obj, eq_obj] = gps_input_pipeline.get_cwu(self.file_params, filename, station, 'cwu')
         return [myData, offset_obj, eq_obj]
 
-    def pre_screen_ts_datasource_paths(self, station):
+    def pre_screen_ts_datasource_paths(self, station: str):
         if self.refframe == "NA":
             filename = self.file_params['cwu']["directory"] + self.file_params['cwu']["gps_ts_dir"] + \
                        station + '.cwu.final_nam14.pos'
@@ -131,7 +131,7 @@ class CWU_Proc_Engine:
 class UNR_Proc_Engine:
     # specific read/write functions. Each one has a matching load velfield, load station
 
-    def __init__(self, root_config, refframe):
+    def __init__(self, root_config: str, refframe: str):
         self.root_config = root_config   # string
         self.refframe = refframe  # string
         self.file_params = config_io.read_config_file(self.root_config)
@@ -144,12 +144,12 @@ class UNR_Proc_Engine:
         myVelocities = io_magnet_unr.read_unr_vel_file(vel_filename, coords_filename)
         return myVelocities
 
-    def import_station(self, station_name):
+    def import_station(self, station_name: str):
         filename = self.pre_screen_ts_datasource_paths(station_name)
         [myData, offset_obj, eq_obj] = gps_input_pipeline.get_unr(self.file_params, filename)  # UNR data format
         return [myData, offset_obj, eq_obj]
 
-    def pre_screen_ts_datasource_paths(self, station):
+    def pre_screen_ts_datasource_paths(self, station: str):
         if self.refframe == 'NA':
             filename = self.file_params["unr"]["directory"]+self.file_params["unr"]["gps_ts_dir"]+station+'.NA.tenv3'
         elif self.refframe == 'ITRF':
@@ -176,7 +176,7 @@ class UNR_Proc_Engine:
 class USGS_Proc_Engine:
     # specific read/write functions. Each one has a matching load velfield, load station
 
-    def __init__(self, root_config, refframe, subnetwork):
+    def __init__(self, root_config: str, refframe: str, subnetwork: str):
         self.root_config = root_config   # string
         self.refframe = refframe  # string
         self.subnetwork = subnetwork  # string
@@ -191,13 +191,13 @@ class USGS_Proc_Engine:
                                                  self.file_params["usgs"]["cache_file"])
         return myVelocities
 
-    def import_station(self, station_name):
+    def import_station(self, station_name: str):
         filename, sub_network = self.pre_screen_ts_datasource_paths(station_name)
         [myData, offset_obj, eq_obj] = gps_input_pipeline.get_usgs(self.file_params, filename, station_name,
                                                                    self.refframe, self.subnetwork)  # USGS data
         return [myData, offset_obj, eq_obj]
 
-    def pre_screen_ts_datasource_paths(self, station_name):
+    def pre_screen_ts_datasource_paths(self, station_name: str):
         # CHECK IF STATION EXISTS IN JUST ONE SUBNETWORK FOR CONVENIENCE
         if self.subnetwork == '':
             network_list = io_usgs.query_usgs_network_name(station_name, self.file_params['usgs']['directory'] +
@@ -247,7 +247,7 @@ class USGS_Proc_Engine:
 class PBO_Proc_Engine:
     # specific read/write functions. Each one has a matching load velfield, load station
 
-    def __init__(self, root_config, refframe, proccenter):
+    def __init__(self, root_config: str, refframe: str, proccenter: str):
         self.root_config = root_config   # string
         self.refframe = refframe  # string
         self.file_params = config_io.read_config_file(self.root_config)
@@ -261,13 +261,13 @@ class PBO_Proc_Engine:
         myVelocities = io_nota.read_pbo_vel_file_format(filename)
         return myVelocities
 
-    def import_station(self, station):
+    def import_station(self, station: str):
         filename = self.pre_screen_ts_datasource_paths(station)
         [myData, offset_obj, eq_obj] = gps_input_pipeline.get_pbo_type(self.file_params, filename, station,
                                                                        self.proccenter)
         return [myData, offset_obj, eq_obj]
 
-    def pre_screen_ts_datasource_paths(self, station):
+    def pre_screen_ts_datasource_paths(self, station: str):
         if self.refframe == "NA":
             filename = self.file_params[self.proccenter]["directory"]+self.file_params[self.proccenter]["gps_ts_dir"] \
                        + station + '.'+self.proccenter+'.final_nam08.pos'

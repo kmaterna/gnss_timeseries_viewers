@@ -14,7 +14,8 @@ from .gps_ts_functions import Timeseries
 from .file_io import io_nota, io_other, config_io
 
 
-def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file, remove_trend=1):
+def make_detrended_ts(Data: Timeseries, seasonals_remove: bool, seasonals_type: str,
+                      data_config_file: str, remove_trend=1):
     """
     Generate a detrended and/or seasonally-removed time series. Seasonal fitting and de-trending in one function.
     There are several options for the seasonal removal (least-squares, notch filter, grace, etc.)
@@ -75,7 +76,7 @@ def make_detrended_ts(Data, seasonals_remove, seasonals_type, data_config_file, 
         return trend_out
 
 
-def remove_seasonals_by_lssq(Data):
+def remove_seasonals_by_lssq(Data: Timeseries):
     [east_params, north_params, up_params] = Data.get_linear_annual_semiannual()
     trend_out = Data.detrend_data_by_value(east_params, north_params, up_params)
     trend_in = Data.remove_seasonal_by_value(east_params, north_params, up_params)
@@ -98,7 +99,7 @@ def simple_detrend_ts(dtarray, ts_array):
     return array_detrended
 
 
-def remove_seasonals_by_notch(Data):
+def remove_seasonals_by_notch(Data: Timeseries):
     """
     Sang-Ho's notch filter script to remove power at frequencies corresponding to 1 year and 6 months.
     We are also removing a linear trend in this step.
@@ -141,7 +142,7 @@ def remove_seasonals_by_notch(Data):
     return detrended, trended
 
 
-def remove_seasonals_by_STL(Data, STL_dir):
+def remove_seasonals_by_STL(Data: Timeseries, STL_dir: str):
     """
     Has an issue: Right now only returns de-trended data.
     """
@@ -245,7 +246,7 @@ def preprocess_stl(dtarray, data_column, uncertainties):
     return [new_dtarray, new_data_column, new_sig]
 
 
-def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
+def remove_seasonals_by_hydro(Data: Timeseries, hydro_dir: str, scaling=False):
     station = Data.name
     files = glob.glob(hydro_dir + station.lower() + '*.hyd')
     if not files:  # found an empty array
@@ -295,7 +296,7 @@ def remove_seasonals_by_hydro(Data, hydro_dir, scaling=False):
     return corrected_object, trended
 
 
-def remove_seasonals_by_german_load(Data, lsdm_dir):
+def remove_seasonals_by_german_load(Data: Timeseries, lsdm_dir: str):
     station = Data.name
     files = glob.glob(lsdm_dir + station + '*.txt')
     if not files:  # found an empty array
@@ -330,7 +331,7 @@ def remove_seasonals_by_german_load(Data, lsdm_dir):
     return detrended, trended
 
 
-def remove_seasonals_by_lakes(Data, lakes_dir, lake_name):
+def remove_seasonals_by_lakes(Data: Timeseries, lakes_dir: str, lake_name: str):
     station = Data.name
     files = glob.glob(lakes_dir + station + "_" + lake_name + "*.txt")
     if not files:  # found an empty array
@@ -361,7 +362,7 @@ def remove_seasonals_by_lakes(Data, lakes_dir, lake_name):
     return corrected_object, trended
 
 
-def get_wimpy_object(Data):
+def get_wimpy_object(Data: Timeseries):
     """Generate a timeseries object that has only lists of nans in its data fields."""
     placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
     wimpyObj = Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder,
@@ -369,13 +370,16 @@ def get_wimpy_object(Data):
     return wimpyObj
 
 
-def remove_seasonals_by_GRACE(Data, grace_dir):
+def remove_seasonals_by_GRACE(Data: Timeseries, grace_dir: str):
     """
     Here we use pre-computed GRACE load model time series to correct the GPS time series.
     We recognize that the horizontals will be bad, and that the resolution of GRACE is coarse.
     For these reasons, this is not an important part of the analysis.
     Read and interpolate GRACE loading model
     Subtract the GRACE model and remove it + overall trend from the GNSS time series
+
+    :param Data: Timeseries object
+    :param grace_dir: string, directory name
     """
 
     filename = grace_dir + "scaled_" + Data.name + "_PREM_model_ts.txt"
