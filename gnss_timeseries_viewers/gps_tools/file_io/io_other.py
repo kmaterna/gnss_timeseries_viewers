@@ -273,6 +273,30 @@ def read_uw_kinematic(filename) -> Timeseries:
                          Sn=np.zeros(np.shape(n)), Su=np.zeros(np.shape(u)))
     return hr_data
 
+def read_cwu_custom(filename):
+    """
+    Columns: Year E N V SigmaE SigmaN SigmaV CorrEN CorrEV CorrNV JSec Year Month Day Hour Minute Second
+
+    :param filename:
+    :return:
+    """
+    print("Reading file %s " % filename)
+    [e, n, u, se, sn, su, yyyy, mm, dd, HH, MM, SS] = np.loadtxt(filename,
+                                                                 usecols=(1, 2, 3, 4, 5, 6, 11, 12, 13, 14, 15, 16),
+                                                                 unpack=True)
+    dtarray = []
+    for i in range(len(yyyy)):
+        formatstring = str(int(yyyy[i]))+define_hours_string(int(mm[i]))+define_hours_string(int(dd[i]))+'T' + \
+                       define_hours_string(int(HH[i]))+define_hours_string(int(MM[i]))+define_hours_string(int(SS[i]))
+        dtarray.append(dt.datetime.strptime(formatstring, "%Y%m%dT%H%M%S"))
+    e = np.subtract(e, e[0])
+    n = np.subtract(n, n[0])
+
+    hr_data = Timeseries(name='P503', coords=[], dtarray=dtarray, dE=np.multiply(e, 1000), dN=np.multiply(n, 1000),
+                         dU=np.multiply(u, 1000), Se=np.multiply(se, 1000), Sn=np.multiply(sn, 1000),
+                         Su=np.multiply(su, 1000))
+    return hr_data;
+
 
 def define_hours_string(hours_int):
     if hours_int <= 9:
