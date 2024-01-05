@@ -80,6 +80,8 @@ def pack_params(data_config_file, expname, center, radius, proc_center, refframe
 
 
 def compute(dataobj_list, offsetobj_list, eqobj_list, distances, data_config_file):
+    if len(dataobj_list) == 0:
+        raise ValueError("Error! Stack provided has exactly zero stations. Exiting...")
     latitudes_list = [i.coords[1] for i in dataobj_list]
     sorted_objects = [x for _, x in sorted(zip(latitudes_list, dataobj_list))]  # the raw, sorted data.
     sorted_offsets = [x for _, x in sorted(zip(latitudes_list, offsetobj_list))]  # the raw, sorted data.

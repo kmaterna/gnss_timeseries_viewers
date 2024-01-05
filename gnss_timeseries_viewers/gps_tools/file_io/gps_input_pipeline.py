@@ -57,7 +57,7 @@ def get_unr_earthquakes(Data0, offsets_file, user_offsets_file):
     evdts1 = io_magnet_unr.search_file_for_unr_offsets(Data0.name, offsets_file, mode=2)
     evdts2 = io_magnet_unr.search_file_for_unr_offsets(Data0.name, user_offsets_file, mode=2)
     all_evdts = evdts1 + evdts2
-    UNR_earthquakes = offsets.solve_for_offsets(Data0, all_evdts)
+    UNR_earthquakes = offsets.solve_for_offsets(Data0, all_evdts, num_days=1)
     offsets.print_offset_object(UNR_earthquakes)
     return UNR_earthquakes
 
