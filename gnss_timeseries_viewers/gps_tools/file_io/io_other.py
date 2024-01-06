@@ -197,11 +197,11 @@ def read_creepmeter(filename) -> Timeseries:
     ts = df['UTC'].values
     dtarray = [pandas.to_datetime(x) for x in ts]
     displacement = df['dextral'].values.tolist()
-    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement,
-                                 dN=np.zeros(np.shape(displacement)), dU=np.zeros(np.shape(displacement)),
-                                 Sn=np.zeros(np.shape(displacement)), Se=np.zeros(np.shape(displacement)),
-                                 Su=np.zeros(np.shape(displacement)))
+    zeros = np.zeros(np.shape(displacement))
+    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement, dN=zeros, dU=zeros,
+                                 Sn=zeros, Se=zeros, Su=zeros)
     return creepmeter_data
+
 
 def read_creepmeter2(filename) -> Timeseries:
     """
@@ -215,9 +215,9 @@ def read_creepmeter2(filename) -> Timeseries:
     ts = df['date'].values
     dtarray = [pandas.to_datetime(x) for x in ts]
     displacement = df['slip'].values.tolist()
-    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement,
-                                 dN=np.zeros(np.shape(displacement)), dU=np.zeros(np.shape(displacement)),
-                                 Sn=(), Se=(), Su=())
+    zeros = np.zeros(np.shape(displacement))
+    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement, dN=zeros, dU=zeros,
+                                 Sn=zeros, Se=zeros, Su=zeros)
     return creepmeter_data
 
 
@@ -273,6 +273,7 @@ def read_uw_kinematic(filename) -> Timeseries:
                          Sn=np.zeros(np.shape(n)), Su=np.zeros(np.shape(u)))
     return hr_data
 
+
 def read_cwu_custom(filename):
     """
     Columns: Year E N V SigmaE SigmaN SigmaV CorrEN CorrEV CorrNV JSec Year Month Day Hour Minute Second
@@ -306,13 +307,16 @@ def define_hours_string(hours_int):
     return hours_string;
 
 
-def write_gmt_ts_file(ts_data, outfile):
+def write_gmt_ts_file(ts_data, outfile, header=None):
     """Write a time series object into a format that GMT can subsequently plot."""
     print("Writing file %s " % outfile)
     with open(outfile, 'w') as ofile:
+        if header is not None:
+            ofile.write(header);
+        ofile.write("# dt E(mm) N(mm) U(mm) Se(mm) Sn(mm) Su(mm)\n")
         for i in range(len(ts_data.dtarray)):
-            ofile.write("%s %f %f %f\n" % (dt.datetime.strftime(ts_data.dtarray[i], "%Y-%m-%dT%H-%M-%S"),
-                                           ts_data.dE[i],
-                                           ts_data.dN[i],
-                                           ts_data.dU[i]) )
+            ofile.write("%s %f %f %f %f %f %f\n" % (dt.datetime.strftime(ts_data.dtarray[i], "%Y-%m-%dT%H-%M-%S"),
+                                                    ts_data.dE[i],
+                                                    ts_data.dN[i],
+                                                    ts_data.dU[i], ts_data.Se[i], ts_data.Sn[i], ts_data.Su[i]))
     return
