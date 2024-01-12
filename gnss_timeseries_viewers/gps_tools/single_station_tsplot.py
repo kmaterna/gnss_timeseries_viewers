@@ -10,7 +10,7 @@ import datetime as dt
 
 def view_single_station(station_name, data_config_file, offsets_remove=1, earthquakes_remove=0, outliers_remove=0,
                         seasonals_remove=0, starttime=None, endtime=None, outliers_def=15,
-                        seasonals_type='lssq', datasource='cwu', refframe='NA', outdir=""):
+                        seasonals_type='lssq', datasource='cwu', plot_detrended=True, refframe='NA', outdir=""):
     """
     :param station_name: string
     :param data_config_file: string
@@ -23,6 +23,7 @@ def view_single_station(station_name, data_config_file, offsets_remove=1, earthq
     :param outliers_def: mm, default 15
     :param seasonals_type: string, default 'lssq'
     :param datasource: string, default cwu
+    :param plot_detrended: whether to plot the de-trended version, default true
     :param refframe: string, default NA
     :param outdir: string
     """
@@ -31,7 +32,8 @@ def view_single_station(station_name, data_config_file, offsets_remove=1, earthq
                               seasonals_type, starttime, endtime)
     [myData, offset_obj, eq_obj] = input_data(station_name, data_config_file, db_params)
     [updatedData, detrended] = compute(data_config_file, myData, offset_obj, eq_obj, plot_params)
-    single_ts_plot(updatedData, detrended, plot_params, db_params, outdir)
+    detrended = detrended if plot_detrended else None
+    single_ts_plot(updatedData, detrended, plot_params=plot_params, db_params=db_params, outdir=outdir)
 
 
 # -------------- CONFIGURE ------------ #
