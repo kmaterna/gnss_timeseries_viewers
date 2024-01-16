@@ -150,12 +150,16 @@ class UNR_Proc_Engine:
         return [myData, offset_obj, eq_obj]
 
     def pre_screen_ts_datasource_paths(self, station: str):
-        if self.refframe == 'NA':
-            filename = self.file_params["unr"]["directory"]+self.file_params["unr"]["gps_ts_dir"]+station+'.NA.tenv3'
-        elif self.refframe == 'ITRF':
+
+        if self.refframe == 'ITRF':
             filename = self.file_params["unr"]["directory"]+self.file_params["unr"]["gps_ts_dir"]+station+'.IGS14.tenv3'
+        elif self.refframe in ['AF', 'AN', 'AR', 'AU', 'BU', 'CA', 'CO', 'EU', 'IN', 'MA', 'NA', 'NB', 'NZ',
+                               'OK', 'ON', 'PA', 'PM', 'PS', 'SA', 'SB', 'SC', 'SL', 'SO', 'SU', 'WL']:
+            # Plates shown here: http://geodesy.unr.edu/gps_timeseries/tenv3/plates/
+            filename = self.file_params["unr"]["directory"] + \
+                       self.file_params["unr"]["gps_ts_dir"]+station+'.'+self.refframe+'.tenv3'
         else:
-            print("Error! Reference frame doesn't match available ones [NA, ITRF]. Choose again")
+            print("Error! Reference frame doesn't match available ones [ITRF or a specific plate]. Choose again.")
             sys.exit(1)
         utilities.check_if_file_exists(filename)
         return filename
