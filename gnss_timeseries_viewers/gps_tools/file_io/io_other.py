@@ -274,6 +274,32 @@ def read_uw_kinematic(filename) -> Timeseries:
     return hr_data
 
 
+def read_unr_five_minute(filename) -> Timeseries:
+    """
+    format: site  sec-J2000 __MJD year mm dd doy s-day
+    ___e-ref(m) ___n-ref(m) ___v-ref(m) _e-mean(m) _n-mean(m) _v-mean(m) sig_e(m) sig_n(m) sig_v(m)
+
+    :param filename: string
+    :return: Timeseries
+    """
+    print("Reading file %s " % filename)
+    station_name = os.path.split(filename)[1][0:4]
+    [yr, mm, dd, sday, e, n, u, sige, sign, sigu] = np.loadtxt(filename, usecols=(3, 4, 5, 7, 8, 9, 10, 14, 15, 16),
+                                                               skiprows=1, unpack=True)
+    dtarray = []
+    for i in range(len(yr)):
+        mystring = str(int(yr[i])) + define_hours_string(int(mm[i])) + define_hours_string(int(dd[i]))
+        num_minutes = int(sday[i] / 60)
+        num_hours = int(np.floor(num_minutes/60))
+        minute_hand = num_minutes - num_hours*60
+        timestring = define_hours_string(int(num_hours)) + define_hours_string(int(minute_hand)) + '00'
+        dtarray.append(dt.datetime.strptime(mystring+"T"+timestring, "%Y%m%dT%H%M%S"))
+    hr_data = Timeseries(name=station_name, coords=[], dtarray=dtarray, dE=np.multiply(e, 1000),
+                         dN=np.multiply(n, 1000), dU=np.multiply(u, 1000), Se=np.multiply(sige, 1000),
+                         Sn=np.multiply(sign, 1000), Su=np.multiply(sigu, 1000))
+    return hr_data
+
+
 def read_cwu_custom(filename):
     """
     Columns: Year E N V SigmaE SigmaN SigmaV CorrEN CorrEV CorrNV JSec Year Month Day Hour Minute Second
