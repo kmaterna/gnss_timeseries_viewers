@@ -109,8 +109,7 @@ def read_USGS_ts_file(filename) -> Timeseries:
     for i in range(len(names)):
         if names[i] == station_name:
             coords = [lon[i], lat[i]]
-    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
-                        EQtimes=[])
+    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su)
     return myData
 
 
@@ -195,5 +194,5 @@ def read_usgs_highrate_file(filename):
     dtarray = [dt.datetime.strptime(x, '%Y/%m/%d %H:%M:%S') for x in dta]
     myData = Timeseries(name="", coords=None, dtarray=dtarray,
                         dN=np.multiply(N, 1000), dE=np.multiply(E, 1000), dU=np.multiply(U, 1000),
-                        Sn=np.zeros(np.shape(N)), Se=np.zeros(np.shape(E)), Su=np.zeros(np.shape(U)), EQtimes=[])
+                        Sn=np.zeros(np.shape(N)), Se=np.zeros(np.shape(E)), Su=np.zeros(np.shape(U)))
     return myData

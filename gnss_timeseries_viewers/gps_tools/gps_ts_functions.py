@@ -14,7 +14,7 @@ from Tectonic_Utils.geodesy import insar_vector_functions, haversine
 
 class Timeseries:
     # The classic timeseries internal object!
-    def __init__(self, name, coords, dtarray, dN, dE, dU, Sn, Se, Su, EQtimes=()):
+    def __init__(self, name, coords, dtarray, dN, dE, dU, Sn, Se, Su, EQtimes=(), Offsettimes=()):
         self.name = name
         self.coords = coords
         self.dtarray = dtarray  # 1d array of datetime objects
@@ -24,7 +24,8 @@ class Timeseries:
         self.Sn = Sn  # 1d arrays in mm
         self.Se = Se
         self.Su = Su
-        self.EQtimes = EQtimes
+        self.EQtimes = EQtimes  # just metadata, timing of earthquake offsets
+        self.Offsettimes = Offsettimes  # just metadata, timing of antenna offsets
         if len(dtarray) == 0:  # zero-length timeseries throws error
             print("Error: length of dtarray is 0 for station %s. No timeseries created." % self.name)
             sys.exit(0)
@@ -95,7 +96,7 @@ class Timeseries:
                 newSu.append(self.Su[i])
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=newdt, dN=np.array(newdN), dE=np.array(newdE),
                              dU=np.array(newdU), Sn=np.array(newSn), Se=np.array(newSe), Su=np.array(newSu),
-                             EQtimes=self.EQtimes)
+                             EQtimes=self.EQtimes, Offsettimes=self.Offsettimes)
         return newData
 
     def impose_time_limits(self, starttime: dt.datetime, endtime: dt.datetime):
@@ -116,7 +117,7 @@ class Timeseries:
                 newSu.append(self.Su[i])
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=newdtarray, dN=np.array(newdN),
                              dE=np.array(newdE), dU=np.array(newdU), Sn=np.array(newSn), Se=np.array(newSe),
-                             Su=np.array(newSu), EQtimes=self.EQtimes)
+                             Su=np.array(newSu), EQtimes=self.EQtimes, Offsettimes=self.Offsettimes)
         return newData
 
     def remove_nans(self):
@@ -137,7 +138,8 @@ class Timeseries:
                     temp_Su.append(self.Su[i])
             newData = Timeseries(name=self.name, coords=self.coords, dtarray=temp_dates, dN=np.array(temp_north),
                                  dE=np.array(temp_east), dU=np.array(temp_vert), Sn=np.array(temp_Sn),
-                                 Se=np.array(temp_Se), Su=np.array(temp_Su), EQtimes=self.EQtimes)
+                                 Se=np.array(temp_Se), Su=np.array(temp_Su), EQtimes=self.EQtimes,
+                                 Offsettimes=self.Offsettimes)
         return newData
 
     def remove_constant(self, east_offset=0.0, north_offset=0.0, vert_offset=0.0):
@@ -152,7 +154,7 @@ class Timeseries:
         temp_vert = np.array([x - vert_offset for x in self.dU])
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=self.dtarray,
                              dN=np.array(temp_north), dE=np.array(temp_east), dU=np.array(temp_vert),
-                             Sn=self.Sn, Se=self.Se, Su=self.Su, EQtimes=self.EQtimes)
+                             Sn=self.Sn, Se=self.Se, Su=self.Su, EQtimes=self.EQtimes, Offsettimes=self.Offsettimes)
         return newData
 
     def set_zero_mean(self):
@@ -167,12 +169,22 @@ class Timeseries:
 
     def embed_tsobject_with_eqdates(self, eq_obj):
         """
-        :param eq_obj: a list of Offset objects to embed into the Timeseries metadata
+        :param eq_obj: a list of Offset objects to embed into the Timeseries earthquake metadata
         """
         eqdates = [x.evdt for x in eq_obj]
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=self.dtarray, dN=self.dN,
                              dE=self.dE, dU=self.dU, Sn=self.Sn, Se=self.Se,
-                             Su=self.Su, EQtimes=eqdates)
+                             Su=self.Su, EQtimes=eqdates, Offsettimes=self.Offsettimes)
+        return newData
+
+    def embed_tsobject_with_offset_dates(self, offset_obj):
+        """
+        :param offset_obj: a list of Offset objects to embed into the Timeseries offset metadata
+        """
+        offsetdates = [x.evdt for x in offset_obj]
+        newData = Timeseries(name=self.name, coords=self.coords, dtarray=self.dtarray, dN=self.dN,
+                             dE=self.dE, dU=self.dU, Sn=self.Sn, Se=self.Se,
+                             Su=self.Su, EQtimes=self.EQtimes, Offsettimes=offsetdates)
         return newData
 
     def rotate_data(self, azimuth: float):  # should test to make sure this works the way I think it does.
@@ -188,7 +200,7 @@ class Timeseries:
             newN.append(new_position[1])
         rotated_ts = Timeseries(name=self.name, coords=self.coords, dtarray=self.dtarray,
                                 dN=np.array(newN), dE=np.array(newE), dU=self.dU,
-                                Sn=self.Sn, Se=self.Se, Su=self.Su, EQtimes=self.EQtimes)
+                                Sn=self.Sn, Se=self.Se, Su=self.Su, EQtimes=self.EQtimes, Offsettimes=self.Offsettimes)
         return rotated_ts
 
     def median_filter_data(self, size: int):
@@ -200,7 +212,8 @@ class Timeseries:
         vdata = scipy.ndimage.median_filter(self.dN, size=size)
         wdata = scipy.ndimage.median_filter(self.dU, size=size)
         filtered_ts = Timeseries(dtarray=self.dtarray, dE=udata, dN=vdata, dU=wdata, coords=self.coords,
-                                 name=self.name, Se=self.Se, Sn=self.Sn, Su=self.Su, EQtimes=self.EQtimes)
+                                 name=self.name, Se=self.Se, Sn=self.Sn, Su=self.Su, EQtimes=self.EQtimes,
+                                 Offsettimes=self.Offsettimes)
         return filtered_ts
 
     def detrend_data_by_value(self, east_params, north_params, vert_params):
@@ -232,7 +245,7 @@ class Timeseries:
         vert_detrended = [x - vert_detrended[0] for x in vert_detrended]
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=data.dtarray, dN=north_detrended,
                              dE=east_detrended, dU=vert_detrended, Sn=data.Sn, Se=data.Se, Su=data.Su,
-                             EQtimes=data.EQtimes)
+                             EQtimes=data.EQtimes, Offsettimes=self.Offsettimes)
         return newData
 
     def simple_detrend(self, starttime=None, endtime=None):
@@ -266,7 +279,7 @@ class Timeseries:
             vert_detrended.append(data.dU[i] - (vert_model[i]))
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=data.dtarray, dN=north_detrended,
                              dE=east_detrended, dU=vert_detrended, Sn=data.Sn, Se=data.Se, Su=data.Su,
-                             EQtimes=data.EQtimes)
+                             EQtimes=data.EQtimes, Offsettimes=self.Offsettimes)
         return newData
 
     # -------------------------------------------- #
@@ -537,9 +550,11 @@ def pair_gps_model(gps_data: Timeseries, model_data: Timeseries):
             Sn_model.append(model_data.Sn[idx])
             Su_model.append(model_data.Su[idx])
     paired_gps = Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=dtarray, dE=dE_gps, dN=dN_gps,
-                            dU=dU_gps, Se=Se_gps, Sn=Sn_gps, Su=Su_gps, EQtimes=gps_data.EQtimes)
+                            dU=dU_gps, Se=Se_gps, Sn=Sn_gps, Su=Su_gps, EQtimes=gps_data.EQtimes,
+                            Offsettimes=gps_data.Offsettimes)
     paired_model = Timeseries(name=model_data.name, coords=model_data.coords, dtarray=dtarray, dE=dE_model, dN=dN_model,
-                              dU=dU_model, Se=Se_model, Sn=Sn_model, Su=Su_model, EQtimes=model_data.EQtimes)
+                              dU=dU_model, Se=Se_model, Sn=Sn_model, Su=Su_model, EQtimes=model_data.EQtimes,
+                              Offsettimes=model_data.Offsettimes)
     return [paired_gps, paired_model]
 
 
@@ -571,7 +586,8 @@ def pair_gps_model_keeping_gps(gps_data: Timeseries, model_data: Timeseries):
             Sn_model.append(0)
             Su_model.append(0)
     paired_model = Timeseries(name=model_data.name, coords=model_data.coords, dtarray=dtarray, dE=dE_model, dN=dN_model,
-                              dU=dU_model, Se=Se_model, Sn=Sn_model, Su=Su_model, EQtimes=model_data.EQtimes)
+                              dU=dU_model, Se=Se_model, Sn=Sn_model, Su=Su_model, EQtimes=model_data.EQtimes,
+                              Offsettimes=model_data.Offsettimes)
     return [gps_data, paired_model]
 
 
@@ -596,7 +612,8 @@ def get_referenced_data(roving_station_data: Timeseries, base_station_data: Time
             Su_gps.append(roving_station_data.Su[i])
     gps_relative = Timeseries(name=roving_station_data.name, coords=roving_station_data.coords, dtarray=dtarray,
                               dE=np.array(dE_gps), dN=np.array(dN_gps), dU=np.array(dU_gps), Se=np.array(Se_gps),
-                              Sn=np.array(Sn_gps), Su=np.array(Su_gps), EQtimes=roving_station_data.EQtimes)
+                              Sn=np.array(Sn_gps), Su=np.array(Su_gps), EQtimes=roving_station_data.EQtimes,
+                              Offsettimes=roving_station_data.Offsettimes)
     return gps_relative
 
 # -------------------------------------------- #
@@ -701,5 +718,6 @@ def get_mean_ts(list_of_ts_objects) -> Timeseries:
         target_date = target_date + dt.timedelta(days=1)
     avg_ts = Timeseries(name='mean', coords=(np.nan, np.nan), dtarray=dtarray,
                         dE=np.array(dE_mean), dN=np.array(dN_mean), dU=np.array(dU_mean), Se=np.array(Se_mean),
-                        Sn=np.array(Sn_mean), Su=np.array(Su_mean), EQtimes=list_of_ts_objects[0].EQtimes)
+                        Sn=np.array(Sn_mean), Su=np.array(Su_mean), EQtimes=list_of_ts_objects[0].EQtimes,
+                        Offsettimes=list_of_ts_objects[0].Offsettimes)
     return avg_ts

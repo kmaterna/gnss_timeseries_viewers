@@ -28,7 +28,8 @@ def subsample_ts_at_points(Data0, dtlist, window_days=30, Se_default=None, Sn_de
         Sn.append(Sn_default)
         Su.append(Su_default)
     downsampled_object = gps_ts_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=dtlist, dE=dE, dN=dN,
-                                                     dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=Data0.EQtimes)
+                                                     dU=dU, Sn=Sn, Se=Se, Su=Su, EQtimes=Data0.EQtimes,
+                                                     Offsettimes=Data0.Offsettimes)
     return downsampled_object
 
 

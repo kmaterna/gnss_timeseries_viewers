@@ -46,6 +46,6 @@ def remove_by_model(data_obj, model_obj, starttime1, endtime1, starttime2, endti
 
     corrected_data = gps_ts_functions.Timeseries(name=Data0.name, coords=Data0.coords, dtarray=dtarray, dE=dE_gps,
                                                  dN=dN_gps, dU=dU_gps, Se=Data0.Se, Sn=Data0.Sn, Su=Data0.Su,
-                                                 EQtimes=Data0.EQtimes)
+                                                 EQtimes=Data0.EQtimes, Offsettimes=Data0.Offsettimes)
     corrected_data = offsets.remove_offsets(corrected_data, offsets_obj)
     return corrected_data

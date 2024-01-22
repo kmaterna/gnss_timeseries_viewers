@@ -138,7 +138,7 @@ def read_pbo_pos_file(filename) -> Timeseries:
     _, specific_file = os.path.split(filename)
     dtarray = [dt.datetime.strptime(str(int(i)), "%Y%m%d") for i in yyyymmdd]
     myData = Timeseries(name=specific_file[0:4], coords=[Elong, Nlat[0]], dtarray=dtarray, dN=dN, dE=dE, dU=dU,
-                        Sn=Sn, Se=Se, Su=Su, EQtimes=[])
+                        Sn=Sn, Se=Se, Su=Su)
     print("Reading data for station %s in time range %s:%s" % (
         myData.name, dt.datetime.strftime(myData.dtarray[0], "%Y-%m-%d"),
         dt.datetime.strftime(myData.dtarray[-1], "%Y-%m-%d")))
@@ -172,8 +172,7 @@ def read_pbo_hydro_file(filename, coords_file=None) -> Timeseries:
     Sn = 0.2 * np.ones(np.shape(dN))
     Su = 0.2 * np.ones(np.shape(dU))
 
-    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
-                        EQtimes=[])
+    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su)
     return myData
 
 

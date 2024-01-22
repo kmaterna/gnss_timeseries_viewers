@@ -62,7 +62,6 @@ def config_view(offsets_remove, earthquakes_remove, outliers_remove, outliers_de
 def input_data(st_name, data_config_file, db_params):
     database = load_gnss.create_station_repo(data_config_file, db_params['refframe'], db_params['datasource'])
     [myData, offset_obj, eq_obj] = database.load_station(st_name)
-    myData = myData.embed_tsobject_with_eqdates(eq_obj)  # embed data with eq object metadata
     return [myData, offset_obj, eq_obj]
 
 
@@ -103,7 +102,7 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
     :param detrended_label: string, label on the mirrored y-axis
     """
     if not title:
-        title, _ = get_figure_name(plot_params, db_params)
+        title, _ = get_figure_name(plot_params, db_params, outdir)
     if not savename:
         _, savename = get_figure_name(plot_params, db_params, outdir)
 
@@ -123,6 +122,8 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
     bottom, top = axarr[0].get_ylim()
     for i in range(len(ts_obj.EQtimes)):
         axarr[0].plot([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth)
+    for i in range(len(ts_obj.Offsettimes)):
+        axarr[0].plot([ts_obj.Offsettimes[i], ts_obj.Offsettimes[i]], [bottom, top], '--c', linewidth=eq_linewidth)
     if detrended:
         ax1 = axarr[0].twinx()
         ax1.plot(detrended.dtarray, detrended.dE, marker='D', markersize=1.0, color='red', linestyle='')
@@ -137,6 +138,8 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
     bottom, top = axarr[1].get_ylim()
     for i in range(len(ts_obj.EQtimes)):
         axarr[1].plot([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth)
+    for i in range(len(ts_obj.Offsettimes)):
+        axarr[1].plot([ts_obj.Offsettimes[i], ts_obj.Offsettimes[i]], [bottom, top], '--c', linewidth=eq_linewidth)
     if detrended:
         ax2 = axarr[1].twinx()
         ax2.plot(detrended.dtarray, detrended.dN, marker='D', markersize=1.0, color='red', linestyle='')
@@ -151,6 +154,8 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
     bottom, top = axarr[2].get_ylim()
     for i in range(len(ts_obj.EQtimes)):
         axarr[2].plot([ts_obj.EQtimes[i], ts_obj.EQtimes[i]], [bottom, top], '--k', linewidth=eq_linewidth)
+    for i in range(len(ts_obj.Offsettimes)):
+        axarr[2].plot([ts_obj.Offsettimes[i], ts_obj.Offsettimes[i]], [bottom, top], '--c', linewidth=eq_linewidth)
     if detrended:
         ax3 = axarr[2].twinx()
         ax3.plot(detrended.dtarray, detrended.dU, marker='D', markersize=1.0, color='red', linestyle='')
@@ -171,11 +176,15 @@ def get_figure_name(plot_params, db_params, outdir=""):
     Building filename and title strings: Metadata like station, offsets/outliers/seasonals, Datasource and Refframe.
     Title and Filename are programmatically linked.
     """
+    if plot_params is None and db_params is None:
+        raise ValueError("Error! Some kind of title and filename is required, "
+                         "it cannot be automatically generated from nothing.")
+
+    if outdir != '':
+        os.makedirs(outdir, exist_ok=True)
 
     savename = outdir + db_params["station"]
     title = db_params["station"]
-    if outdir != '':
-        os.makedirs(outdir, exist_ok=True)
 
     title = title + ', ' + db_params["datasource"] + ' ' + db_params["refframe"]
     if plot_params["earthquakes_remove"] == 0 and plot_params["offsets_remove"] == 0 and \

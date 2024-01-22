@@ -47,7 +47,7 @@ def get_unr_offsets(Data0, offsets_file, user_offsets_file):
     evdts1 = io_magnet_unr.search_file_for_unr_offsets(Data0.name, offsets_file, mode=1)
     evdts2 = io_magnet_unr.search_file_for_unr_offsets(Data0.name, user_offsets_file, mode=1)
     UNR_offsets = offsets.solve_for_offsets(Data0, evdts1 + evdts2)
-    offsets.print_offset_object(UNR_offsets)
+    offsets.print_offset_object(UNR_offsets, metadata='offset: ')
     return UNR_offsets
 
 
@@ -57,8 +57,8 @@ def get_unr_earthquakes(Data0, offsets_file, user_offsets_file):
     evdts1 = io_magnet_unr.search_file_for_unr_offsets(Data0.name, offsets_file, mode=2)
     evdts2 = io_magnet_unr.search_file_for_unr_offsets(Data0.name, user_offsets_file, mode=2)
     all_evdts = evdts1 + evdts2
-    UNR_earthquakes = offsets.solve_for_offsets(Data0, all_evdts, num_days=1)
-    offsets.print_offset_object(UNR_earthquakes)
+    UNR_earthquakes = offsets.solve_for_offsets(Data0, all_evdts, num_days=10)
+    offsets.print_offset_object(UNR_earthquakes, metadata='earthquake: ')
     return UNR_earthquakes
 
 
@@ -66,7 +66,7 @@ def get_nota_offsets(station_name, offsets_dir, file_pattern):
     print("Offset table for station %s:" % station_name)
     table = io_nota.search_files_for_nota_offsets(station_name, offsets_dir, file_pattern)  # Read the offset table
     PBO_offsets = io_nota.parse_antenna_table_pbo(table)
-    offsets.print_offset_object(PBO_offsets)
+    offsets.print_offset_object(PBO_offsets, metadata='offset: ')
     return PBO_offsets
 
 
@@ -74,7 +74,7 @@ def get_nota_earthquakes(station_name, earthquakes_dir, file_pattern):
     print("Earthquake table for station %s:" % station_name)
     table = io_nota.search_files_for_nota_offsets(station_name, earthquakes_dir, file_pattern)  # Read the events table
     PBO_earthquakes = io_nota.parse_earthquake_table_pbo(table)
-    offsets.print_offset_object(PBO_earthquakes)
+    offsets.print_offset_object(PBO_earthquakes, metadata='earthquake: ')
     return PBO_earthquakes
 
 
@@ -84,5 +84,5 @@ def get_usgs_offsets(station, usgs_offsets_dir, sub_network, refframe, typekey='
     offset_file = usgs_offsets_dir + sub_network + '/' + refframe + '_' + sub_network + '_offsets.txt'
     table = io_usgs.search_file_for_usgs_offsets(station, offset_file)
     USGS_offsets = io_usgs.parse_offset_table_usgs(table, typekey)
-    offsets.print_offset_object(USGS_offsets)
+    offsets.print_offset_object(USGS_offsets, metadata=typekey+": ")
     return USGS_offsets

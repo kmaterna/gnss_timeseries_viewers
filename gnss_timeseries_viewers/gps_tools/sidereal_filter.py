@@ -41,6 +41,6 @@ def sidereal_filter(Data0: Timeseries, starttime, endtime) -> Timeseries:
 
     newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=np.array(dN),
                          dE=np.array(dE), dU=np.array(dU), Sn=np.array(Sn), Se=np.array(Se),
-                         Su=np.array(Su), EQtimes=Data0.EQtimes)
+                         Su=np.array(Su), EQtimes=Data0.EQtimes, Offsettimes=Data0.Offsettimes)
 
     return newData;

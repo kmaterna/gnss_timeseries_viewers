@@ -136,9 +136,10 @@ def remove_seasonals_by_notch(Data: Timeseries):
     dU_detrended = simple_detrend_ts(Data.dtarray, dU_filt)
 
     detrended = Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_detrended, dE=dE_detrended,
-                           dU=dU_detrended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes)
+                           dU=dU_detrended, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes,
+                           Offsettimes=Data.Offsettimes)
     trended = Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=dN_filt, dE=dE_filt, dU=dU_filt,
-                         Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes)
+                         Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes, Offsettimes=Data.Offsettimes)
     return detrended, trended
 
 
@@ -156,7 +157,7 @@ def remove_seasonals_by_STL(Data: Timeseries, STL_dir: str):
                                                                             np.float, np.float, np.float)})
         final_dtarray = [dt.datetime.strptime(x, "%Y%m%d") for x in dtstrings]
         Data = Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se,
-                          Su=Su, EQtimes=Data.EQtimes)
+                          Su=Su, EQtimes=Data.EQtimes, Offsettimes=Data.Offsettimes)
 
     else:  # ELSE: WE NEED TO RECOMPUTE
         print("Warning! STL not found for %s" % Data.name)
@@ -196,7 +197,7 @@ def remove_seasonals_by_STL(Data: Timeseries, STL_dir: str):
 
         Data = Timeseries(name=Data.name, coords=Data.coords, dtarray=final_dtarray, dN=np.array(final_dN),
                           dE=np.array(final_dE), dU=np.array(final_dU), Sn=np.array(final_Sn), Se=np.array(final_Se),
-                          Su=np.array(final_Su), EQtimes=Data.EQtimes)
+                          Su=np.array(final_Su), EQtimes=Data.EQtimes, Offsettimes=Data.Offsettimes)
 
         # Write the file so that we don't recompute it next time.
         io_other.write_stl(Data, filename)
@@ -290,9 +291,10 @@ def remove_seasonals_by_hydro(Data: Timeseries, hydro_dir: str, scaling=False):
 
     corrected_object = Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_detrended,
                                   dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se,  Sn=gps_data.Sn, Su=gps_data.Su,
-                                  EQtimes=gps_data.EQtimes)
+                                  EQtimes=gps_data.EQtimes, Offsettimes=gps_data.Offsettimes)
     trended = Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_filt, dN=dN_filt,
-                         dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes)
+                         dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes,
+                         Offsettimes=gps_data.Offsettimes)
     return corrected_object, trended
 
 
@@ -325,9 +327,10 @@ def remove_seasonals_by_german_load(Data: Timeseries, lsdm_dir: str):
 
     detrended = Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_detrended,
                            dN=dN_detrended, dU=dU_detrended, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su,
-                           EQtimes=gps_data.EQtimes)
+                           EQtimes=gps_data.EQtimes, Offsettimes=gps_data.Offsettimes)
     trended = Timeseries(name=gps_data.name, coords=gps_data.coords, dtarray=gps_data.dtarray, dE=dE_filt, dN=dN_filt,
-                         dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes)
+                         dU=dU_filt, Se=gps_data.Se, Sn=gps_data.Sn, Su=gps_data.Su, EQtimes=gps_data.EQtimes,
+                         Offsettimes=gps_data.Offsettimes)
     return detrended, trended
 
 
@@ -356,9 +359,10 @@ def remove_seasonals_by_lakes(Data: Timeseries, lakes_dir: str, lake_name: str):
 
     corrected_object = Timeseries(name=Data.name, coords=Data.coords, dtarray=GPS_paired.dtarray, dE=dE_detrended,
                                   dN=dN_detrended, dU=dU_detrended, Se=GPS_paired.Se, Sn=GPS_paired.Sn,
-                                  Su=GPS_paired.Su, EQtimes=Data.EQtimes)
+                                  Su=GPS_paired.Su, EQtimes=Data.EQtimes, Offsettimes=Data.Offsettimes)
     trended = Timeseries(name=Data.name, coords=Data.coords, dtarray=GPS_paired.dtarray, dE=dE, dN=dN, dU=dU,
-                         Se=GPS_paired.Se, Sn=GPS_paired.Sn, Su=GPS_paired.Su, EQtimes=Data.EQtimes)
+                         Se=GPS_paired.Se, Sn=GPS_paired.Sn, Su=GPS_paired.Su, EQtimes=Data.EQtimes,
+                         Offsettimes=Data.Offsettimes)
     return corrected_object, trended
 
 
@@ -366,7 +370,8 @@ def get_wimpy_object(Data: Timeseries):
     """Generate a timeseries object that has only lists of nans in its data fields."""
     placeholder = np.full_like(Data.dtarray, np.nan, dtype=np.double)
     wimpyObj = Timeseries(name=Data.name, coords=Data.coords, dtarray=Data.dtarray, dN=placeholder, dE=placeholder,
-                          dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes)
+                          dU=placeholder, Sn=Data.Sn, Se=Data.Se, Su=Data.Su, EQtimes=Data.EQtimes,
+                          Offsettimes=Data.Offsettimes)
     return wimpyObj
 
 
@@ -406,8 +411,8 @@ def remove_seasonals_by_GRACE(Data: Timeseries, grace_dir: str):
 
     detrended = Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_detrended,
                            dE=dE_detrended, dU=dU_detrended, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err,
-                           Su=my_paired_ts.V_err, EQtimes=Data.EQtimes)
+                           Su=my_paired_ts.V_err, EQtimes=Data.EQtimes, Offsettimes=Data.Offsettimes)
     trended = Timeseries(name=Data.name, coords=Data.coords, dtarray=my_paired_ts.dtarray, dN=dN_filt, dE=dE_filt,
                          dU=dU_filt, Sn=my_paired_ts.N_err, Se=my_paired_ts.E_err, Su=my_paired_ts.V_err,
-                         EQtimes=Data.EQtimes)
+                         EQtimes=Data.EQtimes, Offsettimes=Data.Offsettimes)
     return detrended, trended  # 0 = successful completion

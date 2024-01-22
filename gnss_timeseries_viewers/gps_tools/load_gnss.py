@@ -79,6 +79,8 @@ class Station_Repo:
 
     def load_station(self, station_name):
         [myData, offset_obj, eq_obj] = self.proc_engine.import_station(station_name)
+        myData = myData.embed_tsobject_with_eqdates(eq_obj)  # embed data object with earthquake metadata
+        myData = myData.embed_tsobject_with_offset_dates(offset_obj)  # embed data object with offset metadata
         return [myData, offset_obj, eq_obj]
 
 

@@ -92,8 +92,7 @@ def read_UNR_magnet_ts_file(filename, coordinates_file) -> Timeseries:
     lon = utilities.check_lon_sanity(lon[0])
     coords = [lon, lat[0]]
 
-    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su,
-                        EQtimes=[])
+    myData = Timeseries(name=station_name, coords=coords, dtarray=dtarray, dN=dN, dE=dE, dU=dU, Sn=Sn, Se=Se, Su=Su)
     print("Reading data for station %s in time range %s:%s" % (
         myData.name, dt.datetime.strftime(myData.dtarray[0], "%Y-%m-%d"),
         dt.datetime.strftime(myData.dtarray[-1], "%Y-%m-%d")))

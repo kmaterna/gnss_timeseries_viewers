@@ -16,8 +16,8 @@ class Offset:
         self.u_offset = u_offset  # in mm
 
     def __str__(self):
-        return f'{dt.datetime.strftime(self.evdt, "%Y-%m-%d")}, {self.e_offset} mmE, ' \
-               f'{self.n_offset} mmN, {self.u_offset} mmU\n'
+        return f'{dt.datetime.strftime(self.evdt, "%Y-%m-%d")}, {np.round(self.e_offset, 5)} mmE, ' \
+               f'{np.round(self.n_offset, 5)} mmN, {np.round(self.u_offset, 5)} mmU.'
 
 def remove_offsets(Data0: Timeseries, offsets_list: list, verbose=False):
     """
@@ -48,7 +48,7 @@ def remove_offsets(Data0: Timeseries, offsets_list: list, verbose=False):
         newU.append(tempU)
 
     newData = Timeseries(name=Data0.name, coords=Data0.coords, dtarray=Data0.dtarray, dN=newN, dE=newE, dU=newU,
-                         Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes)
+                         Sn=Data0.Sn, Se=Data0.Se, Su=Data0.Su, EQtimes=Data0.EQtimes, Offsettimes=Data0.Offsettimes)
     return newData
 
 
@@ -170,7 +170,7 @@ def package_offset_as_StationVel(ts_object: Timeseries, offset: Offset):
     return newobj
 
 
-def print_offset_object(Offset_obj):
+def print_offset_object(Offset_obj, metadata=''):
     for item in Offset_obj:
-        print(item)
+        print(metadata, item)
     return
