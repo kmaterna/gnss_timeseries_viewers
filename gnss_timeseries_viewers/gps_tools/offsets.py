@@ -88,6 +88,33 @@ def fit_single_offset(dtarray, data, interval: list, offset_num_days: int):
     return offset
 
 
+def clean_expected_interval_list(offset_time_intervals: list, num_days):
+    """
+    Defensive programming to warn the user if multiple earthquakes happened in the same solving window,
+    which might result in an offset being removed twice.
+
+    :param offset_time_intervals: list of datetimes, or list of intervals
+    :param num_days: int, number of days in the offset solving window
+    :return: list of intervals
+    """
+    full_interval_list = []
+    for item in offset_time_intervals:
+        if isinstance(item, dt.datetime):  # build an interval from a single day.
+            full_interval_list.append([item, item])  # build an interval from a single day.
+        else:
+            full_interval_list.append(item)  # use interval provided
+    if len(full_interval_list) == 0 or len(full_interval_list) == 1:
+        return full_interval_list
+    inter_event_time = [full_interval_list[i+1][0] - full_interval_list[i][0] for i in range(len(full_interval_list)-1)]
+    for i, x in enumerate(inter_event_time):
+        if x.days < num_days / 2:
+            print("WARNING: You may be solving for two offsets in the same solving window: %s and %s " %
+                  (dt.datetime.strftime(full_interval_list[i][0], "%Y-%m-%d"),
+                   dt.datetime.strftime(full_interval_list[i+1][0], "%Y-%m-%d")))
+            print("Something may get messed up.")
+    return full_interval_list
+
+
 def solve_for_offsets(ts_object: Timeseries, offset_time_intervals: list, num_days=10):
     """
     Solve for all E/N/U offsets at given times. Necessary for UNR data.
@@ -99,10 +126,10 @@ def solve_for_offsets(ts_object: Timeseries, offset_time_intervals: list, num_da
     :returns: list of Offset objects
     """
     print("Solving empirically for offsets at ", offset_time_intervals)
+    full_interval_list = clean_expected_interval_list(offset_time_intervals, num_days)
+
     Offset_obj = []
-    for interval in offset_time_intervals:
-        if isinstance(interval, dt.datetime):  # build an interval from a single day.
-            interval = [interval, interval]  # build an interval from a single day.
+    for interval in full_interval_list:
         e_offset = fit_single_offset(ts_object.dtarray, ts_object.dE, [interval[0], interval[1]], num_days)
         n_offset = fit_single_offset(ts_object.dtarray, ts_object.dN, [interval[0], interval[1]], num_days)
         u_offset = fit_single_offset(ts_object.dtarray, ts_object.dU, [interval[0], interval[1]], num_days)

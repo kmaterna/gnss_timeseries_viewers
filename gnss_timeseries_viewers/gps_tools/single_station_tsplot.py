@@ -101,10 +101,16 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
     :param label_rotation: rotation parameter for text on x-axis
     :param detrended_label: string, label on the mirrored y-axis
     """
+
+    if outdir != '':
+        os.makedirs(outdir, exist_ok=True)
+
     if not title:
-        title, _ = get_figure_name(plot_params, db_params, outdir)
+        title, _ = get_figure_name(plot_params, db_params)
     if not savename:
-        _, savename = get_figure_name(plot_params, db_params, outdir)
+        _, savename = get_figure_name(plot_params, db_params)
+
+    savename = outdir + savename
 
     # The major figure
     dpival = 500
@@ -171,7 +177,7 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
     return
 
 
-def get_figure_name(plot_params, db_params, outdir=""):
+def get_figure_name(plot_params, db_params):
     """
     Building filename and title strings: Metadata like station, offsets/outliers/seasonals, Datasource and Refframe.
     Title and Filename are programmatically linked.
@@ -180,10 +186,7 @@ def get_figure_name(plot_params, db_params, outdir=""):
         raise ValueError("Error! Some kind of title and filename is required, "
                          "it cannot be automatically generated from nothing.")
 
-    if outdir != '':
-        os.makedirs(outdir, exist_ok=True)
-
-    savename = outdir + db_params["station"]
+    savename = db_params["station"]
     title = db_params["station"]
 
     title = title + ', ' + db_params["datasource"] + ' ' + db_params["refframe"]
