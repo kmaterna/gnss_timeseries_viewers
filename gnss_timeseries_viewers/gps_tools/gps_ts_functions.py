@@ -142,6 +142,28 @@ class Timeseries:
                                  Offsettimes=self.Offsettimes)
         return newData
 
+    def remove_specific_date(self, target_date: dt.datetime):
+        """
+        Exclude a particular date from a time series. Useful when needing to exclude an earthquake event day.
+
+        :param target_date: datetime object
+        :return: Timeseries
+        """
+        newdtarray, newdN, newdE, newdU, newSe, newSn, newSu = [], [], [], [], [], [], []
+        for i in range(len(self.dN)):
+            if self.dtarray[i] != target_date:
+                newdtarray.append(self.dtarray[i])
+                newdE.append(self.dE[i])
+                newdN.append(self.dN[i])
+                newdU.append(self.dU[i])
+                newSe.append(self.Se[i])
+                newSn.append(self.Sn[i])
+                newSu.append(self.Su[i])
+        newData = Timeseries(name=self.name, coords=self.coords, dtarray=newdtarray, dN=np.array(newdN),
+                             dE=np.array(newdE), dU=np.array(newdU), Sn=np.array(newSn), Se=np.array(newSe),
+                             Su=np.array(newSu), EQtimes=self.EQtimes, Offsettimes=self.Offsettimes)
+        return newData
+
     def remove_constant(self, east_offset=0.0, north_offset=0.0, vert_offset=0.0):
         """Subtract a constant number from each data array in a time series object
 

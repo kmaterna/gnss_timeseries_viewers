@@ -27,6 +27,9 @@ def load_station_remove_offsets():
     myData = myData.impose_time_limits(dt.datetime.strptime("2000-01-01", "%Y-%m-%d"),
                                        dt.datetime.strptime("2025-01-01", "%Y-%m-%d"))
 
+    # Remove outliers > 20 mm for clarity
+    myData = myData.remove_outliers(outliers_def=20)
+
     # Remove offsets due to antenna changes
     nooffsets = offsets.remove_offsets(myData, offset_obj)
 
@@ -38,12 +41,12 @@ def load_station_remove_offsets():
             ridgecrest_coseismic = offsets.solve_for_offsets(nooffsets, [ridgecrest_window], num_days=10)
             nooffsets = offsets.remove_offsets(nooffsets, ridgecrest_coseismic)
             # Warning: Some pathological values may appear on 7/5/19 and 7/6/19 since they're within the solving window
+            # You might want to remove them with the following function:
+            nooffsets = nooffsets.remove_specific_date(dt.datetime.strptime("2019-07-05", "%Y-%m-%d"))
+            nooffsets = nooffsets.remove_specific_date(dt.datetime.strptime("2019-07-06", "%Y-%m-%d"))
 
-        else:  # the normal way
-            nooffsets = offsets.remove_offsets(nooffsets, [single_earthquake_offset])  # normal way, list of offsets
-
-    # Remove outliers > 20 mm for clarity
-    nooffsets = nooffsets.remove_outliers(outliers_def=20)
+        else:  # remove offsets the normal way
+            nooffsets = offsets.remove_offsets(nooffsets, [single_earthquake_offset])  # normal way, use list of offsets
 
     single_station_tsplot.single_ts_plot(myData, detrended=nooffsets, savename=station+'_view_ts.png',
                                          title='GNSS time series from station '+station, outdir='example_pngs/',
