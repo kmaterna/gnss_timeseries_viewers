@@ -613,6 +613,27 @@ def pair_gps_model_keeping_gps(gps_data: Timeseries, model_data: Timeseries):
     return [gps_data, paired_model]
 
 
+def concatenate_timeseries(timeseries1, timeseries2) -> Timeseries:
+    """
+    Combine two arrays that are subsequent in time.
+
+    :param timeseries1: Timeseries
+    :param timeseries2: Timeseries
+    :return: a Timeseries object
+    """
+    combined_TS = Timeseries(name=timeseries1.name, coords=timeseries1.coords,
+                             dtarray=np.concatenate((timeseries1.dtarray, timeseries2.dtarray)),
+                             dE=np.concatenate((timeseries1.dE, timeseries2.dE)),
+                             dN=np.concatenate((timeseries1.dN, timeseries2.dN)),
+                             dU=np.concatenate((timeseries1.dU, timeseries2.dU)),
+                             Se=np.concatenate((timeseries1.Se, timeseries2.Se)),
+                             Sn=np.concatenate((timeseries1.Sn, timeseries2.Sn)),
+                             Su=np.concatenate((timeseries1.Su, timeseries2.Su)),
+                             EQtimes=timeseries1.EQtimes+timeseries2.EQtimes,
+                             Offsettimes=timeseries1.Offsettimes+timeseries2.Offsettimes)
+    return combined_TS
+
+
 def get_referenced_data(roving_station_data: Timeseries, base_station_data: Timeseries) -> Timeseries:
     """
     Take a time series object and remove motion of a base station (another time series object)

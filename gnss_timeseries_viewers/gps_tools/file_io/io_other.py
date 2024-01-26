@@ -1,10 +1,9 @@
-
 """
 File to read and write data from miscellaneous formats
 """
 import datetime as dt
 import numpy as np
-import pandas, os
+import os
 from .io_magnet_unr import get_coordinates_for_unr_stations
 from ..vel_functions import Station_Vel
 from ..gps_ts_functions import Timeseries
@@ -185,42 +184,6 @@ def read_lake_loading_ts(infile) -> Timeseries:
     return loading_defo
 
 
-def read_creepmeter(filename) -> Timeseries:
-    """
-    Read an excel file for creep-meter timeseries such as those from the Imperial Valley.
-
-    :param filename: string, filename
-    :return: a TimeSeries object
-    """
-    print("Reading file %s " % filename)
-    df = pandas.read_excel(filename, sheet_name=0)
-    ts = df['UTC'].values
-    dtarray = [pandas.to_datetime(x) for x in ts]
-    displacement = df['dextral'].values.tolist()
-    zeros = np.zeros(np.shape(displacement))
-    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement, dN=zeros, dU=zeros,
-                                 Sn=zeros, Se=zeros, Su=zeros)
-    return creepmeter_data
-
-
-def read_creepmeter2(filename) -> Timeseries:
-    """
-    Read an excel file for creep-meter timeseries such as those from the Imperial Valley.
-
-    :param filename: string, filename
-    :return: a TimeSeries object
-    """
-    print("Reading file %s " % filename)
-    df = pandas.read_excel(filename, sheet_name=0)
-    ts = df['date'].values
-    dtarray = [pandas.to_datetime(x) for x in ts]
-    displacement = df['slip'].values.tolist()
-    zeros = np.zeros(np.shape(displacement))
-    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=displacement, dN=zeros, dU=zeros,
-                                 Sn=zeros, Se=zeros, Su=zeros)
-    return creepmeter_data
-
-
 def read_mit_hr_fig(filename_dt, filename_e, filename_n, is_six_hour=False) -> Timeseries:
     """
     :param filename_dt: string, filename of high-rate .fig file produced at MIT
@@ -234,7 +197,7 @@ def read_mit_hr_fig(filename_dt, filename_e, filename_n, is_six_hour=False) -> T
     with open(filename_dt, 'r') as f:
         for line in f:
             if len(line.split()) > 1:
-                dtarray.append(dt.datetime.strptime(line.split()[0]+' '+line.split()[1], '%d-%b-%Y %H:%M:%S'))
+                dtarray.append(dt.datetime.strptime(line.split()[0] + ' ' + line.split()[1], '%d-%b-%Y %H:%M:%S'))
     if is_six_hour:
         e, se = np.loadtxt(filename_e, unpack=True, usecols=(2, 3))
     else:
@@ -266,8 +229,8 @@ def read_uw_kinematic(filename) -> Timeseries:
             minutes_string = '45'
         else:
             minutes_string = '15'
-        newdatetime = dt.datetime.strptime('2023-05-'+str(day_of_month) + 'T' +
-                                           hours_string+':'+minutes_string+':00', '%Y-%m-%dT%H:%M:%S')
+        newdatetime = dt.datetime.strptime('2023-05-' + str(day_of_month) + 'T' +
+                                           hours_string + ':' + minutes_string + ':00', '%Y-%m-%dT%H:%M:%S')
         dtarray.append(newdatetime)
     hr_data = Timeseries(name='P503', coords=[], dtarray=dtarray, dE=e, dN=n, dU=u, Se=np.zeros(np.shape(e)),
                          Sn=np.zeros(np.shape(n)), Su=np.zeros(np.shape(u)))
@@ -290,10 +253,10 @@ def read_unr_five_minute(filename) -> Timeseries:
     for i in range(len(yr)):
         mystring = str(int(yr[i])) + define_hours_string(int(mm[i])) + define_hours_string(int(dd[i]))
         num_minutes = int(sday[i] / 60)
-        num_hours = int(np.floor(num_minutes/60))
-        minute_hand = num_minutes - num_hours*60
+        num_hours = int(np.floor(num_minutes / 60))
+        minute_hand = num_minutes - num_hours * 60
         timestring = define_hours_string(int(num_hours)) + define_hours_string(int(minute_hand)) + '00'
-        dtarray.append(dt.datetime.strptime(mystring+"T"+timestring, "%Y%m%dT%H%M%S"))
+        dtarray.append(dt.datetime.strptime(mystring + "T" + timestring, "%Y%m%dT%H%M%S"))
     hr_data = Timeseries(name=station_name, coords=[], dtarray=dtarray, dE=np.multiply(e, 1000),
                          dN=np.multiply(n, 1000), dU=np.multiply(u, 1000), Se=np.multiply(sige, 1000),
                          Sn=np.multiply(sign, 1000), Su=np.multiply(sigu, 1000))
@@ -313,8 +276,9 @@ def read_cwu_custom(filename):
                                                                  unpack=True)
     dtarray = []
     for i in range(len(yyyy)):
-        formatstring = str(int(yyyy[i]))+define_hours_string(int(mm[i]))+define_hours_string(int(dd[i]))+'T' + \
-                       define_hours_string(int(HH[i]))+define_hours_string(int(MM[i]))+define_hours_string(int(SS[i]))
+        formatstring = str(int(yyyy[i])) + define_hours_string(int(mm[i])) + define_hours_string(int(dd[i])) + 'T' + \
+                       define_hours_string(int(HH[i])) + define_hours_string(int(MM[i])) + define_hours_string(
+            int(SS[i]))
         dtarray.append(dt.datetime.strptime(formatstring, "%Y%m%dT%H%M%S"))
     e = np.subtract(e, e[0])
     n = np.subtract(n, n[0])
