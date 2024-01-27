@@ -44,11 +44,12 @@ def read_creepmeter2(filename) -> Timeseries:
     return creepmeter_data
 
 
-def read_creepmeter_ross_road_three_col(filename) -> Timeseries:
+def read_creepmeter_ross_road_three_col(filename, column_num=2) -> Timeseries:
     """
     Read the Ross Road timeseries data in a text file
 
     :param filename: string, filename
+    :param column_num: zero-index column number with data
     :return: a Timeseries object
     """
     print("Reading file %s " % filename)
@@ -57,9 +58,13 @@ def read_creepmeter_ross_road_three_col(filename) -> Timeseries:
                                                'formats': ('U19', float, float)})
     zeros = np.zeros(np.shape(num1))
     dtarray = []
+    if column_num == 2:
+        data = num2
+    else:
+        data = num1
     for item in datestrs:
         dtarray.append(dt.datetime.strptime(item, "%m/%d/%Y %H:%M:%S"))
-    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=num2, dN=zeros, dU=zeros,
+    creepmeter_data = Timeseries(name='', coords=[], dtarray=dtarray, dE=data, dN=zeros, dU=zeros,
                                  Sn=zeros, Se=zeros, Su=zeros)
     return creepmeter_data
 
