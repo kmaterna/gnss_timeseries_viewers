@@ -5,7 +5,10 @@ Functions for reading a variety of GNSS data formats, including:
   GRACE and other hydrological models
 """
 
-import collections, sys, os, configparser
+import collections
+import sys
+import os
+import configparser
 
 
 def read_config_file(infile):

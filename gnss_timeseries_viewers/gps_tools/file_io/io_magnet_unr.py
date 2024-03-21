@@ -2,7 +2,9 @@
 File to read and write data from Magnet / University of Nevada Reno formats
 """
 import datetime as dt
-import sys, os, re
+import sys
+import os
+import re
 import numpy as np
 from .. import utilities
 from ..vel_functions import Station_Vel

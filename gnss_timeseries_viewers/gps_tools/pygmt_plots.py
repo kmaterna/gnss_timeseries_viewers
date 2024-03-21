@@ -120,5 +120,5 @@ def map_ts_objects(dataobj_list, outname, center=None):
     if center:
         fig.plot(x=center[0], y=center[1], style='a0.1i', fill='red', pen='0.5p,red')
     fig.savefig(outname)
-    print("Saving map %s" % outname )
+    print("Saving map %s" % outname)
     return

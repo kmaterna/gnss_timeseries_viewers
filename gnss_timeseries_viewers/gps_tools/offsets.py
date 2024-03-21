@@ -19,6 +19,7 @@ class Offset:
         return f'{dt.datetime.strftime(self.evdt, "%Y-%m-%d")}, {np.round(self.e_offset, 5)} mmE, ' \
                f'{np.round(self.n_offset, 5)} mmN, {np.round(self.u_offset, 5)} mmU.'
 
+
 def remove_offsets(Data0: Timeseries, offsets_list: list, verbose=False):
     """
     :param Data0: timeseries object

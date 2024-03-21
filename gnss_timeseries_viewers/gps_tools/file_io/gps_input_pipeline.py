@@ -16,6 +16,7 @@ def get_unr(Params, filename):
                                       Params["unr"]["directory"]+Params["unr"]["user_offsets_file"])
     return [myData, Offsets, Earthquakes]
 
+
 def get_pbo_type(Params, pbo_filename, station, database):
     myData = io_nota.read_pbo_pos_file(pbo_filename)  # PBO data format
     Offsets = get_nota_offsets(station, Params[database]["directory"]+Params[database]["offsets_dir"],
@@ -24,6 +25,7 @@ def get_pbo_type(Params, pbo_filename, station, database):
                                        file_pattern="pbo*kalts.evt")
     return [myData, Offsets, Earthquakes]
 
+
 def get_cwu(Params, pbo_filename, station, database):
     myData = io_nota.read_pbo_pos_file(pbo_filename)  # PBO data format
     Offsets = get_nota_offsets(station, Params[database]["directory"]+Params[database]["offsets_dir"],
@@ -31,6 +33,7 @@ def get_cwu(Params, pbo_filename, station, database):
     Earthquakes = get_nota_earthquakes(station, Params[database]["directory"]+Params[database]["earthquakes_dir"],
                                        file_pattern="cwu*kalts.evt")
     return [myData, Offsets, Earthquakes]
+
 
 def get_usgs(Params, filename, station, refframe, sub_network):
     myData = io_usgs.read_USGS_ts_file(filename)

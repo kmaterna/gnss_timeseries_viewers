@@ -286,7 +286,7 @@ def read_cwu_custom(filename):
     hr_data = Timeseries(name='P503', coords=[], dtarray=dtarray, dE=np.multiply(e, 1000), dN=np.multiply(n, 1000),
                          dU=np.multiply(u, 1000), Se=np.multiply(se, 1000), Sn=np.multiply(sn, 1000),
                          Su=np.multiply(su, 1000))
-    return hr_data;
+    return hr_data
 
 
 def define_hours_string(hours_int):
@@ -294,7 +294,7 @@ def define_hours_string(hours_int):
         hours_string = '0' + str(hours_int)
     else:
         hours_string = str(hours_int)
-    return hours_string;
+    return hours_string
 
 
 def write_gmt_ts_file(ts_data, outfile, header=None):
@@ -302,7 +302,7 @@ def write_gmt_ts_file(ts_data, outfile, header=None):
     print("Writing file %s " % outfile)
     with open(outfile, 'w') as ofile:
         if header is not None:
-            ofile.write(header);
+            ofile.write(header)
         ofile.write("# dt E(mm) N(mm) U(mm) Se(mm) Sn(mm) Su(mm)\n")
         for i in range(len(ts_data.dtarray)):
             ofile.write("%s %f %f %f %f %f %f\n" % (dt.datetime.strftime(ts_data.dtarray[i], "%Y-%m-%dT%H-%M-%S"),

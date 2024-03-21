@@ -1,5 +1,6 @@
 
-import sys, os
+import sys
+import os
 from .file_io import config_io, io_nota, io_magnet_unr, io_usgs, gps_input_pipeline
 from . import vel_functions, utilities
 import Tectonic_Utils.read_write.read_kml as read_kml

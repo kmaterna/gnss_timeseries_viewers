@@ -5,7 +5,8 @@ Plot stacks with trends, with steps, or anything else.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib, scipy
+import matplotlib
+import scipy
 import matplotlib.cm as cm
 import datetime as dt
 import json

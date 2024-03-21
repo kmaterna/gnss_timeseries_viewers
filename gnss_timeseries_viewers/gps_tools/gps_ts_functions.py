@@ -663,32 +663,42 @@ def get_referenced_data(roving_station_data: Timeseries, base_station_data: Time
 # FOR REVERSE COMPATIBILITY (MAY BE DEPRECATED)
 # -------------------------------------------- #
 
+
 def remove_outliers(Data0: Timeseries, outliers_def: float):
     return Data0.remove_outliers(outliers_def)
+
 
 def impose_time_limits(Data0: Timeseries, starttime: dt.datetime, endtime: dt.datetime):
     return Data0.impose_time_limits(starttime, endtime)
 
+
 def remove_nans(Data0: Timeseries):
     return Data0.remove_nans()
+
 
 def remove_constant(Data0: Timeseries, east_offset=0, north_offset=0, vert_offset=0):
     return Data0.remove_constant(east_offset, north_offset, vert_offset)
 
+
 def detrend_data_by_value(Data0: Timeseries, east_params, north_params, vert_params):
     return Data0.detrend_data_by_value(east_params, north_params, vert_params)
+
 
 def remove_seasonal_by_value(Data0: Timeseries, east_params, north_params, vert_params):
     return Data0.remove_seasonal_by_value(east_params, north_params, vert_params)
 
+
 def get_slope(Data0: Timeseries, starttime=None, endtime=None, missing_fraction=0.6):
     return Data0.get_slope(starttime, endtime, missing_fraction)
+
 
 def get_slope_unc(dataObj: Timeseries, starttime, endtime):
     return dataObj.get_slope_unc(starttime, endtime)
 
+
 def get_linear_annual_semiannual(Data0: Timeseries, starttime=None, endtime=None, critical_len=365):
     return Data0.get_linear_annual_semiannual(starttime, endtime, critical_len)
+
 
 def get_mean_position(Data0: Timeseries, starttime=None, endtime=None):
     return Data0.get_mean_position(starttime, endtime)
@@ -696,6 +706,7 @@ def get_mean_position(Data0: Timeseries, starttime=None, endtime=None):
 # -------------------------------------------- #
 # FUNCTIONS ON LISTS OF TS OBJECTS
 # -------------------------------------------- #
+
 
 def get_starttime(ts_objects_list) -> dt.datetime:
     """

@@ -3,7 +3,9 @@
 File to read and write data from USGS formats
 """
 import datetime as dt
-import glob, os, sys
+import glob
+import os
+import sys
 import numpy as np
 from ..vel_functions import Station_Vel
 from ..gps_ts_functions import Timeseries
@@ -178,10 +180,11 @@ def query_usgs_network_name(station_name, gps_ts_dir):
     print("Querying for station %s in USGS sub-networks... " % station_name)
     for item in directories:
         if os.path.isfile(os.path.join(item, station_name.lower()+'_NAfixed.rneu')):
-            print("Found %s in %s" % (station_name, item) )
+            print("Found %s in %s" % (station_name, item))
             network_list.append(item)
     print("")
     return network_list
+
 
 def read_usgs_highrate_file(filename):
     """  time format 2023/05/10 00:05:00

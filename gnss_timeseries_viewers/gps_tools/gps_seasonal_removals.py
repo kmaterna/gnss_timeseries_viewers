@@ -8,7 +8,10 @@ Non-Inclusive List of seasonal removal options:
 """
 import numpy as np
 import datetime as dt
-import glob, os, sys, subprocess
+import glob
+import os
+import sys
+import subprocess
 from . import gps_ts_functions, notch_filter, grace_ts_functions, utilities
 from .gps_ts_functions import Timeseries
 from .file_io import io_nota, io_other, config_io

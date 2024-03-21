@@ -1,6 +1,7 @@
 import datetime as dt
 import numpy as np
-import os, sys
+import os
+import sys
 
 
 def check_lon_sanity(lon):
