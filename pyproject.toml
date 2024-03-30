@@ -5,7 +5,7 @@ description = "Useful GNSS timeseries tools: reading PBO and UNR, getting slopes
 authors = ["Kathryn Materna <kmaterna@berkeley.edu>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/kmaterna/GNSS_TimeSeries_Viewers"
+repository = "https://github.com/kmaterna/gnss_timeseries_viewers"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
