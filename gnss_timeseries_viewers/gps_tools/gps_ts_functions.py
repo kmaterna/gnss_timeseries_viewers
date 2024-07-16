@@ -106,6 +106,7 @@ class Timeseries:
         :return: a Timeseries object
         """
         newdtarray, newdN, newdE, newdU, newSe, newSn, newSu = [], [], [], [], [], [], []
+        new_eqtimes, new_offsettimes = [], []
         for i in range(len(self.dN)):
             if starttime <= self.dtarray[i] <= endtime:
                 newdtarray.append(self.dtarray[i])
@@ -115,9 +116,15 @@ class Timeseries:
                 newSe.append(self.Se[i])
                 newSn.append(self.Sn[i])
                 newSu.append(self.Su[i])
+        for offset in self.EQtimes:
+            if starttime <= offset <= endtime:
+                new_eqtimes.append(offset)
+        for offset in self.Offsettimes:
+            if starttime <= offset <= endtime:
+                new_offsettimes.append(offset)
         newData = Timeseries(name=self.name, coords=self.coords, dtarray=newdtarray, dN=np.array(newdN),
                              dE=np.array(newdE), dU=np.array(newdU), Sn=np.array(newSn), Se=np.array(newSe),
-                             Su=np.array(newSu), EQtimes=self.EQtimes, Offsettimes=self.Offsettimes)
+                             Su=np.array(newSu), EQtimes=new_eqtimes, Offsettimes=new_offsettimes)
         return newData
 
     def remove_nans(self):
