@@ -4,6 +4,7 @@ File to read and write data from miscellaneous formats
 import datetime as dt
 import numpy as np
 import os
+import csv
 from .io_magnet_unr import get_coordinates_for_unr_stations
 from ..vel_functions import Station_Vel
 from ..gps_ts_functions import Timeseries
@@ -159,6 +160,66 @@ def read_blacklist(blacklist_file) -> list:
         for line in blacklist_all:
             blacklist.append(line.split()[0])
     return blacklist
+
+
+def read_igs_coords_file(filename) -> list:
+    """
+    Read a file of velocities and coordinates from the IGS
+    i.e., a CSV downloaded from this webpage: https://network.igs.org/
+
+    :param filename: string, filename
+    :return: list of StationVel objects
+    """
+    print("Reading file %s " % filename)
+    station_list = []
+    with open(filename) as csvfile:
+        values = csv.reader(csvfile)
+        for row in values:
+            if row[6] == "Latitude":
+                continue
+            new_station = Station_Vel(name=row[0][0:4], elon=float(row[7]), nlat=float(row[7]), e=0,
+                                      n=0, u=0, se=0, sn=0, su=0,
+                                      first_epoch=dt.datetime.strptime("19000101", "%Y%m%d"),
+                                      last_epoch=dt.datetime.strptime("21000101", "%Y%m%d"), refframe='',
+                                      proccenter='', subnetwork='', survey=False, meas_type='gnss')
+            station_list.append(new_station)
+    print("  --> Returning %d stations" % len(station_list))
+    return station_list
+
+
+def read_noaa_cors_ncn(filename) -> list:
+    """
+    Read a list of stations and their velocities from NOAA CORS NCN network
+    Downloaded from here: https://geodesy.noaa.gov/CORS/news/mycs2/mycs2.shtml
+
+    :param filename: string, filename
+    :return: list of StationVel objects
+    """
+    print("Reading file %s " % filename)
+    station_list = []
+    with open(filename, 'r') as ifile:
+        for _ in range(7):
+            next(ifile)  # Skip the first five lines
+        for line in ifile:
+            temp = line.split()
+            lat_degree, lat_minute, lat_second = float(temp[2]), float(temp[3]), float(temp[4])
+            lat_sign = temp[5]
+            lat = lat_degree + (lat_minute / 60) + (lat_second / 3600)
+            if lat_sign == 'S':
+                lat = -lat
+            lon_degree, lon_minute, lon_second = float(temp[6]), float(temp[7]), float(temp[8])
+            lon_sign = temp[9]
+            lon = lon_degree + (lon_minute / 60) + (lon_second / 3600)
+            if lon_sign == 'W':
+                lon = -lon
+            new_station = Station_Vel(name=temp[0], elon=lon, nlat=lat, e=float(temp[12]),
+                                      n=float(temp[11]), u=float(temp[13]), se=0, sn=0, su=0,
+                                      first_epoch=dt.datetime.strptime("19000101", "%Y%m%d"),
+                                      last_epoch=dt.datetime.strptime("21000101", "%Y%m%d"), refframe='',
+                                      proccenter='', subnetwork='', survey=False, meas_type='gnss')
+            station_list.append(new_station)
+    print("  --> Returning %d stations" % len(station_list))
+    return station_list
 
 
 def write_stl(Data, filename):
