@@ -177,7 +177,7 @@ def read_igs_coords_file(filename) -> list:
         for row in values:
             if row[6] == "Latitude":
                 continue
-            new_station = Station_Vel(name=row[0][0:4], elon=float(row[7]), nlat=float(row[7]), e=0,
+            new_station = Station_Vel(name=row[0][0:4], elon=float(row[7]), nlat=float(row[6]), e=0,
                                       n=0, u=0, se=0, sn=0, su=0,
                                       first_epoch=dt.datetime.strptime("19000101", "%Y%m%d"),
                                       last_epoch=dt.datetime.strptime("21000101", "%Y%m%d"), refframe='',
