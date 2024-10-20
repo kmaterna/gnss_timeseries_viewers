@@ -29,10 +29,9 @@ def view_single_station(station_name, data_config_file, offsets_remove=1, earthq
     """
     db_params = config_db(station_name, datasource, refframe)
     plot_params = config_view(offsets_remove, earthquakes_remove, outliers_remove, outliers_def, seasonals_remove,
-                              seasonals_type, starttime, endtime)
+                              seasonals_type, starttime, endtime, plot_detrended)
     [myData, offset_obj, eq_obj] = input_data(station_name, data_config_file, db_params)
     [updatedData, detrended] = compute(data_config_file, myData, offset_obj, eq_obj, plot_params)
-    detrended = detrended if plot_detrended else None
     single_ts_plot(updatedData, detrended, plot_params=plot_params, db_params=db_params, outdir=outdir)
 
 
@@ -45,10 +44,10 @@ def config_db(station, datasource, refframe):
 
 
 def config_view(offsets_remove, earthquakes_remove, outliers_remove, outliers_def, seasonals_remove, seasonals_type,
-                starttime, endtime):
+                starttime, endtime, plot_detrended):
     """
     outliers_def : mm away from median filter.
-    offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove : booleans
+    offsets_remove, earthquakes_remove, outliers_remove, seasonals_remove, plot_detrended : booleans
     seasonals type : lssq, nldas, gldas, grace, lsdm, shasta, stl, notch
     """
     view_params = locals()  # package all provided arguments into a dictionary
@@ -111,6 +110,9 @@ def single_ts_plot(ts_obj, detrended=None, plot_params=None, db_params=None, out
         _, savename = get_figure_name(plot_params, db_params)
 
     savename = outdir + savename
+
+    if not plot_params["plot_detrended"]:
+        detrended = None
 
     # The major figure
     dpival = 500
