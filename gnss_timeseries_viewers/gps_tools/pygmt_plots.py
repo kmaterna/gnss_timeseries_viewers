@@ -18,11 +18,25 @@ def station_vels_to_arrays(station_vels):
 
 
 def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=None, fault_file=None,
-                      vector_scale_info=(1, 2, "2 mm"), plot_names=True):
+                      vector_scale_info=(1, 2, "2 mm"), plot_names=True, vert_scale_label='mm/yr',
+                      vmin=-5, vmax=5):
     """
     Simply plot the displacement vectors from StationVels in PyGMT, with vertical denoted by colors
     example: scale_factor = 1 scale_arrow = 2 vectext = "2 mm"  # 1 mm, extra small vectors
+
+    :param velfield: list of StationVel objects
+    :param outname: string for saving the file
+    :param symsize: float, default 0.1
+    :param region: list, optional region for the map
+    :param horiz_velfield: default None
+    :param fault_file: string
+    :param vector_scale_info: see function description
+    :param plot_names: default True
+    :param vert_scale_label: default 'mm/yr'
+    :param vmin: default -5 mm
+    :param vmax: default 5 mm
     """
+
     lons = [x.elon for x in velfield]
     lats = [x.nlat for x in velfield]
     names = [x.name for x in velfield]
@@ -33,27 +47,27 @@ def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=
                   np.min(lats)-nrange*0.06, np.max(lats)+nrange*0.06]
 
     fig = pygmt.Figure()
-    pygmt.makecpt(cmap="polar", series="-5/5/0.25", background="o", output="mycpt.cpt")
+    pygmt.makecpt(cmap="polar", series=str(vmin)+"/"+str(vmax)+"/0.25", background="o", output="mycpt.cpt")
     fig.coast(region=region, projection="M7i", frame="0.5", borders=['1', '2'], shorelines='1.0p,black',
               water='lightblue', map_scale="n0.12/0.12+c" + str(region[2]) + "+w10")
     if fault_file:
         fig.plot(data=fault_file, pen='thin,darkgray')
     elon, nlat, e, n, u = station_vels_to_arrays(velfield)
     scale = (6 * vector_scale_info[0] / 12)  # empirical scaling, convenient display
-    fig.plot(x=elon, y=nlat, style='c0.04i', color='black', pen='0.4p,white')  # station locations
+    fig.plot(x=elon, y=nlat, style='c0.04i', fill='black', pen='0.4p,white')  # station locations
     fig.plot(x=elon, y=nlat, style='v0.20+e+a40+gblack+h0+p1p,black+z'+str(scale), pen='0.6p,black',
              direction=[e, n])  # displacement vectors
     if horiz_velfield:  # horizontal-only velocities
         h_elon, h_nlat, h_e, h_n, h_u = station_vels_to_arrays(horiz_velfield)
         fig.plot(x=h_elon, y=h_nlat, style='v0.20+e+a40+gblack+h0+p1p,black+z'+str(scale), pen='0.6p,black',
                  direction=[h_e, h_n])  # displacement vectors
-    fig.plot(x=elon, y=nlat, style='c'+str(symsize)+'i', color=u, cmap='mycpt.cpt', pen='thin,black')  # vertical
+    fig.plot(x=elon, y=nlat, style='c'+str(symsize)+'i', fill=u, cmap='mycpt.cpt', pen='thin,black')  # vertical
     fig.plot(x=region[0], y=region[2], style='v0.20+e+a40+gblack+h0+p1p,black+z'+str(scale), offset="0.5i/0.3i",
              pen='0.6p,black', direction=[[vector_scale_info[1]], [0]])  # scale vector
     fig.text(x=region[0], y=region[2], text=vector_scale_info[2], offset="0.3i/0.3i", font='10p,Helvetica,black')
     if plot_names:
         fig.text(x=[i + 0.02 for i in lons], y=lats, text=names, font='11p,Helvetica-Bold,black')
-    fig.colorbar(position="JCR+w4.0i+v+o0.7i/0i", cmap="mycpt.cpt", frame=["x1", "y+L\"mm/yr\""])
+    fig.colorbar(position="JCR+w4.0i+v+o0.7i/0i", cmap="mycpt.cpt", frame=["x1", "y+L"+vert_scale_label])
     fig.savefig(outname)
     print("Saving %s " % outname)
     return

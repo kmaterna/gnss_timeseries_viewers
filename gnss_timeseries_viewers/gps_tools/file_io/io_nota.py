@@ -201,6 +201,31 @@ def write_pbo_pos_file(ts_object, filename, comment=""):
     return
 
 
+def read_kalts_event_file(filename):
+    """
+    Read the NOTA/CWU kalts events files into a series of vectors
+
+    :param filename: string, filename
+    :return: list of StationVel objects
+    """
+    displacements = []
+    print(f"Reading file {filename}")
+    [lon, lat, dE, dN, SE, SN, _, dH, SH, Site] = np.loadtxt(filename, unpack=True, skiprows=14,
+                                                             dtype={'names': ('lon', 'lat', 'dE', 'dN', 'Se', 'Sn',
+                                                                              'none', 'dU', 'Su', 'site'),
+                                                                    'formats': (
+                                                                        float, float, float, float, float, float,
+                                                                        float, float, float, 'U10')}
+                                                             )
+    for i in range(len(lon)):
+        myStationVel = Station_Vel(name=Site[i][0:4], elon=lon[i], nlat=lat[i], e=dE[i], n=dN[i], u=dH[i],
+                                   se=SE[i], sn=SN[i], su=SH[i], first_epoch=None, last_epoch=None,
+                                   proccenter='gamit', subnetwork='', survey=0, meas_type='gnss')
+        displacements.append(myStationVel)
+    print(f" --> Read {str(len(displacements))} objects")
+    return displacements
+
+
 def parse_earthquake_table_pbo(table):
     """
     Separate a table (from a grep result) into lists of Earthquake Offsets for PBO/NOTA

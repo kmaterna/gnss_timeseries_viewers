@@ -94,6 +94,8 @@ def read_creepmeter_nyland_ranch(filename) -> Timeseries:
     Read a creepmeter time series from USGS, for example Nyland ranch, downloaded from here:
     https://earthquake.usgs.gov/monitoring/deformation/data/download.php
 
+    NOTE: The conversion from float-day to datetime probably rounds incorrectly at the one-minute level.
+
     :param filename: string, filename
     :return: a Timeseries object
     """
