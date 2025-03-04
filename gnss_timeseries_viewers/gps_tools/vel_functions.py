@@ -8,6 +8,7 @@ import matplotlib.path as mpltPath
 from Tectonic_Utils.geodesy import haversine
 import Tectonic_Utils.geodesy.xyz2llh as geo_conv
 from Tectonic_Utils.geodesy import fault_vector_functions
+from Tectonic_Utils.geodesy import euler_pole as ep
 
 
 class Station_Vel:
@@ -312,3 +313,23 @@ def get_bounding_box(velfield, border=0.1):
     lats = [x.nlat for x in velfield]
     bbox = [np.min(lons) - border, np.max(lons) + border, np.min(lats) - border, np.max(lats) + border]
     return bbox
+
+
+def rotate_by_euler_pole(velfield, euler_pole):
+    """
+    Rotate a velfield by a given Euler Pole, useful for turning velocity field into a plate-fixed reference frame.
+
+    :param velfield:
+    :param euler_pole: (lon, lat, rate in deg/Ma)
+    :return: new_velfield
+    """
+    new_velfield = []
+    for vel in velfield:
+        vel_components = ep.point_rotation_by_Euler_Pole((vel.elon, vel.nlat), euler_pole)
+        new_vel = Station_Vel(name=vel.name, nlat=vel.nlat, elon=vel.elon, n=vel.n-vel_components[1],
+                              e=vel.e-vel_components[0], u=vel.u, sn=vel.su, se=vel.se, su=vel.su,
+                              first_epoch=vel.first_epoch, last_epoch=vel.last_epoch, refframe=vel.refframe,
+                              proccenter=vel.proccenter, subnetwork=vel.subnetwork, survey=vel.survey,
+                              meas_type=vel.meas_type)
+        new_velfield.append(new_vel)
+    return new_velfield
