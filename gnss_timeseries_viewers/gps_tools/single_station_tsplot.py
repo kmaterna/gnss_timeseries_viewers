@@ -33,6 +33,7 @@ def view_single_station(station_name, data_config_file, offsets_remove=1, earthq
     [myData, offset_obj, eq_obj] = input_data(station_name, data_config_file, db_params)
     [updatedData, detrended] = compute(data_config_file, myData, offset_obj, eq_obj, plot_params)
     single_ts_plot(updatedData, detrended, plot_params=plot_params, db_params=db_params, outdir=outdir)
+    return updatedData, detrended
 
 
 # -------------- CONFIGURE ------------ #
