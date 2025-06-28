@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.optimize
-import Tectonic_Utils.geodesy.xyz2llh as geo_conv
+import tectonic_utils.geodesy.xyz2llh as geo_conv
 from . import vel_functions
 
 

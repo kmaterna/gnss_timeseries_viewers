@@ -9,7 +9,7 @@ from scipy import signal
 import scipy
 import sys
 from . import lssq_model_errors, utilities, math_functions
-from Tectonic_Utils.geodesy import insar_vector_functions, haversine
+from tectonic_utils.geodesy import insar_vector_functions, haversine
 
 
 class Timeseries:

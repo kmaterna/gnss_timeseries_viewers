@@ -17,5 +17,5 @@ dependencies:
  - pandas
  - pip
  - pip:
-    - Tectonic-Utils
+    - tectonic-utils
     - earthscope-cli

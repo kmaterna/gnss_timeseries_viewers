@@ -12,7 +12,7 @@ The easiest way to install this repository is to use pip. An example of the pip 
 
 This library requires the Python packages listed in requirements.txt. 
 If not using pip, you can alternately create a new Conda environment using requirements.txt, or you can manually ensure that you have each of those libraries installed.
-Don't forget the following libraries: [Tectonic_Utils](https://github.com/kmaterna/Tectonic_Utils), 
+Don't forget the following libraries: [tectonic_utils](https://github.com/kmaterna/Tectonic_Utils), 
 and the [Earthscope CLI](https://gitlab.com/earthscope/public/earthscope-cli) for downloading Earthscope time series.
 
 

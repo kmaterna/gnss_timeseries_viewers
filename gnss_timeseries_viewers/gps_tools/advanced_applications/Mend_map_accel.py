@@ -14,7 +14,7 @@ import numpy as np
 import datetime as dt
 import glob, subprocess, os
 from gnss_timeseries_viewers.gps_tools import gps_seasonal_removals, offsets, load_gnss
-from Tectonic_Utils.geodesy import haversine
+from tectonic_utils.geodesy import haversine
 import remove_ets_events
 
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))  # 5 dirs up

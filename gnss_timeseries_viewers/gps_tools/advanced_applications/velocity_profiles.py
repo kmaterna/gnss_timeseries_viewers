@@ -1,6 +1,6 @@
 """ Profiles using pygmt """
 from .. import vel_functions
-from Tectonic_Utils.geodesy import haversine, insar_vector_functions
+from tectonic_utils.geodesy import haversine, insar_vector_functions
 import numpy as np
 import pygmt
 import matplotlib.pyplot as plt

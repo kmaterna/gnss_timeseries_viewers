@@ -5,10 +5,10 @@ Future work: Combining two velocity fields in outer combination (inclusive) or i
 from . import utilities
 import numpy as np
 import matplotlib.path as mpltPath
-from Tectonic_Utils.geodesy import haversine
-import Tectonic_Utils.geodesy.xyz2llh as geo_conv
-from Tectonic_Utils.geodesy import fault_vector_functions
-from Tectonic_Utils.geodesy import euler_pole as ep
+from tectonic_utils.geodesy import haversine
+import tectonic_utils.geodesy.xyz2llh as geo_conv
+from tectonic_utils.geodesy import fault_vector_functions
+from tectonic_utils.geodesy import euler_pole as ep
 
 
 class Station_Vel:
