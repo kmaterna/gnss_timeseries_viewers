@@ -46,6 +46,10 @@ def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=
         region = [np.min(lons)-erange*0.06, np.max(lons)+erange*0.06,
                   np.min(lats)-nrange*0.06, np.max(lats)+nrange*0.06]
 
+    pygmt.config(
+        MAP_FRAME_TYPE="plain",
+        FORMAT_GEO_MAP="ddd.xx"
+    )
     fig = pygmt.Figure()
     pygmt.makecpt(cmap="polar", series=str(vmin)+"/"+str(vmax)+"/0.25", background="o", output="mycpt.cpt")
     fig.coast(region=region, projection="M7i", frame="0.5", borders=['1', '2'], shorelines='1.0p,black',
@@ -70,7 +74,7 @@ def simple_pygmt_plot(velfield, outname, symsize=0.1, region=(), horiz_velfield=
     fig.colorbar(position="JCR+w4.0i+v+o0.7i/0i", cmap="mycpt.cpt", frame=["x1", "y+L"+vert_scale_label])
     fig.savefig(outname)
     print("Saving %s " % outname)
-    return
+    return fig
 
 
 def map_velocity_profile(velfield, selected_velfield, outname,  vector_scale_info=(0.1, 2, "20 mm"),

@@ -4,7 +4,7 @@ Future work: Combining two velocity fields in outer combination (inclusive) or i
 """
 from . import utilities
 import numpy as np
-import matplotlib.path as mpltPath
+import matplotlib.path as mpltpath
 from tectonic_utils.geodesy import haversine
 import tectonic_utils.geodesy.xyz2llh as geo_conv
 from tectonic_utils.geodesy import fault_vector_functions
@@ -256,7 +256,7 @@ def filter_to_within_polygon(myVelfield, polygon_lon, polygon_lat):
     """
     polygon = np.row_stack((np.array(polygon_lon), np.array(polygon_lat))).T
     points = np.row_stack((np.array(myVelfield.elon), myVelfield.nlat)).T
-    path = mpltPath.Path(polygon)
+    path = mpltpath.Path(polygon)
     inside2 = path.contains_points(points)
     within_stations = [i for (i, v) in zip(myVelfield, inside2) if v]
     print("Returning %d stations within the given polygon" % (len(within_stations)))

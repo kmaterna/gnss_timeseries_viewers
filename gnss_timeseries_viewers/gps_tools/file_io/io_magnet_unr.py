@@ -102,6 +102,9 @@ def read_UNR_magnet_ts_file(filename, coordinates_file) -> Timeseries:
 
 
 def get_coordinates_for_unr_stations(station_names, coordinates_file):
+    [cache_names, cache_lat, cache_lon] = np.loadtxt(coordinates_file, unpack=True, skiprows=2,
+                                                     usecols=(0, 1, 2), dtype={'names': ('name', 'lat', 'lon'),
+                                                                               'formats': ('U4', float, float)})
     """
     Read UNR coordinates for set of stations.
 
@@ -109,9 +112,6 @@ def get_coordinates_for_unr_stations(station_names, coordinates_file):
     :param coordinates_file: cache of coordinates and start-dates
     :returns: 1D list of lons, 1D list of lats
     """
-    [cache_names, cache_lat, cache_lon] = np.loadtxt(coordinates_file, unpack=True, skiprows=2,
-                                                     usecols=(0, 1, 2), dtype={'names': ('name', 'lat', 'lon'),
-                                                                               'formats': ('U4', float, float)})
     lon, lat = [], []
     # find the stations
     for i in range(len(station_names)):
@@ -126,6 +126,71 @@ def get_coordinates_for_unr_stations(station_names, coordinates_file):
             lon.append(elon)
             lat.append(nlat)
     return [lon, lat]
+
+
+def read_unr_midas_velocity_file(filename, refframe="NA"):
+    """
+    Read a UNR/NGL MIDAS velocity file into a list of Station_Vel objects.
+
+    Example input:
+        https://geodesy.unr.edu/gps_timeseries/IGS20/midas/midas.NA.txt
+
+    :param filename: string, tenv file
+    :param refframe: str, default 'NA'
+    :returns: 1D list of Station_Vels
+    """
+
+    velfield = []
+
+    with open(filename, "r") as ifile:
+        for line in ifile:
+
+            # Skip blank/comment lines
+            if not line.strip() or line.startswith("#"):
+                continue
+
+            temp = line.split()
+
+            # MIDAS columns
+            name = temp[0]
+
+            first_epoch = utilities.float_to_dt(float(temp[2]))
+            last_epoch = utilities.float_to_dt(float(temp[3]))
+
+            # MIDAS velocities are E, N, U in m/yr
+            # Station_Vel expects mm/yr
+            e = float(temp[8]) * 1000.0
+            n = float(temp[9]) * 1000.0
+            u = float(temp[10]) * 1000.0
+
+            # MIDAS uncertainties are also m/yr
+            se = float(temp[11]) * 1000.0
+            sn = float(temp[12]) * 1000.0
+            su = float(temp[13]) * 1000.0
+
+            # Coordinates
+            nlat = float(temp[24])
+            elon = float(temp[25])
+
+            station_vel = Station_Vel(
+                name=name,
+                nlat=nlat,
+                elon=elon,
+                n=n,
+                e=e,
+                u=u,
+                sn=sn,
+                se=se,
+                su=su,
+                first_epoch=first_epoch,
+                last_epoch=last_epoch,
+                refframe=refframe,
+                proccenter="UNR"
+            )
+
+            velfield.append(station_vel)
+
+    return velfield
 
 
 def parse_table_unr(table):
